@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+/*
+  Design tokens — "Platina Gift"
+  Direction: a premium collectibles case, not a generic purple SaaS-glass dashboard.
+  Graphite/platinum surfaces, one electric signal color (TON-blue) for actions,
+  a warm foil gold reserved for value/rarity. Display type has real presence;
+  body type stays quiet and legible.
+*/
+@theme {
+  --font-display: "Space Grotesk", "Inter", sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-canvas: #202020;       /* app background */
+  --color-canvas-deep: #1A1A1A;  /* header/nav base, deepest layer */
+  --color-surface: #282828;      /* cards, panels */
+  --color-surface-alt: #333333;  /* hover / raised state */
+  --color-hairline: rgba(255,255,255,0.08);
+
+  --color-text: #F3F4F8;
+  --color-muted: #92929F;
+
+  --color-brand: #2E8FFF;        /* TON-blue — actions, links, active state */
+  --color-brand-dim: #1F6FD1;
+  --color-gold: #E8B860;         /* value / rarity / price accents */
+  --color-gold-dim: #B8863B;
+
+  --color-positive: #2FD180;
+  --color-danger: #F0555A;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    @apply antialiased selection:bg-brand/30;
+  }
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer utilities {
+  /* Card surface with a faceted "gift-tag" corner — the signature motif,
+     used sparingly on premium / rarity-forward surfaces. */
+  .facet-card {
+    position: relative;
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  }
+  .facet-card::before {
+    content: "";
+    position: absolute;
+    top: 0; right: 0;
+    width: 14px; height: 14px;
+    background: linear-gradient(135deg, transparent 50%, var(--color-hairline) 50%);
+    pointer-events: none;
+  }
+
+  .glass-panel {
+    @apply bg-surface/90 backdrop-blur-xl border border-hairline shadow-lg shadow-black/30;
+  }
+
+  .glass-panel-interactive {
+    @apply bg-surface/90 backdrop-blur-xl border border-hairline shadow-lg shadow-black/30 transition-all duration-300 hover:bg-surface-alt hover:border-white/15;
+  }
+
+  .text-glow {
+    text-shadow: 0 0 20px currentColor;
+  }
+
+  /* Thin gold hairline used under headings / active nav — the recurring
+     "foil edge" detail instead of a full pill/blob highlight. */
+  .foil-underline {
+    position: relative;
+  }
+  .foil-underline::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: -6px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--color-gold), transparent);
+    border-radius: 2px;
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Custom scrollbar for a sleek look */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}

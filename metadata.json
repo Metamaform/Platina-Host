@@ -1,0 +1,6 @@
+{
+  "name": "Platina Gift",
+  "description": "Platina Gift Shop and Crash Game",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

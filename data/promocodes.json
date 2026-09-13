@@ -1,0 +1,10 @@
+[
+  {
+    "code": "1",
+    "type": "nft",
+    "value": "99",
+    "maxUses": 1,
+    "currentUses": 1,
+    "active": true
+  }
+]

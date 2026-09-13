@@ -1,0 +1,3 @@
+# Файловая "БД" (users.json, opens.json) — не коммитим реальные данные юзеров.
+*.json
+!.gitignore

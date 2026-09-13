@@ -1,0 +1,16 @@
+{
+  "endTime": "2026-09-01T11:50:00.000Z",
+  "places": 10,
+  "prizeNftUrl": "https://nft.fragment.com/gift/heroichelmet-1.lottie.json",
+  "prizeNftName": "Heroic Helmet",
+  "prizes": {
+    "1": {
+      "url": "https://nft.fragment.com/gift/vicecream-1.lottie.json",
+      "name": "Vice Cream"
+    },
+    "2": {
+      "url": "https://nft.fragment.com/gift/xmasstocking-1.lottie.json",
+      "name": "Xmas Stocking"
+    }
+  }
+}

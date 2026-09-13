@@ -1,0 +1,12 @@
+{
+  "isMaintenance": false,
+  "whitelist": [
+    1198270529,
+    1337
+  ],
+  "allowWebBypass": true,
+  "botAppUrl": "https://t.me/app_bot/app",
+  "botSupportUrl": "https://t.me/platina_help",
+  "botChannelUrl": "https://t.me/platina_gift",
+  "botStartPhoto": "https://example.com/photo.jpg"
+}
