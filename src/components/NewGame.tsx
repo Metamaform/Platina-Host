@@ -417,7 +417,7 @@ export const NewGame: React.FC<NewGameProps> = ({
     const P0 = { x: 0, y: 1000 };
     const P1 = { x: 300, y: 1000 };
     const P2 = { x: 600, y: 600 };
-    const P3 = { x: 800, y: 250 };
+    const P3 = { x: 650, y: 350 };
 
     let m = liveMult;
     if (currentGameState === 'crashed') {
@@ -690,10 +690,10 @@ export const NewGame: React.FC<NewGameProps> = ({
                 {currentGameState === 'flying' && currentAffordableNft && (
                   <motion.div 
                     key={currentAffordableNft.name}
-                    initial={{ opacity: 0, scale: 0.85, filter: 'blur(8px)' }}
+                    initial={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
                     animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-                    exit={{ opacity: 0, scale: 1.15, filter: 'blur(8px)', position: 'absolute' }}
-                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)', position: 'absolute' }}
+                    transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
                     className="mt-3 flex flex-col items-center justify-center"
                   >
                     <PremiumImage

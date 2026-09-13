@@ -458,7 +458,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
                                 ...newDb[existingIndex],
                                 name: v.name,
                                 image_url: v.image,
-                                lottie_url: v.image.replace('.webp', '.tgs')
+                                lottie_url: ''
                               };
                               setGiftsDb(newDb);
                             } else {
@@ -467,7 +467,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
                                 id: Date.now().toString(),
                                 name: v.name,
                                 image_url: v.image,
-                                lottie_url: v.image.replace('.webp', '.tgs')
+                                lottie_url: ''
                               };
                               setGiftsDb([...giftsDb, newGift].sort((a, b) => a.floor_price_gram - b.floor_price_gram));
                             }
@@ -632,7 +632,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
                             ...prev,
                             name: v.name,
                             image_url: v.image,
-                            lottie_url: v.image.replace('.webp', '.tgs')
+                            lottie_url: ''
                           }));
                           // Window stays open so the user can continue editing!
                         }}

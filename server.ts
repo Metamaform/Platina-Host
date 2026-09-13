@@ -740,13 +740,19 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
         if (targetUrl.endsWith('.tgs')) {
           const zlib = await import('zlib');
           const arrayBuffer = await response.arrayBuffer();
+          if (arrayBuffer.byteLength > 2000000) throw new Error("File too large");
           const decompressed = zlib.gunzipSync(Buffer.from(arrayBuffer));
           json = JSON.parse(decompressed.toString('utf8'));
         } else {
           json = await response.json();
         }
 
-        lottieCache.set(targetUrl, json); // Cache it forever for this instance
+        // Only cache if it's relatively small to prevent memory leaks
+        const jsonStr = JSON.stringify(json);
+        if (jsonStr.length < 5000000) {
+           if (lottieCache.size > 100) lottieCache.clear();
+           lottieCache.set(targetUrl, json);
+        }
         return res.json(json);
       } catch (err: any) {
         lastError = err;
