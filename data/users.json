@@ -2,79 +2,27 @@
   "1337": {
     "id": 1337,
     "username": "webtester",
-    "balance": 29.699999999999918,
+    "balance": 977764.3,
     "inventory": [
       {
-        "id": "15",
-        "name": "Candy Cane",
-        "slug": "candycane",
+        "id": "110",
+        "name": "Glossy Hot",
+        "slug": "sharptongue",
         "rarity": "Common",
-        "description": "Уникальный подарок из коллекции Candy Canes.",
-        "floor_price_gram": 3.42,
-        "image_url": "https://fragment.com/file/gifts/candycane/model.VFbuebgC7lyesvreOskTRrUIFjvLV0lGCie-5nCteGpLXh1EPtYQpafQnvNF_sHX.webp",
+        "description": "Уникальный подарок из коллекции Sharp Tongues.",
+        "floor_price_gram": 40,
+        "image_url": "https://fragment.com/file/gifts/sharptongue/model.0PVzYP8KnRPT-4sQ055l3_MXRHt-zuSJcSBCpOo_lz9BA1rjQTneSy64bWKtK8xd.webp",
         "animation_url": "",
-        "lottie_url": "https://fragment.com/file/gifts/candycane/model.VFbuebgC7lyesvreOskTRrUIFjvLV0lGCie-5nCteGpLXh1EPtYQpafQnvNF_sHX.webp",
-        "uniqueId": "17892137257440.17092105160264937",
-        "acquiredAt": "2026-09-12T11:48:45.744Z"
-      },
-      {
-        "id": "103",
-        "name": "Perfume Bottle",
-        "slug": "perfumebottle",
-        "rarity": "Common",
-        "description": "Уникальный подарок из коллекции Perfume Bottles.",
-        "floor_price_gram": 71.29,
-        "image_url": "https://fragment.com/file/gifts/perfumebottle/model.fZHol3ISYXWN6-wkzGVWbm_LK309Z0mNXhPcQ-sd3DkdZ3QsCDrRfTjH-U4OqgKU.webp",
-        "animation_url": "",
-        "lottie_url": "https://fragment.com/file/gifts/perfumebottle/model.fZHol3ISYXWN6-wkzGVWbm_LK309Z0mNXhPcQ-sd3DkdZ3QsCDrRfTjH-U4OqgKU.webp",
-        "uniqueId": "17892137257440.3264442834844963",
-        "acquiredAt": "2026-09-12T11:48:45.744Z"
-      },
-      {
-        "id": "23",
-        "name": "Xmas Stocking",
-        "slug": "xmasstocking",
-        "rarity": "Common",
-        "description": "Уникальный подарок из коллекции Xmas Stockings.",
-        "floor_price_gram": 3.42,
-        "image_url": "https://fragment.com/file/gifts/xmasstocking/model.HWmQtR1PhrInz4_ajzQ7l3n6atWJ_SMtlIX0HRNfI7BFSLojf6nZwGsyn2UhIw4j.webp",
-        "animation_url": "",
-        "lottie_url": "https://fragment.com/file/gifts/xmasstocking/model.HWmQtR1PhrInz4_ajzQ7l3n6atWJ_SMtlIX0HRNfI7BFSLojf6nZwGsyn2UhIw4j.webp",
-        "uniqueId": "17892137257440.14875892980307792",
-        "acquiredAt": "2026-09-12T11:48:45.744Z"
-      },
-      {
-        "id": "15",
-        "name": "Candy Cane",
-        "slug": "candycane",
-        "rarity": "Common",
-        "description": "Уникальный подарок из коллекции Candy Canes.",
-        "floor_price_gram": 3.42,
-        "image_url": "https://fragment.com/file/gifts/candycane/model.VFbuebgC7lyesvreOskTRrUIFjvLV0lGCie-5nCteGpLXh1EPtYQpafQnvNF_sHX.webp",
-        "animation_url": "",
-        "lottie_url": "https://fragment.com/file/gifts/candycane/model.VFbuebgC7lyesvreOskTRrUIFjvLV0lGCie-5nCteGpLXh1EPtYQpafQnvNF_sHX.webp",
-        "uniqueId": "17892137880930.35438061060251225",
-        "acquiredAt": "2026-09-12T11:49:48.093Z"
-      },
-      {
-        "id": "6",
-        "name": "Ice Cream",
-        "slug": "icecream",
-        "rarity": "Common",
-        "description": "Уникальный подарок из коллекции Ice Creams.",
-        "floor_price_gram": 2.01,
-        "image_url": "https://fragment.com/file/gifts/icecream/model.OOpkWM5wh8c8jEBwvL2CpKyijifvQIh03Y02VCZBk_hAFSKpK4vi6HE5oV8n7i03.webp",
-        "animation_url": "",
-        "lottie_url": "https://fragment.com/file/gifts/icecream/model.OOpkWM5wh8c8jEBwvL2CpKyijifvQIh03Y02VCZBk_hAFSKpK4vi6HE5oV8n7i03.webp",
-        "uniqueId": "17892137880930.25923975980607783",
-        "acquiredAt": "2026-09-12T11:49:48.093Z"
+        "lottie_url": "https://fragment.com/file/gifts/sharptongue/model.0PVzYP8KnRPT-4sQ055l3_MXRHt-zuSJcSBCpOo_lz9BA1rjQTneSy64bWKtK8xd.webp",
+        "uniqueId": "e737s6lpy",
+        "price": 40
       }
     ],
-    "turnover": 444472.1670038732,
+    "turnover": 477210.3770038732,
     "topups": [],
     "createdAt": "2026-09-02T04:58:46.689Z",
-    "updatedAt": "2026-09-12T12:32:26.687Z",
-    "seasonTurnover": 2134.8749374999898,
+    "updatedAt": "2026-09-14T16:39:07.806Z",
+    "seasonTurnover": 32813.20999999996,
     "needsReload": false,
     "completedTasks": {
       "1788541215086": {
@@ -103,7 +51,7 @@
     "firstName": "Web",
     "lastName": "Tester",
     "welcomeSeen": true,
-    "welcomeSeenAt": "2026-09-12T10:37:36.495Z"
+    "welcomeSeenAt": "2026-09-14T16:10:32.884Z"
   },
   "5698050836": {
     "id": 5698050836,

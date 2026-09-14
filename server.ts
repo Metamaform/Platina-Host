@@ -232,6 +232,31 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
   app.use(express.urlencoded({ limit: '50mb', extended: true }));
   app.use((req, res, next) => { res.header("Access-Control-Allow-Origin", "*"); res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"); res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization"); if (req.method === "OPTIONS") { res.sendStatus(200); return; } next(); });
 
+  app.post("/api/logs", (req, res) => {
+    try {
+      const logData = req.body;
+      const timestamp = new Date().toISOString();
+      console.log(`\n--- CLIENT LOG [${logData.level?.toUpperCase()}] ---`);
+      console.log(`Time: ${timestamp}`);
+      console.log(`User ID: ${logData.userId || 'Unknown'}`);
+      console.log(`Path: ${logData.path}`);
+      console.log(`Message: ${logData.message}`);
+      if (logData.stack) console.log(`Stack: ${logData.stack}`);
+      if (logData.interactions?.length > 0) {
+        console.log(`Interactions:\n  ${logData.interactions.join('\n  ')}`);
+      }
+      if (logData.additionalData) {
+        console.log(`Additional Data: ${JSON.stringify(logData.additionalData)}`);
+      }
+      console.log(`-----------------------------------------\n`);
+      res.sendStatus(200);
+    } catch (e) {
+      console.error('Error processing log', e);
+      res.sendStatus(500);
+    }
+  });
+
+
 
   const cache = new Map();
   const CACHE_TTL = 60 * 1000 * 5; // 5 minutes

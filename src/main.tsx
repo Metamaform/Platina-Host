@@ -5,6 +5,9 @@ import App from './App.tsx';
 import './index.css';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { ErrorBoundary } from './ErrorBoundary';
+import { initLogger } from './lib/logger';
+
+initLogger();
 
 if (typeof window !== 'undefined') {
   window.Buffer = window.Buffer || Buffer;

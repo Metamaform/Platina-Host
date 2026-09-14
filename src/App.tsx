@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { setLoggerUserId } from './lib/logger';
 import { ShoppingBag, User, Gem, Gift, Wallet, ChevronRight, Activity, CircleDashed, ArrowUpCircle, Shield, LayoutGrid, Trophy, X, ListTodo, Settings, Bomb, Box, Package, ArrowLeft, Users, History, MessageCircle, ExternalLink, Copy, Check, Star, Rocket } from 'lucide-react';
 import defaultGiftsDb from './gifts_data.json';
 import { Craft } from './components/Craft';
@@ -811,6 +812,12 @@ export default function App() {
   // и подтягиваются с сервера при входе.
   const auth = useTelegramAuth();
   const user = auth.user;
+  
+  useEffect(() => {
+    if (user?.id) {
+      setLoggerUserId(user.id);
+    }
+  }, [user?.id]);
   
   const langInit = useRef(false);
   useEffect(() => {

@@ -1,5 +1,783 @@
 [
   {
+    "id": "1789403944693-4libsu",
+    "ts": "2026-09-14T16:39:04.693Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Plush Pepe",
+      "image_url": "https://fragment.com/file/gifts/plushpepe/model.U8pyFGdc2Sg2jMq3nRwlAUZut_CrlFBUI4WkqdqBbMKKfbNZ0-2o9qBExwzyjsK3.webp",
+      "slug": "plushpepe",
+      "price": 5555
+    },
+    "price": 5555,
+    "isGram": false,
+    "multiplier": 2.222,
+    "game": "mines"
+  },
+  {
+    "id": "rocket-1789403559603-1337",
+    "ts": "2026-09-14T16:32:39.603Z",
+    "firstName": "Игрок",
+    "price": 45.3,
+    "isGram": false,
+    "gift": {
+      "id": "110",
+      "name": "Glossy Hot",
+      "slug": "sharptongue",
+      "rarity": "Common",
+      "description": "Уникальный подарок из коллекции Sharp Tongues.",
+      "floor_price_gram": 40,
+      "image_url": "https://fragment.com/file/gifts/sharptongue/model.0PVzYP8KnRPT-4sQ055l3_MXRHt-zuSJcSBCpOo_lz9BA1rjQTneSy64bWKtK8xd.webp",
+      "animation_url": "",
+      "lottie_url": "",
+      "uniqueId": "e737s6lpy",
+      "price": 40
+    },
+    "multiplier": 1.51
+  },
+  {
+    "id": "1789402574013-8f3kc7",
+    "ts": "2026-09-14T16:16:14.013Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Artisan Brick",
+      "image_url": "https://fragment.com/file/gifts/artisanbrick/model.sN0tChrSjwHyd2C8uFe4ZrvTqHLJdGb5BH-RzIvtz0W1RZvoyexk40uacoaJogpj.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402572228-3e8bff",
+    "ts": "2026-09-14T16:16:12.228Z",
+    "firstName": "Web",
+    "price": 25,
+    "isGram": true,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402569039-eyfa1g",
+    "ts": "2026-09-14T16:16:09.039Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Astral Shard",
+      "image_url": "https://fragment.com/file/gifts/astralshard/model.J6lsn0Ls2RAV28ImJrJm-vp9LYJhYKYl-qJNA2SawzQnhVlI3B1iP9puIoQSgx5n.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402562014-jx2a8x",
+    "ts": "2026-09-14T16:16:02.014Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Mini Oscar",
+      "image_url": "https://nft.fragment.com/gift/minioscar-1.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402561992-x944wv",
+    "ts": "2026-09-14T16:16:01.992Z",
+    "firstName": "Web",
+    "price": 25,
+    "isGram": true,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402559037-n8ko59",
+    "ts": "2026-09-14T16:15:59.037Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Diamond",
+      "image_url": "https://fragment.com/file/gifts/nailbracelet/model.K7EqG5Qqfg90OXEG3cj89NMUpyFsXiixJJpAfdj8T8YH4vFxZaZ4OznzEi8Gj1Pp.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402557496-y9v5hy",
+    "ts": "2026-09-14T16:15:57.496Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Artisan Brick",
+      "image_url": "https://fragment.com/file/gifts/artisanbrick/model.sN0tChrSjwHyd2C8uFe4ZrvTqHLJdGb5BH-RzIvtz0W1RZvoyexk40uacoaJogpj.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402552630-axc4my",
+    "ts": "2026-09-14T16:15:52.630Z",
+    "firstName": "Web",
+    "price": 25,
+    "isGram": true,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402549838-mg6uku",
+    "ts": "2026-09-14T16:15:49.838Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Diamond",
+      "image_url": "https://fragment.com/file/gifts/nailbracelet/model.K7EqG5Qqfg90OXEG3cj89NMUpyFsXiixJJpAfdj8T8YH4vFxZaZ4OznzEi8Gj1Pp.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402546388-1gz6um",
+    "ts": "2026-09-14T16:15:46.388Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Low Rider",
+      "image_url": "https://fragment.com/file/gifts/lowrider/model.4mO4m2tNaVnWvUQEi-A4lCnpjM0uJE9VPvlMquS9QYSd2PmEEGLSSq_Mz-C-T94O.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402542677-wcupl0",
+    "ts": "2026-09-14T16:15:42.677Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Mini Oscar",
+      "image_url": "https://nft.fragment.com/gift/minioscar-1.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402542673-9c5gjh",
+    "ts": "2026-09-14T16:15:42.673Z",
+    "firstName": "Web",
+    "price": 25,
+    "isGram": true,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "rocket-1789402521399-1337",
+    "ts": "2026-09-14T16:15:21.399Z",
+    "firstName": "Web",
+    "price": 208.86,
+    "isGram": false,
+    "gift": {
+      "id": "68",
+      "name": "Scared Cat",
+      "slug": "scaredcat",
+      "rarity": "Common",
+      "description": "Уникальный подарок из коллекции Scared Cats.",
+      "floor_price_gram": 185.93,
+      "image_url": "https://fragment.com/file/gifts/scaredcat/model.EP6wL8TV1FHvJm0I8M40_wp6bpLZS9Zl_OBBLrWT2kMlMuiP0lZa6j_S38giTwcl.webp",
+      "animation_url": "",
+      "lottie_url": "",
+      "uniqueId": "fhribvysu",
+      "price": 185.93
+    },
+    "multiplier": 1.51
+  },
+  {
+    "id": "1789402432440-sn6r09",
+    "ts": "2026-09-14T16:13:52.440Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Artisan Brick",
+      "image_url": "https://fragment.com/file/gifts/artisanbrick/model.sN0tChrSjwHyd2C8uFe4ZrvTqHLJdGb5BH-RzIvtz0W1RZvoyexk40uacoaJogpj.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402432438-lze1y5",
+    "ts": "2026-09-14T16:13:52.438Z",
+    "firstName": "Web",
+    "price": 25,
+    "isGram": true,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402429498-pu6gkn",
+    "ts": "2026-09-14T16:13:49.498Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Low Rider",
+      "image_url": "https://fragment.com/file/gifts/lowrider/model.4mO4m2tNaVnWvUQEi-A4lCnpjM0uJE9VPvlMquS9QYSd2PmEEGLSSq_Mz-C-T94O.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402425785-mw0phe",
+    "ts": "2026-09-14T16:13:45.785Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Mini Oscar",
+      "image_url": "https://nft.fragment.com/gift/minioscar-1.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402422551-tkpiz3",
+    "ts": "2026-09-14T16:13:42.551Z",
+    "firstName": "Web",
+    "price": 25,
+    "isGram": true,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402417667-ug4dai",
+    "ts": "2026-09-14T16:13:37.667Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Diamond",
+      "image_url": "https://fragment.com/file/gifts/nailbracelet/model.K7EqG5Qqfg90OXEG3cj89NMUpyFsXiixJJpAfdj8T8YH4vFxZaZ4OznzEi8Gj1Pp.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402414513-f6k5ls",
+    "ts": "2026-09-14T16:13:34.513Z",
+    "firstName": "Web",
+    "price": 25,
+    "isGram": true,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402414511-mrlpiz",
+    "ts": "2026-09-14T16:13:34.511Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Artisan Brick",
+      "image_url": "https://fragment.com/file/gifts/artisanbrick/model.sN0tChrSjwHyd2C8uFe4ZrvTqHLJdGb5BH-RzIvtz0W1RZvoyexk40uacoaJogpj.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402409232-tox447",
+    "ts": "2026-09-14T16:13:29.232Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Low Rider",
+      "image_url": "https://fragment.com/file/gifts/lowrider/model.4mO4m2tNaVnWvUQEi-A4lCnpjM0uJE9VPvlMquS9QYSd2PmEEGLSSq_Mz-C-T94O.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402409230-roppm8",
+    "ts": "2026-09-14T16:13:29.230Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Astral Shard",
+      "image_url": "https://fragment.com/file/gifts/astralshard/model.J6lsn0Ls2RAV28ImJrJm-vp9LYJhYKYl-qJNA2SawzQnhVlI3B1iP9puIoQSgx5n.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402403907-yzy4hz",
+    "ts": "2026-09-14T16:13:23.907Z",
+    "firstName": "Web",
+    "price": 25,
+    "isGram": true,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402397921-17b0uk",
+    "ts": "2026-09-14T16:13:17.921Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Artisan Brick",
+      "image_url": "https://fragment.com/file/gifts/artisanbrick/model.sN0tChrSjwHyd2C8uFe4ZrvTqHLJdGb5BH-RzIvtz0W1RZvoyexk40uacoaJogpj.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402395261-eyw85n",
+    "ts": "2026-09-14T16:13:15.261Z",
+    "firstName": "Web",
+    "price": 25,
+    "isGram": true,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402395259-0opwt3",
+    "ts": "2026-09-14T16:13:15.259Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Low Rider",
+      "image_url": "https://fragment.com/file/gifts/lowrider/model.4mO4m2tNaVnWvUQEi-A4lCnpjM0uJE9VPvlMquS9QYSd2PmEEGLSSq_Mz-C-T94O.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402386574-0o0ym0",
+    "ts": "2026-09-14T16:13:06.574Z",
+    "firstName": "Web",
+    "price": 25,
+    "isGram": true,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402386573-wi950t",
+    "ts": "2026-09-14T16:13:06.573Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Diamond",
+      "image_url": "https://fragment.com/file/gifts/nailbracelet/model.K7EqG5Qqfg90OXEG3cj89NMUpyFsXiixJJpAfdj8T8YH4vFxZaZ4OznzEi8Gj1Pp.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402373526-kjt14f",
+    "ts": "2026-09-14T16:12:53.526Z",
+    "firstName": "Web",
+    "price": 25,
+    "isGram": true,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402364335-k3h5nl",
+    "ts": "2026-09-14T16:12:44.335Z",
+    "firstName": "Web",
+    "price": 25,
+    "isGram": true,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402364332-u8jvn7",
+    "ts": "2026-09-14T16:12:44.332Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Low Rider",
+      "image_url": "https://fragment.com/file/gifts/lowrider/model.4mO4m2tNaVnWvUQEi-A4lCnpjM0uJE9VPvlMquS9QYSd2PmEEGLSSq_Mz-C-T94O.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402355858-9u2bsb",
+    "ts": "2026-09-14T16:12:35.858Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Artisan Brick",
+      "image_url": "https://fragment.com/file/gifts/artisanbrick/model.sN0tChrSjwHyd2C8uFe4ZrvTqHLJdGb5BH-RzIvtz0W1RZvoyexk40uacoaJogpj.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402355854-e540oc",
+    "ts": "2026-09-14T16:12:35.854Z",
+    "firstName": "Web",
+    "price": 25,
+    "isGram": true,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402353529-dkgwx2",
+    "ts": "2026-09-14T16:12:33.529Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Mini Oscar",
+      "image_url": "https://nft.fragment.com/gift/minioscar-1.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402350345-emo661",
+    "ts": "2026-09-14T16:12:30.345Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Low Rider",
+      "image_url": "https://fragment.com/file/gifts/lowrider/model.4mO4m2tNaVnWvUQEi-A4lCnpjM0uJE9VPvlMquS9QYSd2PmEEGLSSq_Mz-C-T94O.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402347580-5jysfl",
+    "ts": "2026-09-14T16:12:27.580Z",
+    "firstName": "Web",
+    "price": 25,
+    "isGram": true,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402342991-7qaffl",
+    "ts": "2026-09-14T16:12:22.991Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Mercurial",
+      "image_url": "https://fragment.com/file/gifts/heroichelmet/model.ak6bqjZwp3q_Gn8Y5_FeefZTXctEmHAFXkmp0lvFH5DfaNLfuedLl2yBMZVNVv8G.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402338953-msk8ya",
+    "ts": "2026-09-14T16:12:18.953Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Astral Shard",
+      "image_url": "https://fragment.com/file/gifts/astralshard/model.J6lsn0Ls2RAV28ImJrJm-vp9LYJhYKYl-qJNA2SawzQnhVlI3B1iP9puIoQSgx5n.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402338952-lw4jnc",
+    "ts": "2026-09-14T16:12:18.952Z",
+    "firstName": "Web",
+    "price": 25,
+    "isGram": true,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402336937-51uvt9",
+    "ts": "2026-09-14T16:12:16.937Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Low Rider",
+      "image_url": "https://fragment.com/file/gifts/lowrider/model.4mO4m2tNaVnWvUQEi-A4lCnpjM0uJE9VPvlMquS9QYSd2PmEEGLSSq_Mz-C-T94O.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402334936-9hq2p9",
+    "ts": "2026-09-14T16:12:14.936Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Artisan Brick",
+      "image_url": "https://fragment.com/file/gifts/artisanbrick/model.sN0tChrSjwHyd2C8uFe4ZrvTqHLJdGb5BH-RzIvtz0W1RZvoyexk40uacoaJogpj.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402332971-ukcslu",
+    "ts": "2026-09-14T16:12:12.971Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Mini Oscar",
+      "image_url": "https://nft.fragment.com/gift/minioscar-1.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402330923-zn0l8c",
+    "ts": "2026-09-14T16:12:10.923Z",
+    "firstName": "Web",
+    "price": 25,
+    "isGram": true,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402328885-cnketz",
+    "ts": "2026-09-14T16:12:08.885Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Low Rider",
+      "image_url": "https://fragment.com/file/gifts/lowrider/model.4mO4m2tNaVnWvUQEi-A4lCnpjM0uJE9VPvlMquS9QYSd2PmEEGLSSq_Mz-C-T94O.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402326823-lpjgn3",
+    "ts": "2026-09-14T16:12:06.823Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Astral Shard",
+      "image_url": "https://fragment.com/file/gifts/astralshard/model.J6lsn0Ls2RAV28ImJrJm-vp9LYJhYKYl-qJNA2SawzQnhVlI3B1iP9puIoQSgx5n.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402326819-ob9vrh",
+    "ts": "2026-09-14T16:12:06.819Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Diamond",
+      "image_url": "https://fragment.com/file/gifts/nailbracelet/model.K7EqG5Qqfg90OXEG3cj89NMUpyFsXiixJJpAfdj8T8YH4vFxZaZ4OznzEi8Gj1Pp.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402321105-uq0mvk",
+    "ts": "2026-09-14T16:12:01.105Z",
+    "firstName": "Web",
+    "price": 25,
+    "isGram": true,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402318833-nn1320",
+    "ts": "2026-09-14T16:11:58.833Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Artisan Brick",
+      "image_url": "https://fragment.com/file/gifts/artisanbrick/model.sN0tChrSjwHyd2C8uFe4ZrvTqHLJdGb5BH-RzIvtz0W1RZvoyexk40uacoaJogpj.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402314605-aq4t2v",
+    "ts": "2026-09-14T16:11:54.605Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Low Rider",
+      "image_url": "https://fragment.com/file/gifts/lowrider/model.4mO4m2tNaVnWvUQEi-A4lCnpjM0uJE9VPvlMquS9QYSd2PmEEGLSSq_Mz-C-T94O.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402311522-a2w668",
+    "ts": "2026-09-14T16:11:51.522Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Mini Oscar",
+      "image_url": "https://nft.fragment.com/gift/minioscar-1.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402311519-nvvo8a",
+    "ts": "2026-09-14T16:11:51.519Z",
+    "firstName": "Web",
+    "price": 25,
+    "isGram": true,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402309109-glb6aq",
+    "ts": "2026-09-14T16:11:49.109Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Diamond",
+      "image_url": "https://fragment.com/file/gifts/nailbracelet/model.K7EqG5Qqfg90OXEG3cj89NMUpyFsXiixJJpAfdj8T8YH4vFxZaZ4OznzEi8Gj1Pp.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402309105-9pj6h8",
+    "ts": "2026-09-14T16:11:49.105Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Mercurial",
+      "image_url": "https://fragment.com/file/gifts/heroichelmet/model.ak6bqjZwp3q_Gn8Y5_FeefZTXctEmHAFXkmp0lvFH5DfaNLfuedLl2yBMZVNVv8G.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402305006-o6dkxi",
+    "ts": "2026-09-14T16:11:45.006Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Low Rider",
+      "image_url": "https://fragment.com/file/gifts/lowrider/model.4mO4m2tNaVnWvUQEi-A4lCnpjM0uJE9VPvlMquS9QYSd2PmEEGLSSq_Mz-C-T94O.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402302278-nremhj",
+    "ts": "2026-09-14T16:11:42.278Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Artisan Brick",
+      "image_url": "https://fragment.com/file/gifts/artisanbrick/model.sN0tChrSjwHyd2C8uFe4ZrvTqHLJdGb5BH-RzIvtz0W1RZvoyexk40uacoaJogpj.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402302275-dsxfsg",
+    "ts": "2026-09-14T16:11:42.275Z",
+    "firstName": "Web",
+    "price": 25,
+    "isGram": true,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402294276-aj7w6q",
+    "ts": "2026-09-14T16:11:34.276Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Astral Shard",
+      "image_url": "https://fragment.com/file/gifts/astralshard/model.J6lsn0Ls2RAV28ImJrJm-vp9LYJhYKYl-qJNA2SawzQnhVlI3B1iP9puIoQSgx5n.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402291682-yyj6lh",
+    "ts": "2026-09-14T16:11:31.682Z",
+    "firstName": "Web",
+    "price": 25,
+    "isGram": true,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402291680-dyzhp2",
+    "ts": "2026-09-14T16:11:31.680Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Low Rider",
+      "image_url": "https://fragment.com/file/gifts/lowrider/model.4mO4m2tNaVnWvUQEi-A4lCnpjM0uJE9VPvlMquS9QYSd2PmEEGLSSq_Mz-C-T94O.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "1789402291678-agxgn6",
+    "ts": "2026-09-14T16:11:31.678Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Artisan Brick",
+      "image_url": "https://fragment.com/file/gifts/artisanbrick/model.sN0tChrSjwHyd2C8uFe4ZrvTqHLJdGb5BH-RzIvtz0W1RZvoyexk40uacoaJogpj.webp"
+    },
+    "price": 25,
+    "isGram": false,
+    "multiplier": 1,
+    "game": "cases"
+  },
+  {
+    "id": "rocket-1789402256136-1337",
+    "ts": "2026-09-14T16:10:56.136Z",
+    "firstName": "Web",
+    "price": 32.25,
+    "isGram": false,
+    "gift": {
+      "id": "105",
+      "name": "Neko Helmet",
+      "slug": "nekohelmet",
+      "rarity": "Common",
+      "description": "Уникальный подарок из коллекции Neko Helmets.",
+      "floor_price_gram": 32.16,
+      "image_url": "https://nft.fragment.com/gift/nekohelmet-1.webp",
+      "animation_url": "",
+      "lottie_url": "https://nft.fragment.com/gift/nekohelmet-1.lottie.json",
+      "uniqueId": "m6srgljfe",
+      "price": 32.16
+    },
+    "multiplier": 2.15
+  },
+  {
     "id": "1789213774445-oddn3j",
     "ts": "2026-09-12T11:49:34.445Z",
     "firstName": "Web",
@@ -1585,828 +2363,6 @@
     "gift": {
       "name": "Winter Wreath",
       "image_url": "https://fragment.com/file/gifts/winterwreath/model.E0zz2eidH_EGY3uKoXZ8HHpDOmA3WYFfI3w2xpSI03Uwbv_hNJgrnVfeadxY3equ.webp"
-    },
-    "price": 5,
-    "isGram": false,
-    "multiplier": 1,
-    "game": "cases"
-  },
-  {
-    "id": "1789213677136-imhjp1",
-    "ts": "2026-09-12T11:47:57.136Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Ice Cream",
-      "image_url": "https://fragment.com/file/gifts/icecream/model.OOpkWM5wh8c8jEBwvL2CpKyijifvQIh03Y02VCZBk_hAFSKpK4vi6HE5oV8n7i03.webp"
-    },
-    "price": 5,
-    "isGram": false,
-    "multiplier": 1,
-    "game": "cases"
-  },
-  {
-    "id": "1789213677134-7ml3qm",
-    "ts": "2026-09-12T11:47:57.134Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Snow Globe",
-      "image_url": "https://nft.fragment.com/gift/snowglobe-1.webp"
-    },
-    "price": 5,
-    "isGram": false,
-    "multiplier": 1,
-    "game": "cases"
-  },
-  {
-    "id": "1789213085880-znkx73",
-    "ts": "2026-09-12T11:38:05.880Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Mini Oscar",
-      "image_url": "https://fragment.com/file/gifts/minioscar/model.pr0FsJY5Rq0064wEssX2ZTNerD7qHJDkVcp64mLzrtyon8aRvpoSZvapkA2Q-DvZ.webp",
-      "slug": "minioscar"
-    },
-    "price": 75.38,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789209581878-hbberh",
-    "ts": "2026-09-12T10:39:41.878Z",
-    "firstName": "Web",
-    "price": 25,
-    "isGram": true,
-    "multiplier": 1,
-    "game": "cases"
-  },
-  {
-    "id": "1789209581875-u7jd8a",
-    "ts": "2026-09-12T10:39:41.875Z",
-    "firstName": "Web",
-    "price": 25,
-    "isGram": true,
-    "multiplier": 1,
-    "game": "cases"
-  },
-  {
-    "id": "1789209578219-lr5f1u",
-    "ts": "2026-09-12T10:39:38.219Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Low Rider",
-      "image_url": "https://fragment.com/file/gifts/lowrider/model.4mO4m2tNaVnWvUQEi-A4lCnpjM0uJE9VPvlMquS9QYSd2PmEEGLSSq_Mz-C-T94O.webp"
-    },
-    "price": 25,
-    "isGram": false,
-    "multiplier": 1,
-    "game": "cases"
-  },
-  {
-    "id": "1789207900814-ieohle",
-    "ts": "2026-09-12T10:11:40.814Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Xmas Stocking",
-      "image_url": "https://fragment.com/file/gifts/xmasstocking/model.HWmQtR1PhrInz4_ajzQ7l3n6atWJ_SMtlIX0HRNfI7BFSLojf6nZwGsyn2UhIw4j.webp"
-    },
-    "price": 5,
-    "isGram": false,
-    "multiplier": 1,
-    "game": "cases"
-  },
-  {
-    "id": "1789205603443-jr1uqx",
-    "ts": "2026-09-12T09:33:23.443Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Low Rider",
-      "image_url": "https://fragment.com/file/gifts/lowrider/model.4mO4m2tNaVnWvUQEi-A4lCnpjM0uJE9VPvlMquS9QYSd2PmEEGLSSq_Mz-C-T94O.webp",
-      "slug": "lowrider"
-    },
-    "price": 54,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789205355073-gf1cbc",
-    "ts": "2026-09-12T09:29:15.073Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Sharp Tongue",
-      "image_url": "https://fragment.com/file/gifts/sharptongue/model.vAFkKQoYv0rjODKDTC4TuCDgE4LsynIfoDGhD0YNz5CtCOCc3uljCYbAolRu1gl5.webp",
-      "slug": "sharptongue",
-      "price": 40
-    },
-    "price": 41.803269230769224,
-    "isGram": false,
-    "multiplier": 1.8653846153846152,
-    "game": "mines"
-  },
-  {
-    "id": "1789205301175-2qlllw",
-    "ts": "2026-09-12T09:28:21.175Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Sleigh Bell",
-      "image_url": "https://fragment.com/file/gifts/sleighbell/model.q5fpEK1YrTYroIF7ybIMQ3FjezDGdbhyiQjLp3yb_XXVbZi6FOqgGAywt1m0ki1Q.webp",
-      "slug": "sleighbell",
-      "price": 6.6
-    },
-    "price": 6.644500000000001,
-    "isGram": false,
-    "multiplier": 1.6166666666666667,
-    "game": "mines"
-  },
-  {
-    "id": "1789205275055-idp7ts",
-    "ts": "2026-09-12T09:27:55.055Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Swag Bag",
-      "image_url": "https://fragment.com/file/gifts/swagbag/model.KO2OquXrpLv_vd8QyAjN49cGdJwulu1vl-upS9_op0waoyzOjrXfsHiE8FHlO4cK.webp",
-      "slug": "swagbag",
-      "price": 5.18
-    },
-    "price": 5.533409090909091,
-    "isGram": false,
-    "multiplier": 2.2045454545454546,
-    "game": "mines"
-  },
-  {
-    "id": "1789205218591-z09sni",
-    "ts": "2026-09-12T09:26:58.591Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Input Key",
-      "image_url": "https://fragment.com/file/gifts/inputkey/model.TiyLrBeIxGs843BSIS_azi7NuxtJciB9WkA0UWh8NBLdCj6jPX_TZVV9THmyChde.webp",
-      "slug": "inputkey",
-      "price": 5.72
-    },
-    "price": 5.8503125,
-    "isGram": false,
-    "multiplier": 1.515625,
-    "game": "mines"
-  },
-  {
-    "id": "1789205188254-haoygq",
-    "ts": "2026-09-12T09:26:28.254Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Restless Jar",
-      "image_url": "https://fragment.com/file/gifts/restlessjar/model.jrlXkXrGJVFpOwmou7KTLtyBw7TeWmjaoGNOo7CH0LrnjlOzFiWE66xznpKac5sm.webp",
-      "slug": "restlessjar",
-      "price": 4.11
-    },
-    "price": 4.134624999999999,
-    "isGram": false,
-    "multiplier": 1.2124999999999997,
-    "game": "mines"
-  },
-  {
-    "id": "1789205167107-vjxkcq",
-    "ts": "2026-09-12T09:26:07.107Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Vice Cream",
-      "image_url": "https://fragment.com/file/gifts/vicecream/model.uHa2XRMqGfX9m5YADG5W39NNUfz_S1SyFaehrdJ4dmQDjwWDUpbHmsFVARoLZZXy.webp",
-      "slug": "vicecream",
-      "price": 2.51
-    },
-    "price": 2.552631578947368,
-    "isGram": false,
-    "multiplier": 1.276315789473684,
-    "game": "mines"
-  },
-  {
-    "id": "1789205055558-ts7r8z",
-    "ts": "2026-09-12T09:24:15.558Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Vice Cream",
-      "image_url": "https://fragment.com/file/gifts/vicecream/model.uHa2XRMqGfX9m5YADG5W39NNUfz_S1SyFaehrdJ4dmQDjwWDUpbHmsFVARoLZZXy.webp",
-      "slug": "vicecream",
-      "price": 2.51
-    },
-    "price": 2.852941176470588,
-    "isGram": false,
-    "multiplier": 1.426470588235294,
-    "game": "mines"
-  },
-  {
-    "id": "1789205045499-ssg9wc",
-    "ts": "2026-09-12T09:24:05.499Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Ice Cream",
-      "image_url": "https://fragment.com/file/gifts/icecream/model.OOpkWM5wh8c8jEBwvL2CpKyijifvQIh03Y02VCZBk_hAFSKpK4vi6HE5oV8n7i03.webp",
-      "slug": "icecream",
-      "price": 2.01
-    },
-    "price": 2.309523809523809,
-    "isGram": false,
-    "multiplier": 1.1547619047619044,
-    "game": "mines"
-  },
-  {
-    "id": "1789205027433-t9jwno",
-    "ts": "2026-09-12T09:23:47.433Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Vice Cream",
-      "image_url": "https://fragment.com/file/gifts/vicecream/model.uHa2XRMqGfX9m5YADG5W39NNUfz_S1SyFaehrdJ4dmQDjwWDUpbHmsFVARoLZZXy.webp",
-      "slug": "vicecream",
-      "price": 2.51
-    },
-    "price": 3.03125,
-    "isGram": false,
-    "multiplier": 1.515625,
-    "game": "mines"
-  },
-  {
-    "id": "1789204996154-g7ntng",
-    "ts": "2026-09-12T09:23:16.154Z",
-    "firstName": "Web",
-    "price": 1.426470588235294,
-    "isGram": true,
-    "multiplier": 1.426470588235294,
-    "game": "mines"
-  },
-  {
-    "id": "1789204744239-ki4ye4",
-    "ts": "2026-09-12T09:19:04.239Z",
-    "firstName": "Web",
-    "price": 0.10543478260869565,
-    "isGram": true,
-    "multiplier": 1.0543478260869565,
-    "game": "mines"
-  },
-  {
-    "id": "1789204718844-jpsuu0",
-    "ts": "2026-09-12T09:18:38.844Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Spy Agaric",
-      "image_url": "https://nft.fragment.com/gift/spyagaric-1.webp",
-      "slug": "spyagaric"
-    },
-    "price": 5.17,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789204232449-n6vbev",
-    "ts": "2026-09-12T09:10:32.449Z",
-    "firstName": "Web",
-    "price": 1.0543478260869565,
-    "isGram": true,
-    "multiplier": 1.0543478260869565,
-    "game": "mines"
-  },
-  {
-    "id": "1789204215986-es50a4",
-    "ts": "2026-09-12T09:10:15.986Z",
-    "firstName": "Web",
-    "price": 1.102272727272727,
-    "isGram": true,
-    "multiplier": 1.102272727272727,
-    "game": "mines"
-  },
-  {
-    "id": "1789204209038-i6yuq3",
-    "ts": "2026-09-12T09:10:09.038Z",
-    "firstName": "Web",
-    "price": 1.2124999999999997,
-    "isGram": true,
-    "multiplier": 1.2124999999999997,
-    "game": "mines"
-  },
-  {
-    "id": "1789204087717-fh8gfz",
-    "ts": "2026-09-12T09:08:07.717Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Instant Ramen",
-      "image_url": "https://fragment.com/file/gifts/instantramen/model.96xsAtRexYjUsiMou-aJUIP6ADSSNSzd1P_YRLprpT8yiPLqW2syOu_7F5Bf5U_-.webp",
-      "slug": "instantramen"
-    },
-    "price": 3.41,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789204083005-zxntqm",
-    "ts": "2026-09-12T09:08:03.005Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Lol Pop",
-      "image_url": "https://fragment.com/file/gifts/lolpop/model.k1XIQ3DELPtY56vCwCFjLXUjbEF04CesqNkRid_FoYs6gynM04i1yQ3tPfnJo9L7.webp",
-      "slug": "lolpop"
-    },
-    "price": 3.4,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789204076962-0xlhd3",
-    "ts": "2026-09-12T09:07:56.962Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Winter Wreath",
-      "image_url": "https://fragment.com/file/gifts/winterwreath/model.E0zz2eidH_EGY3uKoXZ8HHpDOmA3WYFfI3w2xpSI03Uwbv_hNJgrnVfeadxY3equ.webp",
-      "slug": "winterwreath"
-    },
-    "price": 3.32,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789204069479-6vqt3v",
-    "ts": "2026-09-12T09:07:49.479Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Snake Box",
-      "image_url": "https://fragment.com/file/gifts/snakebox/model.spylZAJ2KDZ_xzEY41nAXzkld-naLHcx0Jaz3jvN9unaWgsL-b1GhRbGCP7WauTV.webp",
-      "slug": "snakebox"
-    },
-    "price": 3.21,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789204062476-g9qe4n",
-    "ts": "2026-09-12T09:07:42.476Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Chill Flame",
-      "image_url": "https://fragment.com/file/gifts/chillflame/model.Vgm-793yPILRdkecWqYcydptrLQV-UBGOAZZ53MoNcXfqR0V-D6keb6tKBhCpyRT.webp",
-      "slug": "chillflame"
-    },
-    "price": 2.51,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789204055556-mfng13",
-    "ts": "2026-09-12T09:07:35.556Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Ice Cream",
-      "image_url": "https://fragment.com/file/gifts/icecream/model.OOpkWM5wh8c8jEBwvL2CpKyijifvQIh03Y02VCZBk_hAFSKpK4vi6HE5oV8n7i03.webp",
-      "slug": "icecream"
-    },
-    "price": 2.01,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789203195109-h374lo",
-    "ts": "2026-09-12T08:53:15.109Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Swiss Watch",
-      "image_url": "https://fragment.com/file/gifts/swisswatch/model.t7GGHOAsBzNcBGMVQBrhH7r4pnkWPMbwiMA6w8ZagRzTVd_0AebPhWwuLWqgFC1w.webp",
-      "slug": "swisswatch"
-    },
-    "price": 49.82,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789203176988-1fz5km",
-    "ts": "2026-09-12T08:52:56.988Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Gem Signet",
-      "image_url": "https://fragment.com/file/gifts/gemsignet/model.eUYgzwSwZZZG2zA4DIwcps5R6BeeQesJjqXBDwQeiMkHpJzPCj6FgqKQr1Q-fvZ9.webp",
-      "slug": "gemsignet"
-    },
-    "price": 61.4,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789203162652-sr1goi",
-    "ts": "2026-09-12T08:52:42.652Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Precious Peaches",
-      "image_url": "https://fragment.com/file/gifts/preciouspeach/model.yX5OYEKWccguefFYCUDZDZzhR-A2Vfr4lEIkeFDJQSElsIaGA0aYUiXCgXsfc9WD.webp",
-      "slug": "preciouspeach"
-    },
-    "price": 255.27,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789203104291-87s68b",
-    "ts": "2026-09-12T08:51:44.291Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Rare Bird",
-      "image_url": "https://fragment.com/file/gifts/rarebird/model.IVOoY8QADLOM9ex_sWDZj6AIFNhDhXWHx5vlS6fbzphHqRfzlfDNoUjYFUX3l4n3.webp",
-      "slug": "rarebird"
-    },
-    "price": 24.4,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789196761333-i41v1g",
-    "ts": "2026-09-12T07:06:01.333Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Vintage Cigar",
-      "image_url": "https://fragment.com/file/gifts/vintagecigar/model.X3niZ8BcF_BjB7K7pqBPm5BrLIQm9YKIzGlVe2XhLBEkHJz2ED-n2Mb88UMkNcGh.webp",
-      "slug": "vintagecigar"
-    },
-    "price": 31.91,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789193969341-63qvbk",
-    "ts": "2026-09-12T06:19:29.341Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Ice Cream",
-      "image_url": "https://fragment.com/file/gifts/icecream/model.OOpkWM5wh8c8jEBwvL2CpKyijifvQIh03Y02VCZBk_hAFSKpK4vi6HE5oV8n7i03.webp",
-      "slug": "icecream"
-    },
-    "price": 2.01,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789193955636-8jtmie",
-    "ts": "2026-09-12T06:19:15.636Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Big Year",
-      "image_url": "https://fragment.com/file/gifts/bigyear/model.tyVO8a6JQufq-UpLSv5e-dlrpVOUfOw45EULQUksr1rsxAkB-liapmVcYkwyTFgG.webp",
-      "slug": "bigyear"
-    },
-    "price": 3.82,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789193087896-lj198u",
-    "ts": "2026-09-12T06:04:47.896Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "UFC Strike",
-      "image_url": "https://fragment.com/file/gifts/ufcstrike/model.bCYCXy2LScnfDY8dygGONJXM4fhBEH0vwPXOv4mjIUDSjIGCI9_Sg08xuI1Mm5VC.webp",
-      "slug": "ufcstrike"
-    },
-    "price": 15.31,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789192352781-f8jixw",
-    "ts": "2026-09-12T05:52:32.781Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Mood Pack",
-      "image_url": "https://fragment.com/file/gifts/moodpack/model.9R010yxu21-CkzWocYv6nbbC99K3EuEldp2AazrTVE-K9AZRCW35Y8QaSV1nxO-x.webp",
-      "slug": "moodpack"
-    },
-    "price": 3.86,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789191813730-78lekr",
-    "ts": "2026-09-12T05:43:33.730Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Loot Bag",
-      "image_url": "https://fragment.com/file/gifts/lootbag/model.dwOxN29t6_6TTbF08WGuZqJQYvBSYvO1fYX1Gusiw2grL_7aB9flNPRIn7zGI0x-.webp",
-      "slug": "lootbag"
-    },
-    "price": 122,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789191780787-ro0462",
-    "ts": "2026-09-12T05:43:00.787Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Sharp Tongue",
-      "image_url": "https://fragment.com/file/gifts/sharptongue/model.vAFkKQoYv0rjODKDTC4TuCDgE4LsynIfoDGhD0YNz5CtCOCc3uljCYbAolRu1gl5.webp",
-      "slug": "sharptongue"
-    },
-    "price": 40,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789191747742-qn5dta",
-    "ts": "2026-09-12T05:42:27.742Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Bonded Ring",
-      "image_url": "https://fragment.com/file/gifts/bondedring/model.qkLbnUGUWMLNzAU74rIJfOKGoI5fkU1z7-_VWlN7RoL_VJmjF5pXqOydpzdZWuih.webp",
-      "slug": "bondedring"
-    },
-    "price": 37,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789191713311-2d9p68",
-    "ts": "2026-09-12T05:41:53.311Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Toy Bear",
-      "image_url": "https://fragment.com/file/gifts/toybear/model.GGvGv9n5R1W91Cyg7_DzG6iZ7TaZBUfyVMXxknHf1d0XeD9b6KQ9dAhed2WkfrJv.webp",
-      "slug": "toybear"
-    },
-    "price": 35.9,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789191618575-bcp74c",
-    "ts": "2026-09-12T05:40:18.575Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Eternal Rose",
-      "image_url": "https://fragment.com/file/gifts/eternalrose/model.ErDsgAggUUw8DXvdOBzp16QlE4P0FMApQ4q8UN4FALDlFG9hSFgRPBzkGWImXMvE.webp",
-      "slug": "eternalrose"
-    },
-    "price": 25,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789191544729-wuvqfv",
-    "ts": "2026-09-12T05:39:04.729Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Eternal Rose",
-      "image_url": "https://fragment.com/file/gifts/eternalrose/model.DlEro-3Dfi7ayBIAIJ79Q-yIjLW1jwXT07zx_YFkLCcFE41jjRYH2aGycxPkT9-_.webp",
-      "slug": "eternalrose"
-    },
-    "price": 25,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789191408509-7q0gh2",
-    "ts": "2026-09-12T05:36:48.509Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Khabib's Papakha",
-      "image_url": "https://fragment.com/file/gifts/khabibspapakha/model.PzsjmmKoPLWCUz0hkTAuOMIb_B1bG739XWsiJPSORtATaW7vskbbp2p7Dkb4M9Zr.webp",
-      "slug": "khabibspapakha"
-    },
-    "price": 23.15,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789191393904-6g5u9y",
-    "ts": "2026-09-12T05:36:33.904Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Electric Skull",
-      "image_url": "https://fragment.com/file/gifts/electricskull/model.jLOexiGY6ycVMnM_E9jayxcQ7LSeVz9w4W31KhSkoou-bSeuEQltmsGeH-DtpD2R.webp",
-      "slug": "electricskull"
-    },
-    "price": 22.41,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789191311254-dvju8m",
-    "ts": "2026-09-12T05:35:11.254Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Kissed Frog",
-      "image_url": "https://fragment.com/file/gifts/kissedfrog/model.H5mjFGYmHH_9_nN-CRGjB_PpK_a-BLYQm7E-GWiD3uI-jAuS1Y85y7Z50hm9i-dV.webp",
-      "slug": "kissedfrog"
-    },
-    "price": 37.79,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789191295711-uhzhgl",
-    "ts": "2026-09-12T05:34:55.711Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Neko Helmet",
-      "image_url": "https://fragment.com/file/gifts/nekohelmet/model.Xzq1LnW22fcKHTWZt97GTvc2v90xo20SMRNbji0_12yWnLWv6S0a5zAW3GmG7BDK.webp",
-      "slug": "nekohelmet"
-    },
-    "price": 32.16,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789191189869-knpwj7",
-    "ts": "2026-09-12T05:33:09.869Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Swag Bag",
-      "image_url": "https://fragment.com/file/gifts/swagbag/model.KO2OquXrpLv_vd8QyAjN49cGdJwulu1vl-upS9_op0waoyzOjrXfsHiE8FHlO4cK.webp",
-      "slug": "swagbag"
-    },
-    "price": 5.18,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789191149298-t70nhz",
-    "ts": "2026-09-12T05:32:29.298Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Swag Bag",
-      "image_url": "https://fragment.com/file/gifts/swagbag/model.7awWH_krJzabkPsYiLz4WQEu2bI7wDQLDidKbvL_87BaRYcDzwscVJ1aMor7natg.webp",
-      "slug": "swagbag"
-    },
-    "price": 5.18,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789156846855-sl81rj",
-    "ts": "2026-09-11T20:00:46.855Z",
-    "firstName": "Игрок",
-    "gift": {
-      "name": "Signet Ring",
-      "image_url": "https://nft.fragment.com/gift/signetring-1.webp",
-      "slug": "signetring"
-    },
-    "price": 32.13,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789156756434-v27ht0",
-    "ts": "2026-09-11T19:59:16.434Z",
-    "firstName": "Игрок",
-    "gift": {
-      "name": "Diamond Ring",
-      "image_url": "https://fragment.com/file/gifts/diamondring/model.f75P5U4QwTBOiSR4Y17ej6JOEWfOz2L2RdIWGCjlQcf9ojl-nzzLV74MS9q3Zk3u.webp",
-      "slug": "diamondring"
-    },
-    "price": 29.88,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789156743350-k2cwer",
-    "ts": "2026-09-11T19:59:03.350Z",
-    "firstName": "Игрок",
-    "gift": {
-      "name": "Valentine Boxes",
-      "image_url": "https://fragment.com/file/gifts/valentinebox/model.TEB8rhi_K9f31_4CnlCmN8vnlgNqSnxHN7SNgbCzDDqHVO4LL8VMUsYeT0lhAJBP.webp",
-      "slug": "valentinebox"
-    },
-    "price": 11.06,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789156739478-4mqlnu",
-    "ts": "2026-09-11T19:58:59.478Z",
-    "firstName": "Игрок",
-    "gift": {
-      "name": "Evil Eye",
-      "image_url": "https://fragment.com/file/gifts/evileye/model.f2eWdkcLhQFINTntpy-rn_RRTKvL4mLdI8_2eXTDyfgojBblkh_-vGnySYGzzov4.webp",
-      "slug": "evileye"
-    },
-    "price": 7.04,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789156721545-856ecf",
-    "ts": "2026-09-11T19:58:41.545Z",
-    "firstName": "Игрок",
-    "gift": {
-      "name": "Input Key",
-      "image_url": "https://fragment.com/file/gifts/inputkey/model.TiyLrBeIxGs843BSIS_azi7NuxtJciB9WkA0UWh8NBLdCj6jPX_TZVV9THmyChde.webp",
-      "slug": "inputkey"
-    },
-    "price": 5.72,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789156561622-d7jd0t",
-    "ts": "2026-09-11T19:56:01.622Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Scared Cat",
-      "image_url": "https://fragment.com/file/gifts/scaredcat/model.EP6wL8TV1FHvJm0I8M40_wp6bpLZS9Zl_OBBLrWT2kMlMuiP0lZa6j_S38giTwcl.webp",
-      "slug": "scaredcat"
-    },
-    "price": 185.93,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789155996645-72dkpp",
-    "ts": "2026-09-11T19:46:36.645Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Trapped Heart",
-      "image_url": "https://nft.fragment.com/gift/trappedheart-1.webp",
-      "slug": "trappedheart"
-    },
-    "price": 15.08,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789155983514-v50hm9",
-    "ts": "2026-09-11T19:46:23.514Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Hanging Star",
-      "image_url": "https://fragment.com/file/gifts/hangingstar/model.ianzHh2G0PrEJGx_PYIsziEWif0FVbPtNMA_qRNQwevwJ7zLvgqQGvVAndc3QLwW.webp",
-      "slug": "hangingstar"
-    },
-    "price": 9.05,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789155891549-il7231",
-    "ts": "2026-09-11T19:44:51.549Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Low Rider",
-      "image_url": "https://fragment.com/file/gifts/lowrider/model.4mO4m2tNaVnWvUQEi-A4lCnpjM0uJE9VPvlMquS9QYSd2PmEEGLSSq_Mz-C-T94O.webp",
-      "slug": "lowrider"
-    },
-    "price": 54,
-    "isGram": false,
-    "game": "upgrade"
-  },
-  {
-    "id": "1789155861464-ceaji1",
-    "ts": "2026-09-11T19:44:21.464Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Perfume Bottle",
-      "image_url": "https://fragment.com/file/gifts/perfumebottle/model.fZHol3ISYXWN6-wkzGVWbm_LK309Z0mNXhPcQ-sd3DkdZ3QsCDrRfTjH-U4OqgKU.webp"
-    },
-    "price": 5,
-    "isGram": false,
-    "multiplier": 1,
-    "game": "cases"
-  },
-  {
-    "id": "1789155861462-d7z3bt",
-    "ts": "2026-09-11T19:44:21.462Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Ice Cream",
-      "image_url": "https://fragment.com/file/gifts/icecream/model.OOpkWM5wh8c8jEBwvL2CpKyijifvQIh03Y02VCZBk_hAFSKpK4vi6HE5oV8n7i03.webp"
-    },
-    "price": 5,
-    "isGram": false,
-    "multiplier": 1,
-    "game": "cases"
-  },
-  {
-    "id": "1789155861458-p96jos",
-    "ts": "2026-09-11T19:44:21.458Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Candy Cane",
-      "image_url": "https://fragment.com/file/gifts/candycane/model.VFbuebgC7lyesvreOskTRrUIFjvLV0lGCie-5nCteGpLXh1EPtYQpafQnvNF_sHX.webp"
-    },
-    "price": 5,
-    "isGram": false,
-    "multiplier": 1,
-    "game": "cases"
-  },
-  {
-    "id": "1789155858839-0o6xl1",
-    "ts": "2026-09-11T19:44:18.839Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Jingle Bells",
-      "image_url": "https://nft.fragment.com/gift/jinglebells-1.webp"
-    },
-    "price": 5,
-    "isGram": false,
-    "multiplier": 1,
-    "game": "cases"
-  },
-  {
-    "id": "1789155858837-7vk95f",
-    "ts": "2026-09-11T19:44:18.837Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Santa Hat",
-      "image_url": "https://fragment.com/file/gifts/santahat/model.dyQmp0e-vFlZcT3i55982orqdu9D6GaTdsdyq4_ns8zq6ySuAQIvqhtxGm4zjrLB.webp"
     },
     "price": 5,
     "isGram": false,

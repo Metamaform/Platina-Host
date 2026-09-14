@@ -7,6 +7,39 @@
     <meta name="description" content="Platina Gift Shop and Crash Game" />
     <script>
       (function() {
+        // Fix for Safari's strict atob which throws on whitespaces/newlines (Chrome ignores them)
+        var originalAtob = window.atob;
+        window.atob = function(str) {
+          try {
+            return originalAtob(str);
+          } catch(e) {
+            if (e.name === 'InvalidCharacterError') {
+              try {
+                return originalAtob(String(str).replace(/[^A-Za-z0-9+/=]/g, ''));
+              } catch(e2) {}
+            }
+            throw e;
+          }
+        };
+
+        // Fix for Safari's btoa throwing on unicode characters
+        var originalBtoa = window.btoa;
+        window.btoa = function(str) {
+          try {
+            return originalBtoa(str);
+          } catch(e) {
+            if (e.name === 'InvalidCharacterError') {
+              try {
+                return originalBtoa(unescape(encodeURIComponent(str)));
+              } catch(e2) {}
+            }
+            throw e;
+          }
+        };
+      })();
+    </script>
+    <script>
+      (function() {
         var _localFallback = {};
         var _sessionFallback = {};
         var createStorage = function(fallback) {
