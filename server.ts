@@ -1130,13 +1130,16 @@ app.get("/api/admin/gifts", (req, res) => {
     res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
   });
 
-  app.listen(PORT, "0.0.0.0", () => {
-
-    console.log(`Server running on http://localhost:${PORT}`);
-    if (!process.env.TELEGRAM_BOT_TOKEN) {
-      console.warn("[auth] TELEGRAM_BOT_TOKEN не задан — авторизация через Telegram будет всегда отклоняться.");
-    }
-  });
+  if (!process.env.VERCEL) {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+      if (!process.env.TELEGRAM_BOT_TOKEN) {
+        console.warn("[auth] TELEGRAM_BOT_TOKEN не задан — авторизация через Telegram будет всегда отклоняться.");
+      }
+    });
+  }
+  
+  return app;
 }
 
-startServer();
+export const appPromise = startServer();
