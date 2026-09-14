@@ -11,7 +11,7 @@ import { getFragmentGiftPrices } from "./src/lib/fragmentPrices.server.ts";
 import { getRocketState, placeRocketBet, cashoutRocketBet } from "./src/lib/rocket.server.ts";
 import baseGiftsDb from "./src/gifts_data.json" with { type: "json" };
 
-const botToken = process.env.TELEGRAM_BOT_TOKEN || "";
+const botToken = (process.env.TELEGRAM_BOT_TOKEN || "").trim();
 const bot = botToken ? new TelegramBot(botToken, { polling: true }) : null;
 
 let cachedGramPriceUsd = 0.00084;
@@ -295,7 +295,7 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
         }
         tgUser = { id: 1337, first_name: "Web", last_name: "Tester", username: "webtester" };
       } else {
-        const botToken = process.env.TELEGRAM_BOT_TOKEN || "";
+        const botToken = (process.env.TELEGRAM_BOT_TOKEN || "").trim();
         const verifyResult = verifyTelegramInitData(initData, botToken);
         tgUser = verifyResult.user;
         startParam = verifyResult.startParam;

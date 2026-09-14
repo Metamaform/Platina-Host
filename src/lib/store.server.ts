@@ -68,7 +68,7 @@ export function saveCasesConfig(cases: CaseConfig[]) {
 }
 const TASKS_FILE = path.join(DATA_DIR, 'tasks.json');
 const MAX_OPENS = 200;
-const STARTING_BALANCE = 1100; // 100 стартовый баланс + 1000 бонус, как было раньше в localStorage-версии
+const STARTING_BALANCE = 0; // 0 стартовый баланс
 
 function ensureDataDir() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });

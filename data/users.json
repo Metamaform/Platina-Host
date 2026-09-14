@@ -2,8 +2,21 @@
   "1337": {
     "id": 1337,
     "username": "webtester",
-    "balance": 977764.3,
+    "balance": 927958.1,
     "inventory": [
+      {
+        "id": "117",
+        "name": "Biscuit",
+        "slug": "joyfulbundle",
+        "rarity": "Common",
+        "description": "Уникальный подарок из коллекции Joyful Bundles.",
+        "floor_price_gram": 6.33,
+        "image_url": "https://fragment.com/file/gifts/joyfulbundle/model.PkeZgDtL-9Qs7UX3kHl4d2KQI53wGdueijuehwk7Z3Sri4P0cSLGr49vqsbpV1xX.webp",
+        "animation_url": "",
+        "lottie_url": "https://fragment.com/file/gifts/joyfulbundle/model.PkeZgDtL-9Qs7UX3kHl4d2KQI53wGdueijuehwk7Z3Sri4P0cSLGr49vqsbpV1xX.webp",
+        "uniqueId": "1789405973445",
+        "price": 6.33
+      },
       {
         "id": "110",
         "name": "Glossy Hot",
@@ -16,13 +29,117 @@
         "lottie_url": "https://fragment.com/file/gifts/sharptongue/model.0PVzYP8KnRPT-4sQ055l3_MXRHt-zuSJcSBCpOo_lz9BA1rjQTneSy64bWKtK8xd.webp",
         "uniqueId": "e737s6lpy",
         "price": 40
+      },
+      {
+        "id": "99",
+        "name": "Plush Pepe",
+        "slug": "plushpepe",
+        "rarity": "Mythic",
+        "description": "Уникальный подарок из коллекции Plush Pepes.",
+        "floor_price_gram": 5555,
+        "image_url": "https://fragment.com/file/gifts/plushpepe/model.U8pyFGdc2Sg2jMq3nRwlAUZut_CrlFBUI4WkqdqBbMKKfbNZ0-2o9qBExwzyjsK3.webp",
+        "animation_url": "",
+        "lottie_url": "https://fragment.com/file/gifts/plushpepe/model.U8pyFGdc2Sg2jMq3nRwlAUZut_CrlFBUI4WkqdqBbMKKfbNZ0-2o9qBExwzyjsK3.webp",
+        "uniqueId": "fcjmjafxl",
+        "price": 5555
+      },
+      {
+        "id": "99",
+        "name": "Plush Pepe",
+        "slug": "plushpepe",
+        "rarity": "Mythic",
+        "description": "Уникальный подарок из коллекции Plush Pepes.",
+        "floor_price_gram": 5555,
+        "image_url": "https://fragment.com/file/gifts/plushpepe/model.U8pyFGdc2Sg2jMq3nRwlAUZut_CrlFBUI4WkqdqBbMKKfbNZ0-2o9qBExwzyjsK3.webp",
+        "animation_url": "",
+        "lottie_url": "https://fragment.com/file/gifts/plushpepe/model.U8pyFGdc2Sg2jMq3nRwlAUZut_CrlFBUI4WkqdqBbMKKfbNZ0-2o9qBExwzyjsK3.webp",
+        "uniqueId": "zf80o8f0d",
+        "price": 5555
+      },
+      {
+        "id": "66",
+        "name": "Gold",
+        "slug": "signetring",
+        "rarity": "Common",
+        "description": "Уникальный подарок из коллекции Signet Rings.",
+        "floor_price_gram": 32.35,
+        "image_url": "https://fragment.com/file/gifts/signetring/model.ptl2mJJa1d3Tk8DH63Y5VqT6njjcLea-hPBUmCo5DVTx6RgJbtuiCG9_f6GEiP9s.webp",
+        "animation_url": "",
+        "lottie_url": "https://fragment.com/file/gifts/signetring/model.ptl2mJJa1d3Tk8DH63Y5VqT6njjcLea-hPBUmCo5DVTx6RgJbtuiCG9_f6GEiP9s.webp",
+        "uniqueId": "zrpvijaw6",
+        "price": 32.35
+      },
+      {
+        "id": "99",
+        "name": "Plush Pepe",
+        "slug": "plushpepe",
+        "rarity": "Mythic",
+        "description": "Уникальный подарок из коллекции Plush Pepes.",
+        "floor_price_gram": 5555,
+        "image_url": "https://fragment.com/file/gifts/plushpepe/model.U8pyFGdc2Sg2jMq3nRwlAUZut_CrlFBUI4WkqdqBbMKKfbNZ0-2o9qBExwzyjsK3.webp",
+        "animation_url": "",
+        "lottie_url": "https://fragment.com/file/gifts/plushpepe/model.U8pyFGdc2Sg2jMq3nRwlAUZut_CrlFBUI4WkqdqBbMKKfbNZ0-2o9qBExwzyjsK3.webp",
+        "uniqueId": "y64vsiav3",
+        "price": 5555
+      },
+      {
+        "id": "76",
+        "name": "Voodoo Doll",
+        "slug": "voodoodoll",
+        "rarity": "Common",
+        "description": "Уникальный подарок из коллекции Voodoo Dolls.",
+        "floor_price_gram": 35.48,
+        "image_url": "https://nft.fragment.com/gift/voodoodoll-1.lottie.json",
+        "animation_url": "",
+        "lottie_url": "https://nft.fragment.com/gift/voodoodoll-1.lottie.json",
+        "uniqueId": "17894073907900.8749039118254978",
+        "acquiredAt": "2026-09-14T17:36:30.790Z"
+      },
+      {
+        "id": "96",
+        "name": "Happy End",
+        "slug": "electricskull",
+        "rarity": "Common",
+        "description": "Уникальный подарок из коллекции Electric Skulls.",
+        "floor_price_gram": 22.41,
+        "image_url": "https://fragment.com/file/gifts/electricskull/model.jLOexiGY6ycVMnM_E9jayxcQ7LSeVz9w4W31KhSkoou-bSeuEQltmsGeH-DtpD2R.webp",
+        "animation_url": "",
+        "lottie_url": "https://fragment.com/file/gifts/electricskull/model.jLOexiGY6ycVMnM_E9jayxcQ7LSeVz9w4W31KhSkoou-bSeuEQltmsGeH-DtpD2R.webp",
+        "uniqueId": "17894073907900.20129005154499047",
+        "acquiredAt": "2026-09-14T17:36:30.790Z"
+      },
+      {
+        "id": "76",
+        "name": "Voodoo Doll",
+        "slug": "voodoodoll",
+        "rarity": "Common",
+        "description": "Уникальный подарок из коллекции Voodoo Dolls.",
+        "floor_price_gram": 35.48,
+        "image_url": "https://nft.fragment.com/gift/voodoodoll-1.lottie.json",
+        "animation_url": "",
+        "lottie_url": "https://nft.fragment.com/gift/voodoodoll-1.lottie.json",
+        "uniqueId": "17894073907900.9743001617248166",
+        "acquiredAt": "2026-09-14T17:36:30.790Z"
+      },
+      {
+        "id": "112",
+        "name": "Mercurial",
+        "slug": "heroichelmet",
+        "rarity": "Epic",
+        "description": "Уникальный подарок из коллекции Heroic Helmets.",
+        "floor_price_gram": 170.85,
+        "image_url": "https://fragment.com/file/gifts/heroichelmet/model.ak6bqjZwp3q_Gn8Y5_FeefZTXctEmHAFXkmp0lvFH5DfaNLfuedLl2yBMZVNVv8G.webp",
+        "animation_url": "",
+        "lottie_url": "",
+        "uniqueId": "ecgqko9xh",
+        "price": 170.85
       }
     ],
-    "turnover": 477210.3770038732,
+    "turnover": 527450.3770038732,
     "topups": [],
     "createdAt": "2026-09-02T04:58:46.689Z",
-    "updatedAt": "2026-09-14T16:39:07.806Z",
-    "seasonTurnover": 32813.20999999996,
+    "updatedAt": "2026-09-14T19:55:07.462Z",
+    "seasonTurnover": 83053.21000000002,
     "needsReload": false,
     "completedTasks": {
       "1788541215086": {
@@ -58,12 +175,19 @@
     "firstName": "Metamaform",
     "lastName": "",
     "username": "Metamaform",
-    "balance": 1100,
+    "balance": 1100.12,
     "inventory": [],
     "createdAt": "2026-09-06T08:36:53.874Z",
-    "updatedAt": "2026-09-06T08:36:53.874Z",
-    "languageCode": "zh",
-    "seasonTurnover": 0
+    "updatedAt": "2026-09-14T17:51:31.556Z",
+    "languageCode": "ru",
+    "seasonTurnover": 0,
+    "topups": [
+      {
+        "id": "stars_5698050836_10_0.12_1789408288590",
+        "amount": 0.12,
+        "ts": "2026-09-14T17:51:31.556Z"
+      }
+    ]
   },
   "6053797273": {
     "id": 6053797273,
