@@ -11,7 +11,7 @@ import path from 'path';
  * можно оставить тем же.
  */
 
-const DATA_DIR = path.join(process.cwd(), 'data');
+const DATA_DIR = process.env.VERCEL ? path.join('/tmp', 'data') : path.join(process.cwd(), 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const OPENS_FILE = path.join(DATA_DIR, 'opens.json');
 const ADMIN_CONFIG_FILE = path.join(DATA_DIR, 'admin_config.json');

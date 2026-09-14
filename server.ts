@@ -1125,7 +1125,7 @@ app.get("/api/admin/gifts", (req, res) => {
   // Global error handler
 
   app.use((err: any, req: any, res: any, next: any) => {
-    try { fs.appendFileSync('error.log', new Date().toISOString() + ': ' + (err.stack || err.message || err) + '\n'); } catch (e) {}
+    try { fs.appendFileSync(process.env.VERCEL ? '/tmp/error.log' : 'error.log', new Date().toISOString() + ': ' + (err.stack || err.message || err) + '\n'); } catch (e) {}
     console.error('Global error handler caught:', err);
     res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
   });
