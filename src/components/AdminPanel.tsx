@@ -456,7 +456,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
                               const newDb = [...giftsDb];
                               newDb[existingIndex] = {
                                 ...newDb[existingIndex],
-                                name: v.name,
                                 image_url: v.image,
                                 lottie_url: ''
                               };
@@ -465,7 +464,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
                               const newGift = {
                                 ...base,
                                 id: Date.now().toString(),
-                                name: v.name,
+                                name: base.name,
                                 image_url: v.image,
                                 lottie_url: ''
                               };
@@ -630,7 +629,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
                         onClick={() => {
                           setEditForm((prev: any) => ({
                             ...prev,
-                            name: v.name,
                             image_url: v.image,
                             lottie_url: ''
                           }));

@@ -104,6 +104,25 @@ if (bot) {
     
     const refId = query.query.replace('share_', '');
     const config = getAdminConfig();
+    const user = getUser(query.from.id);
+    const lang = user?.languageCode || 'en';
+    
+    let title = 'Send invitation';
+    let description = 'Sends a beautiful message with a button';
+    let message_text = `<b>🎁 Join Platina Gift and win your NFT gifts!</b>\n\n<b>Get to the weekly top and receive guaranteed prizes!</b>\n\nOur Telegram Channel: @Platina_Gift\nSupport: @Platina_Help`;
+    let playText = '🎮 Start Playing';
+    
+    if (lang === 'ru') {
+      title = 'Отправить приглашение';
+      description = 'Отправит красивое сообщение с кнопкой';
+      message_text = `<b>🎁 Заходи в Platina Gift и выигрывай свои NFT-подарки!</b>\n\n<b>Попади в еженедельный топ и получай гарантированные призы!</b>\n\nНаш Telegram Channel: @Platina_Gift\nТехническая поддержка: @Platina_Help`;
+      playText = '🎮 Начать играть';
+    } else if (lang === 'zh') {
+      title = '发送邀请';
+      description = '发送带有按钮的精美消息';
+      message_text = `<b>🎁 加入 Platina Gift，赢取你的 NFT 礼物！</b>\n\n<b>进入每周排行榜，获得保证奖品！</b>\n\n我们的 Telegram 频道: @Platina_Gift\n技术支持: @Platina_Help`;
+      playText = '🎮 开始游戏';
+    }
     
     // Fallback bot user link if not provided
     const refLink = `https://t.me/PlatinaGiftRobot?start=ref_${refId}`;
@@ -111,15 +130,15 @@ if (bot) {
     const results: any[] = [{
       type: 'article',
       id: '1',
-      title: 'Отправить приглашение',
-      description: 'Отправит красивое сообщение с кнопкой',
+      title: title,
+      description: description,
       input_message_content: {
-        message_text: `<b>🎁 Заходи в Platina Gift и выигрывай свои NFT-подарки!</b>\n\n<b>Попади в еженедельный топ и получай гарантированные призы!</b>\n\nНаш Telegram Channel: @Platina_Gift\nТехническая поддержка: @Platina_Help`,
+        message_text: message_text,
         parse_mode: 'HTML'
       },
       reply_markup: {
         inline_keyboard: [[
-          { text: '🎮 Начать играть', url: refLink }
+          { text: playText, url: refLink }
         ]]
       }
     }];
@@ -173,10 +192,11 @@ if (bot) {
   
   function sendWelcomeMessage(chatId, lang) {
     const config = getAdminConfig();
-    let caption = 'Welcome to the game! 🎮\nOpen gifts, craft NFTs, and compete in the leaderboard.';
-    let playText = 'Start Playing!';
-    let supportText = 'Support';
-    let channelText = 'Our Channel';
+    
+    let caption = '<b>Welcome to Platina Gift!</b> 🎁\n\nOpen exclusive cases, craft unique NFTs, and compete with other players on the leaderboard!\n\n💎 <i>Participate in giveaways and claim your prizes right now.</i>';
+    let playText = '🚀 Start Playing!';
+    let supportText = '👨‍💻 Support';
+    let channelText = '📢 Our Channel';
     
     if (lang === 'ru') {
       caption = '<b>Добро пожаловать в Platina Gift!</b> 🎁\n\nОткрывай эксклюзивные кейсы, крафти уникальные NFT и соревнуйся с другими игроками в таблице лидеров!\n\n💎 <i>Участвуй в раздачах и забирай свои призы прямо сейчас.</i>';
@@ -184,10 +204,10 @@ if (bot) {
       supportText = '👨‍💻 Поддержка';
       channelText = '📢 Наш Канал';
     } else if (lang === 'zh') {
-      caption = '欢迎来到游戏！🎮\n打开礼物，制作NFT，并参与排行榜。';
-      playText = '开始游戏！';
-      supportText = '支持';
-      channelText = '我们的频道';
+      caption = '<b>欢迎来到 Platina Gift！</b> 🎁\n\n开启专属盲盒，制作独特的 NFT，在排行榜上与其他玩家一较高下！\n\n💎 <i>立即参与赠品活动并领取您的奖品。</i>';
+      playText = '🚀 开始游戏！';
+      supportText = '👨‍💻 支持';
+      channelText = '📢 我们的频道';
     }
     
     let appUrl = config.botAppUrl || 'https://t.me/app_bot/app';
@@ -500,12 +520,26 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
     
     if (bot && amount) {
       const config = getAdminConfig();
-      const text = `🎉 <b>Успешное пополнение баланса!</b>\n\nВы пополнили баланс на сумму <b>${amount} GRAM</b>.\n\n<i>Желаем удачной игры и крупных заносов! 🚀</i>`;
+      const user = getUser(userId);
+      const lang = user?.languageCode || 'en';
+      
+      const formattedAmount = Number(amount).toFixed(2);
+      
+      let text = `🎉 <b>Successful top-up!</b>\n\nYou have added <b>${formattedAmount} GRAM</b> to your balance.\n\n<i>Good luck in the game and big wins! 🚀</i>`;
+      let playText = 'Start Playing!';
+      
+      if (lang === 'ru') {
+        text = `🎉 <b>Успешное пополнение баланса!</b>\n\nВы пополнили баланс на сумму <b>${formattedAmount} GRAM</b>.\n\n<i>Желаем удачной игры и крупных заносов! 🚀</i>`;
+        playText = 'Начать играть!';
+      } else if (lang === 'zh') {
+        text = `🎉 <b>充值成功！</b>\n\n您的余额已增加 <b>${formattedAmount} GRAM</b>。\n\n<i>祝您游戏愉快，赢得大奖！ 🚀</i>`;
+        playText = '开始游戏！';
+      }
       
       const appUrl = config.botAppUrl || 'https://t.me/app_bot/app';
       const playButton = appUrl.startsWith('https://t.me/') 
-        ? { text: 'Начать играть!', url: appUrl }
-        : { text: 'Начать играть!', web_app: { url: appUrl } };
+        ? { text: playText, url: appUrl }
+        : { text: playText, web_app: { url: appUrl } };
       const reply_markup = {
         inline_keyboard: [
           [playButton]
@@ -531,12 +565,24 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
     
     if (bot && nftName) {
       const config = getAdminConfig();
-      const text = `🔄 <b>Ваш NFT – ${nftName}, в обработке на вывод!</b>\n\nОбязательно напишите в личные сообщения @platina_relayer для обработки вывода.`;
+      const user = getUser(userId);
+      const lang = user?.languageCode || 'en';
+      
+      let text = `🔄 <b>Your NFT – ${nftName}, is being processed for withdrawal!</b>\n\nPlease send a direct message to @platina_relayer to complete the withdrawal.`;
+      let playText = 'Start Playing!';
+      
+      if (lang === 'ru') {
+        text = `🔄 <b>Ваш NFT – ${nftName}, в обработке на вывод!</b>\n\nОбязательно напишите в личные сообщения @platina_relayer для обработки вывода.`;
+        playText = 'Начать играть!';
+      } else if (lang === 'zh') {
+        text = `🔄 <b>您的 NFT – ${nftName}，正在处理提现！</b>\n\n请务必私信 @platina_relayer 处理提现。`;
+        playText = '开始游戏！';
+      }
       
       const appUrl = config.botAppUrl || 'https://t.me/app_bot/app';
       const playButton = appUrl.startsWith('https://t.me/') 
-        ? { text: 'Начать играть!', url: appUrl }
-        : { text: 'Начать играть!', web_app: { url: appUrl } };
+        ? { text: playText, url: appUrl }
+        : { text: playText, web_app: { url: appUrl } };
       const reply_markup = {
         inline_keyboard: [
           [playButton]
@@ -1124,43 +1170,25 @@ app.get("/api/admin/gifts", (req, res) => {
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
     try {
-      const limit = req.query.limit || 50;
-      const offset = req.query.offset || 0;
-      const collectionParam = req.query.collection as string;
-      const cacheKey = `${collectionParam}-${limit}-${offset}`;
-      const now = Date.now();
-      if (cache.has(cacheKey)) {
-        const cached = cache.get(cacheKey);
-        if (now - cached.timestamp < CACHE_TTL) {
-          return res.json(cached.data);
-        }
-      }
-
-      const COLLECTION_ADDRESS = collectionParam || "EQCE80Aln8YfldnQLwWMvOfloLGgmPY0eGDJz9ufG3gRui3D";
-      const TONAPI_URL = `https://tonapi.io/v2/nfts/collections/${encodeURIComponent(COLLECTION_ADDRESS)}/items`;
-      let response = await fetch(`${TONAPI_URL}?limit=${limit}&offset=${offset}`);
-
-      let retries = 0;
-      while (response.status === 429 && retries < 3) {
-        retries++;
-        console.log(`Rate limited by TonAPI. Retrying in ${retries} seconds...`);
-        await new Promise((resolve) => setTimeout(resolve, retries * 1000));
-        response = await fetch(`${TONAPI_URL}?limit=${limit}&offset=${offset}`);
-      }
-
-      if (!response.ok) {
-        console.warn(`TonAPI failed with ${response.status}. Falling back to currentGiftsDb.`);
-        const numLimit = Number(limit) || 50;
-        const numOffset = Number(offset) || 0;
-        const sliced = (currentGiftsDb as any[]).slice(numOffset, numOffset + numLimit);
-        const fallbackData = { nft_items: sliced };
-        cache.set(cacheKey, { timestamp: now, data: fallbackData });
-        return res.json(fallbackData);
-      }
-
-      const data = await response.json();
-      cache.set(cacheKey, { timestamp: now, data });
-      res.json(data);
+      const limit = Number(req.query.limit) || 50;
+      const offset = Number(req.query.offset) || 0;
+      const sliced = (currentGiftsDb as any[]).slice(offset, offset + limit);
+      
+      const fallbackData = { 
+        nft_items: sliced.map(g => ({
+          metadata: {
+            name: g.name,
+            image: g.image_url,
+            lottie: g.lottie_url,
+            description: g.description
+          },
+          address: g.id || g.slug,
+          collection: { name: "Telegram Gifts" },
+          previews: [{ resolution: "500x500", url: g.image_url }]
+        }))
+      };
+      
+      return res.json(fallbackData);
     } catch (error: any) {
       console.error("Proxy error:", error);
       res.status(500).json({ error: error.message || "Internal Server Error" });

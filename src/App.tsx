@@ -1226,9 +1226,9 @@ export default function App() {
                 <Check className="w-5 h-5 text-green-500" />
               </div>
               <div className="flex flex-col flex-1 min-w-0">
-                <span className="text-white font-bold text-[14px]">Top-up successful!</span>
+                <span className="text-white font-bold text-[14px]">{t('topup_success')}</span>
                 <span className="text-white/70 text-[13px] font-medium flex items-center gap-1">
-                  +{toastMessage.amount} 
+                  +{Number(toastMessage.amount).toFixed(2)} 
                   {toastMessage.method === 'stars' ? (
                     <span className="flex items-center gap-1 text-[#FFD700]"><Star className="w-3.5 h-3.5 fill-current" /> Stars</span>
                   ) : (

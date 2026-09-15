@@ -69,10 +69,13 @@ export function Inventory({
     if (isStartingWithdraw) {
       const token = sessionStorage.getItem('pg_session_token');
       if (token) {
+        const dbItem = giftsDb ? giftsDb.find((g: any) => (item.slug && g.slug === item.slug) || g.name === item.name || g.image_url === item.image_url) : null;
+        const displayName = dbItem ? dbItem.name : item.name;
+        
         fetch('/api/bot/notify-withdraw', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ nftName: item.name })
+          body: JSON.stringify({ nftName: displayName })
         }).catch(console.error);
       }
     }
@@ -204,11 +207,18 @@ export function Inventory({
             {inventory.map((item, i) => {
               let currentPrice = Number(item.price);
               if (giftsDb) {
-                const dbItem = giftsDb.find((g: any) => g.name === item.name || g.image_url === item.image_url);
+                const dbItem = giftsDb.find((g: any) => (item.slug && g.slug === item.slug) || g.name === item.name || g.image_url === item.image_url);
                 if (dbItem && dbItem.floor_price_gram != null) {
                   currentPrice = Number(dbItem.floor_price_gram);
                 }
+                if (dbItem) {
+                  item.displayName = dbItem.name;
+                  item.displayImage = dbItem.lottie_url || dbItem.image_url;
+                }
               }
+              const displayName = item.displayName || item.name;
+              const displayImage = item.displayImage || item.image_url || `/nft/${item.name}.png`;
+
               return (
                 <div
                   key={item.uniqueId || i}
@@ -233,13 +243,13 @@ export function Inventory({
                         loopWithDelay={true} 
                         loopDelayMs={5000} 
                         delayMs={i * 800} 
-                        src={item.image_url || `/nft/${item.name}.png`} 
-                        alt={item.name} 
+                        src={displayImage} 
+                        alt={displayName} 
                         className="w-[85%] h-[85%] object-contain drop-shadow-lg" 
                       />
                     </div>
                     <div className="relative z-20 w-full flex flex-col items-center justify-end shrink-0 pb-1.5 px-1">
-                      <span className="text-[12px] text-white/90 w-full text-center font-bold leading-tight line-clamp-2">{item.name}</span>
+                      <span className="text-[12px] text-white/90 w-full text-center font-bold leading-tight line-clamp-2">{displayName}</span>
                       <span className="text-[13px] font-bold text-white flex items-center justify-center gap-1 mt-0.5">{currentPrice.toFixed(2)} <GramIcon className="w-3.5 h-3.5" /></span>
                     </div>
                     

@@ -138,6 +138,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     'withdraw_note': '* Обратите внимание: при выводе NFT выдаются случайные фоны, узоры и модели.',
     'referrals': 'Реферальная система',
+    'topup_success': 'Успешное пополнение!',
     'deposit_history': 'История пополнений',
     'payment_method': 'Способ оплаты',
     'our_telegram': 'Наш Телеграм',
@@ -338,6 +339,7 @@ const translations: Record<Language, Record<string, string>> = {
     'sell': 'Sell',
     'withdraw_note': '* Note: when withdrawing NFTs, random backgrounds, patterns, and models are issued.',
     'referrals': 'Referral system',
+    'topup_success': 'Top-up successful!',
     'deposit_history': 'Deposit history',
     'payment_method': 'Payment method',
     'our_telegram': 'Our Telegram',
@@ -555,6 +557,7 @@ const translations: Record<Language, Record<string, string>> = {
     'sell': '出售',
     'withdraw_note': '* 注意：提取NFT时，将随机发放背景、图案和模型。',
     'referrals': '推荐系统',
+    'topup_success': '充值成功！',
     'deposit_history': '充值历史',
     'payment_method': '支付方式',
     'our_telegram': '我们的Telegram',
