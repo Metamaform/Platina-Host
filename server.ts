@@ -177,10 +177,10 @@ if (bot) {
     let channelText = 'Our Channel';
     
     if (lang === 'ru') {
-      caption = 'Добро пожаловать в игру! 🎮\nОткрывай подарки, крафти NFT и участвуй в таблице лидеров.';
-      playText = 'Начать играть!';
-      supportText = 'Тех.Поддержка';
-      channelText = 'Наш Телеграм';
+      caption = '<b>Добро пожаловать в Platina Gift!</b> 🎁\n\nОткрывай эксклюзивные кейсы, крафти уникальные NFT и соревнуйся с другими игроками в таблице лидеров!\n\n💎 <i>Участвуй в раздачах и забирай свои призы прямо сейчас.</i>';
+      playText = '🚀 Начать играть!';
+      supportText = '👨‍💻 Поддержка';
+      channelText = '📢 Наш Канал';
     } else if (lang === 'zh') {
       caption = '欢迎来到游戏！🎮\n打开礼物，制作NFT，并参与排行榜。';
       playText = '开始游戏！';
@@ -210,15 +210,18 @@ if (bot) {
     if (config.botStartPhoto && (config.botStartPhoto.startsWith('http') || config.botStartPhoto.startsWith('AgA'))) {
       bot.sendPhoto(chatId, config.botStartPhoto, {
         caption,
+        parse_mode: 'HTML',
         reply_markup: { inline_keyboard: inlineKeyboard }
       }).catch(err => {
         // Fallback silently if photo URL is invalid
         bot.sendMessage(chatId, caption, {
+          parse_mode: 'HTML',
           reply_markup: { inline_keyboard: inlineKeyboard }
         }).catch(e => console.error('[Bot] Failed to send fallback message:', e?.message));
       });
     } else {
       bot.sendMessage(chatId, caption, {
+        parse_mode: 'HTML',
         reply_markup: { inline_keyboard: inlineKeyboard }
       }).catch(e => console.error('[Bot] Failed to send message:', e?.message));
     }
@@ -230,6 +233,17 @@ async function startServer() {
 let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+  app.get('/tonconnect-manifest.json', (req, res) => {
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.headers.host;
+    const fullUrl = `${protocol}://${host}`;
+    res.json({
+      "url": fullUrl,
+      "name": "Platina Gift",
+      "iconUrl": "https://ton.org/download/ton_symbol.png"
+    });
+  });
   app.use((req, res, next) => { res.header("Access-Control-Allow-Origin", "*"); res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"); res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization"); if (req.method === "OPTIONS") { res.sendStatus(200); return; } next(); });
 
   app.post("/api/logs", (req, res) => {
@@ -450,13 +464,12 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
     
     if (bot && amount) {
       const config = getAdminConfig();
-      const text = `Вы пополнили баланс на сумму ${amount} GRAM.`;
+      const text = `🎉 <b>Успешное пополнение баланса!</b>\n\nВы пополнили баланс на сумму <b>${amount} GRAM</b>.\n\n<i>Желаем удачной игры и крупных заносов! 🚀</i>`;
       
       const appUrl = config.botAppUrl || 'https://t.me/app_bot/app';
       const playButton = appUrl.startsWith('https://t.me/') 
         ? { text: 'Начать играть!', url: appUrl }
         : { text: 'Начать играть!', web_app: { url: appUrl } };
-
       const reply_markup = {
         inline_keyboard: [
           [playButton]
@@ -466,9 +479,9 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
       try {
         if (userId && typeof userId === 'number' && userId > 1000) {
           if (config.botTopupPhoto) {
-            bot.sendPhoto(userId, config.botTopupPhoto, { caption: text, reply_markup }).catch(() => {});
+            bot.sendPhoto(userId, config.botTopupPhoto, { caption: text, parse_mode: 'HTML', reply_markup }).catch(() => {});
           } else {
-            bot.sendMessage(userId, text, { reply_markup }).catch(() => {});
+            bot.sendMessage(userId, text, { parse_mode: 'HTML', reply_markup }).catch(() => {});
           }
         }
       } catch (e) {}
@@ -482,13 +495,12 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
     
     if (bot && nftName) {
       const config = getAdminConfig();
-      const text = `Ваш NFT – ${nftName}, в обработке на вывод!\n\nОбязательно напишите в личные сообщения @platina_relayer для обработки вывода.`;
+      const text = `🔄 <b>Ваш NFT – ${nftName}, в обработке на вывод!</b>\n\nОбязательно напишите в личные сообщения @platina_relayer для обработки вывода.`;
       
       const appUrl = config.botAppUrl || 'https://t.me/app_bot/app';
       const playButton = appUrl.startsWith('https://t.me/') 
         ? { text: 'Начать играть!', url: appUrl }
         : { text: 'Начать играть!', web_app: { url: appUrl } };
-
       const reply_markup = {
         inline_keyboard: [
           [playButton]
@@ -498,9 +510,9 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
       try {
         if (userId && typeof userId === 'number' && userId > 1000) {
           if (config.botWithdrawPhoto) {
-            bot.sendPhoto(userId, config.botWithdrawPhoto, { caption: text, reply_markup }).catch(() => {});
+            bot.sendPhoto(userId, config.botWithdrawPhoto, { caption: text, parse_mode: 'HTML', reply_markup }).catch(() => {});
           } else {
-            bot.sendMessage(userId, text, { reply_markup }).catch(() => {});
+            bot.sendMessage(userId, text, { parse_mode: 'HTML', reply_markup }).catch(() => {});
           }
         }
       } catch (e) {}

@@ -359,7 +359,7 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
                          className="flex-1 py-2.5 rounded-[10px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#a855f7] text-white hover:bg-[#9333ea] transition-colors"
                        >
                          <Bomb className="w-3.5 h-3.5 shrink-0" />
-                         <span className="truncate">Мины</span>
+                         <span className="truncate">Mines</span>
                        </button>
                      </div>
                      <button 
@@ -404,7 +404,7 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
                      onClick={() => setResult(null)}
                      className="mt-4 w-full py-4 rounded-[16px] font-bold text-[15px] uppercase tracking-wider z-10 transition-colors bg-white/10 text-white hover:bg-white/20 border border-white/10"
                    >
-                     Закрыть
+                     Close
                    </button>
                  </>
                )}

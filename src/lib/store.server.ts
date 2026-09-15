@@ -555,7 +555,7 @@ export function setUserLanguage(id: number, languageCode: string, profile?: any)
         firstName: profile.first_name || 'Player',
         lastName: profile.last_name || '',
         username: profile.username || '',
-        balance: 1100, // STARTING_BALANCE
+        balance: STARTING_BALANCE,
         inventory: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()

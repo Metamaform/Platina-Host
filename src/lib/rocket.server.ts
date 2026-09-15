@@ -124,14 +124,14 @@ export function placeRocketBet(
   tickRocketEngine();
   const user = getUser(userId);
   if (!user) {
-    return { error: 'Пользователь не найден' };
+    return { error: 'User not found' };
   }
 
   // Check if user already placed a bet in this round
   const existingInRound = currentRound.bets.find(b => b.userId === userId);
   const existingInQueue = currentRound.queuedBets.find(b => b.userId === userId);
   if (existingInRound || existingInQueue) {
-    return { error: 'Ставка на этот раунд уже сделана' };
+    return { error: 'Bet for this round already placed' };
   }
 
   // Validate balance or NFT
@@ -140,24 +140,24 @@ export function placeRocketBet(
 
   if (isGram) {
     if (betAmount < 0.1) {
-      return { error: 'Минимальная ставка 0.1 GRAM' };
+      return { error: 'Minimum bet 0.1 GRAM' };
     }
     if (betAmount > 2500) {
-      return { error: 'Максимальная ставка 2500 GRAM' };
+      return { error: 'Maximum bet 2500 GRAM' };
     }
     if (betAmount > user.balance) {
-      return { error: 'Недостаточно средств на балансе' };
+      return { error: 'Insufficient balance' };
     }
     const newBalance = Number((user.balance - betAmount).toFixed(2));
     const newTurnover = (user.turnover || 0) + betAmount;
     saveUserState(userId, newBalance, user.inventory, newTurnover, user.topups);
   } else {
     // NFT Bet
-    if (!gift) return { error: 'Не выбран предмет NFT' };
+    if (!gift) return { error: 'NFT item not selected' };
     const invItem = user.inventory.find((i: any) => 
       (gift.uniqueId && i.uniqueId === gift.uniqueId) || (i.id === gift.id)
     );
-    if (!invItem) return { error: 'Предмет не найден в инвентаре' };
+    if (!invItem) return { error: 'Item not found in inventory' };
 
     validatedGift = invItem;
     validatedBetAmount = Number(invItem.floor_price_gram || invItem.price || 0);
@@ -171,7 +171,7 @@ export function placeRocketBet(
   const newBet: RocketBet = {
     id: `bet-${currentRound.id}-${userId}`,
     userId,
-    firstName: user.firstName || 'Игрок',
+    firstName: user.firstName || 'Player',
     username: user.username,
     photoUrl: user.photoUrl,
     isGram,
@@ -205,23 +205,23 @@ export function cashoutRocketBet(userId: number) {
   const now = Date.now();
 
   if (currentRound.state !== 'flying' || now >= currentRound.crashTime) {
-    return { error: 'Ракета уже улетела!' };
+    return { error: 'Rocket already flew away!' };
   }
 
   const bet = currentRound.bets.find(b => b.userId === userId && !b.hasWon);
   if (!bet) {
-    return { error: 'Активная ставка не найдена или уже выведена' };
+    return { error: 'Active bet not found or already withdrawn' };
   }
 
   const elapsed = Math.max(0, now - currentRound.launchTime);
   const winMultiplier = multAtTime(elapsed);
 
   if (winMultiplier >= currentRound.crashMultiplier) {
-    return { error: 'Ракета уже улетела!' };
+    return { error: 'Rocket already flew away!' };
   }
 
   const user = getUser(userId);
-  if (!user) return { error: 'Пользователь не найден' };
+  if (!user) return { error: 'User not found' };
 
   let winAmount = Number((bet.betAmount * winMultiplier).toFixed(2));
   let wonGift: any = undefined;
@@ -270,7 +270,7 @@ export function cashoutRocketBet(userId: number) {
   recordOpen({
     id: `rocket-${Date.now()}-${userId}`,
     ts: new Date().toISOString(),
-    firstName: user.firstName || 'Игрок',
+    firstName: user.firstName || 'Player',
     price: winAmount,
     isGram: !wonGift,
     gift: wonGift || (bet.isNft ? bet.gift : undefined),

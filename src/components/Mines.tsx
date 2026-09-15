@@ -377,7 +377,7 @@ export function Mines({
               onClick={() => setShowBetModal(true)}
               className="w-full relative overflow-hidden group rounded-[20px] font-display font-bold text-[18px] tracking-wide active:scale-[0.98] transition-all py-4 bg-brand text-black shadow-[0_0_30px_rgba(255,184,0,0.3)]"
             >
-              Сделать ставку
+              Place bet
             </button>
           ) : (
             <button
@@ -387,7 +387,7 @@ export function Mines({
                 ${safeOpened > 0 ? 'bg-brand text-black' : 'bg-white/5 text-white/30 shadow-none'}
               `}
             >
-              Вывести {currentEligibleNft ? currentEligibleNft.name : `${currentWinAmount.toFixed(2)} GRAM`}
+              Withdraw {currentEligibleNft ? currentEligibleNft.name : `${currentWinAmount.toFixed(2)} GRAM`}
             </button>
           )}
 
@@ -490,7 +490,7 @@ export function Mines({
                     ${mode === 'nft' ? 'bg-brand text-black shadow-sm' : 'text-white/40 hover:text-white/80'}
                   `}
                 >
-                  Подарки
+                  Gifts
                 </button>
                 <button 
                   onClick={() => setMode('gram')}
@@ -506,7 +506,7 @@ export function Mines({
                 {mode === 'gram' ? (
                   <>
                     <div className="absolute top-4 left-5 flex items-center gap-1 text-white/50 text-[12px] font-medium">
-                      <span>Баланс:</span>
+                      <span>Balance:</span>
                       <span className="text-white font-bold">{balance.toFixed(2)}</span>
                       <GramIcon className="w-3.5 h-3.5" />
                     </div>
@@ -541,7 +541,7 @@ export function Mines({
                 ) : (
                   <div className="w-full flex gap-3 overflow-x-auto scrollbar-hide py-2 px-2">
                     {inventory.length === 0 ? (
-                      <div className="text-white/40 text-sm italic w-full text-center">Инвентарь пуст</div>
+                      <div className="text-white/40 text-sm italic w-full text-center">Inventory is empty</div>
                     ) : (
                       inventory.map(item => (
                         <button
@@ -599,7 +599,7 @@ export function Mines({
                 disabled={(mode === 'gram' && (betGram < 0.1 || betGram > balance || betGram > MAX_BET_GRAM)) || (mode === 'nft' && !selectedNft)}
                 className="w-full bg-brand text-black font-display font-bold text-[18px] py-4 rounded-[20px] active:scale-[0.98] transition-transform disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_30px_rgba(255,184,0,0.2)]"
               >
-                Сделать ставку
+                Place bet
               </button>
             </motion.div>
           </>
@@ -658,7 +658,7 @@ export function Mines({
                         onClick={resetGame}
                         className="w-full py-3 rounded-[10px] text-[12px] font-bold flex items-center justify-center gap-1.5 bg-brand text-black hover:bg-brand/90 transition-colors shadow-[0_0_15px_rgba(249,194,60,0.3)]"
                       >
-                        Продолжить
+                        Continue
                       </button>
                     ) : (
                       <>
@@ -682,7 +682,7 @@ export function Mines({
                             className="flex-1 py-2.5 rounded-[10px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#a855f7] text-white hover:bg-[#9333ea] transition-colors"
                           >
                             <Bomb className="w-3.5 h-3.5 shrink-0" />
-                            <span className="truncate">Мины</span>
+                            <span className="truncate">Mines</span>
                           </button>
                         </div>
                         <button 
@@ -726,7 +726,7 @@ export function Mines({
                     onClick={resetGame}
                     className="mt-4 w-full py-4 rounded-[16px] font-bold text-[15px] uppercase tracking-wider z-10 transition-colors bg-white/10 text-white hover:bg-white/20 border border-white/10"
                   >
-                    Закрыть
+                    Close
                   </button>
                 </>
               )}

@@ -32,7 +32,7 @@ export function Leaderboard() {
       const diff = end - now;
       
       if (diff <= 0) {
-        setTimeLeft('Завершено');
+        setTimeLeft('Completed');
         return;
       }
       
@@ -41,7 +41,7 @@ export function Leaderboard() {
       const m = Math.floor((diff / 1000 / 60) % 60);
       const s = Math.floor((diff / 1000) % 60);
       
-      setTimeLeft(`${d}д ${h}ч ${m}м ${s}с`);
+      setTimeLeft(`${d}d ${h}h ${m}m ${s}s`);
     };
     
     updateTime();
@@ -142,7 +142,7 @@ export function Leaderboard() {
                 
                 if (prizeUrl) {
                   return (
-                    <div className="flex flex-col items-center justify-center shrink-0 w-12" title="Ожидаемый приз по окончанию таймера"><PremiumImage src={prizeUrl} alt="Prize" className="w-10 h-10 object-contain drop-shadow-lg" /><span className="text-[9px] text-brand/70 font-bold uppercase mt-0.5">{t('prize')}</span></div>
+                    <div className="flex flex-col items-center justify-center shrink-0 w-12" title="Expected prize at the end of the timer"><PremiumImage src={prizeUrl} alt="Prize" className="w-10 h-10 object-contain drop-shadow-lg" /><span className="text-[9px] text-brand/70 font-bold uppercase mt-0.5">{t('prize')}</span></div>
                   );
                 }
                 return null;
@@ -189,7 +189,7 @@ export function Leaderboard() {
                 
                 if (prizeUrl) {
                   return (
-                    <div className="flex flex-col items-center justify-center shrink-0 w-12" title="Ожидаемый приз по окончанию таймера"><PremiumImage src={prizeUrl} alt="Prize" className="w-10 h-10 object-contain drop-shadow-lg" /><span className="text-[9px] text-brand/70 font-bold uppercase mt-0.5">{t('prize')}</span></div>
+                    <div className="flex flex-col items-center justify-center shrink-0 w-12" title="Expected prize at the end of the timer"><PremiumImage src={prizeUrl} alt="Prize" className="w-10 h-10 object-contain drop-shadow-lg" /><span className="text-[9px] text-brand/70 font-bold uppercase mt-0.5">{t('prize')}</span></div>
                   );
                 }
                 return null;
@@ -260,7 +260,7 @@ export function Leaderboard() {
                 onClick={() => setShowRules(false)}
                 className="w-full mt-6 py-3.5 rounded-xl font-bold bg-brand text-black active:scale-[0.98] transition-transform"
               >
-                Понятно
+                Got it
               </button>
             </motion.div>
           </div>

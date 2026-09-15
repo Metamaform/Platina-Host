@@ -12,10 +12,13 @@
   },
   "dependencies": {
     "@lottiefiles/react-lottie-player": "^3.6.0",
+    "@supabase/supabase-js": "^2.116.0",
     "@tailwindcss/vite": "^4.1.14",
     "@tonconnect/ui-react": "^3.0.2",
+    "@types/cors": "^2.8.19",
     "@vitejs/plugin-react": "^5.0.4",
     "buffer": "^6.0.3",
+    "cors": "^2.8.6",
     "esbuild": "^0.28.2",
     "express": "^4.21.2",
     "lottie-web": "^5.13.0",

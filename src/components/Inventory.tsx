@@ -245,7 +245,7 @@ export function Inventory({
                     
                     {item.isWithdrawing && (
                       <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
-                         <span className="text-white text-xs font-bold bg-black/40 px-3 py-1 rounded-full">{t('withdraw_pending') || 'В обработке'}</span>
+                         <span className="text-white text-xs font-bold bg-black/40 px-3 py-1 rounded-full">{t('withdraw_pending') || 'Pending'}</span>
                       </div>
                     )}
                   </div>

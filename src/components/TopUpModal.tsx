@@ -37,10 +37,10 @@ export function TopUpModal({ onClose, onSuccess, demoMode }: TopUpModalProps) {
 
   const handleTopUp = async () => {
     if (method === 'stars' && parsedAmount < 10) {
-      setError('Минимальная сумма — 10 звезд');
+      setError('Minimum amount - 10 stars');
       return;
     } else if (method === 'ton' && parsedAmount <= 0) {
-      setError('Введите сумму больше 0');
+      setError('Enter amount greater than 0');
       return;
     }
 
@@ -49,7 +49,7 @@ export function TopUpModal({ onClose, onSuccess, demoMode }: TopUpModalProps) {
       // @ts-ignore
       if (window.Telegram?.WebApp?.showAlert) {
         // @ts-ignore
-        window.Telegram.WebApp.showAlert(`Демо-пополнение на ${parsedAmount} успешно!`);
+        window.Telegram.WebApp.showAlert(`Демо-пополнение на ${parsedAmount} successful!`);
       }
       onClose();
       return;
@@ -80,7 +80,7 @@ export function TopUpModal({ onClose, onSuccess, demoMode }: TopUpModalProps) {
                             onSuccess(gramAmount, method, parsedAmount);
                             onClose();
                         } else if (status === 'failed') {
-                            setError('Оплата не удалась');
+                            setError('Payment failed');
                         } else if (status === 'cancelled') {
                             // User cancelled
                         }
@@ -101,11 +101,11 @@ export function TopUpModal({ onClose, onSuccess, demoMode }: TopUpModalProps) {
                 onClose();
             }
         } else {
-            setError(data.error || 'Ошибка создания инвойса');
+            setError(data.error || 'Error creating invoice');
         }
       } catch (e: any) {
         console.error(e);
-        setError('Произошла ошибка при создании инвойса');
+        setError('An error occurred while creating invoice');
       } finally {
         setLoading(false);
       }
@@ -128,7 +128,7 @@ export function TopUpModal({ onClose, onSuccess, demoMode }: TopUpModalProps) {
         onClose();
       } catch (e: any) {
         console.error(e);
-        setError('Транзакция отменена или произошла ошибка');
+        setError('Transaction cancelled or error occurred');
       } finally {
         setLoading(false);
       }
@@ -201,7 +201,7 @@ export function TopUpModal({ onClose, onSuccess, demoMode }: TopUpModalProps) {
           <div className="w-full flex flex-col space-y-4 min-h-[210px]">
             {method === 'ton' && !wallet && !demoMode ? (
               <div className="flex-1 flex flex-col items-center justify-center w-full">
-                <p className="text-white/40 text-[13px] text-center font-medium mb-6 px-4">Подключите кошелек для пополнения баланса через TON</p>
+                <p className="text-white/40 text-[13px] text-center font-medium mb-6 px-4">Connect wallet to top-up balance via TON</p>
                 <TonConnectButton />
               </div>
             ) : (
@@ -253,7 +253,7 @@ export function TopUpModal({ onClose, onSuccess, demoMode }: TopUpModalProps) {
                   {loading ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Ожидание...
+                      Waiting...
                     </>
                   ) : (
                     t('pay')

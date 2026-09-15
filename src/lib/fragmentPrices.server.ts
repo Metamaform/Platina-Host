@@ -68,8 +68,8 @@ export async function getFragmentGiftPrices(slugs: string[]): Promise<FragmentGi
         throw new Error(`Kartoshka API returned ${res.status}`);
       }
     } catch (e: any) {
-      console.error(`[kartoshka api error]:`, e?.message || e);
-      // Fallback
+      // API is currently unavailable or returning 403. 
+      // Silently fallback to using baseGiftsDb prices in the app.
       for (const slug of slugsToFetch) {
         results.push({
           slug,

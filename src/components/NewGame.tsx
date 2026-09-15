@@ -327,7 +327,7 @@ export const NewGame: React.FC<NewGameProps> = ({
 
       const data = await res.json();
       if (!res.ok || data.error) {
-        setActionError(data.error || 'Ошибка размещения ставки');
+        setActionError(data.error || 'Error placing bet');
         return;
       }
 
@@ -344,7 +344,7 @@ export const NewGame: React.FC<NewGameProps> = ({
       setShowBetModal(false);
       fetchState();
     } catch (e: any) {
-      setActionError(e.message || 'Ошибка сети');
+      setActionError(e.message || 'Network error');
     } finally {
       setIsSubmittingBet(false);
     }
@@ -367,7 +367,7 @@ export const NewGame: React.FC<NewGameProps> = ({
 
       const data = await res.json();
       if (!res.ok || data.error) {
-        setActionError(data.error || 'Не удалось забрать выигрыш');
+        setActionError(data.error || 'Failed to withdraw');
         return;
       }
 
@@ -390,7 +390,7 @@ export const NewGame: React.FC<NewGameProps> = ({
 
       fetchState();
     } catch (e: any) {
-      setActionError(e.message || 'Ошибка сети');
+      setActionError(e.message || 'Network error');
     } finally {
       setIsCashingOut(false);
     }
@@ -521,13 +521,13 @@ export const NewGame: React.FC<NewGameProps> = ({
           id="rocket-back-button"
           onClick={onBack}
           className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center active:scale-95 transition-all hover:bg-white/20 border border-white/5 cursor-pointer"
-          title={t('back') || 'Назад'}
+          title={t('back') || 'Back'}
         >
           <ArrowLeft className="w-5 h-5 text-white" />
         </button>
 
         <h1 className="font-display text-lg font-bold text-white drop-shadow-md">
-          {t('new_game') || 'Ракетка'}
+          {t('new_game') || 'Rocket'}
         </h1>
 
         <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
@@ -577,8 +577,8 @@ export const NewGame: React.FC<NewGameProps> = ({
                 currentGameState === 'crashed' ? 'bg-red-500' : 'bg-amber-400 animate-pulse'
               }`} />
               <span className="text-[11px] font-bold tracking-wider uppercase text-white/70">
-                {currentGameState === 'waiting' ? `Старт через ${liveCountdown}с` :
-                 currentGameState === 'flying' ? 'В полете' : 'Краш'}
+                {currentGameState === 'waiting' ? `Start in ${liveCountdown}с` :
+                 currentGameState === 'flying' ? 'Flying' : 'Crashed'}
               </span>
             </div>
 
@@ -682,7 +682,7 @@ export const NewGame: React.FC<NewGameProps> = ({
               </span>
               
               {currentGameState === 'crashed' && (
-                <span className="text-xs text-red-400/90 font-semibold mt-1">Ракета улетела!</span>
+                <span className="text-xs text-red-400/90 font-semibold mt-1">Flew away!</span>
               )}
 
               {/* Display Winnable NFT */}
@@ -724,10 +724,10 @@ export const NewGame: React.FC<NewGameProps> = ({
               className="w-full relative overflow-hidden group rounded-[20px] font-display font-bold text-[17px] tracking-wide active:scale-[0.98] transition-all py-4 bg-brand text-black shadow-[0_0_30px_rgba(255,184,0,0.35)] animate-pulse disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
             >
               {isCashingOut ? (
-                'Вывод...'
+                'Withdrawing...'
               ) : reachedGift ? (
                 <div className="flex items-center justify-center gap-2">
-                  <span>Забрать</span>
+                  <span>Take</span>
                   <div className="relative h-6 overflow-hidden flex items-center">
                     <AnimatePresence mode="popLayout" initial={false}>
                       <motion.span
@@ -749,7 +749,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                   )}
                 </div>
               ) : (
-                `Забрать ${liveWinAmount} GRAM`
+                `Take ${liveWinAmount} GRAM`
               )}
             </button>
           ) : (
@@ -760,14 +760,14 @@ export const NewGame: React.FC<NewGameProps> = ({
               className="w-full relative overflow-hidden group rounded-[20px] font-display font-bold text-[18px] tracking-wide active:scale-[0.98] transition-all py-4 shadow-[0_0_30px_rgba(255,184,0,0.3)] bg-brand text-black disabled:opacity-50 cursor-pointer"
             >
               {userBetInQueue
-                ? 'Ставка на след. раунд принята'
+                ? 'Bet for next round accepted'
                 : userBetInRound && userBetInRound.hasWon
-                ? 'Выигрыш забран! Поставить еще'
+                ? 'Win taken! Bet again'
                 : userBetInRound && currentGameState === 'waiting'
-                ? `Ставка ${userBetInRound.betAmount} GRAM принята`
+                ? `Bet ${userBetInRound.betAmount} GRAM accepted`
                 : currentGameState === 'flying'
-                ? 'Сделать ставку на след. раунд'
-                : 'Сделать ставку'}
+                ? 'Bet for next round'
+                : 'Place bet'}
             </button>
           )}
 
@@ -779,7 +779,7 @@ export const NewGame: React.FC<NewGameProps> = ({
           <div className="w-full mt-7 flex flex-col gap-3 pb-8">
             <div className="flex items-center gap-1.5 px-1">
               <span className="text-white/60 text-xs font-bold uppercase tracking-wider">
-                Список игроков
+                Players list
               </span>
               <span className="text-white/40 text-[11px] font-medium">
                 ({sortedDisplayList.length})
@@ -789,10 +789,10 @@ export const NewGame: React.FC<NewGameProps> = ({
             {sortedDisplayList.length === 0 ? (
               <div className="w-full py-8 px-4 text-center rounded-[24px] bg-[#1c1c20] border border-white/5 flex flex-col items-center justify-center">
                 <span className="text-white/40 text-sm font-medium">
-                  В этом матче пока нет ставок
+                  No bets in this round yet
                 </span>
                 <span className="text-white/20 text-xs mt-1">
-                  Сделайте ставку первым!
+                  Be the first to bet!
                 </span>
               </div>
             ) : (
@@ -835,7 +835,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                             </span>
                             {isMyBet && (
                               <span className="text-[10px] bg-brand/20 text-brand px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                                Вы
+                                You
                               </span>
                             )}
                           </div>
@@ -922,7 +922,7 @@ export const NewGame: React.FC<NewGameProps> = ({
               <div className="flex items-center justify-between mb-6">
                 <div className="w-8" />
                 <h2 className="text-[20px] font-display font-bold text-white text-center">
-                  {currentGameState === 'flying' ? 'Ставка на след. раунд' : (t('make_bet_title') || 'Сделать ставку')}
+                  {currentGameState === 'flying' ? 'Bet for next round' : (t('make_bet_title') || 'Place bet')}
                 </h2>
                 <button
                   onClick={() => setShowBetModal(false)}
@@ -932,7 +932,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                 </button>
               </div>
 
-              {/* Mode Toggle: Подарки / GRAM */}
+              {/* Mode Toggle: Gifts / GRAM */}
               <div className="flex p-1 bg-black/20 rounded-2xl mb-6">
                 <button
                   onClick={() => setMode('nft')}
@@ -940,7 +940,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                     mode === 'nft' ? 'bg-brand text-black shadow-sm' : 'text-white/40 hover:text-white/80'
                   }`}
                 >
-                  Подарки
+                  Gifts
                 </button>
                 <button
                   onClick={() => setMode('gram')}
@@ -957,7 +957,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                 {mode === 'gram' ? (
                   <>
                     <div className="absolute top-4 left-5 flex items-center gap-1 text-white/50 text-[12px] font-medium">
-                      <span>Баланс:</span>
+                      <span>Balance:</span>
                       <span className="text-white font-bold">{balance.toFixed(2)}</span>
                       <GramIcon className="w-3.5 h-3.5" />
                     </div>
@@ -998,10 +998,10 @@ export const NewGame: React.FC<NewGameProps> = ({
                         <div className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-300 ease-in-out flex items-center ${autoCashoutEnabled ? 'bg-brand' : 'bg-white/20'}`}>
                           <div className={`w-4 h-4 bg-black/80 rounded-full transition-transform duration-300 ease-out shadow-sm ${autoCashoutEnabled ? 'translate-x-4' : 'translate-x-0'}`} />
                         </div>
-                        <span className="text-white/80 text-[13px] font-bold">Автовывод</span>
+                        <span className="text-white/80 text-[13px] font-bold">Auto withdraw</span>
                       </div>
                       <div className={`flex-1 flex items-center justify-end transition-opacity ${autoCashoutEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
-                        <span className="text-white/40 text-[12px] font-medium mr-2">множитель</span>
+                        <span className="text-white/40 text-[12px] font-medium mr-2">multiplier</span>
                         <div className="bg-black/30 rounded-lg px-2.5 py-1 flex items-center border border-white/5">
                           <input 
                             type="text"
@@ -1019,7 +1019,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                 ) : (
                   <div className="w-full flex gap-3 overflow-x-auto scrollbar-hide py-2 px-2">
                     {inventory.length === 0 ? (
-                      <div className="text-white/40 text-sm italic w-full text-center">Инвентарь пуст</div>
+                      <div className="text-white/40 text-sm italic w-full text-center">Inventory is empty</div>
                     ) : (
                       inventory.map(item => (
                         <button
@@ -1065,7 +1065,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                 }
                 className="w-full bg-brand text-black font-display font-bold text-[18px] py-4 rounded-[20px] active:scale-[0.98] transition-transform disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_30px_rgba(255,184,0,0.2)] cursor-pointer"
               >
-                {isSubmittingBet ? 'Размещение...' : 'Сделать ставку'}
+                {isSubmittingBet ? 'Placing...' : 'Place bet'}
               </button>
             </motion.div>
           </>
@@ -1103,28 +1103,28 @@ export const NewGame: React.FC<NewGameProps> = ({
                     />
                   </div>
                   <span className="text-[11px] uppercase tracking-widest font-extrabold text-brand bg-brand/15 px-3 py-1 rounded-full mb-1">
-                    NFT Выигрыш! (x{wonResult.multiplier.toFixed(2)})
+                    NFT Win! (x{wonResult.multiplier.toFixed(2)})
                   </span>
                   <h3 className="font-display text-2xl font-black text-white mt-1 mb-2">
                     {wonResult.gift.name}
                   </h3>
                   <div className="flex flex-col gap-2 w-full bg-white/5 rounded-2xl p-3 mb-5 border border-white/5 text-sm">
                     <div className="flex justify-between items-center text-white/70">
-                      <span>Стоимость NFT:</span>
+                      <span>NFT Value:</span>
                       <span className="font-bold text-white flex items-center gap-1">
                         {wonResult.gift.price || wonResult.gift.floor_price_gram} <GramIcon className="w-3.5 h-3.5" />
                       </span>
                     </div>
                     {wonResult.remainder && wonResult.remainder > 0 ? (
                       <div className="flex justify-between items-center text-emerald-400 font-semibold">
-                        <span>Остаток на баланс:</span>
+                        <span>Balance remainder:</span>
                         <span className="flex items-center gap-1 font-bold">
                           +{wonResult.remainder.toFixed(2)} <GramIcon className="w-3.5 h-3.5" />
                         </span>
                       </div>
                     ) : null}
                     <div className="flex justify-between items-center text-brand font-bold pt-1.5 border-t border-white/10">
-                      <span>Итоговый приз:</span>
+                      <span>Total prize:</span>
                       <span className="flex items-center gap-1">
                         {wonResult.winAmount.toFixed(2)} <GramIcon className="w-3.5 h-3.5" />
                       </span>
@@ -1137,13 +1137,13 @@ export const NewGame: React.FC<NewGameProps> = ({
                     <GramIcon className="w-10 h-10 text-brand" />
                   </div>
                   <span className="text-[11px] uppercase tracking-widest font-extrabold text-brand bg-brand/15 px-3 py-1 rounded-full mb-1">
-                    Успешный вывод! (x{wonResult.multiplier.toFixed(2)})
+                    Successful withdraw! (x{wonResult.multiplier.toFixed(2)})
                   </span>
                   <h3 className="font-display text-3xl font-black text-white mt-1 mb-2 flex items-center justify-center gap-2">
                     +{wonResult.winAmount.toFixed(2)} <GramIcon className="w-6 h-6 text-brand" />
                   </h3>
                   <p className="text-white/60 text-xs mb-5">
-                    Выигрыш зачислен на ваш игровой баланс
+                    Winnings credited to your balance
                   </p>
                 </>
               )}
@@ -1152,7 +1152,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                 onClick={() => setWonResult(null)}
                 className="w-full py-3.5 bg-brand text-black font-display font-bold text-base rounded-2xl active:scale-[0.98] transition-transform shadow-[0_0_20px_rgba(255,184,0,0.2)] cursor-pointer"
               >
-                Отлично!
+                Great!
               </button>
             </motion.div>
           </div>

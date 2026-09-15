@@ -277,7 +277,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
     }
   };
 
-  const firstName = user?.firstName || 'Алексей';
+  const firstName = user?.firstName || 'Alexey';
   const username = user?.username ? `@${user.username}` : '@alexey_dev';
   const photoUrl = user?.photoUrl;
   
@@ -327,10 +327,10 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
         }
         setPromoCode('');
       } else {
-        setPromoStatus({ msg: data.error || 'Ошибка', type: 'error' });
+        setPromoStatus({ msg: data.error || 'Error', type: 'error' });
       }
     } catch (e) {
-      setPromoStatus({ msg: 'Промокод не найден', type: 'error' });
+      setPromoStatus({ msg: 'Promo code not found', type: 'error' });
     }
     setIsActivating(false);
   };
@@ -455,7 +455,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
             <div className="w-9 h-9 rounded-full bg-brand/10 text-brand flex items-center justify-center">
               <Users className="w-5 h-5" />
             </div>
-            <span className="font-semibold text-[15px]">{t('referrals') || 'Реферальная система'}</span>
+            <span className="font-semibold text-[15px]">{t('referrals') || 'Referral system'}</span>
           </div>
           <ChevronRight className="w-5 h-5 text-white/20 group-hover:text-white/50 transition-colors" />
         </button>
@@ -465,7 +465,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
             <div className="w-9 h-9 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center">
               <History className="w-5 h-5" />
             </div>
-            <span className="font-semibold text-[15px]">{t('deposit_history') || 'История пополнений'}</span>
+            <span className="font-semibold text-[15px]">{t('deposit_history') || 'Deposit history'}</span>
           </div>
           <ChevronRight className="w-5 h-5 text-white/20 group-hover:text-white/50 transition-colors" />
         </button>
@@ -476,7 +476,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               <MessageCircle className="w-5 h-5" />
             </div>
             <div className="flex flex-col">
-              <span className="font-semibold text-[15px]">{t('support') || 'Техподдержка'}</span>
+              <span className="font-semibold text-[15px]">{t('support') || 'Support'}</span>
               <span className="text-xs text-brand font-medium">@platina_help</span>
             </div>
           </div>
@@ -906,7 +906,7 @@ export default function App() {
   }, [auth.status, pricesLoaded, minTimePassed]);
 
   const navItems = [
-    { id: 'inventory', icon: Package, label: t('my_inventory') || 'Инвентарь' },
+    { id: 'inventory', icon: Package, label: t('my_inventory') || 'Inventory' },
     { id: 'cases', icon: Box, label: t('nav_cases') },
     { id: 'shop', icon: Activity, label: t('nav_shop') },
     { id: 'tasks', icon: ListTodo, label: t('nav_tasks') },
@@ -1139,7 +1139,7 @@ export default function App() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 100, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="absolute bottom-0 left-0 right-0 z-[90] pb-[calc(env(safe-area-inset-bottom)+4px)] px-3 pt-2 w-full pointer-events-none"
+              className="absolute bottom-2 left-0 right-0 z-[90] pb-[calc(env(safe-area-inset-bottom)+12px)] px-3 pt-2 w-full pointer-events-none"
             >
               <div className="pointer-events-auto w-full">
               <nav className="relative flex items-center p-1.5 rounded-[32px] bg-[#141414]/70 backdrop-blur-[20px] border border-white/[0.08] shadow-[0_16px_40px_-12px_rgba(0,0,0,0.5)]">
@@ -1226,7 +1226,7 @@ export default function App() {
                 <Check className="w-5 h-5 text-green-500" />
               </div>
               <div className="flex flex-col flex-1 min-w-0">
-                <span className="text-white font-bold text-[14px]">Пополнение успешно!</span>
+                <span className="text-white font-bold text-[14px]">Top-up successful!</span>
                 <span className="text-white/70 text-[13px] font-medium flex items-center gap-1">
                   +{toastMessage.amount} 
                   {toastMessage.method === 'stars' ? (

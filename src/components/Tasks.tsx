@@ -71,7 +71,7 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
         if (current < target) {
           const isGrams = task.reqs?.game === 'turnover' || task.title === 'Награда за оборот';
           const remaining = target - current;
-          showToast(`Осталось выполнить: ${Number(remaining).toFixed(isGrams ? 2 : 0)}${isGrams ? ' Gram' : ' раз(а)'}`);
+          showToast(`Remaining: ${Number(remaining).toFixed(isGrams ? 2 : 0)}${isGrams ? ' Gram' : ' раз(а)'}`);
           return false;
         }
       }
@@ -178,7 +178,7 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
         </div>
       ) : error ? (
         <div className="text-center py-10 text-red-400 text-sm">
-          Ошибка загрузки: {error}
+          Loading error: {error}
         </div>
       ) : (
         <div className="space-y-3">

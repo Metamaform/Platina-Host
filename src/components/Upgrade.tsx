@@ -327,7 +327,7 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
         </div>
 
         <p className="text-[10px] text-muted text-center mt-6 px-6 pb-2 leading-tight">
-          * Обратите внимание: при выводе NFT выдаются случайные фоны, узоры и модели.
+          * Note: when withdrawing NFTs, random backgrounds, patterns and models are issued.
         </p>
       </div>
 
@@ -363,7 +363,7 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
               </div>
               <div className="overflow-y-auto no-scrollbar pb-10">
                 {availableInventory.length === 0 ? (
-                  <p className="text-muted text-[14px] px-5 bg-white/5 py-4 rounded-2xl text-center border border-white/5 border-dashed">{inventory.length > 0 ? 'Все предметы находятся в процессе вывода.' : t('inventory_empty_upgrade')}</p>
+                  <p className="text-muted text-[14px] px-5 bg-white/5 py-4 rounded-2xl text-center border border-white/5 border-dashed">{inventory.length > 0 ? 'All items are currently pending withdrawal.' : t('inventory_empty_upgrade')}</p>
                 ) : (
                   <div className="grid grid-cols-3 gap-3">
                     {availableInventory.map((item) => (
@@ -505,7 +505,7 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                          className="flex-1 py-2.5 rounded-[10px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#a855f7] text-white hover:bg-[#9333ea] transition-colors"
                        >
                          <Bomb className="w-3.5 h-3.5 shrink-0" />
-                         <span className="truncate">Мины</span>
+                         <span className="truncate">Mines</span>
                        </button>
                      </div>
                      <button 
@@ -553,7 +553,7 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                      onClick={() => { setResult(null); setSourceId(null); setTargetId(null); setGramBet(0); }}
                      className="mt-4 w-full py-4 rounded-[16px] font-bold text-[15px] uppercase tracking-wider z-10 transition-colors bg-white/10 text-white hover:bg-white/20"
                    >
-                     Продолжить
+                     Continue
                    </button>
                  </>
                )}
