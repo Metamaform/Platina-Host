@@ -9,6 +9,7 @@ import { issueToken, verifyToken } from "./src/lib/session.server.ts";
 import { getUser, upsertUserProfile, setUserLanguage, saveUserState, recordOpen, getRecentOpens, getLeaderboardConfig, getLeaderboardData, saveLeaderboardConfig, getAdminConfig, saveAdminConfig, getReferrals, getTasksConfig, saveTasksConfig, completeUserTask, getCasesConfig, saveCasesConfig, getPromocodes, savePromocodes, getPromoRedemptions, savePromoRedemptions, getGiftsConfig, saveGiftsConfig, setWelcomeSeen, resetWelcomeSeen } from "./src/lib/store.server.ts";
 import { getFragmentGiftPrices } from "./src/lib/fragmentPrices.server.ts";
 import { getRocketState, placeRocketBet, cashoutRocketBet } from "./src/lib/rocket.server.ts";
+import { supabaseServer } from "./src/lib/supabase.server.ts";
 import baseGiftsDb from "./src/gifts_data.json" with { type: "json" };
 
 const botToken = (process.env.TELEGRAM_BOT_TOKEN || "").trim();
@@ -333,26 +334,24 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
       // ----------------------------------------------------
       // Background Supabase Sync on App Open
       // ----------------------------------------------------
-      import('./src/lib/supabase.server.js').then(({ supabaseServer }) => {
-        if (supabaseServer) {
-          supabaseServer.from('users').upsert({
-            id: user.id,
-            first_name: user.firstName,
-            last_name: user.lastName,
-            username: user.username,
-            language_code: user.languageCode || null,
-            balance: user.balance,
-            inventory: user.inventory,
-          }, { onConflict: 'id' }).then(({ error }) => {
-            if (error) console.error("[Supabase] Error syncing user on auth:", error);
-          });
-          
-          // Log app opens
-          supabaseServer.from('opens_log').insert([{ user_id: user.id }]).then(({ error }) => {
-            if (error && error.code !== '42P01') console.error("[Supabase] Error logging open:", error);
-          });
-        }
-      });
+      if (supabaseServer) {
+        supabaseServer.from('users').upsert({
+          id: user.id,
+          first_name: user.firstName,
+          last_name: user.lastName,
+          username: user.username,
+          language_code: user.languageCode || null,
+          balance: user.balance,
+          inventory: user.inventory,
+        }, { onConflict: 'id' }).then(({ error }) => {
+          if (error) console.error("[Supabase] Error syncing user on auth:", error);
+        });
+        
+        // Log app opens
+        supabaseServer.from('opens_log').insert([{ user_id: user.id }]).then(({ error }) => {
+          if (error && error.code !== '42P01') console.error("[Supabase] Error logging open:", error);
+        });
+      }
       // ----------------------------------------------------
 
       const token = issueToken(user.id);
@@ -972,25 +971,23 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
     upsertUserProfile(user);
     
     // Background Supabase Sync for Promo
-    import('./src/lib/supabase.server.js').then(({ supabaseServer }) => {
-      if (supabaseServer) {
-        supabaseServer.from('promo_redemptions').insert([{ 
-          user_id: user.id, 
-          code: promo.code 
-        }]).then(({ error }) => {
-          if (error) console.error("[Supabase] Error logging promo redemption:", error);
-        });
-        
-        supabaseServer.from('promocodes').upsert([{
-          code: promo.code,
-          reward: parseFloat(promo.value) || 0,
-          activations: promo.currentUses,
-          max_activations: promo.maxUses > 0 ? promo.maxUses : null
-        }], { onConflict: 'code' }).then(({ error }) => {
-          if (error) console.error("[Supabase] Error syncing promocode:", error);
-        });
-      }
-    });
+    if (supabaseServer) {
+      supabaseServer.from('promo_redemptions').insert([{ 
+        user_id: user.id, 
+        code: promo.code 
+      }]).then(({ error }) => {
+        if (error) console.error("[Supabase] Error logging promo redemption:", error);
+      });
+      
+      supabaseServer.from('promocodes').upsert([{
+        code: promo.code,
+        reward: parseFloat(promo.value) || 0,
+        activations: promo.currentUses,
+        max_activations: promo.maxUses > 0 ? promo.maxUses : null
+      }], { onConflict: 'code' }).then(({ error }) => {
+        if (error) console.error("[Supabase] Error syncing promocode:", error);
+      });
+    }
     
     res.json({ success: true, type: promo.type, addedGrams, addedItem });
   });
