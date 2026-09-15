@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { supabaseServer } from './supabase.server';
 
 /**
  * Простое файловое хранилище (JSON на диске) — заменяет localStorage,
@@ -168,6 +169,22 @@ export function upsertUserProfile(profile: {
 
   all[key] = user;
   writeJson(USERS_FILE, all);
+
+  // Sync to Supabase in the background (fire-and-forget)
+  if (supabaseServer) {
+    supabaseServer.from('users').upsert({
+      id: user.id,
+      first_name: user.firstName,
+      last_name: user.lastName,
+      username: user.username,
+      balance: user.balance,
+      inventory: user.inventory,
+      updated_at: user.updatedAt,
+    }, { onConflict: 'id' }).then(({ error }) => {
+      if (error) console.error("[Supabase] Error syncing user:", error);
+    });
+  }
+
   return user;
 }
 
@@ -214,6 +231,17 @@ export function saveUserState(id: number, balance: number, inventory: any[], tur
   existing.updatedAt = new Date().toISOString();
   all[key] = existing;
   writeJson(USERS_FILE, all);
+
+  // Sync state update to Supabase in background
+  if (supabaseServer) {
+    supabaseServer.from('users').update({
+      balance: existing.balance,
+      inventory: existing.inventory,
+    }).eq('id', existing.id).then(({ error }) => {
+      if (error) console.error("[Supabase] Error syncing user state:", error);
+    });
+  }
+
   return existing;
 }
 
