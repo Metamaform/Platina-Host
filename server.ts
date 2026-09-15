@@ -339,18 +339,24 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
         supabaseServer.from('users').upsert({
           id: user.id,
           first_name: user.firstName,
-          last_name: user.lastName,
-          username: user.username,
+          last_name: user.lastName || null,
+          username: user.username || null,
           language_code: user.languageCode || null,
           balance: user.balance,
           inventory: user.inventory,
         }, { onConflict: 'id' }).then(({ error }) => {
-          if (error) console.error("[Supabase] Error syncing user on auth:", error);
+          if (error) {
+            console.error("[Supabase] Error syncing user on auth:", error);
+            try { fs.appendFileSync('data/supabase.log', new Date().toISOString() + ' Auth Upsert Error: ' + JSON.stringify(error) + '\n'); } catch (e) {}
+          }
         });
         
         // Log app opens
         supabaseServer.from('opens_log').insert([{ user_id: user.id }]).then(({ error }) => {
-          if (error && error.code !== '42P01' && error.code !== 'PGRST205' && error.code !== 'PGRST116') console.error("[Supabase] Error logging open:", error);
+          if (error && error.code !== '42P01' && error.code !== 'PGRST205' && error.code !== 'PGRST116') {
+             console.error("[Supabase] Error logging open:", error);
+             try { fs.appendFileSync('data/supabase.log', new Date().toISOString() + ' Opens Insert Error: ' + JSON.stringify(error) + '\n'); } catch (e) {}
+          }
         });
       }
       // ----------------------------------------------------
