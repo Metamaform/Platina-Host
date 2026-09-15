@@ -2,7 +2,7 @@
   "1337": {
     "id": 1337,
     "username": "webtester",
-    "balance": 927958.1,
+    "balance": 928002.07,
     "inventory": [
       {
         "id": "117",
@@ -135,11 +135,11 @@
         "price": 170.85
       }
     ],
-    "turnover": 527450.3770038732,
+    "turnover": 527525.3770038732,
     "topups": [],
     "createdAt": "2026-09-02T04:58:46.689Z",
-    "updatedAt": "2026-09-14T19:55:07.462Z",
-    "seasonTurnover": 83053.21000000002,
+    "updatedAt": "2026-09-15T15:03:14.109Z",
+    "seasonTurnover": 83128.21000000002,
     "needsReload": false,
     "completedTasks": {
       "1788541215086": {
