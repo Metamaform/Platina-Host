@@ -295,7 +295,7 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
   // Telegram auth
   // ---------------------------------------------------------------------
 
-  app.post("/api/auth/telegram", (req, res) => {
+  app.post("/api/auth/telegram", async (req, res) => {
     try {
       const { initData } = req.body || {};
       const config = getAdminConfig();
@@ -319,6 +319,10 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
       if (config.isMaintenance && !config.whitelist.includes(tgUser.id)) { 
          isMaintenance = true;
       }
+
+      // Restore memory from Supabase first
+      const { syncUserFromSupabase } = await import('./src/lib/store.server.js');
+      await syncUserFromSupabase(tgUser.id);
       
       const user = upsertUserProfile(tgUser, startParam);
       if (user.needsReload) {

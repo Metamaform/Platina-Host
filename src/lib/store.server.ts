@@ -126,6 +126,39 @@ function users(): Record<string, StoredUser> {
   return usersCache;
 }
 
+export async function syncUserFromSupabase(id: number): Promise<void> {
+  if (!supabaseServer) return;
+  try {
+    const { data, error } = await supabaseServer.from('users').select('*').eq('id', id).single();
+    if (error || !data) return;
+    
+    const all = users();
+    const key = String(id);
+    
+    if (!all[key]) {
+      all[key] = {
+        id: Number(data.id),
+        firstName: data.first_name || '',
+        lastName: data.last_name,
+        username: data.username,
+        languageCode: data.language_code,
+        balance: Number(data.balance) || 0,
+        inventory: data.inventory || [],
+        turnover: 0,
+        topups: [],
+        createdAt: data.created_at || new Date().toISOString(),
+        updatedAt: data.updated_at || new Date().toISOString(),
+      };
+    } else {
+      all[key].balance = Number(data.balance) || 0;
+      all[key].inventory = typeof data.inventory === 'string' ? JSON.parse(data.inventory) : (data.inventory || []);
+    }
+    writeJson(USERS_FILE, all);
+  } catch (e) {
+    console.error("[Supabase] Failed to sync down from Supabase:", e);
+  }
+}
+
 export function getUser(id: number): StoredUser | null {
   return users()[String(id)] || null;
 }
