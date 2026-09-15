@@ -350,7 +350,7 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
         
         // Log app opens
         supabaseServer.from('opens_log').insert([{ user_id: user.id }]).then(({ error }) => {
-          if (error && error.code !== '42P01') console.error("[Supabase] Error logging open:", error);
+          if (error && error.code !== '42P01' && error.code !== 'PGRST205' && error.code !== 'PGRST116') console.error("[Supabase] Error logging open:", error);
         });
       }
       // ----------------------------------------------------

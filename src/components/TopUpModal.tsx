@@ -36,8 +36,8 @@ export function TopUpModal({ onClose, onSuccess, demoMode }: TopUpModalProps) {
   const gramAmount = method === 'stars' ? parsedAmount * starsRate : parsedAmount;
 
   const handleTopUp = async () => {
-    if (method === 'stars' && parsedAmount < 10) {
-      setError('Minimum amount - 10 stars');
+    if (method === 'stars' && parsedAmount < 1) {
+      setError('Minimum amount - 1 stars');
       return;
     } else if (method === 'ton' && parsedAmount <= 0) {
       setError('Enter amount greater than 0');
@@ -222,7 +222,7 @@ export function TopUpModal({ onClose, onSuccess, demoMode }: TopUpModalProps) {
                         }
                       }}
                       className="flex-1 bg-transparent text-3xl font-black text-white outline-none"
-                      placeholder={method === 'stars' ? "10" : "0.0"}
+                      placeholder={method === 'stars' ? "1" : "0.0"}
                     />
                     <div className="text-white/50 font-bold flex items-center gap-1.5">
                       {method === 'stars' ? (

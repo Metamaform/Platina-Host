@@ -212,7 +212,6 @@ export function upsertUserProfile(profile: {
       username: user.username,
       balance: user.balance,
       inventory: user.inventory,
-      updated_at: user.updatedAt,
     }, { onConflict: 'id' }).then(({ error }) => {
       if (error) console.error("[Supabase] Error syncing user:", error);
     });
