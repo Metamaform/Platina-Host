@@ -15,8 +15,49 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<{status: 'win' | 'lose', item?: any, refund?: number} | null>(null);
-  const [multiplier, setMultiplier] = useState<number>(2);
+  const [multiplier, setMultiplier] = useState<number>(() => {
+    try {
+      return Number(localStorage.getItem('craft_multiplier')) || 2;
+    } catch {
+      return 2;
+    }
+  });
   const pendingResultRef = useRef<any>(null);
+
+  const saveModelsToLocal = (uids: string[]) => {
+    const models = uids.map(uid => inventory.find(i => i.uniqueId === uid)?.id).filter(Boolean);
+    localStorage.setItem('craft_sourceModelIds', JSON.stringify(models));
+  };
+
+  useEffect(() => {
+    localStorage.setItem('craft_multiplier', multiplier.toString());
+  }, [multiplier]);
+
+  useEffect(() => {
+    try {
+      const savedModelsJson = localStorage.getItem('craft_sourceModelIds');
+      if (savedModelsJson) {
+        const desiredModelIds = JSON.parse(savedModelsJson) as string[];
+        const newSourceIds: string[] = [];
+        const usedUniqueIds = new Set<string>();
+        
+        for (const modelId of desiredModelIds) {
+          const item = inventory.find(i => i.id === modelId && !i.isWithdrawing && !usedUniqueIds.has(i.uniqueId));
+          if (item) {
+            newSourceIds.push(item.uniqueId);
+            usedUniqueIds.add(item.uniqueId);
+          }
+        }
+        
+        setSelectedIds(prev => {
+          if (prev.length === newSourceIds.length && prev.every((id, idx) => id === newSourceIds[idx])) {
+            return prev;
+          }
+          return newSourceIds;
+        });
+      }
+    } catch {}
+  }, [inventory]);
 
   useEffect(() => {
     return () => {
@@ -82,10 +123,18 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
   const toggleSelection = (uniqueId: string) => {
     if (spinning) return;
     if (selectedIds.includes(uniqueId)) {
-      setSelectedIds(prev => prev.filter(id => id !== uniqueId));
+      setSelectedIds(prev => {
+        const next = prev.filter(id => id !== uniqueId);
+        saveModelsToLocal(next);
+        return next;
+      });
     } else {
       if (selectedIds.length < 10) {
-        setSelectedIds(prev => [...prev, uniqueId]);
+        setSelectedIds(prev => {
+          const next = [...prev, uniqueId];
+          saveModelsToLocal(next);
+          return next;
+        });
       }
     }
   };
@@ -103,11 +152,11 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
     
     const r = Math.random();
     let chance = 0;
-    if (multiplier === 2) chance = 0.45;
-    else if (multiplier === 5) chance = 0.18;
-    else if (multiplier === 10) chance = 0.09;
-    else if (multiplier === 15) chance = 0.06;
-    else if (multiplier === 100) chance = 0.008;
+    if (multiplier === 2) chance = 0.475; // 95% RTP
+    else if (multiplier === 5) chance = 0.19; // 95% RTP
+    else if (multiplier === 10) chance = 0.095; // 95% RTP
+    else if (multiplier === 15) chance = 0.0633; // ~95% RTP
+    else if (multiplier === 100) chance = 0.0095; // 95% RTP
 
     const isWin = r < chance;
     
@@ -145,7 +194,6 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
       pendingResultRef.current = null;
       
       setResult({ status: isWin ? 'win' : 'lose', item: wonItem, refund: refundAmount });
-      setSelectedIds([]);
       setSpinning(false);
     }
   };

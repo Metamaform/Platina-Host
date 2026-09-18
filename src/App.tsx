@@ -60,15 +60,15 @@ function Shop({  onPlayUpgrade, onPlayCraft, onPlayMines, onPlayNewGame, giftsDb
   const { t, lang } = useTranslation();
   const getLocalizedImage = (id: string, base: string) => {
     if (lang === 'zh') {
-      if (id === 'upgrade') return '/apgreyd_chaina.png';
-      if (id === 'craft') return '/craft_chaina.png';
-      if (id === 'mines') return '/mines_chaina.png';
-      if (id === 'subscribe') return '/subscribe_chaina.png';
+      if (id === 'upgrade') return '/apgreyd_chaina.png?v=2';
+      if (id === 'craft') return '/craft_chaina.png?v=2';
+      if (id === 'mines') return '/mines_chaina.png?v=2';
+      if (id === 'subscribe') return '/subscribe_chaina.png?v=2';
     } else if (lang === 'en') {
-      if (id === 'upgrade') return '/upgrade_en.png';
-      if (id === 'craft') return '/craft_en.png';
-      if (id === 'mines') return '/mines_en.png';
-      if (id === 'subscribe') return '/subscribe_en.png';
+      if (id === 'upgrade') return '/upgrade_en.png?v=2';
+      if (id === 'craft') return '/craft_en.png?v=2';
+      if (id === 'mines') return '/mines_en.png?v=2';
+      if (id === 'subscribe') return '/subscribe_en.png?v=2';
     }
     return base;
   };

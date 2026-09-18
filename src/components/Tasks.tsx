@@ -71,7 +71,7 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
         if (current < target) {
           const isGrams = task.reqs?.game === 'turnover' || task.title === 'Награда за оборот';
           const remaining = target - current;
-          showToast(`Remaining: ${Number(remaining).toFixed(isGrams ? 2 : 0)}${isGrams ? ' Gram' : ' раз(а)'}`);
+          showToast(`${t('remaining')} ${Number(remaining).toFixed(isGrams ? 2 : 0)}${isGrams ? ' Gram' : ' ' + t('times')}`);
           return false;
         }
       }

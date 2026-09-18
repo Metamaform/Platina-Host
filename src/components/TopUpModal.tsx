@@ -49,7 +49,7 @@ export function TopUpModal({ onClose, onSuccess, demoMode }: TopUpModalProps) {
       // @ts-ignore
       if (window.Telegram?.WebApp?.showAlert) {
         // @ts-ignore
-        window.Telegram.WebApp.showAlert(`Демо-пополнение на ${parsedAmount} successful!`);
+        window.Telegram.WebApp.showAlert(`Demo top-up ${parsedAmount} successful`);
       }
       onClose();
       return;

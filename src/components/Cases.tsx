@@ -310,7 +310,7 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
                ) : (
                  <div className="w-full mt-4 flex flex-col items-center">
                    <div className="flex items-center justify-center mb-4">
-                     <button onClick={() => setIsFastOpen(!isFastOpen)} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${isFastOpen ? "bg-brand text-white shadow-[0_0_15px_rgba(255,176,24,0.3)]" : "bg-white/5 text-white/50 border border-white/10"}`}>Fast open: {isFastOpen ? "ON" : "OFF"}</button>
+                     <button onClick={() => setIsFastOpen(!isFastOpen)} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${isFastOpen ? "bg-brand text-white shadow-[0_0_15px_rgba(255,176,24,0.3)]" : "bg-white/5 text-white/50 border border-white/10"}`}>{isFastOpen ? t('fast_open_on') : t('fast_open_off')}</button>
                    </div>
                    <div className="flex gap-2 mb-6">
                      {[1, 2, 3].map(amount => (

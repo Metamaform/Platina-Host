@@ -20,9 +20,9 @@ const CRASHED_PAUSE_MS = 3000;    // 3s result pause
 
 export function generateCrashMultiplier(): number {
   const rand = Math.random();
-  if (rand < 0.035) return 1.0; // 3.5% instant crash at 1.00x
-  // 96% RTP curve
-  let mult = 0.96 / (1.0 - rand * 0.95);
+  if (rand < 0.05) return 1.0; // 5% instant crash at 1.00x
+  // 95% RTP curve
+  let mult = 0.95 / (1.0 - rand);
   mult = Math.max(1.01, Math.min(80.0, mult));
   return Number(mult.toFixed(2));
 }

@@ -212,7 +212,7 @@ export function upsertUserProfile(profile: {
       username: user.username || null,
       balance: user.balance,
       inventory: user.inventory,
-    }, { onConflict: 'id' }).then(({ error }) => {
+    }, { onConflict: 'id' }).then(({ error }: { error: any }) => {
       if (error) {
         console.error("[Supabase] Error syncing user:", error);
         try { const fs = require('fs'); fs.appendFileSync('data/supabase.log', new Date().toISOString() + ' Sync User Error: ' + JSON.stringify(error) + '\n'); } catch (e) {}
@@ -272,7 +272,7 @@ export function saveUserState(id: number, balance: number, inventory: any[], tur
     supabaseServer.from('users').update({
       balance: existing.balance,
       inventory: existing.inventory,
-    }).eq('id', existing.id).then(({ error }) => {
+    }).eq('id', existing.id).then(({ error }: { error: any }) => {
       if (error) {
         console.error("[Supabase] Error syncing user state:", error);
         try { const fs = require('fs'); fs.appendFileSync('data/supabase.log', new Date().toISOString() + ' Sync State Error: ' + JSON.stringify(error) + '\n'); } catch (e) {}

@@ -612,7 +612,29 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
     res.json({ success: true, welcome_seen: true });
   });
 
-  app.post("/api/state", requireAuth, (req, res) => {
+  
+  app.post("/api/upgrade", requireAuth, (req, res) => {
+    const { betAmount, targetPrice } = req.body;
+    if (!targetPrice || targetPrice <= 0) return res.status(400).json({ error: 'Invalid target' });
+    
+    let chance = ((betAmount * 0.95) / targetPrice) * 100;
+    if (chance > 95) chance = 95;
+    
+    const win = Math.random() * 100 < chance;
+    
+    // Calculate final angle for animation
+    const winAngle = (chance / 100) * 360;
+    let finalAngle;
+    if (win) {
+       finalAngle = 360 - (Math.random() * winAngle);
+    } else {
+       finalAngle = 360 - (winAngle + Math.random() * (360 - winAngle));
+    }
+    
+    res.json({ win, finalAngle, chance });
+  });
+
+app.post("/api/state", requireAuth, (req, res) => {
     const userId = (req as any).userId as number;
     const { balance, inventory, turnover, topups } = req.body || {};
     if (typeof balance !== "number" || !Array.isArray(inventory)) {

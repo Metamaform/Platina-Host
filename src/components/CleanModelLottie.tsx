@@ -48,13 +48,12 @@ export const CleanModelLottie: React.FC<Props> = ({ lottieUrl, className, static
     try {
       anim = lottie.loadAnimation({
         container: containerRef.current,
-        renderer: 'canvas',
+        renderer: 'svg',
         loop: loop || false,
         autoplay: !staticMode && delayMs === 0,
         animationData: cleanDataUrl,
         rendererSettings: {
-          preserveAspectRatio: 'xMidYMid meet',
-          clearCanvas: true
+          preserveAspectRatio: 'xMidYMid meet'
         }
       });
       animRef.current = anim;

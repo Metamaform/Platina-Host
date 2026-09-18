@@ -5,6 +5,7 @@ import { useTranslation } from '../lib/i18n';
 import { GramIcon } from './GramIcon';
 import { PremiumImage } from './PremiumImage';
 import { CleanModelLottie } from './CleanModelLottie';
+import { BoomIcon } from './BoomIcon';
 import { multAtTime, RocketBet, ServerRocketState } from '../lib/rocketShared';
 
 interface NewGameProps {
@@ -49,10 +50,59 @@ export const NewGame: React.FC<NewGameProps> = ({
 
   // User Bet modal state
   const [showBetModal, setShowBetModal] = useState(false);
-  const [mode, setMode] = useState<'gram' | 'nft'>('gram');
-  const [betInput, setBetInput] = useState<string>('10');
+  const [mode, setMode] = useState<'gram' | 'nft'>(() => {
+    try {
+      return (localStorage.getItem('rocket_mode') as 'gram' | 'nft') || 'gram';
+    } catch {
+      return 'gram';
+    }
+  });
+  const [betInput, setBetInput] = useState<string>(() => {
+    try {
+      return localStorage.getItem('rocket_bet') || '10';
+    } catch {
+      return '10';
+    }
+  });
   const betGram = parseFloat(betInput) || 0;
+  
   const [selectedNft, setSelectedNft] = useState<any>(null);
+
+  useEffect(() => {
+    localStorage.setItem('rocket_mode', mode);
+  }, [mode]);
+
+  useEffect(() => {
+    localStorage.setItem('rocket_bet', betInput);
+  }, [betInput]);
+
+    const isInitRef = useRef(false);
+  useEffect(() => {
+    if (!isInitRef.current) return;
+    if (selectedNft) {
+      localStorage.setItem('rocket_selectedNftModel', selectedNft.id);
+    } else {
+      localStorage.removeItem('rocket_selectedNftModel');
+    }
+  }, [selectedNft]);
+
+    useEffect(() => {
+    try {
+      const savedModel = localStorage.getItem('rocket_selectedNftModel');
+      if (savedModel) {
+        const item = inventory.find(i => i.id === savedModel && !i.isWithdrawing);
+        if (item) {
+          setSelectedNft(item);
+        } else if (inventory.length > 0) {
+          setSelectedNft(null);
+        }
+      }
+    } catch {}
+    isInitRef.current = true;
+  }, [inventory]);
+
+  // Current game state (reactive, updated by loop)
+  const [currentGameState, setCurrentGameState] = useState<'waiting' | 'flying' | 'crashed'>('waiting');
 
   // Submitting loading states
   const [isSubmittingBet, setIsSubmittingBet] = useState(false);
@@ -116,8 +166,11 @@ export const NewGame: React.FC<NewGameProps> = ({
   useEffect(() => {
     if (!serverState) return;
 
-    const animTimer = setInterval(() => {
+    let animationFrameId: number;
+
+    const tick = () => {
       const adjustedNow = Date.now() + clockOffset;
+      let nextGameState = serverState.state;
 
       if (serverState.state === 'waiting') {
         if (adjustedNow < serverState.launchTime) {
@@ -126,23 +179,33 @@ export const NewGame: React.FC<NewGameProps> = ({
           const remaining = Math.min(5, Math.max(1, Math.ceil(diff / 1000)));
           setLiveCountdown(remaining);
           setLiveMult(1.0);
+          nextGameState = 'waiting';
         } else {
           setRemainingMs(0);
           const elapsed = adjustedNow - serverState.launchTime;
           setLiveMult(multAtTime(elapsed));
+          nextGameState = adjustedNow >= serverState.crashTime ? 'crashed' : 'flying';
         }
       } else if (serverState.state === 'flying') {
         setRemainingMs(0);
         const elapsed = Math.max(0, adjustedNow - serverState.launchTime);
         const calculated = multAtTime(elapsed);
         setLiveMult(calculated);
+        nextGameState = 'flying';
       } else if (serverState.state === 'crashed') {
         setRemainingMs(0);
         setLiveMult(serverState.crashMultiplier || serverState.currentMultiplier || 1.0);
+        nextGameState = 'crashed';
       }
-    }, 50);
 
-    return () => clearInterval(animTimer);
+      setCurrentGameState((prev) => (prev !== nextGameState ? nextGameState : prev));
+      
+      animationFrameId = requestAnimationFrame(tick);
+    };
+
+    animationFrameId = requestAnimationFrame(tick);
+
+    return () => cancelAnimationFrame(animationFrameId);
   }, [serverState, clockOffset]);
 
   // Find active user bet in current round or queued bets
@@ -155,19 +218,6 @@ export const NewGame: React.FC<NewGameProps> = ({
     if (!user || !serverState) return null;
     return serverState.queuedBets.find(b => b.userId === user.id) || null;
   }, [user, serverState]);
-
-  // Current game state (reactive)
-  const currentGameState = useMemo(() => {
-    if (!serverState) return 'waiting';
-    const adjustedNow = Date.now() + clockOffset;
-    if (serverState.state === 'waiting' && adjustedNow >= serverState.launchTime) {
-      if (adjustedNow >= serverState.crashTime) {
-        return 'crashed';
-      }
-      return 'flying';
-    }
-    return serverState.state;
-  }, [serverState, clockOffset, liveCountdown, liveMult]);
 
   // Sort players in current round according to rules:
   // - If crashed: green winners (hasWon) first, red losers (!hasWon) pushed to the bottom.
@@ -240,8 +290,10 @@ export const NewGame: React.FC<NewGameProps> = ({
   // Highest priced reached NFT gift <= currentBetValue
   const reachedGift = useMemo(() => {
     if (!userBetInRound || currentBetValue <= 0) return null;
-    const reached = sortedGifts.filter((g) => g.priceVal <= currentBetValue);
-    return reached.length > 0 ? reached[reached.length - 1] : null;
+    for (let i = sortedGifts.length - 1; i >= 0; i--) {
+      if (sortedGifts[i].priceVal <= currentBetValue) return sortedGifts[i];
+    }
+    return null;
   }, [sortedGifts, currentBetValue, userBetInRound]);
 
   const reachedGiftPrice = reachedGift ? reachedGift.priceVal : 0;
@@ -499,45 +551,37 @@ export const NewGame: React.FC<NewGameProps> = ({
 
     if (activeWinAmount <= 0) return null;
     
-    const affordableGifts = (activeGiftsDb || [])
-      .filter((g: any) => {
-        const p = Number(g.floor_price_gram || g.price || 0);
-        return p > 0 && p <= activeWinAmount;
-      })
-      .sort((a: any, b: any) => {
-        const pa = Number(a.floor_price_gram || a.price || 0);
-        const pb = Number(b.floor_price_gram || b.price || 0);
-        return pb - pa;
-      });
-      
-    return affordableGifts[0] || null;
-  }, [userBetInRound, liveMult, activeGiftsDb]);
+    // O(N) iteration instead of filtering and sorting every frame
+    for (let i = sortedGifts.length - 1; i >= 0; i--) {
+      if (sortedGifts[i].priceVal <= activeWinAmount) return sortedGifts[i];
+    }
+    return null;
+  }, [userBetInRound, liveMult, sortedGifts]);
 
   return (
     <div className="h-full w-full flex flex-col bg-canvas text-white relative select-none">
-      {/* Top Header Bar */}
-      <div className="relative h-[72px] flex items-center justify-between px-4 z-20 shrink-0 border-b border-white/5">
-        <button
-          id="rocket-back-button"
-          onClick={onBack}
-          className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center active:scale-95 transition-all hover:bg-white/20 border border-white/5 cursor-pointer"
-          title={t('back') || 'Back'}
-        >
-          <ArrowLeft className="w-5 h-5 text-white" />
-        </button>
+      <button
+        id="rocket-back-button"
+        onClick={onBack}
+        className="absolute top-4 left-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center active:scale-95 transition-all hover:bg-white/20 border border-white/5 cursor-pointer z-20"
+        title={t('back') || 'Back'}
+      >
+        <ArrowLeft className="w-5 h-5 text-white" />
+      </button>
 
+      <div className="absolute top-0 left-0 right-0 h-[72px] flex items-center justify-center pointer-events-none z-10">
         <h1 className="font-display text-lg font-bold text-white drop-shadow-md">
           {t('new_game') || 'Rocket'}
         </h1>
+      </div>
 
-        <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
-          <span className="text-white font-bold text-[13px]">{balance.toFixed(2)}</span>
-          <GramIcon className="w-3.5 h-3.5" />
-        </div>
+      <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-white/5 px-3 h-10 rounded-full border border-white/5 z-20">
+        <span className="text-white font-bold text-[13px]">{balance.toFixed(2)}</span>
+        <GramIcon className="w-3.5 h-3.5" />
       </div>
 
       {/* Main Scrollable Area */}
-      <div className="flex-1 overflow-y-auto px-4 pt-3 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto px-4 pt-[72px] custom-scrollbar">
         <div className="max-w-md mx-auto flex flex-col items-center">
 
           {/* Fixed Non-scrollable Multipliers Line (нельзя листать) */}
@@ -565,124 +609,168 @@ export const NewGame: React.FC<NewGameProps> = ({
           )}
 
           {/* Rocket Flight Screen / Visualizer */}
-          <div className="w-full relative min-h-[250px] rounded-[28px] bg-gradient-to-b from-[#181820] to-[#121216] border border-white/10 overflow-hidden flex flex-col items-center justify-center p-5 shadow-2xl mb-4">
-            {/* Ambient Background Glow */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent pointer-events-none" />
-            <div className="absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+          <div className="w-full relative min-h-[250px] mb-4">
+            {/* Background container with rounded corners and overflow hidden */}
+            <div className="absolute inset-0 rounded-[28px] bg-gradient-to-b from-[#181820] to-[#121216] border border-white/10 overflow-hidden shadow-2xl pointer-events-none">
+              {/* Ambient Background Glow */}
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+
+              {/* Center Area: Waiting rocket or flying/crashed rocket */}
+              <div className="absolute inset-0 w-full h-full pointer-events-none z-0">
+                <svg 
+                  className="w-full h-full pointer-events-none" 
+                  viewBox="0 0 1000 1000" 
+                  preserveAspectRatio="none"
+                >
+                  <defs>
+                    <filter id="neon-glow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="15" result="coloredBlur"/>
+                      <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
+                  </defs>
+                  
+                  {currentGameState !== 'waiting' && trajectoryPath && (
+                    <path
+                      d={trajectoryPath}
+                      fill="none"
+                      stroke={pathColor}
+                      strokeWidth="16"
+                      strokeLinecap="round"
+                      filter="url(#neon-glow)"
+                      className="transition-colors duration-300"
+                    />
+                  )}
+                </svg>
+              </div>
+
+              {/* Explosion Effect */}
+              <AnimatePresence>
+                {currentGameState === 'crashed' && (
+                  <motion.div 
+                    initial={{ scale: 0, opacity: 1, rotate: -30 }}
+                    animate={{ scale: [1.5, 1], opacity: 1, rotate: 0 }}
+                    exit={{ opacity: 0, scale: 0.5 }}
+                    transition={{ type: "spring", damping: 10, stiffness: 300, duration: 0.2 }}
+                    className="absolute z-20 pointer-events-none drop-shadow-[0_4px_25px_rgba(239,68,68,0.8)]"
+                    style={{ left: `calc(${rocketPos.x / 10}% - 5rem)`, top: `calc(${rocketPos.y / 10}% - 5rem)`, width: '10rem', height: '10rem' }}
+                  >
+                    <img src="/telegram-boom.svg" className="w-full h-full object-contain" alt="Boom" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Absolutely Positioned Rocket */}
+              <div 
+                className={`absolute z-10 w-28 h-28 flex items-center justify-center transition-all ${
+                  currentGameState === 'waiting' ? 'opacity-0 scale-50 duration-500' :
+                  currentGameState === 'crashed' ? 'opacity-0 scale-0 duration-[200ms] ease-out' : 
+                  'opacity-100 scale-100 duration-[100ms] ease-linear'
+                }`}
+                style={{
+                  left: `calc(${rocketPos.x / 10}% - 3.5rem)`, 
+                  top: `calc(${rocketPos.y / 10}% - 3.5rem)`,
+                  transform: `rotate(${rocketPos.angle + 45}deg)`,
+                }}
+              >
+                <CleanModelLottie
+                  lottieUrl="/stellarrocket-1-nobg.lottie.json"
+                  loop={currentGameState === 'flying'}
+                  staticMode={currentGameState === 'crashed'}
+                  className="w-full h-full drop-shadow-[0_4px_25px_rgba(245,158,11,0.35)]"
+                />
+              </div>
+            </div>
+
+            {/* Everything else placed over the background container, without overflow-hidden! */}
 
             {/* Status Pill */}
-            <div className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-white/5 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
-              <span className={`w-2 h-2 rounded-full ${
+            <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 bg-white/5 backdrop-blur-md px-2 py-1 rounded-full border border-white/10">
+              <span className={`w-1.5 h-1.5 rounded-full ${
                 currentGameState === 'flying' ? 'bg-green-400 animate-ping' :
                 currentGameState === 'crashed' ? 'bg-red-500' : 'bg-amber-400 animate-pulse'
               }`} />
-              <span className="text-[11px] font-bold tracking-wider uppercase text-white/70">
-                {currentGameState === 'waiting' ? `Start in ${liveCountdown}с` :
-                 currentGameState === 'flying' ? 'Flying' : 'Crashed'}
+              <span className="text-[9px] font-bold tracking-wider uppercase text-white/70">
+                {currentGameState === 'waiting' ? t('start_in') :
+                 currentGameState === 'flying' ? t('flying') : t('crashed')}
               </span>
             </div>
 
             {/* Round Number */}
-            <div className="absolute top-4 right-4 z-10 text-[11px] text-white/40 font-medium bg-white/5 px-2.5 py-1 rounded-full border border-white/5">
+            <div className="absolute top-4 right-4 z-10 flex items-center justify-center bg-white/5 backdrop-blur-md px-2 py-1 rounded-full border border-white/10 text-[9px] font-bold tracking-wider text-white/70 uppercase">
               #{serverState?.roundId || 1}
             </div>
 
-            {/* Center Area: Waiting rocket or flying/crashed rocket */}
-            <div className="absolute inset-0 w-full h-full pointer-events-none z-0">
-              <svg 
-                className="w-full h-full pointer-events-none" 
-                viewBox="0 0 1000 1000" 
-                preserveAspectRatio="none"
-              >
-                <defs>
-                  <filter id="neon-glow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="15" result="coloredBlur"/>
-                    <feMerge>
-                      <feMergeNode in="coloredBlur"/>
-                      <feMergeNode in="SourceGraphic"/>
-                    </feMerge>
-                  </filter>
-                </defs>
-                
-                {currentGameState !== 'waiting' && trajectoryPath && (
-                  <path
-                    d={trajectoryPath}
-                    fill="none"
-                    stroke={pathColor}
-                    strokeWidth="16"
-                    strokeLinecap="round"
-                    filter="url(#neon-glow)"
-                    className="transition-colors duration-300"
-                  />
-                )}
-              </svg>
-            </div>
-
-            {/* Absolutely Positioned Rocket */}
-            <div 
-              className={`absolute z-10 w-28 h-28 flex items-center justify-center transition-all ${
-                currentGameState === 'waiting' ? 'opacity-0 scale-50 duration-500' :
-                currentGameState === 'crashed' ? 'opacity-35 grayscale scale-90 duration-[300ms]' : 
-                'opacity-100 scale-100 duration-[100ms] ease-linear'
-              }`}
-              style={{
-                left: `calc(${rocketPos.x / 10}% - 3.5rem)`, 
-                top: `calc(${rocketPos.y / 10}% - 3.5rem)`,
-                transform: `rotate(${rocketPos.angle + 45}deg)`,
-              }}
-            >
-              <CleanModelLottie
-                lottieUrl="https://nft.fragment.com/gift/stellarrocket-1.lottie.json"
-                loop={currentGameState === 'flying'}
-                staticMode={currentGameState === 'crashed'}
-                className="w-full h-full drop-shadow-[0_4px_25px_rgba(245,158,11,0.35)]"
-              />
-            </div>
-
             {/* Centered Multiplier and Countdown */}
-            <div className={`relative z-10 flex flex-col items-center justify-center h-full pointer-events-none transition-all duration-300 ${currentGameState === 'flying' && currentAffordableNft ? '-mt-6' : ''}`}>
+            <div className={`absolute inset-x-0 ${currentGameState === 'waiting' ? 'top-1/2 -translate-y-1/2' : 'top-8'} z-10 flex flex-col items-center pointer-events-none transition-all duration-500`}>
               <AnimatePresence>
                 {currentGameState === 'waiting' && (
                   <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
+                    initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
                     transition={{ duration: 0.25 }}
-                    className="absolute w-44 h-44 flex items-center justify-center pointer-events-none"
+                    className="relative w-24 h-24 flex items-center justify-center pointer-events-none"
                   >
-                    <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none scale-110" viewBox="0 0 176 176">
+                    <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 100 100">
                       <circle
-                        cx="88"
-                        cy="88"
-                        r="78"
+                        cx="50"
+                        cy="50"
+                        r="44"
                         className="stroke-brand fill-none transition-all duration-100 ease-linear"
                         strokeWidth="4"
-                        strokeDasharray={490}
-                        strokeDashoffset={490 * (1 - Math.max(0, Math.min(1, remainingMs / 5000)))}
+                        strokeDasharray={276}
+                        strokeDashoffset={276 * (1 - Math.max(0, Math.min(1, remainingMs / 5000)))}
                         strokeLinecap="round"
                         style={{
                           filter: 'drop-shadow(0 0 6px rgba(255, 184, 0, 0.6))'
                         }}
                       />
                     </svg>
+                    <AnimatePresence mode="popLayout">
+                      <motion.div
+                        key={liveCountdown}
+                        initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.8 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        className="text-4xl font-display font-black text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] z-10"
+                      >
+                        {liveCountdown}
+                      </motion.div>
+                    </AnimatePresence>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              <span className={`font-display font-black tracking-tight drop-shadow-md transition-colors z-10 ${
-                currentGameState === 'crashed' 
-                  ? 'text-4xl text-red-500' 
-                  : liveMult < 1.2 
-                    ? 'text-5xl text-red-500'
-                    : liveMult < 3.0
-                      ? 'text-5xl text-emerald-400'
-                      : 'text-5xl text-brand'
-              }`}>
-                x{(currentGameState === 'crashed' ? (serverState?.crashMultiplier || liveMult) : liveMult).toFixed(2)}
-              </span>
+              <AnimatePresence>
+                {currentGameState !== 'waiting' && (
+                  <motion.span 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className={`font-display font-black tracking-tight drop-shadow-md transition-colors z-10 ${
+                      currentGameState === 'crashed' 
+                        ? 'text-4xl text-red-500' 
+                        : liveMult < 1.2 
+                          ? 'text-5xl text-red-500'
+                          : liveMult < 3.0
+                            ? 'text-5xl text-emerald-400'
+                            : liveMult < 8.0
+                              ? 'text-5xl text-brand'
+                              : 'text-5xl text-yellow-400'
+                    }`}
+                  >
+                    x{(currentGameState === 'crashed' ? (serverState?.crashMultiplier || liveMult) : liveMult).toFixed(2)}
+                  </motion.span>
+                )}
+              </AnimatePresence>
               
               {currentGameState === 'crashed' && (
-                <span className="text-xs text-red-400/90 font-semibold mt-1">Flew away!</span>
+                <span className="text-xs text-red-400/90 font-semibold mt-1">{t('rocket_flew_away')}</span>
               )}
 
               {/* Display Winnable NFT */}
@@ -760,14 +848,14 @@ export const NewGame: React.FC<NewGameProps> = ({
               className="w-full relative overflow-hidden group rounded-[20px] font-display font-bold text-[18px] tracking-wide active:scale-[0.98] transition-all py-4 shadow-[0_0_30px_rgba(255,184,0,0.3)] bg-brand text-black disabled:opacity-50 cursor-pointer"
             >
               {userBetInQueue
-                ? 'Bet for next round accepted'
+                ? t('rocket_next_round_accepted')
                 : userBetInRound && userBetInRound.hasWon
-                ? 'Win taken! Bet again'
+                ? t('rocket_win_taken')
                 : userBetInRound && currentGameState === 'waiting'
-                ? `Bet ${userBetInRound.betAmount} GRAM accepted`
+                ? t('rocket_bet_accepted').replace('{amount}', userBetInRound.betAmount.toString())
                 : currentGameState === 'flying'
-                ? 'Bet for next round'
-                : 'Place bet'}
+                ? t('rocket_bet_next_round')
+                : t('rocket_place_bet')}
             </button>
           )}
 
@@ -779,7 +867,7 @@ export const NewGame: React.FC<NewGameProps> = ({
           <div className="w-full mt-7 flex flex-col gap-3 pb-8">
             <div className="flex items-center gap-1.5 px-1">
               <span className="text-white/60 text-xs font-bold uppercase tracking-wider">
-                Players list
+                {t('players_list')}
               </span>
               <span className="text-white/40 text-[11px] font-medium">
                 ({sortedDisplayList.length})
@@ -789,11 +877,9 @@ export const NewGame: React.FC<NewGameProps> = ({
             {sortedDisplayList.length === 0 ? (
               <div className="w-full py-8 px-4 text-center rounded-[24px] bg-[#1c1c20] border border-white/5 flex flex-col items-center justify-center">
                 <span className="text-white/40 text-sm font-medium">
-                  No bets in this round yet
+                  {t('rocket_no_bets')}
                 </span>
-                <span className="text-white/20 text-xs mt-1">
-                  Be the first to bet!
-                </span>
+                <span className="text-white/20 text-xs mt-1">{t('rocket_be_first')}</span>
               </div>
             ) : (
               <AnimatePresence mode="popLayout">
@@ -834,9 +920,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                               {open.firstName}
                             </span>
                             {isMyBet && (
-                              <span className="text-[10px] bg-brand/20 text-brand px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                                You
-                              </span>
+                              <span className="text-[10px] bg-brand/20 text-brand px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">{t('you')}</span>
                             )}
                           </div>
                           <div className="flex items-center gap-1.5 opacity-60">
@@ -922,7 +1006,7 @@ export const NewGame: React.FC<NewGameProps> = ({
               <div className="flex items-center justify-between mb-6">
                 <div className="w-8" />
                 <h2 className="text-[20px] font-display font-bold text-white text-center">
-                  {currentGameState === 'flying' ? 'Bet for next round' : (t('make_bet_title') || 'Place bet')}
+                  {currentGameState === 'flying' ? t('rocket_bet_next_round') : (t('make_bet_title') || t('rocket_place_bet'))}
                 </h2>
                 <button
                   onClick={() => setShowBetModal(false)}
@@ -939,9 +1023,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                   className={`flex-1 py-2.5 rounded-[12px] font-medium text-[15px] transition-all cursor-pointer ${
                     mode === 'nft' ? 'bg-brand text-black shadow-sm' : 'text-white/40 hover:text-white/80'
                   }`}
-                >
-                  Gifts
-                </button>
+                >{t('gifts')}</button>
                 <button
                   onClick={() => setMode('gram')}
                   className={`flex-1 py-2.5 rounded-[12px] font-medium text-[15px] transition-all cursor-pointer ${
@@ -998,7 +1080,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                         <div className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-300 ease-in-out flex items-center ${autoCashoutEnabled ? 'bg-brand' : 'bg-white/20'}`}>
                           <div className={`w-4 h-4 bg-black/80 rounded-full transition-transform duration-300 ease-out shadow-sm ${autoCashoutEnabled ? 'translate-x-4' : 'translate-x-0'}`} />
                         </div>
-                        <span className="text-white/80 text-[13px] font-bold">Auto withdraw</span>
+                        <span className="text-white/80 text-[13px] font-bold">{t('rocket_auto_withdraw')}</span>
                       </div>
                       <div className={`flex-1 flex items-center justify-end transition-opacity ${autoCashoutEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
                         <span className="text-white/40 text-[12px] font-medium mr-2">multiplier</span>
@@ -1065,7 +1147,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                 }
                 className="w-full bg-brand text-black font-display font-bold text-[18px] py-4 rounded-[20px] active:scale-[0.98] transition-transform disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_30px_rgba(255,184,0,0.2)] cursor-pointer"
               >
-                {isSubmittingBet ? 'Placing...' : 'Place bet'}
+                {isSubmittingBet ? 'Placing...' : t('rocket_place_bet')}
               </button>
             </motion.div>
           </>
@@ -1075,85 +1157,78 @@ export const NewGame: React.FC<NewGameProps> = ({
       {/* Celebration Modal when user cashes out */}
       <AnimatePresence>
         {wonResult && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/95 backdrop-blur-sm px-6" onClick={() => setWonResult(null)}>
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-md"
-              onClick={() => setWonResult(null)}
-            />
-            <motion.div
-              initial={{ scale: 0.85, opacity: 0, y: 20 }}
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.85, opacity: 0, y: 20 }}
-              transition={{ type: "spring", stiffness: 350, damping: 25 }}
-              className="relative w-full max-w-sm bg-gradient-to-b from-[#24242e] to-[#17171d] border border-brand/40 rounded-[32px] p-6 flex flex-col items-center text-center shadow-[0_0_50px_rgba(255,184,0,0.3)] z-10"
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-[280px] flex flex-col gap-2.5 mx-auto p-2 rounded-[28px] relative z-10 transition-all duration-300 shadow-2xl border border-[#3b82f6]/20 bg-[#16181d] shadow-[0_4px_20px_-10px_rgba(59,130,246,0.1)]"
             >
-              <div className="w-12 h-1.5 bg-white/10 rounded-full mb-4" />
+              <div className="w-full flex justify-center pt-2 relative">
+                <div className="flex flex-col items-center">
+                  <span className="text-[13px] font-black text-[#22c55e] uppercase tracking-widest">
+                    Успешный вывод!
+                  </span>
+                </div>
+                <button onClick={() => setWonResult(null)} className="absolute top-0 right-1 p-1 text-white/40 hover:text-white transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
 
               {wonResult.gift ? (
-                <>
-                  <div className="w-24 h-24 rounded-2xl bg-black/50 border border-brand/40 flex items-center justify-center p-2 mb-3.5 shadow-[0_0_30px_rgba(255,184,0,0.25)]">
-                    <PremiumImage
-                      staticMode={true}
-                      src={wonResult.gift.image_url}
-                      alt={wonResult.gift.name}
-                      className="w-full h-full object-contain"
+                <div className="relative overflow-hidden w-full aspect-square rounded-[20px] flex flex-col items-center p-1 transition-all duration-300">
+                  <div className="flex-1 w-full flex items-center justify-center min-h-0 mb-2">
+                    <PremiumImage 
+                      staticMode={false} 
+                      loopWithDelay={true} 
+                      loopDelayMs={5000} 
+                      src={wonResult.gift.image_url} 
+                      alt={wonResult.gift.name} 
+                      className="w-[85%] h-[85%] object-contain drop-shadow-lg" 
                     />
                   </div>
-                  <span className="text-[11px] uppercase tracking-widest font-extrabold text-brand bg-brand/15 px-3 py-1 rounded-full mb-1">
-                    NFT Win! (x{wonResult.multiplier.toFixed(2)})
-                  </span>
-                  <h3 className="font-display text-2xl font-black text-white mt-1 mb-2">
-                    {wonResult.gift.name}
-                  </h3>
-                  <div className="flex flex-col gap-2 w-full bg-white/5 rounded-2xl p-3 mb-5 border border-white/5 text-sm">
-                    <div className="flex justify-between items-center text-white/70">
-                      <span>NFT Value:</span>
-                      <span className="font-bold text-white flex items-center gap-1">
-                        {wonResult.gift.price || wonResult.gift.floor_price_gram} <GramIcon className="w-3.5 h-3.5" />
-                      </span>
-                    </div>
-                    {wonResult.remainder && wonResult.remainder > 0 ? (
-                      <div className="flex justify-between items-center text-emerald-400 font-semibold">
-                        <span>Balance remainder:</span>
-                        <span className="flex items-center gap-1 font-bold">
-                          +{wonResult.remainder.toFixed(2)} <GramIcon className="w-3.5 h-3.5" />
-                        </span>
-                      </div>
-                    ) : null}
-                    <div className="flex justify-between items-center text-brand font-bold pt-1.5 border-t border-white/10">
-                      <span>Total prize:</span>
-                      <span className="flex items-center gap-1">
-                        {wonResult.winAmount.toFixed(2)} <GramIcon className="w-3.5 h-3.5" />
-                      </span>
-                    </div>
+                  <div className="relative z-20 w-full flex flex-col items-center justify-end shrink-0 pb-1.5 px-1">
+                    <span className="text-[14px] text-white/90 w-full text-center font-bold leading-tight line-clamp-2">{wonResult.gift.name}</span>
+                    <span className="text-[15px] font-bold text-brand flex items-center justify-center gap-1 mt-1">{Number(wonResult.gift.price || wonResult.gift.floor_price_gram || 0).toFixed(2)} <GramIcon className="w-4 h-4" /></span>
                   </div>
-                </>
+                </div>
               ) : (
-                <>
-                  <div className="w-20 h-20 rounded-full bg-brand/10 border-2 border-brand/40 flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(255,184,0,0.25)]">
+                <div className="relative overflow-hidden w-full aspect-square rounded-[20px] flex flex-col items-center p-1 transition-all duration-300 justify-center">
+                  <div className="w-20 h-20 rounded-full bg-brand/10 border-2 border-brand/40 flex items-center justify-center shadow-[0_0_30px_rgba(255,184,0,0.25)] mb-4">
                     <GramIcon className="w-10 h-10 text-brand" />
                   </div>
-                  <span className="text-[11px] uppercase tracking-widest font-extrabold text-brand bg-brand/15 px-3 py-1 rounded-full mb-1">
-                    Successful withdraw! (x{wonResult.multiplier.toFixed(2)})
-                  </span>
-                  <h3 className="font-display text-3xl font-black text-white mt-1 mb-2 flex items-center justify-center gap-2">
-                    +{wonResult.winAmount.toFixed(2)} <GramIcon className="w-6 h-6 text-brand" />
-                  </h3>
-                  <p className="text-white/60 text-xs mb-5">
-                    Winnings credited to your balance
-                  </p>
-                </>
+                  <div className="relative z-20 w-full flex flex-col items-center justify-end shrink-0 pb-1.5 px-1">
+                    <span className="text-[14px] text-white/60 w-full text-center font-medium leading-tight line-clamp-2">Выигрыш (x{wonResult.multiplier.toFixed(2)})</span>
+                    <span className="text-[24px] font-bold text-brand flex items-center justify-center gap-1 mt-1">+{wonResult.winAmount.toFixed(2)} <GramIcon className="w-5 h-5 text-brand" /></span>
+                  </div>
+                </div>
               )}
 
-              <button
-                onClick={() => setWonResult(null)}
-                className="w-full py-3.5 bg-brand text-black font-display font-bold text-base rounded-2xl active:scale-[0.98] transition-transform shadow-[0_0_20px_rgba(255,184,0,0.2)] cursor-pointer"
-              >
-                Great!
-              </button>
+              <div className="flex flex-col gap-1.5 w-full mt-1">
+                <div className="flex flex-col gap-1 px-2 py-1.5 mb-1 text-[12px] font-medium border-t border-white/5 pt-2">
+                  {wonResult.remainder && wonResult.remainder > 0 ? (
+                    <div className="flex justify-between items-center text-[#22c55e]">
+                      <span>Остаток с выигрыша:</span>
+                      <span className="flex items-center gap-1 font-bold">
+                        +{wonResult.remainder.toFixed(2)} <GramIcon className="w-3 h-3" />
+                      </span>
+                    </div>
+                  ) : null}
+                  <div className="flex justify-between items-center text-white/60">
+                    <span>Текущий баланс:</span>
+                    <span className="text-white flex items-center gap-1 font-bold">
+                      {balance.toFixed(2)} <GramIcon className="w-3 h-3 text-brand" />
+                    </span>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setWonResult(null)}
+                  className="w-full py-3 rounded-[12px] text-[13px] font-bold flex items-center justify-center bg-white/10 text-white hover:bg-white/20 transition-colors"
+                >
+                  Отлично
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

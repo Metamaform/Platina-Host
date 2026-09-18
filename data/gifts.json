@@ -6,7 +6,7 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Berry Boxes.",
     "floor_price_gram": 8.01,
-    "image_url": "https://fragment.com/file/gifts/berrybox/model.tOJPWNGnvgz4oI6jSJ1YWVyoXyVg0rDKzBZFkVBdVNidoWYDemOtnx-0iKr1DBfX.webp",
+    "image_url": "https://fragment.com/file/gifts/berrybox/model.kQPafPX2f_DmtLLTOq9xHEh7Z42G_-axx6klO5Np6S3V1ab1UlHwb6hQ7qMo7DGN.webp",
     "animation_url": "",
     "lottie_url": ""
   },
@@ -19,7 +19,7 @@
     "floor_price_gram": 2.51,
     "image_url": "https://fragment.com/file/gifts/vicecream/model.uHa2XRMqGfX9m5YADG5W39NNUfz_S1SyFaehrdJ4dmQDjwWDUpbHmsFVARoLZZXy.webp",
     "animation_url": "",
-    "lottie_url": ""
+    "lottie_url": "https://fragment.com/file/gifts/vicecream/model.uHa2XRMqGfX9m5YADG5W39NNUfz_S1SyFaehrdJ4dmQDjwWDUpbHmsFVARoLZZXy.webp"
   },
   {
     "id": "125",
@@ -96,7 +96,7 @@
     "floor_price_gram": 2.51,
     "image_url": "https://fragment.com/file/gifts/chillflame/model.Vgm-793yPILRdkecWqYcydptrLQV-UBGOAZZ53MoNcXfqR0V-D6keb6tKBhCpyRT.webp",
     "animation_url": "",
-    "lottie_url": ""
+    "lottie_url": "/chillflame-1.lottie.json"
   },
   {
     "id": "10",
@@ -107,7 +107,7 @@
     "floor_price_gram": 3.42,
     "image_url": "https://fragment.com/file/gifts/holidaydrink/model.7EyCrtlGGTaFmpqaObuyKoV7VVFuZ3exKlqNNFmPl53xCL8_pT1iiMZsx3my2XTn.webp",
     "animation_url": "",
-    "lottie_url": ""
+    "lottie_url": "/holidaydrink-1.lottie.json"
   },
   {
     "id": "36",
@@ -151,7 +151,7 @@
     "floor_price_gram": 3.9,
     "image_url": "https://nft.fragment.com/gift/hypnolollipop-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/hypnolollipop-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "32",
@@ -162,7 +162,7 @@
     "floor_price_gram": 3.52,
     "image_url": "https://nft.fragment.com/gift/petsnake-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/petsnake-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "11",
@@ -261,7 +261,7 @@
     "floor_price_gram": 3.86,
     "image_url": "https://nft.fragment.com/gift/moodpack-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/moodpack-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "37",
@@ -272,7 +272,7 @@
     "floor_price_gram": 4.29,
     "image_url": "https://nft.fragment.com/gift/starnotepad-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/starnotepad-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "22",
@@ -283,7 +283,7 @@
     "floor_price_gram": 4.02,
     "image_url": "https://nft.fragment.com/gift/partysparkler-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/partysparkler-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "29",
@@ -294,7 +294,7 @@
     "floor_price_gram": 3.72,
     "image_url": "https://nft.fragment.com/gift/whipcupcake-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/whipcupcake-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "31",
@@ -316,7 +316,7 @@
     "floor_price_gram": 3.72,
     "image_url": "https://nft.fragment.com/gift/timelessbook-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/timelessbook-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "100",
@@ -327,7 +327,7 @@
     "floor_price_gram": 4.25,
     "image_url": "https://nft.fragment.com/gift/snowglobe-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/snowglobe-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "16",
@@ -338,7 +338,7 @@
     "floor_price_gram": 4,
     "image_url": "https://nft.fragment.com/gift/freshsocks-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/freshsocks-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "89",
@@ -349,7 +349,7 @@
     "floor_price_gram": 4.28,
     "image_url": "https://nft.fragment.com/gift/happybrownie-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/happybrownie-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "65",
@@ -404,7 +404,7 @@
     "floor_price_gram": 3.49,
     "image_url": "https://nft.fragment.com/gift/libertyfigure-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/libertyfigure-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "95",
@@ -415,7 +415,7 @@
     "floor_price_gram": 4.3,
     "image_url": "https://nft.fragment.com/gift/cookieheart-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/cookieheart-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "52",
@@ -437,7 +437,7 @@
     "floor_price_gram": 4.36,
     "image_url": "https://nft.fragment.com/gift/homemadecake-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/homemadecake-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "43",
@@ -448,7 +448,7 @@
     "floor_price_gram": 4.81,
     "image_url": "https://nft.fragment.com/gift/stellarrocket-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/stellarrocket-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "133",
@@ -470,7 +470,7 @@
     "floor_price_gram": 4.17,
     "image_url": "https://nft.fragment.com/gift/bdaycandle-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/bdaycandle-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "70",
@@ -481,7 +481,7 @@
     "floor_price_gram": 4.55,
     "image_url": "https://nft.fragment.com/gift/bowtie-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/bowtie-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "91",
@@ -492,7 +492,7 @@
     "floor_price_gram": 4.67,
     "image_url": "https://nft.fragment.com/gift/witchhat-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/witchhat-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "17",
@@ -514,7 +514,7 @@
     "floor_price_gram": 5.18,
     "image_url": "https://nft.fragment.com/gift/swagbag-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/swagbag-1.lottie.json"
+    "lottie_url": "/swagbag-1.lottie.json"
   },
   {
     "id": "62",
@@ -525,7 +525,7 @@
     "floor_price_gram": 5.09,
     "image_url": "https://nft.fragment.com/gift/springbasket-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/springbasket-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "41",
@@ -536,7 +536,7 @@
     "floor_price_gram": 5.17,
     "image_url": "https://nft.fragment.com/gift/spyagaric-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/spyagaric-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "67",
@@ -547,7 +547,7 @@
     "floor_price_gram": 4.88,
     "image_url": "https://nft.fragment.com/gift/faithamulet-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/faithamulet-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "106",
@@ -602,7 +602,7 @@
     "floor_price_gram": 6.12,
     "image_url": "https://nft.fragment.com/gift/moonpendant-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/moonpendant-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "54",
@@ -613,7 +613,7 @@
     "floor_price_gram": 5.63,
     "image_url": "https://nft.fragment.com/gift/lightsword-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/lightsword-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "79",
@@ -624,7 +624,7 @@
     "floor_price_gram": 5.9,
     "image_url": "https://nft.fragment.com/gift/surgeboard-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/surgeboard-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "93",
@@ -633,9 +633,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Sleigh Bells.",
     "floor_price_gram": 6.6,
-    "image_url": "https://nft.fragment.com/gift/sleighbell-1.webp",
+    "image_url": "https://fragment.com/file/gifts/sleighbell/model.q5fpEK1YrTYroIF7ybIMQ3FjezDGdbhyiQjLp3yb_XXVbZi6FOqgGAywt1m0ki1Q.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/sleighbell-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "55",
@@ -646,7 +646,7 @@
     "floor_price_gram": 6.8,
     "image_url": "https://nft.fragment.com/gift/jollychimp-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/jollychimp-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "80",
@@ -657,7 +657,7 @@
     "floor_price_gram": 4.03,
     "image_url": "https://nft.fragment.com/gift/cloverpin-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/cloverpin-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "81",
@@ -679,7 +679,7 @@
     "floor_price_gram": 6.33,
     "image_url": "https://nft.fragment.com/gift/joyfulbundle-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/joyfulbundle-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "56",
@@ -690,7 +690,7 @@
     "floor_price_gram": 7.36,
     "image_url": "https://nft.fragment.com/gift/bunnymuffin-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/bunnymuffin-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "71",
@@ -701,7 +701,7 @@
     "floor_price_gram": 7,
     "image_url": "https://nft.fragment.com/gift/jinglebells-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/jinglebells-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "123",
@@ -712,7 +712,7 @@
     "floor_price_gram": 6.53,
     "image_url": "https://nft.fragment.com/gift/jellybunny-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/jellybunny-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "21",
@@ -734,7 +734,7 @@
     "floor_price_gram": 9.2,
     "image_url": "https://nft.fragment.com/gift/lovecandle-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/lovecandle-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "47",
@@ -745,7 +745,7 @@
     "floor_price_gram": 9.05,
     "image_url": "https://nft.fragment.com/gift/hangingstar-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/hangingstar-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "49",
@@ -756,7 +756,7 @@
     "floor_price_gram": 8.72,
     "image_url": "https://nft.fragment.com/gift/sakuraflower-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/sakuraflower-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "64",
@@ -778,7 +778,7 @@
     "floor_price_gram": 10.5,
     "image_url": "https://nft.fragment.com/gift/skullflower-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/skullflower-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "82",
@@ -789,7 +789,7 @@
     "floor_price_gram": 12.42,
     "image_url": "https://nft.fragment.com/gift/madpumpkin-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/madpumpkin-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "25",
@@ -798,9 +798,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Flying Brooms.",
     "floor_price_gram": 11.19,
-    "image_url": "https://nft.fragment.com/gift/flyingbroom-1.webp",
+    "image_url": "https://fragment.com/file/gifts/flyingbroom/model.VpC4nPDe0abuJSvorFHInD9s-RLc1puwphS3k3fo6AHv5J66N3Ji9yOwquYI5lPz.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/flyingbroom-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "60",
@@ -809,9 +809,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Jacks-in-the-Box.",
     "floor_price_gram": 4.39,
-    "image_url": "https://nft.fragment.com/gift/jackinthebox-1.webp",
+    "image_url": "https://fragment.com/file/gifts/jackinthebox/model.U17xLdtOWDajrmALabUZGK0RxvKpYbNaWdWVJY86fnX4meyqx6VVZjxAvu0VlRyk.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/jackinthebox-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "113",
@@ -820,9 +820,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Record Players.",
     "floor_price_gram": 12.17,
-    "image_url": "https://nft.fragment.com/gift/recordplayer-1.webp",
+    "image_url": "https://fragment.com/file/gifts/recordplayer/model.xp_y002UgW-7TRCFiBxPz8I6GFKAzOC6km80RxpKgTasAXLf5qA2GmIglSOoWPW8.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/recordplayer-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "26",
@@ -831,9 +831,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Crystal Balls.",
     "floor_price_gram": 9.74,
-    "image_url": "https://nft.fragment.com/gift/crystalball-1.webp",
+    "image_url": "https://fragment.com/file/gifts/crystalball/model.JNjXgQxk-Gqlcc2NTbiU1hKpsNc9YPZlwpzVoOqzCluNc4C3nnQQ065qUQLcAn0W.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/crystalball-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "20",
@@ -842,9 +842,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Snoop Cigars.",
     "floor_price_gram": 14.23,
-    "image_url": "https://nft.fragment.com/gift/snoopcigar-1.webp",
+    "image_url": "https://fragment.com/file/gifts/snoopcigar/model.xBpAbNHpXDQvEBeWH_qsqPW7GzBfQncaZxEmpkLQ3nPYR5qobUIoDWj9h1J_tp2z.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/snoopcigar-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "72",
@@ -853,9 +853,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Ionic Dryers.",
     "floor_price_gram": 13.25,
-    "image_url": "https://nft.fragment.com/gift/ionicdryer-1.webp",
+    "image_url": "https://fragment.com/file/gifts/ionicdryer/model.EOIiEVdKyhmvuXasgZCrLbbGFTJ32MTrnGfD5ehJWtH1lfbMLtrBMP39VZNA3UVZ.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/ionicdryer-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "73",
@@ -864,9 +864,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Love Potions.",
     "floor_price_gram": 14.43,
-    "image_url": "https://nft.fragment.com/gift/lovepotion-1.webp",
+    "image_url": "https://fragment.com/file/gifts/lovepotion/model.h2jIzY2VuK55rpRxyEXsI34pTC76wtn8eL6xFAN6EYtRpXZXeapKnpLRtcMKgr_J.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/lovepotion-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "42",
@@ -875,9 +875,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Trapped Hearts.",
     "floor_price_gram": 15.08,
-    "image_url": "https://nft.fragment.com/gift/trappedheart-1.webp",
+    "image_url": "https://fragment.com/file/gifts/trappedheart/model.O02su8KSOV2pjZ8AZnUsqIpHVmmMq83RcP4S1hNZOysBSSzzfaEA4e62cd_ZvkZd.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/trappedheart-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "75",
@@ -886,9 +886,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции UFC Strikes.",
     "floor_price_gram": 15.28,
-    "image_url": "https://nft.fragment.com/gift/ufcstrike-1.webp",
+    "image_url": "https://fragment.com/file/gifts/ufcstrike/model.sTnDKI0k14MdrZgylwe44_Gm4qzM4Lz-LzbAgLY0x7hFHcmRCBIJvY1mge3f5YbL.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/ufcstrike-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "77",
@@ -897,9 +897,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Sky Stilettos.",
     "floor_price_gram": 18.09,
-    "image_url": "https://nft.fragment.com/gift/skystilettos-1.webp",
+    "image_url": "https://fragment.com/file/gifts/skystilettos/model.es86jmXkT-r7E19pzEyNf8X0fJe8Yhbaa0zf6YlrwnPbgsa8M0IdOnFgMTNjKmFr.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/skystilettos-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "69",
@@ -908,9 +908,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Cupid Charms.",
     "floor_price_gram": 21.42,
-    "image_url": "https://nft.fragment.com/gift/cupidcharm-1.webp",
+    "image_url": "https://fragment.com/file/gifts/cupidcharm/model.0gt0psu6bKAzde_v9VVoAZ5Gble-RJMkn6LjRPkegqt0Tj2qXgVDAv7KZ7BteZSv.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/cupidcharm-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "132",
@@ -919,9 +919,9 @@
     "rarity": "Epic",
     "description": "Уникальный подарок из коллекции Bling Binky.",
     "floor_price_gram": 23.38,
-    "image_url": "https://nft.fragment.com/gift/blingbinky-1.webp",
+    "image_url": "https://fragment.com/file/gifts/blingbinky/model.pGuDpW6zwR7uywg_E59rDeoBsajwGJ5AiRJrN7PtQSfaemFs-nucg4d5aIceLBQC.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/blingbinky-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "135",
@@ -930,9 +930,9 @@
     "rarity": "Epic",
     "description": "Уникальный подарок из коллекции Khabib's Papakha.",
     "floor_price_gram": 23.15,
-    "image_url": "https://nft.fragment.com/gift/khabibspapakha-1.webp",
+    "image_url": "https://fragment.com/file/gifts/khabibspapakha/model.G2XWPu2kfUj6UZqZNurqRh3ro9wHH6SjuSysUFceSFUByOyEFHz34J0g2mzTbvSG.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/khabibspapakha-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "107",
@@ -941,9 +941,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Rare Birds.",
     "floor_price_gram": 24.2,
-    "image_url": "https://nft.fragment.com/gift/rarebird-1.webp",
+    "image_url": "https://fragment.com/file/gifts/rarebird/model.IVOoY8QADLOM9ex_sWDZj6AIFNhDhXWHx5vlS6fbzphHqRfzlfDNoUjYFUX3l4n3.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/rarebird-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "58",
@@ -952,9 +952,9 @@
     "rarity": "Epic",
     "description": "Уникальный подарок из коллекции Eternal Roses.",
     "floor_price_gram": 24.34,
-    "image_url": "https://nft.fragment.com/gift/eternalrose-1.webp",
+    "image_url": "https://fragment.com/file/gifts/eternalrose/model.E_wVl2Sjys9nrm40MD4yuXZ6zWMrZg8B0Hw5_ee5m8hBCNplw8xenI_sbdg0b3DL.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/eternalrose-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "96",
@@ -965,7 +965,7 @@
     "floor_price_gram": 22.41,
     "image_url": "https://nft.fragment.com/gift/electricskull-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/electricskull-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "85",
@@ -987,7 +987,7 @@
     "floor_price_gram": 32.13,
     "image_url": "https://nft.fragment.com/gift/signetring-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/signetring-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "102",
@@ -996,9 +996,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Genie Lamps.",
     "floor_price_gram": 33,
-    "image_url": "https://nft.fragment.com/gift/genielamp-1.webp",
+    "image_url": "https://fragment.com/file/gifts/genielamp/model.DCqjdUmCAE-cITEx7ex3v-5CCHa4t8Cu197fLzCPsTMUDW6BeMflO6ioKRlWU_FF.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/genielamp-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "76",
@@ -1007,9 +1007,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Voodoo Dolls.",
     "floor_price_gram": 35.1,
-    "image_url": "https://nft.fragment.com/gift/voodoodoll-1.webp",
+    "image_url": "https://fragment.com/file/gifts/voodoodoll/model._8doXx1VIQBB924J1Weq5TsaucUEyAMWCnx4wTKc0HoIJFxAJMFq5Nlbu6LSdTjz.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/voodoodoll-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "86",
@@ -1018,9 +1018,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Toy Bears.",
     "floor_price_gram": 35.9,
-    "image_url": "https://nft.fragment.com/gift/toybear-1.webp",
+    "image_url": "https://fragment.com/file/gifts/toybear/model.kF8IthLEuZ1WmQVwvY2no3IZTEEXjwIM3Rn6E4-ob336l87kySpXRLci13CJqdId.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/toybear-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "7",
@@ -1029,9 +1029,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Vintage Cigars.",
     "floor_price_gram": 31.91,
-    "image_url": "https://nft.fragment.com/gift/vintagecigar-1.webp",
+    "image_url": "https://fragment.com/file/gifts/vintagecigar/model.OWd2FJTcQWIFZMvK2_Jo7ruTPkeq1Gh3TW2G6VMe9CjjfDX45norSthk4v5E9Lke.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/vintagecigar-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "78",
@@ -1040,9 +1040,9 @@
     "rarity": "Rare",
     "description": "Уникальный подарок из коллекции Kissed Frogs.",
     "floor_price_gram": 37.22,
-    "image_url": "https://nft.fragment.com/gift/kissedfrog-1.webp",
+    "image_url": "https://fragment.com/file/gifts/kissedfrog/model.AxeAFEWzBMQwpUBrsppwn5WkRbEpIsOyRLmEyphv5lWKI4ozs_HJDM8MHbEgdvDf.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/kissedfrog-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "105",
@@ -1051,9 +1051,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Neko Helmets.",
     "floor_price_gram": 32.16,
-    "image_url": "https://nft.fragment.com/gift/nekohelmet-1.webp",
+    "image_url": "https://fragment.com/file/gifts/nekohelmet/model.SzZsAHuAXHK1mRkXwcLio-ZufBNvTxjqlI7luRwKt3Si8OwP6hay5LfT_WsZnpnZ.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/nekohelmet-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "87",
@@ -1062,9 +1062,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Bonded Rings.",
     "floor_price_gram": 37,
-    "image_url": "https://nft.fragment.com/gift/bondedring-1.webp",
+    "image_url": "https://fragment.com/file/gifts/bondedring/model.425krdbhG0LIPiRlwRMoAlcKmrmduO9RSKImenE9asQlZvzWigTLZwxzheXjeRJ1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/bondedring-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "110",
@@ -1073,9 +1073,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Sharp Tongues.",
     "floor_price_gram": 40,
-    "image_url": "https://nft.fragment.com/gift/sharptongue-1.webp",
+    "image_url": "https://fragment.com/file/gifts/sharptongue/model.A8FyjKzMysM4tGI5gYLGJEOO-CZCdvFiAU9aqLZZD6RgaihHcU-YPKb8em0fTRce.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/sharptongue-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "126",
@@ -1084,9 +1084,9 @@
     "rarity": "Epic",
     "description": "Уникальный подарок из коллекции Swiss Watch.",
     "floor_price_gram": 48.5,
-    "image_url": "https://nft.fragment.com/gift/swisswatch-1.webp",
+    "image_url": "https://fragment.com/file/gifts/swisswatch/model.FI9GnTuYfT2cu83m4G_kEgb9svjOR_e0Iu_MAlTQT4IjyNNL104TBqO9T1ytKDiQ.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/swisswatch-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "63",
@@ -1095,7 +1095,7 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Low Riders.",
     "floor_price_gram": 54,
-    "image_url": "https://fragment.com/file/gifts/lowrider/model.4mO4m2tNaVnWvUQEi-A4lCnpjM0uJE9VPvlMquS9QYSd2PmEEGLSSq_Mz-C-T94O.webp",
+    "image_url": "https://fragment.com/file/gifts/lowrider/model.B54L8PTlho8qKyJhGdet14L7SqTct0-oHUyOoGegX-i2vQhcbwut7KkYAHpUHY6Y.webp",
     "animation_url": "",
     "lottie_url": ""
   },
@@ -1106,9 +1106,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Magic Potions.",
     "floor_price_gram": 52.76,
-    "image_url": "https://nft.fragment.com/gift/magicpotion-1.webp",
+    "image_url": "https://fragment.com/file/gifts/magicpotion/model.nwUVd7OO1xEPYBEuu4eBlsSnWx8e3cokM4xtefB2CN2SvIIf4wVjm7PYqheYaxfV.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/magicpotion-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "14",
@@ -1117,9 +1117,9 @@
     "rarity": "Rare",
     "description": "Уникальный подарок из коллекции Gem Signets.",
     "floor_price_gram": 61.4,
-    "image_url": "https://nft.fragment.com/gift/gemsignet-1.webp",
+    "image_url": "https://fragment.com/file/gifts/gemsignet/model.eiS7g7f0TALQ7N3WUMFLgkjlv_kV2ZIfHQBQC6GgpvgJxELd4JBwsKdbRonqW6Lr.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/gemsignet-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "103",
@@ -1128,7 +1128,7 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Perfume Bottles.",
     "floor_price_gram": 71.29,
-    "image_url": "https://fragment.com/file/gifts/perfumebottle/model.fZHol3ISYXWN6-wkzGVWbm_LK309Z0mNXhPcQ-sd3DkdZ3QsCDrRfTjH-U4OqgKU.webp",
+    "image_url": "https://fragment.com/file/gifts/perfumebottle/model.NLc61pUwVt-RGnAQLWibjvVFaYTTY4BoS8VL15MS4I9f3uznAzr8cP1cITnPHpWt.webp",
     "animation_url": "",
     "lottie_url": ""
   },
@@ -1141,7 +1141,7 @@
     "floor_price_gram": 69,
     "image_url": "https://nft.fragment.com/gift/iongem-1.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/iongem-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "108",
@@ -1150,9 +1150,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Mini Oscars.",
     "floor_price_gram": 74.17,
-    "image_url": "https://nft.fragment.com/gift/minioscar-1.webp",
+    "image_url": "https://fragment.com/file/gifts/minioscar/model.pWf1XxFwCn4kFHLZF3jYpwetlnkVBzGbf86KhDID4AHRDWbE3JcLtMs8ecEtzRJZ.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/minioscar-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "139",
@@ -1161,9 +1161,9 @@
     "rarity": "Epic",
     "description": "Уникальный подарок из коллекции Durov's Glasses.",
     "floor_price_gram": 86,
-    "image_url": "https://nft.fragment.com/gift/durovsglasses-1.webp",
+    "image_url": "https://fragment.com/file/gifts/durovsglasses/model.pWya-WgkbKMWb5yJlJNebE-8RfQjfhZI1qJLlmHqnrX5zdikazoTF6BeWFLvq0TA.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/durovsglasses-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "88",
@@ -1172,9 +1172,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Westside Signs.",
     "floor_price_gram": 96.58,
-    "image_url": "https://nft.fragment.com/gift/westsidesign-1.webp",
+    "image_url": "https://fragment.com/file/gifts/westsidesign/model.q2Dr-24E8xeOXOaY0yB7xNDNUzIy3_lK9S87SJa2FJsMYDng_49I0U5UddROFOoa.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/westsidesign-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "118",
@@ -1183,9 +1183,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Mighty Arms.",
     "floor_price_gram": 111,
-    "image_url": "https://nft.fragment.com/gift/mightyarm-1.webp",
+    "image_url": "https://fragment.com/file/gifts/mightyarm/model.7NUvgHXAkqmYXH6sJD3xNn2u1NfXCuz-ilzpZFzwk08ITwOhb28cFn4OsWMTo0qG.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/mightyarm-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "61",
@@ -1194,9 +1194,9 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Nail Bracelets.",
     "floor_price_gram": 113.57,
-    "image_url": "https://nft.fragment.com/gift/nailbracelet-1.webp",
+    "image_url": "https://fragment.com/file/gifts/nailbracelet/model.N7MhJcqycZQtuvUb3PWvXqpztFxx_d7XWRXrvaHQMNGhYQDB0KTXzRiLMcOuhqe9.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/nailbracelet-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "90",
@@ -1227,7 +1227,7 @@
     "rarity": "Common",
     "description": "Уникальный подарок из коллекции Artisan Bricks.",
     "floor_price_gram": 55.66,
-    "image_url": "https://fragment.com/file/gifts/artisanbrick/model.sN0tChrSjwHyd2C8uFe4ZrvTqHLJdGb5BH-RzIvtz0W1RZvoyexk40uacoaJogpj.webp",
+    "image_url": "https://fragment.com/file/gifts/artisanbrick/model.d3bO-PyNwVVI2AjB4zAYeFs90VREpKKtabXExPk82YTSkxC6tcJjCTvyHB5c-132.webp",
     "animation_url": "",
     "lottie_url": ""
   },
@@ -1238,9 +1238,9 @@
     "rarity": "Epic",
     "description": "Уникальный подарок из коллекции Heroic Helmets.",
     "floor_price_gram": 170.85,
-    "image_url": "https://nft.fragment.com/gift/heroichelmet-1.webp",
+    "image_url": "https://fragment.com/file/gifts/heroichelmet/model.ak6bqjZwp3q_Gn8Y5_FeefZTXctEmHAFXkmp0lvFH5DfaNLfuedLl2yBMZVNVv8G.webp",
     "animation_url": "",
-    "lottie_url": "https://nft.fragment.com/gift/heroichelmet-1.lottie.json"
+    "lottie_url": ""
   },
   {
     "id": "68",

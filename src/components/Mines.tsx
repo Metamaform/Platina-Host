@@ -18,9 +18,24 @@ function getMultiplier(mines: number, opened: number): number {
     remainingSafe--;
     remainingTotal--;
   }
-  const houseEdge = 0.97; // 97% RTP
+  const houseEdge = 0.95; // 95% RTP
   return probability > 0 ? (1 / probability) * houseEdge : 0;
 }
+
+
+const getInitialMinesSession = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const s = localStorage.getItem('mines_session');
+    if (s) {
+      const parsed = JSON.parse(s);
+      if (parsed && parsed.gameState === 'playing') {
+        return parsed;
+      }
+    }
+  } catch {}
+  return null;
+};
 
 export function Mines({ 
   onBack, 
@@ -62,16 +77,78 @@ export function Mines({
     return () => clearInterval(interval);
   }, []);
 
-  const [mode, setMode] = useState<'gram' | 'nft'>('gram');
-  const [betInput, setBetInput] = useState<string>('');
+  const [mode, setMode] = useState<'gram' | 'nft'>(() => {
+    try {
+      return (localStorage.getItem('mines_mode') as 'gram' | 'nft') || 'gram';
+    } catch {
+      return 'gram';
+    }
+  });
+  const [betInput, setBetInput] = useState<string>(() => {
+    try {
+      return localStorage.getItem('mines_bet') || '';
+    } catch {
+      return '';
+    }
+  });
   const betGram = parseFloat(betInput) || 0;
   const [selectedNft, setSelectedNft] = useState<any>(null);
+
+  useEffect(() => {
+    localStorage.setItem('mines_mode', mode);
+  }, [mode]);
+
+  useEffect(() => {
+    localStorage.setItem('mines_bet', betInput);
+  }, [betInput]);
+
+    const isInitRef = useRef(false);
+  useEffect(() => {
+    if (!isInitRef.current) return;
+    if (selectedNft) {
+      localStorage.setItem('mines_selectedNftModel', selectedNft.id);
+    } else {
+      localStorage.removeItem('mines_selectedNftModel');
+    }
+  }, [selectedNft]);
+
+    useEffect(() => {
+    try {
+      const savedModel = localStorage.getItem('mines_selectedNftModel');
+      if (savedModel) {
+        const item = inventory.find(i => i.id === savedModel && !i.isWithdrawing);
+        if (item) {
+          setSelectedNft(item);
+        } else if (inventory.length > 0) {
+          setSelectedNft(null);
+        }
+      }
+    } catch {}
+    isInitRef.current = true;
+  }, [inventory]);
   
-  const [minesCount, setMinesCount] = useState<number>(1);
-  const [gameState, setGameState] = useState<'idle' | 'playing'>('idle');
-  const [activeBetValue, setActiveBetValue] = useState<number>(0);
-  const [grid, setGrid] = useState<{isMine: boolean, revealed: boolean, manualReveal?: boolean, cellNft?: any}[]>(Array(25).fill({ isMine: false, revealed: false }));
-  const [safeOpened, setSafeOpened] = useState(0);
+    const initialSession = useMemo(() => getInitialMinesSession(), []);
+  
+  const [minesCount, setMinesCount] = useState<number>(initialSession?.minesCount || 1);
+  const [gameState, setGameState] = useState<'idle' | 'playing'>(initialSession?.gameState || 'idle');
+  const [activeBetValue, setActiveBetValue] = useState<number>(initialSession?.activeBetValue || 0);
+  const [grid, setGrid] = useState<{isMine: boolean, revealed: boolean, manualReveal?: boolean, cellNft?: any}[]>(initialSession?.grid || Array(25).fill({ isMine: false, revealed: false }));
+  const [safeOpened, setSafeOpened] = useState<number>(initialSession?.safeOpened || 0);
+
+  useEffect(() => {
+    if (gameState === 'playing') {
+      localStorage.setItem('mines_session', JSON.stringify({
+        gameState,
+        activeBetValue,
+        grid,
+        safeOpened,
+        minesCount
+      }));
+    } else {
+      localStorage.removeItem('mines_session');
+    }
+  }, [gameState, activeBetValue, grid, safeOpened, minesCount]);
+
   
   const [showResult, setShowResult] = useState<{type: 'win' | 'loss', amount?: number, item?: any} | null>(null);
   const [showBetModal, setShowBetModal] = useState(false);
@@ -506,7 +583,7 @@ export function Mines({
                 {mode === 'gram' ? (
                   <>
                     <div className="absolute top-4 left-5 flex items-center gap-1 text-white/50 text-[12px] font-medium">
-                      <span>Balance:</span>
+                      <span>{t('balance')}:</span>
                       <span className="text-white font-bold">{balance.toFixed(2)}</span>
                       <GramIcon className="w-3.5 h-3.5" />
                     </div>
@@ -541,7 +618,7 @@ export function Mines({
                 ) : (
                   <div className="w-full flex gap-3 overflow-x-auto scrollbar-hide py-2 px-2">
                     {inventory.length === 0 ? (
-                      <div className="text-white/40 text-sm italic w-full text-center">Inventory is empty</div>
+                      <div className="text-white/40 text-sm italic w-full text-center">{t('inventory_empty_upgrade')}</div>
                     ) : (
                       inventory.map(item => (
                         <button

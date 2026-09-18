@@ -251,7 +251,7 @@ export function Leaderboard() {
                 <div className="bg-white/5 border border-white/5 rounded-xl p-4">
                   <p className="font-medium text-white mb-1">{t('prizes_to_winners')}</p>
                   <p className="text-[13px]">
-                    {t('prizes_desc')}
+                    <span dangerouslySetInnerHTML={{ __html: t('prizes_desc') }} />
                   </p>
                 </div>
               </div>
@@ -260,7 +260,7 @@ export function Leaderboard() {
                 onClick={() => setShowRules(false)}
                 className="w-full mt-6 py-3.5 rounded-xl font-bold bg-brand text-black active:scale-[0.98] transition-transform"
               >
-                Got it
+                {t('got_it')}
               </button>
             </motion.div>
           </div>
