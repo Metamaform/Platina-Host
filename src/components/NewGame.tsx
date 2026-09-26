@@ -1,12 +1,17 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Rocket, X, Flame } from 'lucide-react';
+import { ArrowLeft, Rocket, X, Flame, ShieldCheck, History, Users, Settings } from 'lucide-react';
 import { useTranslation } from '../lib/i18n';
 import { GramIcon } from './GramIcon';
 import { PremiumImage } from './PremiumImage';
 import { CleanModelLottie } from './CleanModelLottie';
 import { BoomIcon } from './BoomIcon';
-import { multAtTime, RocketBet, ServerRocketState } from '../lib/rocketShared';
+import { multAtTime, RocketBet, ServerRocketState, getRocketReachedGift } from '../lib/rocketShared';
+import { cleanNftName, getNftBackdrop } from '../lib/nftUtils';
+import { NftSelectorGrid } from './NftSelectorGrid';
+import { GameLossModal } from './GameLossModal';
+import { BetHistoryModal, BetHistoryRecord } from './BetHistoryModal';
+import { GameRoundInfoModal } from './GameRoundInfoModal';
 
 interface NewGameProps {
   onBack: () => void;
@@ -45,8 +50,11 @@ export const NewGame: React.FC<NewGameProps> = ({
 
   // Live animated multiplier for smooth 60fps rendering
   const [liveMult, setLiveMult] = useState<number>(1.0);
-  const [liveCountdown, setLiveCountdown] = useState<number>(0);
-  const [remainingMs, setRemainingMs] = useState<number>(5000);
+  const [liveCountdown, setLiveCountdown] = useState<number>(5);
+  const circleRef = useRef<SVGCircleElement | null>(null);
+  const lastCountdownRef = useRef<number>(5);
+  const lastMultRef = useRef<number>(1.0);
+  const lastStateRef = useRef<string>('waiting');
 
   // User Bet modal state
   const [showBetModal, setShowBetModal] = useState(false);
@@ -76,7 +84,7 @@ export const NewGame: React.FC<NewGameProps> = ({
     localStorage.setItem('rocket_bet', betInput);
   }, [betInput]);
 
-    const isInitRef = useRef(false);
+  const isInitRef = useRef(false);
   useEffect(() => {
     if (!isInitRef.current) return;
     if (selectedNft) {
@@ -86,19 +94,22 @@ export const NewGame: React.FC<NewGameProps> = ({
     }
   }, [selectedNft]);
 
-    useEffect(() => {
-    try {
-      const savedModel = localStorage.getItem('rocket_selectedNftModel');
-      if (savedModel) {
-        const item = inventory.find(i => i.id === savedModel && !i.isWithdrawing);
-        if (item) {
-          setSelectedNft(item);
-        } else if (inventory.length > 0) {
-          setSelectedNft(null);
+  useEffect(() => {
+    if (!isInitRef.current) {
+      isInitRef.current = true;
+      try {
+        const savedModel = localStorage.getItem('rocket_selectedNftModel');
+        if (savedModel) {
+          const item = inventory.find(i => i.id === savedModel && !i.isWithdrawing);
+          if (item) {
+            setSelectedNft(item);
+          }
         }
-      }
-    } catch {}
-    isInitRef.current = true;
+      } catch {}
+    } else {
+      // Keep selectedNft only if that specific NFT still exists in inventory; NEVER auto-fill duplicate models!
+      setSelectedNft((prev: any) => (prev && inventory.some(i => i.uniqueId === prev.uniqueId && !i.isWithdrawing) ? prev : null));
+    }
   }, [inventory]);
 
   // Current game state (reactive, updated by loop)
@@ -117,6 +128,38 @@ export const NewGame: React.FC<NewGameProps> = ({
     winAmount: number;
     remainder?: number;
     multiplier: number;
+  } | null>(null);
+
+  // Personal user game history in Rocket (latest 50 games matching IMG_0888)
+  const rocketUserHistoryKey = `rocket_user_history_${user?.id || 'me'}`;
+  const [userRocketGames, setUserRocketGames] = useState<BetHistoryRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem(rocketUserHistoryKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed.slice(0, 50);
+      }
+    } catch {}
+    return [];
+  });
+
+  const recordRocketUserGame = useCallback((gameItem: any) => {
+    setUserRocketGames(prev => {
+      const next = [gameItem, ...prev.slice(0, 49)];
+      try {
+        localStorage.setItem(rocketUserHistoryKey, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }, [rocketUserHistoryKey]);
+
+  const [showBetHistory, setShowBetHistory] = useState<boolean>(false);
+  const [showRoundInfo, setShowRoundInfo] = useState<boolean>(false);
+
+  const [lossResult, setLossResult] = useState<{
+    amount?: number;
+    item?: any;
+    crashMultiplier: number;
   } | null>(null);
 
   // Active gifts list with automatic fallback
@@ -147,8 +190,8 @@ export const NewGame: React.FC<NewGameProps> = ({
       const res = await fetch('/api/rocket/state', { headers });
       if (!res.ok) return;
       const data: ServerRocketState = await res.json();
-      const offset = data.serverTime - Date.now();
-      setClockOffset(offset);
+      const rawOffset = data.serverTime - Date.now();
+      setClockOffset((prev) => (prev === 0 ? rawOffset : prev * 0.7 + rawOffset * 0.3));
       setServerState(data);
     } catch (e) {
       // ignore network hiccup
@@ -171,34 +214,48 @@ export const NewGame: React.FC<NewGameProps> = ({
     const tick = () => {
       const adjustedNow = Date.now() + clockOffset;
       let nextGameState = serverState.state;
+      let nextMult = 1.0;
 
       if (serverState.state === 'waiting') {
         if (adjustedNow < serverState.launchTime) {
           const diff = Math.max(0, serverState.launchTime - adjustedNow);
-          setRemainingMs(diff);
+          const progress = Math.max(0, Math.min(1, diff / 5000));
+          if (circleRef.current) {
+            circleRef.current.style.strokeDashoffset = `${276.46 * (1 - progress)}`;
+          }
           const remaining = Math.min(5, Math.max(1, Math.ceil(diff / 1000)));
-          setLiveCountdown(remaining);
-          setLiveMult(1.0);
+          if (remaining !== lastCountdownRef.current) {
+            lastCountdownRef.current = remaining;
+            setLiveCountdown(remaining);
+          }
+          nextMult = 1.0;
           nextGameState = 'waiting';
         } else {
-          setRemainingMs(0);
+          if (circleRef.current) {
+            circleRef.current.style.strokeDashoffset = '276.46';
+          }
           const elapsed = adjustedNow - serverState.launchTime;
-          setLiveMult(multAtTime(elapsed));
+          nextMult = multAtTime(elapsed);
           nextGameState = adjustedNow >= serverState.crashTime ? 'crashed' : 'flying';
         }
       } else if (serverState.state === 'flying') {
-        setRemainingMs(0);
         const elapsed = Math.max(0, adjustedNow - serverState.launchTime);
-        const calculated = multAtTime(elapsed);
-        setLiveMult(calculated);
+        nextMult = multAtTime(elapsed);
         nextGameState = 'flying';
       } else if (serverState.state === 'crashed') {
-        setRemainingMs(0);
-        setLiveMult(serverState.crashMultiplier || serverState.currentMultiplier || 1.0);
+        nextMult = serverState.crashMultiplier || serverState.currentMultiplier || 1.0;
         nextGameState = 'crashed';
       }
 
-      setCurrentGameState((prev) => (prev !== nextGameState ? nextGameState : prev));
+      if (nextMult !== lastMultRef.current || nextGameState !== lastStateRef.current) {
+        lastMultRef.current = nextMult;
+        setLiveMult(nextMult);
+      }
+
+      if (nextGameState !== lastStateRef.current) {
+        lastStateRef.current = nextGameState;
+        setCurrentGameState(nextGameState as any);
+      }
       
       animationFrameId = requestAnimationFrame(tick);
     };
@@ -213,6 +270,47 @@ export const NewGame: React.FC<NewGameProps> = ({
     if (!user || !serverState) return null;
     return serverState.bets.find(b => b.userId === user.id) || null;
   }, [user, serverState]);
+
+  const crashLossNotifiedRoundRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (serverState?.state === 'crashed' && serverState.roundId !== crashLossNotifiedRoundRef.current) {
+      crashLossNotifiedRoundRef.current = serverState.roundId;
+      if (userBetInRound && !userBetInRound.hasWon) {
+        const crashMult = serverState.crashMultiplier || serverState.currentMultiplier || 1.0;
+        const betAmount = userBetInRound.betAmount;
+        const gift = userBetInRound.gift;
+        const isGram = userBetInRound.isGram;
+
+        const flightTime = Math.max(0, ((serverState.crashTime || Date.now()) - (serverState.launchTime || Date.now())) / 1000);
+        recordRocketUserGame({
+          id: `${930000 + (serverState.roundId % 70000)}`,
+          roundId: serverState.roundId,
+          timestamp: Date.now(),
+          betAmount,
+          mode: isGram ? 'gram' : 'nft',
+          gift,
+          multiplier: crashMult,
+          winAmount: 0,
+          isWon: false,
+          payoutGram: 0,
+          payoutItem: gift?.name || (isGram ? '-' : 'NFT'),
+          cashoutType: '-',
+          crashMult,
+          crashTime: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+          balanceBefore: balance + betAmount,
+          balanceAfter: balance
+        });
+
+        setTimeout(() => {
+          setLossResult({
+            amount: isGram ? betAmount : undefined,
+            item: gift,
+            crashMultiplier: crashMult
+          });
+        }, 600);
+      }
+    }
+  }, [serverState, userBetInRound]);
 
   const userBetInQueue = useMemo(() => {
     if (!user || !serverState) return null;
@@ -287,26 +385,15 @@ export const NewGame: React.FC<NewGameProps> = ({
     return Number(((userBetInRound.betAmount || 0) * liveMult).toFixed(2));
   }, [userBetInRound, liveMult]);
 
-  // Highest priced reached NFT gift <= currentBetValue
-  const reachedGift = useMemo(() => {
-    if (!userBetInRound || currentBetValue <= 0) return null;
-    for (let i = sortedGifts.length - 1; i >= 0; i--) {
-      if (sortedGifts[i].priceVal <= currentBetValue) return sortedGifts[i];
+  // Resolve reached NFT gift, next target NFT, and remainder in GRAMs (enforcing >= 1 TON gap)
+  const { reachedGift, nextGift, remainder: remainderGrams } = useMemo(() => {
+    if (!userBetInRound || currentBetValue <= 0) {
+      return { reachedGift: null, nextGift: null, remainder: 0 };
     }
-    return null;
+    return getRocketReachedGift(sortedGifts, currentBetValue, userBetInRound.betAmount || 0);
   }, [sortedGifts, currentBetValue, userBetInRound]);
 
   const reachedGiftPrice = reachedGift ? reachedGift.priceVal : 0;
-  const remainderGrams = reachedGift
-    ? Math.max(0, Number((currentBetValue - reachedGiftPrice).toFixed(2)))
-    : currentBetValue;
-
-  // Next target NFT gift
-  const nextGift = useMemo(() => {
-    if (!userBetInRound) return null;
-    return sortedGifts.find((g) => g.priceVal > currentBetValue) || null;
-  }, [sortedGifts, currentBetValue, userBetInRound]);
-
   const nextGiftPrice = nextGift ? nextGift.priceVal : 0;
   const nextGiftMultiplier =
     nextGift && userBetInRound && userBetInRound.betAmount > 0
@@ -358,6 +445,10 @@ export const NewGame: React.FC<NewGameProps> = ({
     } else {
       if (!selectedNft) return;
       betValue = Number(selectedNft.floor_price_gram || selectedNft.price || 0);
+      if (betValue > MAX_BET_GRAM) {
+        setActionError('Максимальная ставка в NFT — 2500 GRAM');
+        return;
+      }
       betGift = selectedNft;
     }
 
@@ -391,6 +482,11 @@ export const NewGame: React.FC<NewGameProps> = ({
       }
       if (onTurnover) {
         onTurnover(betValue);
+      }
+
+      if (mode === 'nft') {
+        setSelectedNft(null);
+        localStorage.removeItem('rocket_selectedNftModel');
       }
 
       setShowBetModal(false);
@@ -438,6 +534,27 @@ export const NewGame: React.FC<NewGameProps> = ({
         winAmount: data.winAmount,
         remainder: data.remainder,
         multiplier: data.multiplier
+      });
+
+      const flightTime = Math.max(0, (Date.now() - (serverState?.launchTime || Date.now())) / 1000);
+      recordRocketUserGame({
+        id: `${930000 + ((serverState?.roundId || 1000) % 70000)}`,
+        roundId: serverState?.roundId || 931002,
+        timestamp: Date.now(),
+        betAmount: userBetInRound.betAmount,
+        mode: userBetInRound.isGram ? 'gram' : 'nft',
+        gift: data.gift,
+        multiplier: data.multiplier,
+        winAmount: data.winAmount,
+        isWon: true,
+        payoutGram: userBetInRound.isGram ? data.winAmount : (data.remainder || 0),
+        payoutItem: data.gift?.name || (userBetInRound.isGram ? '-' : 'NFT'),
+        cashoutType: 'Ручной',
+        cashoutMult: data.multiplier,
+        acceptedAt: data.multiplier,
+        crashMult: serverState?.crashMultiplier || Number((data.multiplier + 0.8).toFixed(2)),
+        balanceBefore: balance,
+        balanceAfter: balance + (data.winAmount - userBetInRound.betAmount)
       });
 
       fetchState();
@@ -543,20 +660,7 @@ export const NewGame: React.FC<NewGameProps> = ({
     ? (userBetInRound.betAmount * liveMult).toFixed(2)
     : '0.00';
 
-  const currentAffordableNft = useMemo(() => {
-    // Only check if user has placed a bet (no demo mode)
-    const activeWinAmount = userBetInRound 
-      ? (userBetInRound.betAmount * liveMult) 
-      : 0;
-
-    if (activeWinAmount <= 0) return null;
-    
-    // O(N) iteration instead of filtering and sorting every frame
-    for (let i = sortedGifts.length - 1; i >= 0; i--) {
-      if (sortedGifts[i].priceVal <= activeWinAmount) return sortedGifts[i];
-    }
-    return null;
-  }, [userBetInRound, liveMult, sortedGifts]);
+  const currentAffordableNft = reachedGift;
 
   return (
     <div className="h-full w-full flex flex-col bg-canvas text-white relative select-none">
@@ -575,9 +679,18 @@ export const NewGame: React.FC<NewGameProps> = ({
         </h1>
       </div>
 
-      <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-white/5 px-3 h-10 rounded-full border border-white/5 z-20">
-        <span className="text-white font-bold text-[13px]">{balance.toFixed(2)}</span>
-        <GramIcon className="w-3.5 h-3.5" />
+      <div className="absolute top-4 right-4 flex items-center gap-2 z-20">
+        <div className="flex items-center gap-1.5 bg-white/5 px-3 h-10 rounded-full border border-white/5">
+          <span className="text-white font-bold text-[13px]">{balance.toFixed(2)}</span>
+          <GramIcon className="w-3.5 h-3.5" />
+        </div>
+        <button
+          onClick={() => setShowBetHistory(true)}
+          className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center active:scale-95 transition-all hover:bg-white/20 border border-white/5 cursor-pointer text-white/80 hover:text-white"
+          title="История ваших ставок"
+        >
+          <History className="w-5 h-5 text-white/80" />
+        </button>
       </div>
 
       {/* Main Scrollable Area */}
@@ -716,17 +829,28 @@ export const NewGame: React.FC<NewGameProps> = ({
                     className="relative w-24 h-24 flex items-center justify-center pointer-events-none"
                   >
                     <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 100 100">
+                      {/* Background track circle */}
                       <circle
                         cx="50"
                         cy="50"
                         r="44"
-                        className="stroke-brand fill-none transition-all duration-100 ease-linear"
-                        strokeWidth="4"
-                        strokeDasharray={276}
-                        strokeDashoffset={276 * (1 - Math.max(0, Math.min(1, remainingMs / 5000)))}
+                        className="stroke-white/10 fill-none"
+                        strokeWidth="5"
+                      />
+                      {/* Smooth progress circle */}
+                      <circle
+                        ref={circleRef}
+                        cx="50"
+                        cy="50"
+                        r="44"
+                        className="stroke-brand fill-none"
+                        strokeWidth="5"
+                        strokeDasharray={276.46}
+                        strokeDashoffset={276.46 * (1 - Math.max(0, Math.min(1, (serverState?.launchTime ? Math.max(0, serverState.launchTime - (Date.now() + clockOffset)) : 5000) / 5000)))}
                         strokeLinecap="round"
                         style={{
-                          filter: 'drop-shadow(0 0 6px rgba(255, 184, 0, 0.6))'
+                          filter: 'drop-shadow(0 0 8px rgba(255, 184, 0, 0.7))',
+                          willChange: 'stroke-dashoffset',
                         }}
                       />
                     </svg>
@@ -775,23 +899,38 @@ export const NewGame: React.FC<NewGameProps> = ({
 
               {/* Display Winnable NFT */}
               <AnimatePresence mode="popLayout">
-                {currentGameState === 'flying' && currentAffordableNft && (
-                  <motion.div 
-                    key={currentAffordableNft.name}
-                    initial={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
-                    animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-                    exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)', position: 'absolute' }}
-                    transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                    className="mt-3 flex flex-col items-center justify-center"
-                  >
-                    <PremiumImage
-                      src={currentAffordableNft.lottie_url || currentAffordableNft.image_url} 
-                      alt={currentAffordableNft.name}
-                      className="w-24 h-24 object-contain drop-shadow-[0_8px_20px_rgba(255,255,255,0.15)]"
-                      staticMode={true}
-                    />
-                  </motion.div>
-                )}
+                {currentGameState === 'flying' && currentAffordableNft && (() => {
+                  const nftBackdrop = getNftBackdrop(currentAffordableNft);
+                  const isOnyx = nftBackdrop === 'Onyx Black';
+                  const isBlack = nftBackdrop === 'Black';
+
+                  return (
+                    <motion.div 
+                      key={currentAffordableNft.name}
+                      initial={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
+                      animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                      exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)', position: 'absolute' }}
+                      transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                      className="mt-3 flex flex-col items-center justify-center"
+                    >
+                      <PremiumImage
+                        src={currentAffordableNft.lottie_url || currentAffordableNft.image_url} 
+                        alt={currentAffordableNft.name}
+                        className="w-[68px] h-[68px] object-contain"
+                        staticMode={true}
+                      />
+                      {(isOnyx || isBlack) && (
+                        <span className={`text-[10px] font-black uppercase tracking-widest mt-1 px-2.5 py-0.5 rounded-full ${
+                          isOnyx 
+                            ? 'text-zinc-200 bg-[#35393a]/90' 
+                            : 'text-zinc-300 bg-black/90'
+                        }`}>
+                          {isOnyx ? 'Onyx Black' : 'Black'}
+                        </span>
+                      )}
+                    </motion.div>
+                  );
+                })()}
               </AnimatePresence>
             </div>
           </div>
@@ -809,14 +948,14 @@ export const NewGame: React.FC<NewGameProps> = ({
               id="rocket-cashout-button"
               onClick={handleCashout}
               disabled={isCashingOut}
-              className="w-full relative overflow-hidden group rounded-[20px] font-display font-bold text-[17px] tracking-wide active:scale-[0.98] transition-all py-4 bg-brand text-black shadow-[0_0_30px_rgba(255,184,0,0.35)] animate-pulse disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+              className="w-full relative overflow-hidden group rounded-[20px] font-display font-bold text-[17px] tracking-wide active:scale-[0.98] transition-all py-4 bg-brand text-black shadow-[0_0_30px_rgba(255,184,0,0.35)] animate-pulse disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 select-none"
             >
               {isCashingOut ? (
-                'Withdrawing...'
+                <span>{t('withdrawing') || 'Вывод...'}</span>
               ) : reachedGift ? (
-                <div className="flex items-center justify-center gap-2">
-                  <span>Take</span>
-                  <div className="relative h-6 overflow-hidden flex items-center">
+                <div className="flex items-center justify-center gap-2 pointer-events-none">
+                  <span>{t('take') || 'Забрать'}</span>
+                  <div className="relative h-6 overflow-hidden flex items-center pointer-events-none">
                     <AnimatePresence mode="popLayout" initial={false}>
                       <motion.span
                         key={reachedGift.id || reachedGift.slug || reachedGift.name}
@@ -824,20 +963,20 @@ export const NewGame: React.FC<NewGameProps> = ({
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.25 }}
-                        className="inline-block truncate max-w-[140px]"
+                        className="inline-block truncate max-w-[140px] pointer-events-none"
                       >
-                        {reachedGift.name}
+                        {cleanNftName(reachedGift.name)}
                       </motion.span>
                     </AnimatePresence>
                   </div>
                   {remainderGrams > 0 && (
-                    <span className="bg-black/20 text-black px-2 py-0.5 rounded-full text-xs font-black tabular-nums">
+                    <span className="bg-black/20 text-black px-2 py-0.5 rounded-full text-xs font-black tabular-nums pointer-events-none">
                       +{remainderGrams.toFixed(2)} G
                     </span>
                   )}
                 </div>
               ) : (
-                `Take ${liveWinAmount} GRAM`
+                <span className="pointer-events-none">{t('take') || 'Забрать'} {liveWinAmount} GRAM</span>
               )}
             </button>
           ) : (
@@ -861,17 +1000,17 @@ export const NewGame: React.FC<NewGameProps> = ({
 
           {/* 
             ========================================================================
-            BOTTOM PANEL: PLAYERS IN MATCH (MINES STYLE CARDS, NEUTRAL STYLING)
+            BOTTOM PANEL: PLAYERS IN MATCH
             ========================================================================
           */}
           <div className="w-full mt-7 flex flex-col gap-3 pb-8">
-            <div className="flex items-center gap-1.5 px-1">
-              <span className="text-white/60 text-xs font-bold uppercase tracking-wider">
-                {t('players_list')}
-              </span>
-              <span className="text-white/40 text-[11px] font-medium">
-                ({sortedDisplayList.length})
-              </span>
+            <div className="flex items-center justify-between px-1 mb-1">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-white/50" />
+                <span className="text-white font-bold text-xs">
+                  {t('players_list')} ({sortedDisplayList.length})
+                </span>
+              </div>
             </div>
 
             {sortedDisplayList.length === 0 ? (
@@ -898,6 +1037,10 @@ export const NewGame: React.FC<NewGameProps> = ({
                   }
                   const betAmount = Number(open.betAmount || 0).toFixed(2);
 
+                  // Live bet calculations while in flight
+                  const currentLiveValue = Number(((open.betAmount || 0) * liveMult).toFixed(2));
+                  const { reachedGift: liveNft } = getRocketReachedGift(sortedGifts, currentLiveValue, open.betAmount || 0);
+
                   return (
                     <motion.div
                       layout
@@ -906,73 +1049,124 @@ export const NewGame: React.FC<NewGameProps> = ({
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.9 }}
                       transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                      className="flex items-center justify-between rounded-[24px] p-3 bg-[#1c1c20] border border-white/5"
+                      className={`flex items-center justify-between rounded-[22px] p-3 transition-colors duration-300 ${
+                        isWon
+                          ? 'border border-emerald-500/80 bg-emerald-950/20'
+                          : isLost
+                          ? 'border border-red-500/80 bg-red-950/20'
+                          : 'border border-white/10 bg-[#1c1c20]'
+                      }`}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
                         <img
                           src={open.photoUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${open.firstName || undefined}`}
                           alt=""
-                          className="w-10 h-10 rounded-full bg-white/5 shrink-0 object-cover border border-white/5"
+                          className="w-10 h-10 rounded-full bg-white/5 shrink-0 object-cover border border-white/10"
                         />
-                        <div className="flex flex-col">
+                        <div className="flex flex-col min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-white font-medium text-[15px] truncate max-w-[100px]">
+                            <span className="text-white font-medium text-[15px] truncate max-w-[120px]">
                               {open.firstName}
                             </span>
                             {isMyBet && (
-                              <span className="text-[10px] bg-brand/20 text-brand px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">{t('you')}</span>
+                              <span className="text-[10px] bg-white/10 text-white/90 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                                {t('you')}
+                              </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-1.5 opacity-60">
+                          <div className="flex items-center gap-1.5 text-xs text-white/50 mt-0.5">
                             {open.isNft ? (
-                              <span className="text-[12px] font-medium">{t('bet_nft')}</span>
+                              <span>{t('bet_nft')}</span>
                             ) : (
-                              <>
-                                <GramIcon className="w-3.5 h-3.5" />
-                                <span className="text-[12px] font-medium">{betAmount}</span>
-                              </>
+                              <span className="flex items-center gap-1">
+                                <GramIcon className="w-3 h-3 text-white/40" /> {betAmount}
+                              </span>
                             )}
-                            <span className="text-[12px]">
+                            <span>•</span>
+                            <span className={isWon ? 'text-emerald-400 font-semibold' : isLost ? 'text-red-400 font-semibold' : 'text-white/60'}>
                               x{isWon ? multStr : isFlyingActive ? liveMult.toFixed(2) : isLost ? multStr : '1.00'}
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      {/* Right-side outcome / prize */}
-                      {isNftWin && open.gift ? (
-                        <div className="flex items-center gap-3 bg-black/20 rounded-[16px] pr-4 p-1.5 border border-white/5">
-                          <PremiumImage
-                            staticMode={true}
-                            src={open.gift.image_url}
-                            alt={open.gift.name}
-                            className="w-10 h-10 object-contain drop-shadow-md"
-                          />
-                          <div className="flex flex-col items-end justify-center">
-                            <span className="text-brand font-bold text-[14px] leading-none mb-1 flex items-center gap-1">
-                              {winAmount} <GramIcon className="w-3 h-3" />
-                            </span>
-                            <span className="text-[10px] text-white/50 leading-none truncate max-w-[80px] text-right">
-                              {open.gift.name}
+                      {/* Right-side outcome / live bet / prize */}
+                      {isWon ? (
+                        open.gift ? (
+                          <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl px-2.5 py-1.5">
+                            <PremiumImage
+                              staticMode={true}
+                              src={open.gift.image_url}
+                              alt={open.gift.name}
+                              className="w-8 h-8 object-contain shrink-0"
+                            />
+                            <div className="flex flex-col items-end justify-center">
+                              <div className="flex items-center gap-1 text-emerald-400 font-display font-bold text-[14px] leading-tight">
+                                <span>+{winAmount}</span>
+                                <GramIcon className="w-3.5 h-3.5 text-emerald-400" />
+                              </div>
+                              <span className="text-[10px] text-emerald-300 truncate max-w-[85px] text-right">
+                                {cleanNftName(open.gift.baseName || open.gift.name)}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-end justify-center px-2 py-1">
+                            <div className="flex items-center gap-1 text-emerald-400 font-display font-bold text-[15px] leading-tight">
+                              <span>+{winAmount}</span>
+                              <GramIcon className="w-3.5 h-3.5 text-emerald-400" />
+                            </div>
+                            <span className="text-[10px] text-emerald-400/80 font-medium mt-0.5">
+                              x{multStr}
                             </span>
                           </div>
-                        </div>
-                      ) : isWon ? (
-                        <div className="flex items-center gap-1.5 text-success font-display text-[16px] font-bold">
-                          +{winAmount} <GramIcon className="w-4 h-4 text-success" />
-                        </div>
+                        )
                       ) : isLost ? (
-                        <div className="flex items-center gap-1 text-white/40 font-display text-[15px] font-bold px-2 py-1">
-                          <span className="line-through decoration-white/25">-{betAmount}</span>
-                          <GramIcon className="w-3.5 h-3.5 text-white/30" />
+                        <div className="flex flex-col items-end justify-center px-2 py-1">
+                          <div className="flex items-center gap-1 text-red-400 font-display font-bold text-[15px] leading-tight">
+                            <span>-{betAmount}</span>
+                            <GramIcon className="w-3.5 h-3.5 text-red-400" />
+                          </div>
+                          <span className="text-[10px] text-red-400/70 font-medium mt-0.5">
+                            x{multStr}
+                          </span>
                         </div>
                       ) : isFlyingActive ? (
-                        <div className="flex items-center gap-1 text-white font-display text-[15px] font-bold px-2 py-1">
-                          <GramIcon className="w-3.5 h-3.5 text-brand" /> {betAmount}
-                        </div>
+                        liveNft ? (
+                          <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-2xl px-2.5 py-1.5">
+                            <PremiumImage
+                              staticMode={true}
+                              src={liveNft.image_url}
+                              alt={liveNft.name}
+                              className="w-8 h-8 object-contain shrink-0"
+                            />
+                            <div className="flex flex-col items-end justify-center">
+                              <div className="flex items-center gap-1 text-white font-display font-bold text-[14px] leading-tight">
+                                <span>+{currentLiveValue.toFixed(2)}</span>
+                                <GramIcon className="w-3.5 h-3.5" />
+                              </div>
+                              <span className="text-[10px] text-white/60 truncate max-w-[85px] text-right">
+                                {cleanNftName(liveNft.baseName || liveNft.name)}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-end justify-center px-2 py-1">
+                            <div className="flex items-center gap-1 text-white font-display font-bold text-[15px] leading-tight">
+                              <span>+{currentLiveValue.toFixed(2)}</span>
+                              <GramIcon className="w-3.5 h-3.5" />
+                            </div>
+                            <span className="text-[10px] text-white/40 mt-0.5">
+                              x{liveMult.toFixed(2)}
+                            </span>
+                          </div>
+                        )
                       ) : (
-                        <div className="flex items-center gap-1 text-white/80 font-display text-[15px] font-bold px-2 py-1">
-                          <GramIcon className="w-3.5 h-3.5 text-brand/70" /> {betAmount}
+                        <div className="flex flex-col items-end justify-center px-2 py-1">
+                          <div className="flex items-center gap-1 text-white/80 font-display font-bold text-[14px] leading-tight">
+                            <span>{betAmount}</span>
+                            <GramIcon className="w-3.5 h-3.5 text-white/50" />
+                          </div>
                         </div>
                       )}
                     </motion.div>
@@ -993,7 +1187,8 @@ export const NewGame: React.FC<NewGameProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowBetModal(false)}
-              className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm"
+              onTouchEnd={() => setShowBetModal(false)}
+              className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm cursor-pointer"
             />
 
             <motion.div
@@ -1099,39 +1294,15 @@ export const NewGame: React.FC<NewGameProps> = ({
                     </div>
                   </>
                 ) : (
-                  <div className="w-full flex gap-3 overflow-x-auto scrollbar-hide py-2 px-2">
-                    {inventory.length === 0 ? (
-                      <div className="text-white/40 text-sm italic w-full text-center">Inventory is empty</div>
-                    ) : (
-                      inventory.map(item => (
-                        <button
-                          key={item.uniqueId}
-                          onClick={() => setSelectedNft(item)}
-                          className={`shrink-0 w-24 h-[132px] rounded-2xl border flex flex-col items-center p-2 transition-all cursor-pointer ${
-                            selectedNft?.uniqueId === item.uniqueId
-                              ? 'bg-brand/20 border-brand scale-105'
-                              : 'bg-black/20 border-white/5 opacity-50 hover:opacity-100'
-                          }`}
-                        >
-                          <div className="flex-1 w-full flex items-center justify-center min-h-0 mb-2">
-                            <PremiumImage
-                              src={item.image_url}
-                              alt=""
-                              className="w-12 h-12 object-contain drop-shadow-md"
-                              staticMode={true}
-                            />
-                          </div>
-                          <div className="flex flex-col items-center w-full shrink-0">
-                            <span className="text-[10px] text-white/80 font-medium truncate w-[95%] text-center">
-                              {item.name}
-                            </span>
-                            <span className="text-[10px] text-brand font-bold flex items-center justify-center gap-0.5 mt-0.5">
-                              {item.floor_price_gram || item.price || 0} <GramIcon className="w-2.5 h-2.5" />
-                            </span>
-                          </div>
-                        </button>
-                      ))
-                    )}
+                  <div className="w-full">
+                    <NftSelectorGrid
+                      inventory={inventory}
+                      selectedIds={selectedNft ? [selectedNft.uniqueId || selectedNft.id] : []}
+                      onSelect={(item) => setSelectedNft(item)}
+                      maxBetGram={2500}
+                      maxContainerHeight="max-h-[300px]"
+                      emptyText={t('inventory_empty') || 'Инвентарь пуст'}
+                    />
                   </div>
                 )}
               </div>
@@ -1143,7 +1314,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                 disabled={
                   isSubmittingBet ||
                   (mode === 'gram' && (betGram < 0.1 || betGram > balance || betGram > MAX_BET_GRAM)) ||
-                  (mode === 'nft' && !selectedNft)
+                  (mode === 'nft' && (!selectedNft || Number(selectedNft.floor_price_gram || selectedNft.price || 0) > 2500))
                 }
                 className="w-full bg-brand text-black font-display font-bold text-[18px] py-4 rounded-[20px] active:scale-[0.98] transition-transform disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_30px_rgba(255,184,0,0.2)] cursor-pointer"
               >
@@ -1157,21 +1328,38 @@ export const NewGame: React.FC<NewGameProps> = ({
       {/* Celebration Modal when user cashes out */}
       <AnimatePresence>
         {wonResult && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/95 backdrop-blur-sm px-6" onClick={() => setWonResult(null)}>
+          <div 
+            className="fixed inset-0 z-[120] flex items-center justify-center bg-black/85 backdrop-blur-md px-6 cursor-pointer select-none"
+            onClick={() => setWonResult(null)}
+            onTouchEnd={(e) => {
+              if (e.target === e.currentTarget) {
+                setWonResult(null);
+              }
+            }}
+          >
+            {/* Dedicated full screen click capture backdrop */}
+            <div 
+              className="absolute inset-0 cursor-pointer" 
+              onClick={() => setWonResult(null)} 
+            />
+
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 10 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-[280px] flex flex-col gap-2.5 mx-auto p-2 rounded-[28px] relative z-10 transition-all duration-300 shadow-2xl border border-[#3b82f6]/20 bg-[#16181d] shadow-[0_4px_20px_-10px_rgba(59,130,246,0.1)]"
+              className="w-full max-w-[290px] flex flex-col gap-2.5 mx-auto p-4 rounded-[28px] relative z-10 transition-all duration-300 shadow-2xl border border-[#3b82f6]/20 bg-[#16181d] shadow-[0_4px_20px_-10px_rgba(59,130,246,0.1)] cursor-default"
             >
-              <div className="w-full flex justify-center pt-2 relative">
-                <div className="flex flex-col items-center">
-                  <span className="text-[13px] font-black text-[#22c55e] uppercase tracking-widest">
-                    Успешный вывод!
-                  </span>
-                </div>
-                <button onClick={() => setWonResult(null)} className="absolute top-0 right-1 p-1 text-white/40 hover:text-white transition-colors">
+              <div className="w-full flex justify-between items-center relative mb-1">
+                <span className="text-[14px] font-black text-[#22c55e] uppercase tracking-wider">
+                  Успешный вывод!
+                </span>
+                <button 
+                  type="button"
+                  onClick={() => setWonResult(null)} 
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-90 flex items-center justify-center text-white/60 hover:text-white transition-all cursor-pointer z-30"
+                  title="Закрыть"
+                >
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -1189,7 +1377,28 @@ export const NewGame: React.FC<NewGameProps> = ({
                     />
                   </div>
                   <div className="relative z-20 w-full flex flex-col items-center justify-end shrink-0 pb-1.5 px-1">
-                    <span className="text-[14px] text-white/90 w-full text-center font-bold leading-tight line-clamp-2">{wonResult.gift.name}</span>
+                    {(() => {
+                      const giftBackdrop = getNftBackdrop(wonResult.gift);
+                      const isOnyx = giftBackdrop === 'Onyx Black';
+                      const isBlack = giftBackdrop === 'Black';
+
+                      return (
+                        <>
+                          {(isOnyx || isBlack) && (
+                            <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full mb-1 ${
+                              isOnyx 
+                                ? 'text-zinc-200 bg-[#35393a]/90' 
+                                : 'text-zinc-300 bg-black/90'
+                            }`}>
+                              {isOnyx ? 'Onyx Black' : 'Black'}
+                            </span>
+                          )}
+                          <span className="text-[14px] text-white/90 w-full text-center font-bold leading-tight line-clamp-2">
+                            {cleanNftName(wonResult.gift.baseName || wonResult.gift.name)}
+                          </span>
+                        </>
+                      );
+                    })()}
                     <span className="text-[15px] font-bold text-brand flex items-center justify-center gap-1 mt-1">{Number(wonResult.gift.price || wonResult.gift.floor_price_gram || 0).toFixed(2)} <GramIcon className="w-4 h-4" /></span>
                   </div>
                 </div>
@@ -1205,7 +1414,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                 </div>
               )}
 
-              <div className="flex flex-col gap-1.5 w-full mt-1">
+              <div className="flex flex-col gap-2 w-full mt-1">
                 <div className="flex flex-col gap-1 px-2 py-1.5 mb-1 text-[12px] font-medium border-t border-white/5 pt-2">
                   {wonResult.remainder && wonResult.remainder > 0 ? (
                     <div className="flex justify-between items-center text-[#22c55e]">
@@ -1223,16 +1432,57 @@ export const NewGame: React.FC<NewGameProps> = ({
                   </div>
                 </div>
                 <button 
+                  type="button"
                   onClick={() => setWonResult(null)}
-                  className="w-full py-3 rounded-[12px] text-[13px] font-bold flex items-center justify-center bg-white/10 text-white hover:bg-white/20 transition-colors"
+                  className="w-full py-3.5 rounded-[16px] text-[14px] font-bold flex items-center justify-center bg-brand text-black hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer shadow-[0_0_20px_rgba(255,184,0,0.25)]"
                 >
-                  Отлично
+                  {t('continue') || 'Отлично'}
                 </button>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+
+      {/* Beautiful Defeat Modal for Rocket Crash */}
+      <GameLossModal
+        isOpen={Boolean(lossResult)}
+        onClose={() => setLossResult(null)}
+        onRetry={() => {
+          setLossResult(null);
+          setShowBetModal(true);
+        }}
+        game="rocket"
+        crashMultiplier={lossResult?.crashMultiplier}
+      />
+
+      {/* Bet History Modal matching IMG_0888 */}
+      <BetHistoryModal
+        isOpen={showBetHistory}
+        onClose={() => setShowBetHistory(false)}
+        title="История ваших ставок"
+        history={userRocketGames}
+      />
+
+      {/* Game Round Info Modal (gear icon) */}
+      <GameRoundInfoModal
+        isOpen={showRoundInfo}
+        onClose={() => setShowRoundInfo(false)}
+        game="rocket"
+        roundId={serverState?.roundId}
+        balance={balance}
+        timeoutSec={serverState?.state === 'waiting' && serverState?.remainingWaitingMs ? Number((serverState.remainingWaitingMs / 1000).toFixed(1)) : 5.0}
+        maxPrize={100000}
+        minBet={0.1}
+        maxBet={7000}
+        statusText={
+          serverState?.state === 'flying'
+            ? 'Ракета в полёте 🚀'
+            : serverState?.state === 'crashed'
+            ? `Краш на x${(serverState?.crashMultiplier || 1.0).toFixed(2)}`
+            : 'Ожидание игроков'
+        }
+      />
     </div>
   );
 };

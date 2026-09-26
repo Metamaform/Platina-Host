@@ -9,11 +9,26 @@ export interface FragmentGiftPrice {
   fetchedAt: string;
 }
 
+export interface BackdropPriceInfo {
+  slug: string;
+  blackTon: number;
+  blackMult: number;
+  onyxTon: number;
+  onyxMult: number;
+  fetchedAt: string;
+}
+
 // Реальные флор-цены с публичных страниц fragment.com (без авторизации).
 // Бэкенд кэширует ответ на 10 минут, так что дёргать можно свободно.
 export async function fetchFragmentPrices(): Promise<FragmentGiftPrice[]> {
   const response = await fetch('/api/fragment/prices');
   if (!response.ok) throw new Error(`Fragment prices failed: ${response.status}`);
+  return response.json();
+}
+
+export async function fetchFragmentBackdropPrices(): Promise<Record<string, BackdropPriceInfo>> {
+  const response = await fetch('/api/fragment/backdrop-prices');
+  if (!response.ok) throw new Error(`Backdrop prices failed: ${response.status}`);
   return response.json();
 }
 

@@ -1,6 +1,6 @@
 import { getUser, saveUserState, recordOpen, getGiftsConfig } from './store.server.ts';
 import type { RocketBet } from './rocketShared.ts';
-import { multAtTime, flightDurationForMult } from './rocketShared.ts';
+import { multAtTime, flightDurationForMult, getRocketReachedGift } from './rocketShared.ts';
 
 export interface RocketRound {
   id: number;
@@ -75,7 +75,7 @@ export function tickRocketEngine() {
     const queued = [...currentRound.queuedBets];
 
     currentRound = initRound(nextId, history);
-    // Move any queued bets into the newly started round
+    // Move any queued real user bets into the newly started round
     currentRound.bets = queued.map(b => ({ ...b, queued: false, id: `bet-${nextId}-${b.userId}` }));
   }
 }
@@ -161,6 +161,9 @@ export function placeRocketBet(
 
     validatedGift = invItem;
     validatedBetAmount = Number(invItem.floor_price_gram || invItem.price || 0);
+    if (validatedBetAmount > 2500) {
+      return { error: 'Maximum NFT bet is 2500 GRAM' };
+    }
 
     const newInventory = user.inventory.filter((i: any) => i.uniqueId !== invItem.uniqueId);
     const newTurnover = (user.turnover || 0) + validatedBetAmount;
@@ -228,28 +231,19 @@ export function cashoutRocketBet(userId: number) {
   let remainder = 0;
 
   const giftsDb: any[] = getGiftsConfig() || [];
-  const affordableGifts = giftsDb
-    .filter((g: any) => {
-      const p = Number(g.floor_price_gram || g.price || 0);
-      return p > 0 && p <= winAmount;
-    })
-    .sort((a: any, b: any) => {
-      const pa = Number(a.floor_price_gram || a.price || 0);
-      const pb = Number(b.floor_price_gram || b.price || 0);
-      return pb - pa;
-    });
+  const { reachedGift, remainder: calcRemainder } = getRocketReachedGift(giftsDb, winAmount, bet.betAmount);
 
-  const bestNft = affordableGifts[0];
-
-  if (bestNft) {
-    const nftPrice = Number(bestNft.floor_price_gram || bestNft.price || 0);
+  if (reachedGift) {
+    const nftPrice = Number(reachedGift.floor_price_gram || reachedGift.price || 0);
+    const itemBackdrop = reachedGift.backdrop || (reachedGift.id?.endsWith('_onyx') || reachedGift.name?.includes('Onyx') ? 'Onyx Black' : reachedGift.id?.endsWith('_black') || reachedGift.name?.includes('(Black)') ? 'Black' : 'Default');
     wonGift = {
-      ...bestNft,
+      ...reachedGift,
       uniqueId: Math.random().toString(36).substr(2, 9),
-      price: nftPrice
+      price: nftPrice,
+      backdrop: itemBackdrop
     };
     const updatedInv = [...(user.inventory || []), wonGift];
-    remainder = Number((winAmount - nftPrice).toFixed(2));
+    remainder = calcRemainder;
     const updatedBal = remainder > 0 ? Number((user.balance + remainder).toFixed(2)) : user.balance;
     saveUserState(userId, updatedBal, updatedInv, user.turnover, user.topups);
   } else {

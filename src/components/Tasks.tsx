@@ -119,53 +119,65 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
       <AnimatePresence>
         {toastMessage && (
           <motion.div
-            initial={{ y: -40, opacity: 0, scale: 0.9 }}
-            animate={{ y: 16, opacity: 1, scale: 1 }}
-            exit={{ y: -40, opacity: 0, scale: 0.9 }}
-            className="fixed top-0 left-1/2 -translate-x-1/2 z-[200] bg-black/80 backdrop-blur-md border border-white/20 shadow-2xl rounded-full px-5 py-2.5 flex items-center gap-3 w-max"
+            initial={{ opacity: 0, y: -20, scale: 0.94 }}
+            animate={{ opacity: 1, y: 16, scale: 1 }}
+            exit={{ opacity: 0, y: -16, scale: 0.94 }}
+            transition={{ type: 'spring', damping: 26, stiffness: 350 }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-[250] bg-[#14151a]/95 backdrop-blur-2xl border border-white/15 shadow-[0_12px_36px_rgba(0,0,0,0.6)] rounded-full px-5 py-2.5 flex items-center gap-2.5 max-w-sm w-max"
           >
             <div className="w-2 h-2 rounded-full bg-brand animate-pulse" />
-            <span className="text-white text-sm font-semibold">{toastMessage}</span>
+            <span className="text-white text-xs font-semibold">{toastMessage}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="flex items-center gap-2 mb-6 px-1">
-        <CheckSquare className="w-7 h-7 text-brand" />
-        <h2 className="font-display text-2xl font-semibold">{t('tasks_title')}</h2>
+      <div className="flex items-center gap-2.5 mb-5 px-1">
+        <div className="w-9 h-9 rounded-xl bg-brand/10 border border-brand/20 text-brand flex items-center justify-center">
+          <CheckSquare className="w-5 h-5" />
+        </div>
+        <div>
+          <h2 className="font-display text-2xl font-bold text-white tracking-tight">{t('tasks_title')}</h2>
+          <p className="text-white/40 text-xs mt-0.5">Выполняйте задания и получайте GRAM</p>
+        </div>
       </div>
 
-      <div className="flex relative p-1 bg-white/5 backdrop-blur-[20px] border border-white/10 rounded-2xl mb-4">
+      <div className="flex relative p-1 bg-[#15161b] border border-white/[0.08] rounded-2xl mb-4">
         <button
-          onClick={() => setActiveTab('daily')}
-          className={`relative z-10 flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-300 ${
+          onClick={() => {
+            setActiveTab('daily');
+            try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
+          }}
+          className={`relative z-10 flex-1 py-2.5 rounded-xl text-xs font-bold transition-colors duration-200 cursor-pointer active:scale-[0.98] ${
             activeTab === 'daily'
               ? 'text-white'
-              : 'text-white/50 hover:text-white/80'
+              : 'text-white/40 hover:text-white/70'
           }`}
         >
           {activeTab === 'daily' && (
             <motion.div
               layoutId="tasks-tab-pill"
-              className="absolute inset-0 rounded-xl bg-brand shadow-lg z-[-1]"
-              transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
+              className="absolute inset-0 rounded-xl bg-white/10 border border-white/10 shadow-sm z-[-1]"
+              transition={{ type: 'spring', damping: 28, stiffness: 380 }}
             />
           )}
           <span className="relative z-10">{t('daily')}</span>
         </button>
         <button
-          onClick={() => setActiveTab('all')}
-          className={`relative z-10 flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-300 ${
+          onClick={() => {
+            setActiveTab('all');
+            try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
+          }}
+          className={`relative z-10 flex-1 py-2.5 rounded-xl text-xs font-bold transition-colors duration-200 cursor-pointer active:scale-[0.98] ${
             activeTab === 'all'
               ? 'text-white'
-              : 'text-white/50 hover:text-white/80'
+              : 'text-white/40 hover:text-white/70'
           }`}
         >
           {activeTab === 'all' && (
             <motion.div
               layoutId="tasks-tab-pill"
-              className="absolute inset-0 rounded-xl bg-brand shadow-lg z-[-1]"
-              transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
+              className="absolute inset-0 rounded-xl bg-white/10 border border-white/10 shadow-sm z-[-1]"
+              transition={{ type: 'spring', damping: 28, stiffness: 380 }}
             />
           )}
           <span className="relative z-10">{t('main_tasks')}</span>
@@ -173,51 +185,55 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center py-10">
-          <Loader2 className="w-8 h-8 animate-spin text-brand" />
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="w-7 h-7 animate-spin text-brand" />
         </div>
       ) : error ? (
-        <div className="text-center py-10 text-red-400 text-sm">
+        <div className="text-center py-10 text-rose-400 text-xs font-semibold">
           Loading error: {error}
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {filteredTasks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 opacity-60">
-              <Calendar className="w-12 h-12 text-muted mb-3" />
-              <p className="text-sm text-center">{t('no_tasks')}</p>
+            <div className="flex flex-col items-center justify-center py-12 bg-white/[0.02] border border-white/5 rounded-2xl">
+              <Calendar className="w-10 h-10 text-white/20 mb-2" />
+              <p className="text-xs text-white/40 font-medium text-center">{t('no_tasks')}</p>
             </div>
           ) : (
             filteredTasks.map(task => (
               <div 
                 key={task.id}
-                className={`glass-panel-interactive rounded-2xl p-4 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-transform ${
-                  task.completed ? 'opacity-70 pointer-events-none' : ''
+                className={`bg-[#15161b] border border-white/[0.08] hover:border-white/15 rounded-2xl p-3.5 flex items-center gap-3.5 cursor-pointer active:scale-[0.98] transition-all duration-150 select-none shadow-sm ${
+                  task.completed ? 'opacity-65 pointer-events-none' : ''
                 }`}
                 onClick={() => handleComplete(task)}
               >
-                <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10 overflow-hidden">
+                <div className="w-11 h-11 rounded-xl bg-white/[0.04] border border-white/5 flex items-center justify-center shrink-0 overflow-hidden">
                   {task.icon === 'telegram' ? (
-                    <img src="/telegram.png" className="w-10 h-10 object-contain" alt="Telegram" />
+                    <img src="/telegram.png" className="w-8 h-8 object-contain" alt="Telegram" />
                   ) : (
-                    <Gift className={`w-6 h-6 ${task.completed ? 'text-emerald-400' : 'text-gold'}`} />
+                    <Gift className={`w-5 h-5 ${task.completed ? 'text-emerald-400' : 'text-amber-400'}`} />
                   )}
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-display text-base font-semibold truncate text-white">{task.title}</h3>
-                  <p className="text-xs text-muted leading-tight mt-0.5 line-clamp-2">
+                  <h3 className="font-display text-[14px] font-bold truncate text-white leading-tight">{task.title}</h3>
+                  <p className="text-[11px] text-white/45 leading-tight mt-0.5 line-clamp-2">
                     {task.description}
                   </p>
-                  <div className="flex items-center gap-3 mt-2">
-                    <div className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded text-xs font-bold text-gold border border-gold/20">
-                      +{task.reward} <GramIcon className="w-3 h-3 drop-shadow-md" />
+                  <div className="flex items-center gap-2 mt-2">
+                    <div className="flex items-center gap-1 bg-amber-400/10 px-2 py-0.5 rounded-lg text-[11px] font-bold text-amber-400 border border-amber-400/20">
+                      +{task.reward} <GramIcon className="w-3 h-3 text-amber-400" />
                     </div>
                   </div>
                 </div>
                 
                 <div className="shrink-0 flex items-center justify-center">
-                  {task.completed ? <CheckCircle2 className="w-6 h-6 text-emerald-400" /> : <ChevronRight className="w-5 h-5 text-white/50" />}
+                  {task.completed ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-white/30" />
+                  )}
                 </div>
               </div>
             ))

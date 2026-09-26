@@ -7,10 +7,11 @@ import TelegramBot from "node-telegram-bot-api";
 import { createServer as createViteServer } from "vite";
 import { verifyTelegramInitData, TelegramAuthError } from "./src/lib/telegramAuth.server.ts";
 import { issueToken, verifyToken } from "./src/lib/session.server.ts";
-import { getUser, upsertUserProfile, setUserLanguage, saveUserState, recordOpen, getRecentOpens, getLeaderboardConfig, getLeaderboardData, saveLeaderboardConfig, getAdminConfig, saveAdminConfig, getReferrals, getTasksConfig, saveTasksConfig, completeUserTask, getCasesConfig, saveCasesConfig, getPromocodes, savePromocodes, getPromoRedemptions, savePromoRedemptions, getGiftsConfig, saveGiftsConfig, setWelcomeSeen, resetWelcomeSeen } from "./src/lib/store.server.ts";
-import { getFragmentGiftPrices } from "./src/lib/fragmentPrices.server.ts";
+import { getUser, upsertUserProfile, setUserLanguage, saveUserState, recordOpen, getRecentOpens, getLeaderboardConfig, getLeaderboardData, saveLeaderboardConfig, getAdminConfig, saveAdminConfig, getReferrals, getTasksConfig, saveTasksConfig, completeUserTask, getCasesConfig, saveCasesConfig, getPromocodes, savePromocodes, getPromoRedemptions, savePromoRedemptions, getGiftsConfig, saveGiftsConfig, setWelcomeSeen, resetWelcomeSeen, syncUserFromSupabase } from "./src/lib/store.server.ts";
+import { getFragmentGiftPrices, getFragmentBackdropPrices, syncAllNftPrices, lastSyncStats, lastSyncTime, isSyncing, TTL_MS } from "./src/lib/fragmentPrices.server.ts";
 import { getRocketState, placeRocketBet, cashoutRocketBet } from "./src/lib/rocket.server.ts";
 import { supabaseServer } from "./src/lib/supabase.server.ts";
+import { cleanNftName, getNftBackdrop } from "./src/lib/nftUtils.ts";
 import baseGiftsDb from "./src/gifts_data.json" with { type: "json" };
 
 const botToken = (process.env.TELEGRAM_BOT_TOKEN || "").trim();
@@ -342,15 +343,10 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
          isMaintenance = true;
       }
 
-      // Restore memory from Supabase first
-      const { syncUserFromSupabase } = await import('./src/lib/store.server.js');
+      // Restore memory from Supabase if needed
       await syncUserFromSupabase(tgUser.id);
       
       const user = upsertUserProfile(tgUser, startParam);
-      if (user.needsReload) {
-        user.needsReload = false;
-        saveUserState(user.id, user.balance, user.inventory, user.turnover, user.topups);
-      }
 
       // ----------------------------------------------------
       // Background Supabase Sync on App Open
@@ -396,15 +392,25 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
         },
         balance: user.balance,
         inventory: (user.inventory || []).map(item => {
-          const gift = currentGiftsDb.find(g => g.name === item.name);
-          if (gift) {
-            return {
-              ...item,
-              image_url: gift.lottie_url || gift.image_url || item.image_url,
-              lottie_url: gift.lottie_url || gift.image_url || item.image_url
-            };
-          }
-          return item;
+          const itemBackdrop = getNftBackdrop(item);
+          const gift = currentGiftsDb.find(g => 
+            (item.id && g.id === item.id) ||
+            (itemBackdrop !== 'Default' && g.backdrop === itemBackdrop && (g.name === item.name || cleanNftName(g.name) === cleanNftName(item.name) || g.slug === item.slug)) ||
+            (itemBackdrop === 'Default' && (g.backdrop || 'Default') === 'Default' && (g.name === item.name || cleanNftName(g.name) === cleanNftName(item.name) || g.slug === item.slug))
+          ) || currentGiftsDb.find(g => g.name === item.name);
+
+          const finalBackdrop = itemBackdrop !== 'Default' ? itemBackdrop : (gift?.backdrop || 'Default');
+          const finalImage = (gift && (gift.backdrop === finalBackdrop || finalBackdrop === 'Default'))
+            ? (gift.lottie_url || gift.image_url || item.image_url)
+            : (item.image_url || gift?.lottie_url || gift?.image_url);
+
+          return {
+            ...item,
+            id: item.id || gift?.id,
+            backdrop: finalBackdrop,
+            image_url: finalImage,
+            lottie_url: finalImage
+          };
         }),
         turnover: user.turnover || 0,
         topups: user.topups || [],
@@ -456,17 +462,27 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
       user: { id: user.id, firstName: user.firstName, lastName: user.lastName, username: user.username, photoUrl: user.photoUrl },
       balance: user.balance,
       inventory: (user.inventory || []).map(item => {
-          const gift = currentGiftsDb.find(g => g.name === item.name);
-          if (gift) {
-            return {
-              ...item,
-              image_url: gift.lottie_url || gift.image_url || item.image_url,
-              lottie_url: gift.lottie_url || gift.image_url || item.image_url
-            };
-          }
-          return item;
-        }),
-        turnover: user.turnover || 0,
+        const itemBackdrop = getNftBackdrop(item);
+        const gift = currentGiftsDb.find(g => 
+          (item.id && g.id === item.id) ||
+          (itemBackdrop !== 'Default' && g.backdrop === itemBackdrop && (g.name === item.name || cleanNftName(g.name) === cleanNftName(item.name) || g.slug === item.slug)) ||
+          (itemBackdrop === 'Default' && (g.backdrop || 'Default') === 'Default' && (g.name === item.name || cleanNftName(g.name) === cleanNftName(item.name) || g.slug === item.slug))
+        ) || currentGiftsDb.find(g => g.name === item.name);
+
+        const finalBackdrop = itemBackdrop !== 'Default' ? itemBackdrop : (gift?.backdrop || 'Default');
+        const finalImage = (gift && (gift.backdrop === finalBackdrop || finalBackdrop === 'Default'))
+          ? (gift.lottie_url || gift.image_url || item.image_url)
+          : (item.image_url || gift?.lottie_url || gift?.image_url);
+
+        return {
+          ...item,
+          id: item.id || gift?.id,
+          backdrop: finalBackdrop,
+          image_url: finalImage,
+          lottie_url: finalImage
+        };
+      }),
+      turnover: user.turnover || 0,
       });
   });
 
@@ -622,14 +638,16 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
     
     const win = Math.random() * 100 < chance;
     
-    // Calculate final angle for animation
-    const winAngle = (chance / 100) * 360;
-    let finalAngle;
+    // Calculate final angle for animation landing at the exact center of a segment (72 segments, 5 deg each)
+    const totalSegments = 72;
+    const greenSegmentsCount = Math.max(1, Math.min(totalSegments - 1, Math.round((chance / 100) * totalSegments)));
+    let targetSegmentIndex = 0;
     if (win) {
-       finalAngle = 360 - (Math.random() * winAngle);
+      targetSegmentIndex = Math.floor(Math.random() * greenSegmentsCount);
     } else {
-       finalAngle = 360 - (winAngle + Math.random() * (360 - winAngle));
+      targetSegmentIndex = greenSegmentsCount + Math.floor(Math.random() * (totalSegments - greenSegmentsCount));
     }
+    const finalAngle = (targetSegmentIndex + 0.5) * (360 / totalSegments);
     
     res.json({ win, finalAngle, chance });
   });
@@ -641,13 +659,16 @@ app.post("/api/state", requireAuth, (req, res) => {
       res.status(400).json({ error: "Ожидаются balance:number и inventory:array" });
       return;
     }
-    const updated = saveUserState(userId, balance, inventory, turnover, topups);
+    const sanitizedInventory = inventory.map((item: any) => {
+      const bd = getNftBackdrop(item);
+      return {
+        ...item,
+        backdrop: bd
+      };
+    });
+    const updated = saveUserState(userId, balance, sanitizedInventory, turnover, topups);
     if (!updated) {
       res.status(404).json({ error: "Пользователь не найден" });
-      return;
-    }
-    if (updated.needsReload) {
-      res.json({ ok: true, forceReload: true });
       return;
     }
     res.json({ ok: true });
@@ -686,11 +707,21 @@ app.post("/api/state", requireAuth, (req, res) => {
       res.status(400).json({ error: "Ожидается gift:{name,...} для NFT" });
       return;
     }
+    const itemBackdrop = gift ? getNftBackdrop(gift) : undefined;
     recordOpen({
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       ts: new Date().toISOString(),
       firstName: user.firstName || "Игрок",
-      gift: isGram ? undefined : { name: gift.name, image_url: gift.image_url, pattern: gift.pattern, lottieUrl: gift.lottieUrl, slug: gift.slug, price: gift.price },
+      gift: isGram ? undefined : {
+        id: gift.id,
+        name: gift.name,
+        image_url: gift.image_url,
+        pattern: gift.pattern,
+        lottieUrl: gift.lottieUrl,
+        slug: gift.slug,
+        price: gift.price,
+        backdrop: itemBackdrop
+      },
       price,
       isGram: !!isGram,
       multiplier: multiplier || undefined,
@@ -704,19 +735,30 @@ app.post("/api/state", requireAuth, (req, res) => {
   app.get("/api/opens/recent", (req, res) => {
     const limit = Math.min(Number(req.query.limit) || 20, 100);
     const opens = getRecentOpens(limit);
-    // Resolve updated URLs from currentGiftsDb
+    // Resolve updated URLs from currentGiftsDb while preserving exact backdrop
     const resolvedOpens = opens.map(open => {
       if (open.gift && open.gift.name) {
-        const gift = currentGiftsDb.find(g => g.name === open.gift.name);
-        if (gift) {
-           return {
-             ...open,
-             gift: {
-               ...open.gift,
-               image_url: gift.lottie_url || gift.image_url || open.gift.image_url
-             }
-           };
-        }
+        const itemBackdrop = getNftBackdrop(open.gift);
+        const gift = currentGiftsDb.find(g => 
+          (open.gift.id && g.id === open.gift.id) ||
+          (itemBackdrop !== 'Default' && g.backdrop === itemBackdrop && (g.name === open.gift.name || cleanNftName(g.name) === cleanNftName(open.gift.name) || g.slug === open.gift.slug)) ||
+          (itemBackdrop === 'Default' && (g.backdrop || 'Default') === 'Default' && (g.name === open.gift.name || cleanNftName(g.name) === cleanNftName(open.gift.name) || g.slug === open.gift.slug))
+        ) || currentGiftsDb.find(g => g.name === open.gift.name);
+
+        const finalBackdrop = itemBackdrop !== 'Default' ? itemBackdrop : (gift?.backdrop || 'Default');
+        const finalImageUrl = (gift && (gift.backdrop === finalBackdrop || finalBackdrop === 'Default'))
+          ? (gift.lottie_url || gift.image_url || open.gift.image_url)
+          : (open.gift.image_url || gift?.lottie_url || gift?.image_url);
+
+        return {
+          ...open,
+          gift: {
+            ...open.gift,
+            id: open.gift.id || gift?.id,
+            backdrop: finalBackdrop,
+            image_url: finalImageUrl
+          }
+        };
       }
       return open;
     });
@@ -768,6 +810,41 @@ app.post("/api/state", requireAuth, (req, res) => {
       res.json(prices);
     } catch (e: any) {
       res.status(500).json({ error: e?.message || "Fragment scrape failed" });
+    }
+  });
+
+  app.get("/api/fragment/backdrop-prices", async (req, res) => {
+    try {
+      const slugs = Array.from(new Set((currentGiftsDb as any[]).map((g) => g.slug).filter(Boolean)));
+      const backdrops = await getFragmentBackdropPrices(slugs);
+      res.json(backdrops);
+    } catch (e: any) {
+      res.status(500).json({ error: e?.message || "Backdrops scrape failed" });
+    }
+  });
+
+  app.get("/api/fragment/sync-status", (req, res) => {
+    res.json({
+      lastSyncTime,
+      isSyncing,
+      intervalHours: 3,
+      intervalMs: TTL_MS,
+      stats: lastSyncStats
+    });
+  });
+
+  app.post("/api/fragment/sync", requireAdmin, async (req, res) => {
+    try {
+      const slugs = Array.from(new Set((currentGiftsDb as any[]).map((g) => g.slug).filter(Boolean)));
+      const result = await syncAllNftPrices(slugs, true);
+      res.json({
+        ok: true,
+        regularCount: result.prices.length,
+        backdropsCount: Object.keys(result.backdrops).length,
+        stats: lastSyncStats
+      });
+    } catch (e: any) {
+      res.status(500).json({ error: e?.message || "Sync failed" });
     }
   });
 
@@ -1253,6 +1330,30 @@ app.get("/api/admin/gifts", (req, res) => {
       if (!process.env.TELEGRAM_BOT_TOKEN) {
         console.warn("[auth] TELEGRAM_BOT_TOKEN не задан — авторизация через Telegram будет всегда отклоняться.");
       }
+
+      // Initial sync of all regular and Black/Onyx NFT floors
+      const startPriceSync = () => {
+        const slugs = Array.from(new Set((currentGiftsDb as any[]).map((g) => g.slug).filter(Boolean)));
+        if (slugs.length > 0) {
+          syncAllNftPrices(slugs, false).catch(err => {
+            console.warn('[Price Sync] Initial sync failed, using cached/fallback floors:', err.message);
+          });
+        }
+      };
+
+      // Run on boot shortly after server is listening
+      setTimeout(startPriceSync, 3000);
+
+      // Periodically refresh all floor prices every 3 hours (10,800,000 ms)
+      setInterval(() => {
+        console.log('[Price Sync] 3-hour timer triggered: fetching all NFT floors (regular, Black, Onyx)...');
+        const slugs = Array.from(new Set((currentGiftsDb as any[]).map((g) => g.slug).filter(Boolean)));
+        if (slugs.length > 0) {
+          syncAllNftPrices(slugs, true).catch(err => {
+            console.error('[Price Sync] Scheduled 3-hour sync error:', err.message);
+          });
+        }
+      }, TTL_MS);
     });
   }
   

@@ -5,6 +5,9 @@ import { motion, AnimatePresence, useAnimation } from 'motion/react';
 import { PremiumImage } from './PremiumImage';
 import { incrementStat, recordGameProgress } from '../lib/stats';
 import { GramIcon } from './GramIcon';
+import { cleanNftName, getNftBackdrop } from '../lib/nftUtils';
+import { UpgradeWheel } from './UpgradeWheel';
+import { GameLossModal } from './GameLossModal';
 
 export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin, setInventory, onBet, onNavigate }: { inventory: any[], giftsDb: any[], onBack: () => void, balance: number, setBalance: any, onWin?: (item: any, price: number) => void, setInventory: any, onBet?: (amount: number) => void, onNavigate?: (target: string) => void }) {
   const { t } = useTranslation();
@@ -31,8 +34,16 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
   
   // Persist State
   const saveModelsToLocal = (uids: string[]) => {
+    if (!uids || uids.length === 0) {
+      localStorage.removeItem('upgrade_sourceModelIds');
+      return;
+    }
     const models = uids.map(uid => inventory.find(i => i.uniqueId === uid)?.id).filter(Boolean);
-    localStorage.setItem('upgrade_sourceModelIds', JSON.stringify(models));
+    if (models.length > 0) {
+      localStorage.setItem('upgrade_sourceModelIds', JSON.stringify(models));
+    } else {
+      localStorage.removeItem('upgrade_sourceModelIds');
+    }
   };
 
   useEffect(() => {
@@ -47,36 +58,40 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
     localStorage.setItem('upgrade_gramBet', gramBetInput);
   }, [gramBetInput]);
 
-  // Auto-fill sourceIds based on saved models when inventory changes
+  // Initial load only - do NOT auto-replace bet items with other identical items when inventory changes
+  const isInitRef = useRef(false);
   useEffect(() => {
-    try {
-      const savedModelsJson = localStorage.getItem('upgrade_sourceModelIds');
-      if (savedModelsJson) {
-        const desiredModelIds = JSON.parse(savedModelsJson) as string[];
-        const newSourceIds: string[] = [];
-        const usedUniqueIds = new Set<string>();
-        
-        for (const modelId of desiredModelIds) {
-          const item = inventory.find(i => i.id === modelId && !i.isWithdrawing && !usedUniqueIds.has(i.uniqueId));
-          if (item) {
-            newSourceIds.push(item.uniqueId);
-            usedUniqueIds.add(item.uniqueId);
+    if (!isInitRef.current) {
+      isInitRef.current = true;
+      try {
+        const savedModelsJson = localStorage.getItem('upgrade_sourceModelIds');
+        if (savedModelsJson) {
+          const desiredModelIds = JSON.parse(savedModelsJson) as string[];
+          const newSourceIds: string[] = [];
+          const usedUniqueIds = new Set<string>();
+          
+          for (const modelId of desiredModelIds) {
+            const item = inventory.find(i => i.id === modelId && !i.isWithdrawing && !usedUniqueIds.has(i.uniqueId));
+            if (item) {
+              newSourceIds.push(item.uniqueId);
+              usedUniqueIds.add(item.uniqueId);
+            }
+          }
+          if (newSourceIds.length > 0) {
+            setSourceIds(newSourceIds);
           }
         }
-        
-        setSourceIds(prev => {
-          if (prev.length === newSourceIds.length && prev.every((id, idx) => id === newSourceIds[idx])) {
-            return prev;
-          }
-          return newSourceIds;
-        });
-      }
-    } catch {}
+      } catch {}
+    } else {
+      // Keep only items that still exist in inventory; NEVER auto-fill others of the same model!
+      setSourceIds(prev => prev.filter(uid => inventory.some(i => i.uniqueId === uid && !i.isWithdrawing)));
+    }
   }, [inventory]);
 
   const [activeTab, setActiveTab] = useState<'inventory' | 'targets'>('inventory');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [targetBackdropFilter, setTargetBackdropFilter] = useState<'black' | 'onyx' | null>(null);
   
   // Settings
   const [showSettings, setShowSettings] = useState(false);
@@ -85,7 +100,14 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
 
   // Animation & Result State
   const [spinning, setSpinning] = useState(false);
-  const [result, setResult] = useState<{status: 'win' | 'lose', item?: any} | null>(null);
+  const [result, setResult] = useState<{
+    status: 'win' | 'lose';
+    item?: any;
+    lostSources?: any[];
+    lostGram?: number;
+    chance?: number;
+    target?: any;
+  } | null>(null);
   const [rotation, setRotation] = useState(0);
   const controls = useAnimation();
   const pendingResultRef = useRef<any>(null);
@@ -100,11 +122,20 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
   const applyResultRef = useRef((resultData: any) => {});
   applyResultRef.current = (resultData: any) => {
     const { isWin, wonItem, gramBetDeducted, removedSourceIds, multiplier } = resultData;
+    setSourceIds([]);
+    localStorage.removeItem('upgrade_sourceModelIds');
     if (isWin) {
       incrementStat('stat_upgrade_wins');
       recordGameProgress('upgrade', gramBetDeducted, multiplier, 1);
       setInventory((prev: any[]) => [wonItem, ...prev.filter(i => !removedSourceIds.includes(i.uniqueId))]);
-      onWin?.({ name: wonItem.name, image_url: wonItem.image_url, slug: wonItem.slug }, wonItem.price);
+      onWin?.({
+        id: wonItem.id,
+        name: wonItem.name,
+        image_url: wonItem.image_url,
+        slug: wonItem.slug,
+        backdrop: wonItem.backdrop,
+        pattern: wonItem.pattern
+      }, wonItem.price);
     } else {
       setInventory((prev: any[]) => prev.filter(i => !removedSourceIds.includes(i.uniqueId)));
     }
@@ -117,6 +148,10 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
 
   const target = useMemo(() => giftsDb.find(t => t.id === targetId), [giftsDb, targetId]);
 
+  const targetBackdrop = getNftBackdrop(target);
+  const isTargetOnyx = targetBackdrop === 'Onyx Black';
+  const isTargetBlack = targetBackdrop === 'Black';
+
   // Auto-deselect target if bet > target price
   useEffect(() => {
     if (target && (target.floor_price_gram || target.price || 0) <= totalBet) setTargetId(null);
@@ -126,7 +161,8 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
   const visualChance = (!target && totalBet === 0) ? 50 : chance;
   if (chance > 95) chance = 95;
 
-  const canUpgrade = (sourceIds.length > 0 || gramBet >= 0.1) && target && balance >= gramBet && chance > 0 && !spinning;
+  const isBetTooHigh = sourcePrice > 2500;
+  const canUpgrade = (sourceIds.length > 0 || gramBet >= 0.1) && target && balance >= gramBet && chance > 0 && !spinning && !isBetTooHigh;
 
   // Sound effects
   const playTick = () => {
@@ -147,6 +183,9 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
     let win = false;
     let finalAngle = 0;
     
+    const totalSegments = 72;
+    const greenSegmentsCount = Math.max(1, Math.min(totalSegments - 1, Math.round((chance / 100) * totalSegments)));
+
     try {
       const res = await fetch('/api/upgrade', {
         method: 'POST',
@@ -161,28 +200,46 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
         win = data.win;
         finalAngle = data.finalAngle;
       } else {
-         // Fallback logic
-         win = Math.random() * 100 < chance;
-         const winAngle = (chance / 100) * 360;
-         if (win) finalAngle = 360 - (Math.random() * winAngle);
-         else finalAngle = 360 - (winAngle + Math.random() * (360 - winAngle));
+        // Fallback logic
+        win = Math.random() * 100 < chance;
+        const targetSegmentIndex = win
+          ? Math.floor(Math.random() * greenSegmentsCount)
+          : greenSegmentsCount + Math.floor(Math.random() * (totalSegments - greenSegmentsCount));
+        finalAngle = (targetSegmentIndex + 0.5) * (360 / totalSegments);
       }
     } catch(e) {
-       win = Math.random() * 100 < chance;
-       const winAngle = (chance / 100) * 360;
-       if (win) finalAngle = 360 - (Math.random() * winAngle);
-       else finalAngle = 360 - (winAngle + Math.random() * (360 - winAngle));
+      win = Math.random() * 100 < chance;
+      const targetSegmentIndex = win
+        ? Math.floor(Math.random() * greenSegmentsCount)
+        : greenSegmentsCount + Math.floor(Math.random() * (totalSegments - greenSegmentsCount));
+      finalAngle = (targetSegmentIndex + 0.5) * (360 / totalSegments);
     }
 
+    // Ensure finalAngle strictly lands at the exact dead center of the chosen block
+    const degPerSeg = 360 / totalSegments;
+    let chosenSegmentIndex = Math.floor(finalAngle / degPerSeg);
+    if (win && chosenSegmentIndex >= greenSegmentsCount) {
+      chosenSegmentIndex = Math.floor(Math.random() * greenSegmentsCount);
+    } else if (!win && chosenSegmentIndex < greenSegmentsCount) {
+      chosenSegmentIndex = greenSegmentsCount + Math.floor(Math.random() * (totalSegments - greenSegmentsCount));
+    }
+    const exactCenterAngle = (chosenSegmentIndex + 0.5) * degPerSeg;
+
     const currentMod = rotation % 360;
-    const diff = finalAngle - currentMod;
+    const diff = (exactCenterAngle - currentMod + 360) % 360;
     
-    const spins = animSpeed === 'fast' ? 3 : 6;
+    const spins = animSpeed === 'fast' ? 3 : 5;
     const targetRotation = rotation + (360 * spins) + diff; 
     
     let finalWonItem = null;
-    if (win) {
-      finalWonItem = { ...target, uniqueId: Date.now().toString(), price: target.floor_price_gram || target.price || 0, image_url: target.image_url };
+    if (win && target) {
+      finalWonItem = {
+        ...target,
+        uniqueId: Date.now().toString(),
+        price: target.floor_price_gram || target.price || 0,
+        image_url: target.image_url,
+        backdrop: target.backdrop || targetBackdrop
+      };
     }
 
     const multiplier = totalBet > 0 && target ? (target.floor_price_gram || target.price || 0) / totalBet : 0;
@@ -216,7 +273,16 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
     if (pendingResultRef.current) {
       applyResultRef.current(pendingResultRef.current);
       pendingResultRef.current = null;
-      setResult({ status: win ? 'win' : 'lose', item: win ? finalWonItem : target });
+      setSourceIds([]);
+      localStorage.removeItem('upgrade_sourceModelIds');
+      setResult({ 
+        status: win ? 'win' : 'lose', 
+        item: win ? finalWonItem : target,
+        lostSources: win ? undefined : selectedSources,
+        lostGram: win ? undefined : gramBet,
+        chance: Number(chance.toFixed(1)),
+        target: target
+      });
       setSpinning(false);
     }
   };
@@ -256,21 +322,38 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
   const filteredInventory = useMemo(() => {
     return availableInventory
       .filter(i => i.name.toLowerCase().includes(searchQuery.toLowerCase()))
+      .filter(i => {
+        if (!targetBackdropFilter) return true;
+        const b = getNftBackdrop(i);
+        if (targetBackdropFilter === 'black') return b === 'Black';
+        if (targetBackdropFilter === 'onyx') return b === 'Onyx Black';
+        return true;
+      })
       .sort((a, b) => {
         const diff = (a.floor_price_gram || a.price || 0) - (b.floor_price_gram || b.price || 0);
         return sortOrder === 'asc' ? diff : -diff;
       });
-  }, [availableInventory, searchQuery, sortOrder]);
+  }, [availableInventory, searchQuery, sortOrder, targetBackdropFilter]);
 
   const filteredTargets = useMemo(() => {
     return giftsDb
       .filter(g => (g.floor_price_gram || g.price || 0) > totalBet)
       .filter(g => g.name.toLowerCase().includes(searchQuery.toLowerCase()))
+      .filter(g => {
+        const b = getNftBackdrop(g);
+        const isOnyx = b === 'Onyx Black';
+        const isBlack = b === 'Black';
+        const isDefault = b === 'Default';
+
+        if (targetBackdropFilter === 'black') return isBlack;
+        if (targetBackdropFilter === 'onyx') return isOnyx;
+        return isDefault;
+      })
       .sort((a, b) => {
         const diff = (a.floor_price_gram || a.price || 0) - (b.floor_price_gram || b.price || 0);
         return sortOrder === 'asc' ? diff : -diff;
       });
-  }, [giftsDb, totalBet, searchQuery, sortOrder]);
+  }, [giftsDb, totalBet, searchQuery, sortOrder, targetBackdropFilter]);
 
   return (
     <div className="h-full w-full flex flex-col bg-[#0a0a0c] text-white relative overflow-hidden">
@@ -336,92 +419,116 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
         </button>
 
       <div className="flex-1 overflow-y-auto pb-[20px] pt-[72px] flex flex-col">
-        {/* Top: Large Wheel */}
-        <div className="relative w-full max-w-[320px] aspect-square flex justify-center shrink-0 mx-auto">
-          <div className="relative w-[300px] h-[300px]">
-            <div className="w-full h-full rotate-90">
-              <motion.div className="w-full h-full drop-shadow-2xl relative" animate={controls}>
-                <img src="/krug_apgreyd.png" className="absolute inset-0 w-full h-full object-contain scale-[1.05]" alt="wheel frame" />
-                <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible relative z-10">
-                  <circle cx="50" cy="50" r="44" fill="none" stroke="#252525" strokeWidth="8" strokeOpacity="0.9" />
-                  <circle 
-                    cx="50" cy="50" r="44" fill="none" stroke="currentColor" strokeWidth="8" 
-                    strokeDasharray={`${(visualChance / 100) * 276.46} 276.46`}
-                    strokeLinecap="butt"
-                    className={`transition-all duration-500 ${visualChance > 0 ? 'text-brand' : 'text-transparent'}`}
-                    style={{ filter: visualChance > 0 ? "drop-shadow(0 0 10px rgba(255,184,0,0.6))" : "none" }}
-                  />
-                </svg>
-              </motion.div>
-            </div>
-            
-            {/* Bottom Pointer */}
-            <div className="absolute -bottom-[20px] left-1/2 -translate-x-1/2 z-30 drop-shadow-[0_0_20px_rgba(255,255,255,0.8)] scale-[1.3] rotate-180">
-              <svg width="26" height="30" viewBox="0 0 26 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M13 28 L4 4 L13 9 Z" fill="url(#ptr_left)" />
-                <path d="M13 28 L13 9 L22 4 Z" fill="url(#ptr_right)" />
-                <path d="M13 28 L4 4 L13 9 L22 4 Z" stroke="#fbc740" strokeWidth="2.5" strokeLinejoin="round"/>
-                <defs>
-                  <linearGradient id="ptr_left" x1="8.5" y1="4" x2="8.5" y2="28" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#fbc740" />
-                    <stop offset="1" stopColor="#d4a017" />
-                  </linearGradient>
-                  <linearGradient id="ptr_right" x1="17.5" y1="4" x2="17.5" y2="28" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#d4a017" />
-                    <stop offset="1" stopColor="#997300" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
-            
-            {/* Inner Circle Content */}
-            <div className="absolute inset-[15%] bg-gradient-to-b from-[#1c1d21] to-[#131417] rounded-full shadow-[inset_0_4px_20px_rgba(0,0,0,0.8)] flex flex-col items-center justify-center pointer-events-none border-[2px] border-[#25272c]">
-               <span className="text-[24px] font-display font-black text-white drop-shadow-[0_0_15px_rgba(251,199,64,0.6)]">{chance.toFixed(1)}%</span>
-            </div>
-          </div>
+        {/* Top: Assembled Upgrade Wheel from Manifest (+35% size) */}
+        <div className="relative w-full max-w-[405px] px-2 aspect-square flex items-center justify-center shrink-0 mx-auto">
+          <UpgradeWheel 
+            winChance={chance} 
+            controls={controls} 
+            isSpinning={spinning} 
+            size={405} 
+          />
         </div>
 
         {/* Middle: Selection Cards */}
         <div className="w-full px-4 grid grid-cols-2 gap-3 mb-4 mt-6">
           {/* Left Card: Input */}
-          <div className="bg-[#151619] rounded-[16px] overflow-hidden relative min-h-[160px] flex flex-col border border-white/5 p-3">
-             <div className="text-center z-10 shrink-0 mb-2">
-               <h3 className="text-white font-bold text-[11px] leading-tight text-white/50 uppercase tracking-widest">Отдаваемые предметы</h3>
-             </div>
-             <div className="flex-1 w-full flex flex-col items-center justify-center">
-                {selectedSources.length > 0 ? (
-                  <div className="flex flex-wrap items-center justify-center gap-1 mb-2">
-                    {selectedSources.slice(0, 3).map((src, idx) => (
-                      <div key={idx} className="relative w-14 h-14 bg-[#1c1d21] rounded-[10px] border border-white/10 flex items-center justify-center">
-                        <PremiumImage staticMode src={src.image_url} alt={src.name} className="w-[90%] h-[90%] object-contain" />
+          {(() => {
+            const singleSrc = selectedSources.length === 1 ? selectedSources[0] : null;
+            const singleSrcBackdrop = singleSrc ? getNftBackdrop(singleSrc) : 'Default';
+            const isSingleOnyx = singleSrcBackdrop === 'Onyx Black';
+            const isSingleBlack = singleSrcBackdrop === 'Black';
+
+            return (
+              <div className={`rounded-[16px] overflow-hidden relative min-h-[160px] flex flex-col border transition-all duration-300 p-3 ${
+                isSingleBlack
+                  ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/10'
+                  : isSingleOnyx
+                    ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/10'
+                    : 'bg-[#151619] border-white/5'
+              }`}>
+                 <div className="text-center z-10 shrink-0 mb-1">
+                   <h3 className="text-white font-bold text-[11px] leading-tight text-white/50 uppercase tracking-widest">Отдаваемые предметы</h3>
+                   {singleSrc && (isSingleOnyx || isSingleBlack) && (
+                     <div className="w-full flex justify-center pt-0.5">
+                       <span className={`text-[11px] font-bold uppercase tracking-widest ${
+                         isSingleOnyx ? 'text-zinc-300' : 'text-zinc-400'
+                       }`}>
+                         {isSingleOnyx ? 'Onyx Black' : 'Black'}
+                       </span>
+                     </div>
+                   )}
+                 </div>
+                 <div className="flex-1 w-full relative flex flex-col items-center justify-center">
+                     {selectedSources.length === 1 ? (
+                      <>
+                        <PremiumImage staticMode src={selectedSources[0].image_url} alt={selectedSources[0].name} className="w-[48%] h-[48%] object-contain drop-shadow-xl" />
+                        <span className="text-[11px] text-white/90 truncate w-full text-center font-bold mt-2">{cleanNftName(selectedSources[0].name)}</span>
+                        <span className="text-[13px] font-bold text-white flex items-center justify-center gap-1 mt-0.5">{Number(selectedSources[0].floor_price_gram || selectedSources[0].price || 0).toFixed(2)} <GramIcon className="w-3 h-3" /></span>
                         <button onClick={(e) => { 
                           e.stopPropagation(); 
-                          setSourceIds(prev => {
-                            const next = prev.filter(id => id !== src.uniqueId);
-                            saveModelsToLocal(next);
-                            return next;
-                          }); 
-                        }} className="absolute -top-1 -right-1 bg-red-500 rounded-full p-0.5"><X className="w-2.5 h-2.5 text-white" /></button>
+                          setSourceIds([]);
+                          saveModelsToLocal([]);
+                        }} className="absolute top-0 right-0 bg-red-500/80 hover:bg-red-500 rounded-full p-1"><X className="w-3 h-3 text-white" /></button>
+                      </>
+                    ) : selectedSources.length > 1 ? (
+                      <div className="flex flex-wrap items-center justify-center gap-1 mb-2">
+                        {selectedSources.slice(0, 3).map((src, idx) => {
+                          const srcB = getNftBackdrop(src);
+                          return (
+                            <div key={idx} className={`relative w-14 h-14 rounded-[10px] border flex items-center justify-center ${
+                              srcB === 'Black'
+                                ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/10'
+                                : srcB === 'Onyx Black'
+                                  ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/10'
+                                  : 'bg-[#1c1d21] border-white/10'
+                            }`}>
+                              <PremiumImage staticMode src={src.image_url} alt={src.name} className="w-[54%] h-[54%] object-contain" />
+                              <button onClick={(e) => { 
+                                e.stopPropagation(); 
+                                setSourceIds(prev => {
+                                  const next = prev.filter(id => id !== src.uniqueId);
+                                  saveModelsToLocal(next);
+                                  return next;
+                                }); 
+                              }} className="absolute -top-1 -right-1 bg-red-500 rounded-full p-0.5"><X className="w-2.5 h-2.5 text-white" /></button>
+                            </div>
+                          );
+                        })}
+                        {selectedSources.length > 3 && <div className="text-[10px] text-white/50">+{selectedSources.length - 3}</div>}
                       </div>
-                    ))}
-                    {selectedSources.length > 3 && <div className="text-[10px] text-white/50">+{selectedSources.length - 3}</div>}
-                  </div>
-                ) : (
-                  <div className="text-[10px] text-white/40 mb-2 text-center">Выберите предметы ниже</div>
-                )}
-             </div>
-          </div>
+                    ) : (
+                      <div className="text-[10px] text-white/40 mb-2 text-center">Выберите предметы ниже</div>
+                    )}
+                 </div>
+              </div>
+            );
+          })()}
 
-          {/* Right Card: Target */}
-          <div className="bg-[#151619] rounded-[16px] overflow-hidden relative min-h-[160px] flex flex-col border border-white/5 p-3">
-             <div className="text-center z-10 shrink-0 mb-2">
+           {/* Right Card: Target */}
+          <div className={`rounded-[16px] overflow-hidden relative min-h-[160px] flex flex-col border transition-all duration-300 p-3 ${
+            isTargetBlack 
+              ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/10' 
+              : isTargetOnyx 
+                ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/10' 
+                : 'bg-[#151619] border-white/5'
+          }`}>
+             <div className="text-center z-10 shrink-0 mb-1">
                <h3 className="text-white font-bold text-[11px] leading-tight text-white/50 uppercase tracking-widest">Желаемый предмет</h3>
+               {target && (isTargetOnyx || isTargetBlack) && (
+                 <div className="w-full flex justify-center pt-0.5">
+                   <span className={`text-[11px] font-bold uppercase tracking-widest ${
+                     isTargetOnyx ? 'text-zinc-300' : 'text-zinc-400'
+                   }`}>
+                     {isTargetOnyx ? 'Onyx Black' : 'Black'}
+                   </span>
+                 </div>
+               )}
              </div>
              <div className="flex-1 w-full relative flex flex-col items-center justify-center">
                 {target ? (
                   <>
-                    <PremiumImage staticMode src={target.image_url} alt={target.name} className="w-[85%] h-[85%] object-contain drop-shadow-xl" />
-                    <span className="text-[11px] text-white/90 truncate w-full text-center font-bold mt-2">{target.name}</span>
+                    <PremiumImage staticMode src={target.image_url} alt={target.name} className="w-[48%] h-[48%] object-contain drop-shadow-xl" />
+                    <span className="text-[11px] text-white/90 truncate w-full text-center font-bold mt-2">{cleanNftName(target.name)}</span>
                     <span className="text-[13px] font-bold text-brand flex items-center justify-center gap-1 mt-0.5">{Number(target.floor_price_gram || target.price || 0).toFixed(2)} <GramIcon className="w-3 h-3" /></span>
                   </>
                 ) : (
@@ -491,7 +598,7 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
 
           {/* Filters */}
           <div className="flex items-center gap-2 mb-4 shrink-0">
-            <div className="flex-1 relative">
+            <div className="flex-1 relative min-w-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
               <input 
                 type="text" 
@@ -501,9 +608,35 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                 className="w-full bg-[#1a1b1f] border border-white/5 rounded-[12px] py-2 pl-9 pr-3 text-[13px] text-white outline-none placeholder:text-white/30"
               />
             </div>
+            <button
+              type="button"
+              onClick={() => setTargetBackdropFilter(prev => prev === 'black' ? null : 'black')}
+              className={`py-2 px-2.5 rounded-[12px] text-[11px] font-bold border transition-all shrink-0 flex items-center gap-1.5 ${
+                targetBackdropFilter === 'black'
+                  ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/40 text-white shadow-md ring-1 ring-white/20'
+                  : 'bg-[#1a1b1f] border-white/5 text-white/60 hover:text-white hover:bg-white/5'
+              }`}
+              title="Фильтр Black"
+            >
+              <span className="w-2 h-2 rounded-full bg-black border border-white/30 inline-block shrink-0" />
+              <span>Black</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setTargetBackdropFilter(prev => prev === 'onyx' ? null : 'onyx')}
+              className={`py-2 px-2.5 rounded-[12px] text-[11px] font-bold border transition-all shrink-0 flex items-center gap-1.5 ${
+                targetBackdropFilter === 'onyx'
+                  ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/40 text-white shadow-md ring-1 ring-white/20'
+                  : 'bg-[#1a1b1f] border-white/5 text-white/60 hover:text-white hover:bg-white/5'
+              }`}
+              title="Фильтр Onyx Black"
+            >
+              <span className="w-2 h-2 rounded-full bg-[#393d3f] border border-white/30 inline-block shrink-0" />
+              <span>Onyx Black</span>
+            </button>
             <button 
               onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
-              className="bg-[#1a1b1f] border border-white/5 rounded-[12px] px-3 py-2 text-[13px] font-medium text-white flex items-center gap-1"
+              className="bg-[#1a1b1f] border border-white/5 rounded-[12px] px-3 py-2 text-[13px] font-medium text-white flex items-center gap-1 shrink-0"
             >
               Цена {sortOrder === 'desc' ? '↓' : '↑'}
             </button>
@@ -518,9 +651,16 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                 <div className="grid grid-cols-3 gap-3">
                   {filteredInventory.map(item => {
                     const isSelected = sourceIds.includes(item.uniqueId);
+                    const itemBackdrop = getNftBackdrop(item);
+                    const isOnyx = itemBackdrop === 'Onyx Black';
+                    const isBlack = itemBackdrop === 'Black';
+                    const itemPrice = Number(item.floor_price_gram || item.price || 0);
+                    const isOverLimit = itemPrice > 2500 || (!isSelected && sourcePrice + itemPrice > 2500);
+
                     return (
                       <button
                         key={item.uniqueId}
+                        disabled={isOverLimit && !isSelected}
                         onClick={() => {
                           if (isSelected) {
                             setSourceIds(prev => {
@@ -529,6 +669,7 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                               return next;
                             });
                           } else {
+                            if (isOverLimit) return;
                             setSourceIds(prev => {
                               const next = [...prev, item.uniqueId];
                               saveModelsToLocal(next);
@@ -537,15 +678,36 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                           }
                         }}
                         className={`relative overflow-hidden w-full aspect-[3/4] rounded-[16px] border flex flex-col items-center p-2 transition-all ${
-                          isSelected ? 'border-brand bg-[#fbc740]/10 scale-95 shadow-[0_4px_15px_rgba(251,199,64,0.15)]' : 'border-white/5 bg-[#181a20] hover:bg-[#1f2129]'
+                          isOverLimit && !isSelected ? 'opacity-40 cursor-not-allowed border-white/5 bg-[#181a20]' :
+                          isSelected 
+                            ? 'border-brand bg-[#fbc740]/10 scale-95 shadow-[0_4px_15px_rgba(251,199,64,0.15)]' 
+                            : isBlack 
+                              ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/10' 
+                              : isOnyx 
+                                ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/10' 
+                                : 'border-white/5 bg-[#181a20] hover:bg-[#1f2129]'
                         }`}
                       >
+                        {(isOnyx || isBlack) && (
+                          <span className={`absolute top-1.5 left-0 right-0 z-20 text-[9px] font-bold uppercase tracking-widest text-center ${
+                            isOnyx ? 'text-zinc-300' : 'text-zinc-400'
+                          }`}>
+                            {isOnyx ? 'Onyx Black' : 'Black'}
+                          </span>
+                        )}
                         <div className="flex-1 w-full flex items-center justify-center min-h-0 mb-1">
-                          <PremiumImage staticMode src={item.image_url} alt={item.name} className="w-[85%] h-[85%] object-contain drop-shadow-md" />
+                          <PremiumImage staticMode src={item.image_url} alt={item.name} className="w-[51%] h-[51%] object-contain drop-shadow-md" />
                         </div>
                         <div className="relative z-20 w-full flex flex-col items-center justify-end shrink-0">
-                          <span className="text-[10px] text-white/90 truncate w-[95%] text-center leading-none mb-1.5">{item.name}</span>
-                          <span className="text-[12px] font-bold text-white flex items-center gap-1">{Number(item.floor_price_gram || item.price || 0).toFixed(2)} <GramIcon className="w-3 h-3" /></span>
+                          <span className="text-[10px] text-white/90 truncate w-[95%] text-center leading-none mb-1">{cleanNftName(item.name)}</span>
+                          <div className="flex items-center justify-center gap-1 w-full">
+                            <span className="text-[12px] font-bold text-white flex items-center gap-1">{Number(item.floor_price_gram || item.price || 0).toFixed(2)} <GramIcon className="w-3 h-3" /></span>
+                            {itemPrice > 2500 && (
+                              <span className="text-[8px] font-bold text-red-400 bg-red-500/20 px-1 py-0.5 rounded border border-red-500/30 whitespace-nowrap">
+                                &gt;2500
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </button>
                     )
@@ -559,26 +721,43 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                  <p className="text-white/40 text-[13px] text-center mt-6">Нет подходящих предметов</p>
               ) : (
                 <div className="grid grid-cols-3 gap-3">
-                  {filteredTargets.map(g => {
+                  {filteredTargets.map((g, idx) => {
                     const isSelected = targetId === g.id;
+                    const gBackdrop = getNftBackdrop(g);
+                    const isOnyx = gBackdrop === 'Onyx Black';
+                    const isBlack = gBackdrop === 'Black';
+
                     return (
                       <button
-                        key={g.id}
+                        key={g.uniqueId || `${g.id || 'target'}-${idx}`}
                         onClick={() => setTargetId(isSelected ? null : g.id)}
                         className={`relative overflow-hidden w-full aspect-square rounded-[16px] border flex flex-col items-center justify-end pb-2 transition-all ${
-                          isSelected ? 'border-brand bg-[#fbc740]/10 scale-95 shadow-[0_4px_15px_rgba(251,199,64,0.15)]' : 'border-white/5 bg-[#181a20] hover:bg-[#1f2129]'
+                          isSelected 
+                            ? 'border-brand bg-[#fbc740]/10 scale-95 shadow-[0_4px_15px_rgba(251,199,64,0.15)]' 
+                            : isBlack 
+                              ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/10' 
+                              : isOnyx 
+                                ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/10' 
+                                : 'border-white/5 bg-[#181a20] hover:bg-[#1f2129]'
                         }`}
                       >
-                        <div className="absolute inset-0 z-0 p-3 pb-8">
-                          <PremiumImage staticMode src={g.image_url} alt={g.name} className="w-full h-full object-contain" />
+                        {(isOnyx || isBlack) && (
+                          <span className={`absolute top-1.5 left-0 right-0 z-20 text-[9px] font-bold uppercase tracking-widest text-center ${
+                            isOnyx ? 'text-zinc-300' : 'text-zinc-400'
+                          }`}>
+                            {isOnyx ? 'Onyx Black' : 'Black'}
+                          </span>
+                        )}
+                        <div className="absolute inset-0 z-0 flex items-center justify-center p-3 pb-8">
+                          <PremiumImage staticMode src={g.image_url} alt={g.name} className="w-[56%] h-[56%] object-contain" />
                         </div>
                         <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
                         <div className="relative z-20 w-full flex flex-col items-center justify-end">
-                          <span className="text-[10px] text-white/90 truncate w-[90%] text-center leading-none mb-1">{g.name}</span>
+                          <span className="text-[10px] text-white/90 truncate w-[90%] text-center leading-none mb-1">{cleanNftName(g.name)}</span>
                           <span className="text-[12px] font-bold text-brand flex items-center gap-1">{Number(g.floor_price_gram || g.price || 0).toFixed(2)} <GramIcon className="w-3 h-3" /></span>
                         </div>
                       </button>
-                    )
+                    );
                   })}
                 </div>
               )
@@ -686,9 +865,9 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
         )}
       </AnimatePresence>
 
-      {/* Result Modal */}
+      {/* Win Modal */}
       <AnimatePresence>
-        {result && (
+        {result && result.status === 'win' && (
            <motion.div
              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
              className="fixed inset-0 z-[110] flex items-center justify-center bg-black/95 backdrop-blur-sm px-6"
@@ -698,72 +877,72 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                initial={{ scale: 0.95, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 10 }}
                onClick={(e) => e.stopPropagation()}
                className={`w-full max-w-[280px] flex flex-col gap-2.5 mx-auto p-2 rounded-[28px] relative z-10 transition-all duration-300 shadow-2xl ${
-                 result?.status === 'win' 
-                   ? 'border border-[#3b82f6]/20 bg-[#16181d] shadow-[0_4px_20px_-10px_rgba(59,130,246,0.1)]' 
-                   : 'bg-[#1c0606] border border-[#3f0d0d] p-8 items-center overflow-hidden shadow-[0_0_50px_rgba(239,68,68,0.15)]'
+                 getNftBackdrop(result.item) === 'Black'
+                   ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border border-white/10 shadow-[0_4px_25px_rgba(0,0,0,0.5)]'
+                   : getNftBackdrop(result.item) === 'Onyx Black'
+                     ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border border-white/10 shadow-[0_4px_25px_rgba(0,0,0,0.4)]'
+                     : 'border border-[#3b82f6]/20 bg-[#16181d] shadow-[0_4px_20px_-10px_rgba(59,130,246,0.1)]'
                }`}
              >
-               {result?.status === 'win' ? (
-                 <>
-                   <div className="w-full flex justify-center pt-2 relative">
-                     <div className="flex flex-col items-center">
-                       <span className="text-[13px] font-black text-[#22c55e] uppercase tracking-widest">Апгрейд успешен!</span>
-                     </div>
-                     <button onClick={() => { setResult(null); }} className="absolute top-0 right-1 p-1 text-white/40 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
-                   </div>
-                   <div className="relative overflow-hidden w-full aspect-square rounded-[20px] flex flex-col items-center p-1 transition-all duration-300">
-                     <div className="flex-1 w-full flex items-center justify-center min-h-0 mb-2">
-                       <PremiumImage 
-                         staticMode={false} 
-                         loopWithDelay={true} 
-                         loopDelayMs={5000} 
-                         src={result.item?.image_url || `/nft/${result.item?.name}.png`} 
-                         alt={result.item?.name} 
-                         className="w-[85%] h-[85%] object-contain drop-shadow-lg" 
-                       />
-                     </div>
-                     <div className="relative z-20 w-full flex flex-col items-center justify-end shrink-0 pb-1.5 px-1">
-                       <span className="text-[14px] text-white/90 w-full text-center font-bold leading-tight line-clamp-2">{result.item?.name}</span>
-                       <span className="text-[15px] font-bold text-brand flex items-center justify-center gap-1 mt-1">{Number(result.item?.price || 0).toFixed(2)} <GramIcon className="w-4 h-4" /></span>
-                     </div>
-                   </div>
-                   
-                   <div className="flex flex-col gap-1.5 w-full mt-1">
-                     <button 
-                       onClick={() => { setResult(null); }}
-                       className="w-full py-3 rounded-[12px] text-[13px] font-bold flex items-center justify-center bg-white/10 text-white hover:bg-white/20 transition-colors"
-                     >
-                       Отлично
-                     </button>
-                   </div>
-                 </>
-               ) : (
-                 <>
-                   <button onClick={() => { setResult(null); }} className="absolute top-4 right-4 text-white/40 hover:text-white z-10 transition-colors"><X className="w-5 h-5" /></button>
-                   
-                   <div className="z-10 relative mt-4">
-                     <div className="w-[100px] h-[100px] flex items-center justify-center text-red-500 bg-red-500/10 rounded-full mx-auto">
-                       <X className="w-12 h-12" />
-                     </div>
-                   </div>
-     
-                   <h3 className="font-display text-[20px] font-bold z-10 tracking-tight text-white mt-4 text-center">Апгрейд не удался</h3>
-                   <p className="text-white/60 text-[13px] text-center z-10 font-medium leading-relaxed px-2 mt-1 mb-4">
-                     Предметы сгорели. Попробуйте еще раз!
-                   </p>
-                   
-                   <button
-                     onClick={() => { setResult(null); }}
-                     className="mt-2 w-full py-3.5 rounded-[12px] font-bold text-[14px] uppercase tracking-wider z-10 transition-colors bg-white/10 text-white hover:bg-white/20"
-                   >
-                     Продолжить
-                   </button>
-                 </>
-               )}
+               <div className="w-full flex justify-center pt-2 relative">
+                 <div className="flex flex-col items-center">
+                   {(() => {
+                     const wonBackdrop = getNftBackdrop(result.item);
+                     const isOnyx = wonBackdrop === "Onyx Black";
+                     const isBlack = wonBackdrop === "Black";
+                     if (!isOnyx && !isBlack) return null;
+                     return (
+                       <span className={`text-[11px] font-bold uppercase tracking-widest ${
+                         isOnyx ? "text-zinc-300" : "text-zinc-400"
+                       }`}>
+                         {isOnyx ? "Onyx Black" : "Black"}
+                       </span>
+                     );
+                   })()}
+                   <span className="text-[13px] font-black text-[#22c55e] uppercase tracking-widest mt-0.5">Апгрейд успешен!</span>
+                 </div>
+                 <button onClick={() => { setResult(null); }} className="absolute top-0 right-1 p-1 text-white/40 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
+               </div>
+               <div className="relative overflow-hidden w-full aspect-square rounded-[20px] flex flex-col items-center p-1 transition-all duration-300">
+                 <div className="flex-1 w-full flex items-center justify-center min-h-0 mb-2">
+                   <PremiumImage 
+                     staticMode={false} 
+                     loopWithDelay={true} 
+                     loopDelayMs={5000} 
+                     src={result.item?.image_url || `/nft/${result.item?.name}.png`} 
+                     alt={result.item?.name} 
+                     className="w-[85%] h-[85%] object-contain drop-shadow-lg" 
+                   />
+                 </div>
+                 <div className="relative z-20 w-full flex flex-col items-center justify-end shrink-0 pb-1.5 px-1">
+                   <span className="text-[14px] text-white/90 w-full text-center font-bold leading-tight line-clamp-2">{cleanNftName(result.item?.name)}</span>
+                   <span className="text-[15px] font-bold text-brand flex items-center justify-center gap-1 mt-1">{Number(result.item?.price || 0).toFixed(2)} <GramIcon className="w-4 h-4" /></span>
+                 </div>
+               </div>
+               
+               <div className="flex flex-col gap-1.5 w-full mt-1">
+                 <button 
+                   onClick={() => { setResult(null); }}
+                   className="w-full py-3 rounded-[12px] text-[13px] font-bold flex items-center justify-center bg-white/10 text-white hover:bg-white/20 transition-colors"
+                 >
+                   Отлично
+                 </button>
+               </div>
              </motion.div>
            </motion.div>
-         )}
+        )}
       </AnimatePresence>
+
+      {/* Beautiful Defeat Modal */}
+      <GameLossModal
+        isOpen={Boolean(result && result.status === 'lose')}
+        onClose={() => setResult(null)}
+        onRetry={() => {
+          setResult(null);
+        }}
+        game="upgrade"
+        onNavigate={onNavigate}
+      />
     </div>
   );
 }

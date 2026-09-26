@@ -143,17 +143,22 @@ export async function syncUserFromSupabase(id: number): Promise<void> {
         username: data.username,
         languageCode: data.language_code,
         balance: Number(data.balance) || 0,
-        inventory: data.inventory || [],
+        inventory: typeof data.inventory === 'string' ? JSON.parse(data.inventory) : (data.inventory || []),
         turnover: 0,
         topups: [],
         createdAt: data.created_at || new Date().toISOString(),
         updatedAt: data.updated_at || new Date().toISOString(),
       };
+      writeJson(USERS_FILE, all);
     } else {
-      all[key].balance = Number(data.balance) || 0;
-      all[key].inventory = typeof data.inventory === 'string' ? JSON.parse(data.inventory) : (data.inventory || []);
+      // Only restore from Supabase if local user state is completely empty
+      const isLocalEmpty = (all[key].balance === 0 || all[key].balance === undefined) && (!all[key].inventory || all[key].inventory.length === 0);
+      if (isLocalEmpty && (Number(data.balance) > 0 || (Array.isArray(data.inventory) && data.inventory.length > 0))) {
+        all[key].balance = Number(data.balance) || 0;
+        all[key].inventory = typeof data.inventory === 'string' ? JSON.parse(data.inventory) : (data.inventory || []);
+        writeJson(USERS_FILE, all);
+      }
     }
-    writeJson(USERS_FILE, all);
   } catch (e) {
     console.error("[Supabase] Failed to sync down from Supabase:", e);
   }
@@ -183,6 +188,7 @@ export function upsertUserProfile(profile: {
         lastName: profile.last_name,
         username: profile.username,
         photoUrl: profile.photo_url,
+        needsReload: false,
         updatedAt: now,
       }
     : {
@@ -253,13 +259,16 @@ export function saveUserState(id: number, balance: number, inventory: any[], tur
   const key = String(id);
   const existing = all[key];
   if (!existing) return null;
-  if (existing.needsReload) return existing;
+  existing.needsReload = false;
   existing.balance = balance;
   existing.inventory = inventory;
   if (typeof turnover === 'number') {
     const delta = Math.max(0, turnover - (existing.turnover || 0));
-    if (existing.seasonTurnover === undefined) existing.seasonTurnover = existing.turnover || 0;
-    existing.seasonTurnover += delta;
+    if (existing.seasonTurnover === undefined || existing.seasonTurnover === null) {
+      existing.seasonTurnover = turnover;
+    } else {
+      existing.seasonTurnover = (existing.seasonTurnover || 0) + delta;
+    }
     existing.turnover = turnover;
   }
   if (Array.isArray(topups)) existing.topups = topups;
@@ -287,10 +296,11 @@ export interface OpenEvent {
   id: string;
   ts: string;
   firstName: string;
-  gift?: { name: string; image_url?: string; slug?: string; price?: number };
+  gift?: { id?: string; name: string; image_url?: string; slug?: string; price?: number; backdrop?: string; pattern?: string; lottieUrl?: string };
   price: number;
   isGram?: boolean;
   multiplier?: number;
+  game?: string;
 }
 
 let opensCache: OpenEvent[] | null = null;
@@ -494,7 +504,6 @@ export function checkLeaderboardEnd() {
             price: finalPrice
           };
           u.inventory.push(giftItem);
-          u.needsReload = true;
         }
       }
     }
@@ -515,9 +524,14 @@ export function checkLeaderboardEnd() {
 export function getLeaderboardData(currentUserId: number, limit: number = 100) {
   checkLeaderboardEnd();
   const allUsers = Object.values(users());
+  const getUserTurnover = (u: StoredUser) => {
+    if (typeof u.seasonTurnover === 'number' && u.seasonTurnover > 0) return u.seasonTurnover;
+    return u.turnover || 0;
+  };
+
   const sorted = allUsers
-    .filter(u => (u.seasonTurnover ?? u.turnover ?? 0) > 0)
-    .sort((a, b) => (b.seasonTurnover ?? b.turnover ?? 0) - (a.seasonTurnover ?? a.turnover ?? 0));
+    .filter(u => getUserTurnover(u) > 0)
+    .sort((a, b) => getUserTurnover(b) - getUserTurnover(a));
     
   const top = sorted.slice(0, limit).map((u, i) => ({
     rank: i + 1,
@@ -525,7 +539,7 @@ export function getLeaderboardData(currentUserId: number, limit: number = 100) {
     firstName: u.firstName,
     username: u.username,
     photoUrl: u.photoUrl,
-    turnover: u.seasonTurnover ?? u.turnover ?? 0
+    turnover: getUserTurnover(u)
   }));
   
   const currentUserIndex = sorted.findIndex(u => u.id === currentUserId);
@@ -535,7 +549,7 @@ export function getLeaderboardData(currentUserId: number, limit: number = 100) {
     firstName: sorted[currentUserIndex].firstName,
     username: sorted[currentUserIndex].username,
     photoUrl: sorted[currentUserIndex].photoUrl,
-    turnover: sorted[currentUserIndex].seasonTurnover ?? sorted[currentUserIndex].turnover ?? 0
+    turnover: getUserTurnover(sorted[currentUserIndex])
   } : null;
   
   return { top, currentUser };

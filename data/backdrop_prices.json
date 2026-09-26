@@ -1,0 +1,710 @@
+{
+  "berrybox": {
+    "blackTon": 76.68,
+    "blackMult": 5,
+    "onyxTon": 16.58,
+    "onyxMult": 1.46
+  },
+  "vicecream": {
+    "blackTon": 49.29,
+    "blackMult": 6.97,
+    "onyxTon": 32.24,
+    "onyxMult": 1.93
+  },
+  "icecream": {
+    "blackTon": 22.59,
+    "blackMult": 6.81,
+    "onyxTon": 35.25,
+    "onyxMult": 1.89
+  },
+  "hypnolollipop": {
+    "blackTon": 20.22,
+    "blackMult": 6.45,
+    "onyxTon": 9.77,
+    "onyxMult": 2.15
+  },
+  "petsnake": {
+    "blackTon": 51.22,
+    "blackMult": 6.79,
+    "onyxTon": 44.9,
+    "onyxMult": 2.06
+  },
+  "instantramen": {
+    "blackTon": 21.75,
+    "blackMult": 6.09,
+    "onyxTon": 115.99,
+    "onyxMult": 1.79
+  },
+  "gingercookie": {
+    "blackTon": 19.44,
+    "blackMult": 7.17,
+    "onyxTon": 59.76,
+    "onyxMult": 2.2
+  },
+  "snakebox": {
+    "blackTon": 61.91,
+    "blackMult": 6.52,
+    "onyxTon": 38.1,
+    "onyxMult": 1.86
+  },
+  "jesterhat": {
+    "blackTon": 324.84,
+    "blackMult": 7.15,
+    "onyxTon": 23.5,
+    "onyxMult": 2.2
+  },
+  "tamagadget": {
+    "blackTon": 25.42,
+    "blackMult": 6.92,
+    "onyxTon": 17.68,
+    "onyxMult": 2.24
+  },
+  "santahat": {
+    "blackTon": 50.1,
+    "blackMult": 5.96,
+    "onyxTon": 48.09,
+    "onyxMult": 2.01
+  },
+  "bigyear": {
+    "blackTon": 43.22,
+    "blackMult": 8,
+    "onyxTon": 50.52,
+    "onyxMult": 2.54
+  },
+  "spicedwine": {
+    "blackTon": 92.04,
+    "blackMult": 5.78,
+    "onyxTon": 47.13,
+    "onyxMult": 1.82
+  },
+  "valentinebox": {
+    "blackTon": 42.38,
+    "blackMult": 4.12,
+    "onyxTon": 18.47,
+    "onyxMult": 1.57
+  },
+  "xmasstocking": {
+    "blackTon": 48.12,
+    "blackMult": 6.38,
+    "onyxTon": 212.26,
+    "onyxMult": 1.88
+  },
+  "moodpack": {
+    "blackTon": 48.65,
+    "blackMult": 7.12,
+    "onyxTon": 456.31,
+    "onyxMult": 2.35
+  },
+  "lunarsnake": {
+    "blackTon": 39.48,
+    "blackMult": 6.5,
+    "onyxTon": 20.95,
+    "onyxMult": 1.88
+  },
+  "starnotepad": {
+    "blackTon": 177.45,
+    "blackMult": 6.21,
+    "onyxTon": 39.3,
+    "onyxMult": 2.03
+  },
+  "partysparkler": {
+    "blackTon": 91.66,
+    "blackMult": 7.72,
+    "onyxTon": 192.03,
+    "onyxMult": 2.34
+  },
+  "timelessbook": {
+    "blackTon": 71.94,
+    "blackMult": 8,
+    "onyxTon": 57.87,
+    "onyxMult": 2.36
+  },
+  "hexpot": {
+    "blackTon": 179.77,
+    "blackMult": 6.39,
+    "onyxTon": 97.92,
+    "onyxMult": 2.06
+  },
+  "snowglobe": {
+    "blackTon": 48.75,
+    "blackMult": 6.69,
+    "onyxTon": 55.66,
+    "onyxMult": 2.05
+  },
+  "whipcupcake": {
+    "blackTon": 82.26,
+    "blackMult": 6.26,
+    "onyxTon": 56.71,
+    "onyxMult": 1.86
+  },
+  "freshsocks": {
+    "blackTon": 63.46,
+    "blackMult": 6.12,
+    "onyxTon": 225.75,
+    "onyxMult": 2.05
+  },
+  "victorymedal": {
+    "blackTon": 226.56,
+    "blackMult": 8,
+    "onyxTon": 82.38,
+    "onyxMult": 2.42
+  },
+  "moneypot": {
+    "blackTon": 73.06,
+    "blackMult": 6.91,
+    "onyxTon": 33.59,
+    "onyxMult": 2.24
+  },
+  "happybrownie": {
+    "blackTon": 68.54,
+    "blackMult": 5.49,
+    "onyxTon": 118.17,
+    "onyxMult": 1.79
+  },
+  "moussecake": {
+    "blackTon": 91.01,
+    "blackMult": 5.57,
+    "onyxTon": 10.34,
+    "onyxMult": 1.89
+  },
+  "libertyfigure": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "lolpop": {
+    "blackTon": 52.46,
+    "blackMult": 6.74,
+    "onyxTon": 56.51,
+    "onyxMult": 1.88
+  },
+  "cookieheart": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "homemadecake": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "deskcalendar": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "stellarrocket": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "snowmittens": {
+    "blackTon": 29.63,
+    "blackMult": 5.73,
+    "onyxTon": 528.1,
+    "onyxMult": 2.16
+  },
+  "bowtie": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "witchhat": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "prettyposy": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "snoopdogg": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "bdaycandle": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "springbasket": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "spyagaric": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "faithamulet": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "lushbouquet": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "swagbag": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "eternalcandle": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "inputkey": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "moonpendant": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "surgeboard": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "lightsword": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "restlessjar": {
+    "blackTon": 313.99,
+    "blackMult": 5.81,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "jollychimp": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "cloverpin": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "joyfulbundle": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "evileye": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "sleighbell": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "bunnymuffin": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "jinglebells": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "finepen": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "jellybunny": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "lovecandle": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "hangingstar": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "tophat": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "skullflower": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "madpumpkin": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "jackinthebox": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "sakuraflower": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "recordplayer": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "snoopcigar": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "crystalball": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "ionicdryer": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "flyingbroom": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "lovepotion": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "ufcstrike": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "skystilettos": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "cupidcharm": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "blingbinky": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "khabibspapakha": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "trappedheart": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "rarebird": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "eternalrose": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "electricskull": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "diamondring": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "genielamp": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "signetring": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "toybear": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "vintagecigar": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "kissedfrog": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "nekohelmet": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "bondedring": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "voodoodoll": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "sharptongue": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "swisswatch": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "lowrider": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "magicpotion": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "perfumebottle": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "gemsignet": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "minioscar": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "durovsglasses": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "westsidesign": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "nailbracelet": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "mightyarm": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "iongem": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "astralshard": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "preciouspeach": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "artisanbrick": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "lootbag": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "scaredcat": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "heartlocket": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "plushpepe": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "durovscap": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "heroichelmet": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "winterwreath": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "poolfloat": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "holidaydrink": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "easteregg": {
+    "blackTon": null,
+    "blackMult": 5.5,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "candycane": {
+    "blackTon": 29.04,
+    "blackMult": 6.46,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  },
+  "chillflame": {
+    "blackTon": 27.03,
+    "blackMult": 7.54,
+    "onyxTon": null,
+    "onyxMult": 1.85
+  }
+}

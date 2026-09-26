@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PremiumImage } from './PremiumImage';
 import { GramIcon } from './GramIcon';
+import { getNftBackdrop } from '../lib/nftUtils';
 
 interface RealDrop {
   id: string;
   ts: string;
   firstName: string;
-  gift?: { name: string; image_url?: string; slug?: string; isGram?: boolean };
+  gift?: { id?: string; name: string; image_url?: string; slug?: string; isGram?: boolean; backdrop?: string; rarity?: string };
   price: number;
   isGram?: boolean;
 }
@@ -97,30 +98,42 @@ export const LiveFeed: React.FC = () => {
       </h3>
       <div className="flex flex-row gap-2 h-[50px] relative overflow-hidden px-1 w-full items-center">
         <AnimatePresence>
-          {drops.map((drop, i) => (
-            <motion.div
-              key={drop.id}
-              initial={{ opacity: 0, x: -20, scale: 0.5 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.4, type: 'spring', bounce: 0.4 }}
-              className="w-12 h-12 rounded-xl overflow-hidden bg-gradient-to-tr from-white/5 to-white/10 shrink-0 border border-white/5 shadow-lg flex items-center justify-center relative"
-              title={`${drop.firstName} — ${drop.isGram ? (drop.price || 0) + ' GRAM' : drop.gift?.name}`}
-            >
-              {drop.isGram ? (
-                <div className="w-8 h-8 flex items-center justify-center">
-                  <GramIcon className="w-full h-full text-[#0098EA]" />
-                </div>
-              ) : (
-                <PremiumImage 
-                  delayMs={i * 800} 
-                  src={drop.gift?.image_url} 
-                  alt={drop.gift?.name || ""} 
-                  className={drop.gift?.isGram ? "w-8 h-8" : "w-full h-full"} 
-                />
-              )}
-            </motion.div>
-          ))}
+          {drops.map((drop, i) => {
+            const backdrop = getNftBackdrop(drop.gift);
+            const isOnyx = backdrop === 'Onyx Black';
+            const isBlack = backdrop === 'Black';
+
+            return (
+              <motion.div
+                key={drop.id}
+                initial={{ opacity: 0, x: -20, scale: 0.5 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.4, type: 'spring', bounce: 0.4 }}
+                className={`w-12 h-12 rounded-xl overflow-hidden shrink-0 border shadow-lg flex items-center justify-center relative ${
+                  isBlack
+                    ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/10'
+                    : isOnyx
+                      ? 'bg-[radial-gradient(circle,#35393a_0%,#282b2c_100%)] border-white/10'
+                      : 'bg-gradient-to-tr from-white/5 to-white/10 border-white/5'
+                }`}
+                title={`${drop.firstName} — ${drop.isGram ? (drop.price || 0) + ' GRAM' : drop.gift?.name}`}
+              >
+                {drop.isGram ? (
+                  <div className="w-8 h-8 flex items-center justify-center">
+                    <GramIcon className="w-full h-full text-[#0098EA]" />
+                  </div>
+                ) : (
+                  <PremiumImage 
+                    delayMs={i * 800} 
+                    src={drop.gift?.image_url} 
+                    alt={drop.gift?.name || ""} 
+                    className={drop.gift?.isGram ? "w-8 h-8" : "w-full h-full"} 
+                  />
+                )}
+              </motion.div>
+            );
+          })}
         </AnimatePresence>
       </div>
     </div>

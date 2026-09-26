@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { setLoggerUserId } from './lib/logger';
-import { ShoppingBag, User, Gem, Gift, Wallet, ChevronRight, Activity, CircleDashed, ArrowUpCircle, Shield, LayoutGrid, Trophy, X, ListTodo, Settings, Bomb, Box, Package, ArrowLeft, Users, History, MessageCircle, ExternalLink, Copy, Check, Star, Rocket } from 'lucide-react';
+import { ShoppingBag, User, Gem, Gift, Wallet, ChevronRight, Activity, CircleDashed, ArrowUpCircle, Shield, LayoutGrid, Trophy, X, ListTodo, Settings, Bomb, Box, Package, ArrowLeft, ArrowUpRight, Users, History, MessageCircle, ExternalLink, Copy, Check, Star, Rocket, Flame, Sparkles } from 'lucide-react';
 import defaultGiftsDb from './gifts_data.json';
 import { Craft } from './components/Craft';
 import { Upgrade } from './components/Upgrade';
 import { Mines } from './components/Mines';
 import { NewGame } from './components/NewGame';
+import { Plinko } from './components/Plinko';
 import { LiveFeed } from './components/LiveFeed';
 import { PremiumImage } from './components/PremiumImage';
 import { AdminPanel } from './components/AdminPanel';
@@ -20,8 +21,10 @@ import { useTelegramAuth } from './lib/useTelegramAuth';
 import { useTranslation, i18n } from './lib/i18n';
 import { CleanModelLottie } from './components/CleanModelLottie';
 import { Inventory } from './components/Inventory';
-import { fetchFragmentPrices } from './lib/api';
+import { fetchFragmentPrices, fetchFragmentBackdropPrices } from './lib/api';
 import { WelcomeScreen } from './components/WelcomeScreen';
+import { WalletHome } from './components/WalletHome';
+import { SendModal } from './components/SendModal';
 
 
 
@@ -56,7 +59,7 @@ function CraftAnimatedIcon() {
   );
 }
 
-function Shop({  onPlayUpgrade, onPlayCraft, onPlayMines, onPlayNewGame, giftsDb, pricesLoaded }: { onPlayUpgrade: () => void, onPlayCraft: () => void, onPlayMines: () => void, onPlayNewGame: () => void, giftsDb: any[], pricesLoaded: boolean }) {
+function Shop({  onPlayUpgrade, onPlayCraft, onPlayMines, onPlayNewGame, onPlayPlinko, giftsDb, pricesLoaded }: { onPlayUpgrade: () => void, onPlayCraft: () => void, onPlayMines: () => void, onPlayNewGame: () => void, onPlayPlinko: () => void, giftsDb: any[], pricesLoaded: boolean }) {
   const { t, lang } = useTranslation();
   const getLocalizedImage = (id: string, base: string) => {
     if (lang === 'zh') {
@@ -95,23 +98,6 @@ function Shop({  onPlayUpgrade, onPlayCraft, onPlayMines, onPlayNewGame, giftsDb
       name: t('mines'),
       description: t('mines_desc'),
       fullCardImage: getLocalizedImage('mines', '/mines_nft.jpg?v=5')
-    },
-    {
-      id: 'new_game',
-      name: t('new_game'),
-      description: t('new_game_desc'),
-      color: 'from-amber-500/25 via-orange-500/20 to-yellow-500/25',
-      badge: t('soon'),
-      customIcon: () => (
-        <div className="relative w-14 h-14 flex items-center justify-center">
-          <motion.div
-            animate={{ scale: [0.9, 1.15, 0.9], opacity: [0.3, 0.7, 0.3] }}
-            transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
-            className="absolute inset-1 rounded-full bg-gradient-to-tr from-amber-500/30 via-orange-500/20 to-yellow-400/30 blur-md pointer-events-none"
-          />
-          <Rocket className="w-8 h-8 text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] relative z-10 rotate-45" />
-        </div>
-      )
     }
   ];
 
@@ -133,6 +119,113 @@ function Shop({  onPlayUpgrade, onPlayCraft, onPlayMines, onPlayNewGame, giftsDb
       </a>
 
       <h2 className="font-display text-2xl font-semibold mb-6 px-1 pt-2">{t('popular_games')}</h2>
+
+      {/* Side-by-side Square Cards: Rocket (Crash) & Plinko on the exact same row/level */}
+      <div className="grid grid-cols-2 gap-3.5 mb-4">
+        {/* Rocket Square Card */}
+        <div 
+          onClick={onPlayNewGame}
+          className="aspect-square rounded-[26px] relative overflow-hidden cursor-pointer group flex flex-col justify-between p-4 bg-gradient-to-b from-[#1c1c24] to-[#121217] border border-amber-500/20 shadow-[0_8px_24px_rgba(0,0,0,0.4)] active:scale-[0.98] transition-all hover:border-amber-500/40"
+        >
+          {/* Ambient Glow */}
+          <div className="absolute top-0 right-0 w-28 h-28 bg-amber-500/15 rounded-full blur-2xl pointer-events-none group-hover:bg-amber-500/25 transition-all" />
+
+          {/* Top Badge & Multiplier */}
+          <div className="flex items-center justify-between z-10 w-full">
+            <span className="px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 font-extrabold text-[10px] tracking-wider uppercase flex items-center gap-1 shadow-sm">
+              <Flame className="w-3 h-3 text-amber-400" /> CRASH
+            </span>
+            <span className="text-[10px] font-bold text-white/40 bg-white/5 px-2 py-0.5 rounded-full">
+              x100
+            </span>
+          </div>
+
+          {/* Center 3D Model / Animation */}
+          <div className="flex-1 w-full flex items-center justify-center relative my-1 z-10">
+            <div className="w-20 h-20 relative flex items-center justify-center">
+              <motion.div
+                animate={{ y: [-3, 3, -3], rotate: [42, 48, 42] }}
+                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                className="w-full h-full flex items-center justify-center"
+              >
+                <CleanModelLottie
+                  lottieUrl="/stellarrocket-1-nobg.lottie.json"
+                  className="w-full h-full drop-shadow-[0_8px_20px_rgba(245,158,11,0.4)]"
+                />
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Bottom Texts */}
+          <div className="z-10 flex flex-col">
+            <h3 className="font-display text-[16px] font-bold text-white tracking-wide leading-tight group-hover:text-amber-300 transition-colors">
+              РАКЕТА
+            </h3>
+            <p className="text-[11px] text-white/50 font-medium truncate mt-0.5">
+              Успей забрать
+            </p>
+          </div>
+        </div>
+
+        {/* Plinko Square Card */}
+        <div 
+          onClick={onPlayPlinko}
+          className="aspect-square rounded-[26px] relative overflow-hidden cursor-pointer group flex flex-col justify-between p-4 bg-gradient-to-b from-[#1c1c24] to-[#121217] border border-violet-500/20 shadow-[0_8px_24px_rgba(0,0,0,0.4)] active:scale-[0.98] transition-all hover:border-violet-500/40"
+        >
+          {/* Ambient Glow */}
+          <div className="absolute top-0 right-0 w-28 h-28 bg-violet-500/15 rounded-full blur-2xl pointer-events-none group-hover:bg-violet-500/25 transition-all" />
+
+          {/* Top Badge & Multiplier */}
+          <div className="flex items-center justify-between z-10 w-full">
+            <span className="px-2.5 py-1 rounded-full bg-violet-500/15 border border-violet-500/30 text-violet-300 font-extrabold text-[10px] tracking-wider uppercase flex items-center gap-1 shadow-sm">
+              <Sparkles className="w-3 h-3 text-violet-400" /> NEW
+            </span>
+            <span className="text-[10px] font-bold text-white/40 bg-white/5 px-2 py-0.5 rounded-full">
+              x1000
+            </span>
+          </div>
+
+          {/* Center Visual / Animation */}
+          <div className="flex-1 w-full flex items-center justify-center relative my-1 z-10">
+            <div className="w-20 h-20 relative flex items-center justify-center">
+              <motion.div
+                animate={{ scale: [0.95, 1.05, 0.95] }}
+                transition={{ repeat: Infinity, duration: 2.4, ease: "easeInOut" }}
+                className="w-full h-full flex items-center justify-center relative"
+              >
+                <div className="relative w-16 h-16 flex flex-col items-center justify-center">
+                  <div className="flex gap-2 mb-1.5">
+                    <span className="w-2 h-2 rounded-full bg-violet-400 shadow-[0_0_8px_#a855f7]" />
+                    <span className="w-2 h-2 rounded-full bg-violet-400 shadow-[0_0_8px_#a855f7]" />
+                  </div>
+                  <div className="flex gap-2 mb-1.5">
+                    <span className="w-2 h-2 rounded-full bg-white/80" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-brand shadow-[0_0_10px_#ffb800] animate-bounce" />
+                    <span className="w-2 h-2 rounded-full bg-white/80" />
+                  </div>
+                  <div className="flex gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_6px_#22d3ee]" />
+                    <span className="w-2 h-2 rounded-full bg-violet-400 shadow-[0_0_6px_#a855f7]" />
+                    <span className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_6px_#c084fc]" />
+                    <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_#fbbf24]" />
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Bottom Texts */}
+          <div className="z-10 flex flex-col">
+            <h3 className="font-display text-[16px] font-bold text-white tracking-wide leading-tight group-hover:text-violet-300 transition-colors">
+              PLINKO
+            </h3>
+            <p className="text-[11px] text-white/50 font-medium truncate mt-0.5">
+              Падающие шары
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 gap-4">
         {games.map(game => {
           if (game.fullCardImage) {
@@ -215,7 +308,7 @@ function Gifts({  giftsDb, pricesLoaded }: { giftsDb: any[], pricesLoaded?: bool
     <div className="space-y-4">
       <h2 className="font-display text-2xl font-semibold mb-6 px-1">{t('nft_gifts')}</h2>
       <div className="grid grid-cols-2 gap-4">
-        {gifts.map(gift => {
+        {gifts.map((gift, idx) => {
           // Define rarity based on price
           let rarity = { label: t('common'), color: 'text-muted bg-white/5 border-white/15' };
           if (gift.price > 80) rarity = { label: t('legendary'), color: 'text-gold bg-gold/10 border-gold/30' };
@@ -223,37 +316,37 @@ function Gifts({  giftsDb, pricesLoaded }: { giftsDb: any[], pricesLoaded?: bool
           else if (gift.price > 20) rarity = { label: t('rare'), color: 'text-sky-300 bg-sky-400/10 border-sky-400/30' };
 
           return (
-          <div id={`gift-${gift.id}`} key={gift.id} className="facet-card glass-panel-interactive rounded-2xl p-3 flex flex-col items-center cursor-pointer group">
-            <div className={`w-full aspect-square rounded-xl overflow-hidden mb-3 relative bg-white/5`}>
-              
-              <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors duration-300 z-0" />
-              <PremiumImage staticMode src={gift.imageByName}
-                alt={gift.name}
-                className="w-full h-full object-cover relative z-10 drop-shadow-2xl group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-500"
-              />
-              <div className={`absolute top-2 right-2 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider border z-20 backdrop-blur-md ${rarity.color}`}>
-                {rarity.label}
+            <div key={gift.id} id={`gift-${gift.id}`} className="facet-card glass-panel-interactive rounded-2xl p-3 flex flex-col items-center cursor-pointer group w-full">
+              <div className={`w-full aspect-square rounded-xl overflow-hidden mb-3 relative bg-white/5`}>
+                
+                <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors duration-300 z-0" />
+                <PremiumImage staticMode src={gift.imageByName}
+                  alt={gift.name}
+                  className="w-full h-full object-cover relative z-10 drop-shadow-2xl group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-500"
+                />
+                <div className={`absolute top-2 right-2 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider border z-20 backdrop-blur-md ${rarity.color}`}>
+                  {rarity.label}
+                </div>
+              </div>
+              <div className="w-full text-center relative z-10">
+                <div className="text-xs font-medium text-[color:var(--color-text)] mb-1 truncate px-1">{gift.name}</div>
+                {pricesLoaded ? (
+                  gift.price != null && (
+                    <div className="flex items-center justify-center gap-1.5 bg-black/40 rounded-lg py-1">
+                      <span className="font-display text-xs font-bold text-gold">
+                        {gift.price.toFixed(2)}
+                      </span>
+                      <GramIcon className="w-4 h-4 drop-shadow-md" />
+                    </div>
+                  )
+                ) : (
+                  <div className="flex items-center justify-center gap-1.5 bg-black/40 rounded-lg py-1 animate-pulse">
+                    <div className="h-4 w-12 bg-white/20 rounded"></div>
+                    <div className="w-4 h-4 bg-white/20 rounded-full"></div>
+                  </div>
+                )}
               </div>
             </div>
-            <div className="w-full text-center relative z-10">
-              <div className="text-xs font-medium text-[color:var(--color-text)] mb-1 truncate px-1">{gift.name}</div>
-              {pricesLoaded ? (
-                gift.price != null && (
-                  <div className="flex items-center justify-center gap-1.5 bg-black/40 rounded-lg py-1">
-                    <span className="font-display text-xs font-bold text-gold">
-                      {gift.price.toFixed(2)}
-                    </span>
-                    <GramIcon className="w-4 h-4 drop-shadow-md" />
-                  </div>
-                )
-              ) : (
-                <div className="flex items-center justify-center gap-1.5 bg-black/40 rounded-lg py-1 animate-pulse">
-                  <div className="h-4 w-12 bg-white/20 rounded"></div>
-                  <div className="w-4 h-4 bg-white/20 rounded-full"></div>
-                </div>
-              )}
-            </div>
-          </div>
         )})}
       </div>
 
@@ -262,7 +355,7 @@ function Gifts({  giftsDb, pricesLoaded }: { giftsDb: any[], pricesLoaded?: bool
 }
 
 
-function Profile({  user, inventory, setInventory, balance, setBalance, turnover, topups, onOpenTopUp, config, giftsDb, onBack }: { user: any, inventory: any[], setInventory: any, balance: number, setBalance: any, turnover: number, topups: any[], onOpenTopUp: () => void, config?: any, giftsDb?: any[], onBack?: () => void }) {
+function Profile({  user, inventory, setInventory, balance, setBalance, turnover, topups, onOpenTopUp, config, giftsDb, onBack, onGoToInventory, onGoToLeaderboard }: { user: any, inventory: any[], setInventory: any, balance: number, setBalance: any, turnover: number, topups: any[], onOpenTopUp: () => void, config?: any, giftsDb?: any[], onBack?: () => void, onGoToInventory?: () => void, onGoToLeaderboard?: () => void }) {
   const { t, setLang, lang } = useTranslation();
   const [showSettings, setShowSettings] = useState(false);
   const handleSetLang = (l: 'en' | 'ru' | 'zh') => {
@@ -366,21 +459,32 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
   const progressPercent = isMax ? 100 : (currentLevelProgress / levelThreshold) * 100;
 
   return (
-    <div className="space-y-6 relative">
-
-      <div className="flex flex-col items-center justify-center pt-1 pb-4 relative mt-[-10px]">
-        <button onClick={() => setShowSettings(true)} className="absolute top-[-10px] right-0 w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white transition-colors active:scale-95 z-20">
+    <div className="space-y-5 relative pb-8">
+      {/* Profile Header */}
+      <div className="flex flex-col items-center justify-center pt-2 pb-2 relative">
+        <button 
+          onClick={() => {
+            setShowSettings(true);
+            try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch (e) {}
+          }} 
+          className="absolute top-0 right-0 w-10 h-10 rounded-full bg-white/[0.06] border border-white/5 flex items-center justify-center text-white/60 hover:text-white transition-all active:scale-95 z-20 cursor-pointer"
+        >
           <Settings className="w-5 h-5" />
         </button>
         {onBack && (
-          <button onClick={onBack} className="absolute top-[-10px] left-0 w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white transition-colors active:scale-95 z-20">
+          <button 
+            onClick={() => {
+              onBack();
+              try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch (e) {}
+            }} 
+            className="absolute top-0 left-0 w-10 h-10 rounded-full bg-white/[0.06] border border-white/5 flex items-center justify-center text-white/60 hover:text-white transition-all active:scale-95 z-20 cursor-pointer"
+          >
             <ArrowLeft className="w-5 h-5" />
           </button>
         )}
-        <div className="relative mb-4 mt-2">
-
-          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-brand to-gold p-[2px] shadow-lg shadow-brand/20">
-            <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden relative">
+        <div className="relative mb-3 mt-1">
+          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-brand via-brand/40 to-amber-400 p-[2.5px] shadow-xl shadow-brand/20">
+            <div className="w-full h-full rounded-full bg-[#15161b] flex items-center justify-center overflow-hidden relative">
                <div className="absolute inset-0 bg-white/5" />
                {photoUrl ? (
                  <img src={photoUrl || undefined} alt={firstName} className="w-full h-full object-cover relative z-10" />
@@ -389,189 +493,300 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                )}
             </div>
           </div>
-          <div className="absolute bottom-2 right-1 w-5 h-5 rounded-full bg-positive border-4 border-canvas-deep" />
+          <div className="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-emerald-400 border-3 border-[#121316] shadow-sm" />
         </div>
-        <h2 className="font-display text-2xl font-semibold mb-1">{firstName}</h2>
-        <p className="text-brand font-medium text-sm">{username}</p>
+        <h2 className="font-display text-2xl font-bold text-white mb-0.5 tracking-tight">{firstName}</h2>
+        <p className="text-brand font-semibold text-xs tracking-wide">{username ? `@${username}` : 'Galea Player'}</p>
       </div>
       
-      <div className="glass-panel p-5 rounded-2xl">
+      {/* Turnover & Level Card */}
+      <div className="bg-[#15161b] border border-white/[0.08] p-5 rounded-[24px] shadow-lg">
         <div className="flex justify-between items-end mb-3">
           <div>
-            <div className="text-muted text-[10px] mb-1 font-medium uppercase tracking-wider">{t('turnover')}</div>
-            <div className="font-display text-2xl font-semibold flex items-center gap-1.5">
+            <div className="text-white/40 text-[11px] mb-1 font-bold uppercase tracking-wider">{t('turnover')}</div>
+            <div className="font-display text-2xl font-bold flex items-center gap-1.5 text-white">
               {Math.floor(turnover).toLocaleString('en-US')} <GramIcon className="w-5 h-5 drop-shadow-md" />
             </div>
           </div>
-          <div className="text-right mb-1">
-            <button onClick={() => setShowLevelModal(true)} className="text-brand text-xs font-bold active:scale-95 transition-transform">{t('level')} {currentLevel}</button>
-            <div className="text-muted text-[10px] flex items-center justify-end gap-1">{isMax ? t('max_level') : `${t('to_next')} ${(levelThreshold - Math.floor(currentLevelProgress)).toLocaleString('en-US')}`} { !isMax && <GramIcon className="w-3 h-3 drop-shadow-md" /> }</div>
+          <div className="text-right mb-0.5">
+            <button 
+              onClick={() => {
+                setShowLevelModal(true);
+                try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
+              }} 
+              className="text-brand text-xs font-bold active:scale-95 transition-transform cursor-pointer bg-brand/10 hover:bg-brand/15 px-2.5 py-1 rounded-lg border border-brand/20"
+            >
+              {t('level')} {currentLevel}
+            </button>
+            <div className="text-white/40 text-[10px] flex items-center justify-end gap-1 mt-1 font-medium">
+              {isMax ? t('max_level') : `${t('to_next')} ${(levelThreshold - Math.floor(currentLevelProgress)).toLocaleString('en-US')}`}
+              {!isMax && <GramIcon className="w-3 h-3 drop-shadow-sm" />}
+            </div>
           </div>
         </div>
-        <div className="group h-2.5 w-full bg-white/5 rounded-full relative drop-shadow-inner border border-white/5 transition-all duration-300 hover:shadow-[0_0_15px_rgba(251,191,36,0.3)] hover:border-gold/30">
-          <div className="absolute inset-0 rounded-full overflow-hidden">
-            <motion.div 
-              initial={{ width: 0 }} 
-              animate={{ width: `${progressPercent}%` }} 
-              transition={{ duration: 1.5, ease: 'easeOut', delay: 0.2 }}
-              className="absolute top-0 left-0 bottom-0 bg-gradient-to-r from-amber-500 to-amber-300 rounded-full shadow-[0_0_10px_rgba(251,191,36,0.5)] group-hover:brightness-125 transition-all duration-300" 
-            />
-          </div>
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${progressPercent}%` }}
-            transition={{ duration: 1.5, ease: 'easeOut', delay: 0.2 }}
-            className="absolute top-0 left-0 bottom-0 bg-amber-400 rounded-full blur-[6px] opacity-0 group-hover:opacity-60 group-hover:animate-pulse transition-opacity duration-500 pointer-events-none"
+        <div className="h-2 w-full bg-white/5 rounded-full relative overflow-hidden border border-white/5">
+          <motion.div 
+            initial={{ width: 0 }} 
+            animate={{ width: `${progressPercent}%` }} 
+            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+            className="absolute top-0 left-0 bottom-0 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 rounded-full shadow-[0_0_12px_rgba(251,191,36,0.6)]" 
           />
         </div>
       </div>
-      <div className="glass-panel rounded-2xl p-5 flex flex-col gap-3">
-        <h3 className="font-display font-semibold">{t('enter_promocode')}</h3>
+
+      {/* Promocode Card */}
+      <div className="bg-[#15161b] border border-white/[0.08] rounded-[24px] p-4.5 flex flex-col gap-2.5 shadow-lg">
+        <h3 className="font-display text-sm font-bold text-white tracking-wide">{t('enter_promocode')}</h3>
         <div className="flex gap-2">
           <input 
             value={promoCode} 
             onChange={(e) => setPromoCode(e.target.value.toUpperCase())} 
             placeholder={t('promocode_placeholder')} 
-            className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 text-sm font-bold text-white placeholder-white/30 uppercase" 
+            className="flex-1 bg-black/30 border border-white/10 focus:border-brand/40 rounded-xl px-4 py-3 text-sm font-bold text-white placeholder-white/25 uppercase outline-none transition-colors" 
           />
           <button 
-            onClick={handleActivatePromo} 
+            onClick={() => {
+              handleActivatePromo();
+              try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch (e) {}
+            }} 
             disabled={isActivating || !promoCode.trim()} 
-            className="px-6 py-2.5 bg-brand text-white font-bold rounded-xl active:scale-95 transition-transform disabled:opacity-50"
+            className="px-5 py-3 bg-brand hover:brightness-110 text-white font-bold text-sm rounded-xl active:scale-95 transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed shadow-md shadow-brand/20 cursor-pointer"
           >
             {isActivating ? '...' : t('promo_ok')}
           </button>
         </div>
         {promoStatus && (
-          <div className={`text-xs font-bold ${promoStatus.type === 'success' ? 'text-success' : 'text-red-400'}`}>
+          <motion.div 
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`text-xs font-semibold ${promoStatus.type === 'success' ? 'text-emerald-400' : 'text-rose-400'}`}
+          >
             {promoStatus.msg}
-          </div>
+          </motion.div>
         )}
       </div>
 
-      <div className="glass-panel p-2 rounded-2xl flex flex-col mb-4 space-y-1">
-        <button onClick={() => setShowReferrals(true)} className="flex items-center justify-between p-3.5 hover:bg-white/5 transition-colors rounded-xl group active:scale-95">
-          <div className="flex items-center gap-4">
-            <div className="w-9 h-9 rounded-full bg-brand/10 text-brand flex items-center justify-center">
+      {/* Menu Action List */}
+      <div className="bg-[#15161b] border border-white/[0.08] p-1.5 rounded-[24px] flex flex-col space-y-1 shadow-lg">
+        {onGoToInventory && (
+          <button 
+            onClick={() => {
+              onGoToInventory();
+              try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
+            }} 
+            className="flex items-center justify-between p-3.5 hover:bg-white/[0.04] transition-all rounded-2xl group active:scale-[0.98] cursor-pointer"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400 flex items-center justify-center shrink-0">
+                <Package className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="font-semibold text-[14px] text-white leading-tight">{t('my_inventory') || 'Мой инвентарь NFT'}</span>
+                <span className="text-[11px] text-white/40 mt-0.5">{inventory.length} предметов · вывод и продажа</span>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white/70 transition-colors" />
+          </button>
+        )}
+
+        {onGoToLeaderboard && (
+          <button 
+            onClick={() => {
+              onGoToLeaderboard();
+              try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
+            }} 
+            className="flex items-center justify-between p-3.5 hover:bg-white/[0.04] transition-all rounded-2xl group active:scale-[0.98] cursor-pointer"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                <Trophy className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="font-semibold text-[14px] text-white leading-tight">{t('nav_leaderboard') || 'Таблица лидеров'}</span>
+                <span className="text-[11px] text-white/40 mt-0.5">Топ игроков по обороту</span>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white/70 transition-colors" />
+          </button>
+        )}
+
+        <button 
+          onClick={() => {
+            setShowReferrals(true);
+            try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
+          }} 
+          className="flex items-center justify-between p-3.5 hover:bg-white/[0.04] transition-all rounded-2xl group active:scale-[0.98] cursor-pointer"
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-brand/10 border border-brand/20 text-brand flex items-center justify-center shrink-0">
               <Users className="w-5 h-5" />
             </div>
-            <span className="font-semibold text-[15px]">{t('referrals') || 'Referral system'}</span>
+            <div className="flex flex-col text-left">
+              <span className="font-semibold text-[14px] text-white leading-tight">{t('referrals') || 'Реферальная система'}</span>
+              <span className="text-[11px] text-white/40 mt-0.5">Приглашай друзей и получай процент</span>
+            </div>
           </div>
-          <ChevronRight className="w-5 h-5 text-white/20 group-hover:text-white/50 transition-colors" />
+          <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white/70 transition-colors" />
         </button>
         
-        <button onClick={() => setShowHistory(true)} className="flex items-center justify-between p-3.5 hover:bg-white/5 transition-colors rounded-xl group active:scale-95">
-          <div className="flex items-center gap-4">
-            <div className="w-9 h-9 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center">
+        <button 
+          onClick={() => {
+            setShowHistory(true);
+            try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
+          }} 
+          className="flex items-center justify-between p-3.5 hover:bg-white/[0.04] transition-all rounded-2xl group active:scale-[0.98] cursor-pointer"
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
               <History className="w-5 h-5" />
             </div>
-            <span className="font-semibold text-[15px]">{t('deposit_history') || 'Deposit history'}</span>
+            <div className="flex flex-col text-left">
+              <span className="font-semibold text-[14px] text-white leading-tight">{t('deposit_history') || 'История пополнений'}</span>
+              <span className="text-[11px] text-white/40 mt-0.5">Все транзакции вашего счета</span>
+            </div>
           </div>
-          <ChevronRight className="w-5 h-5 text-white/20 group-hover:text-white/50 transition-colors" />
+          <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white/70 transition-colors" />
         </button>
 
-        <a href={config?.supportUrl || 'https://t.me/platina_help'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3.5 hover:bg-white/5 transition-colors rounded-xl group active:scale-95">
-          <div className="flex items-center gap-4">
-            <div className="w-9 h-9 rounded-full bg-purple-500/10 text-purple-400 flex items-center justify-center">
+        <a 
+          href={config?.supportUrl || 'https://t.me/platina_help'} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="flex items-center justify-between p-3.5 hover:bg-white/[0.04] transition-all rounded-2xl group active:scale-[0.98] cursor-pointer"
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
               <MessageCircle className="w-5 h-5" />
             </div>
-            <div className="flex flex-col">
-              <span className="font-semibold text-[15px]">{t('support') || 'Support'}</span>
-              <span className="text-xs text-brand font-medium">@platina_help</span>
+            <div className="flex flex-col text-left">
+              <span className="font-semibold text-[14px] text-white leading-tight">{t('support') || 'Поддержка'}</span>
+              <span className="text-[11px] text-white/40 mt-0.5">Оперативная помощь @platina_help</span>
             </div>
           </div>
-          <ExternalLink className="w-5 h-5 text-white/20 group-hover:text-white/50 transition-colors" />
+          <ExternalLink className="w-4 h-4 text-white/30 group-hover:text-white/70 transition-colors" />
         </a>
       </div>
 
+      {/* Referrals Modal (Bottom Sheet style) */}
       <AnimatePresence>
         {showReferrals && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
+          <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4">
             <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
               onClick={() => setShowReferrals(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-[8px]"
+              className="fixed inset-0 bg-black/80 backdrop-blur-md cursor-pointer"
             />
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-md bg-surface border border-hairline rounded-3xl shadow-2xl z-50 overflow-hidden flex flex-col max-h-[85vh]"
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+              className="relative z-10 w-full max-w-md bg-[#14151a] border border-white/10 rounded-t-[32px] sm:rounded-[28px] shadow-2xl overflow-hidden flex flex-col max-h-[85vh] text-white"
             >
-              <div className="absolute inset-0 bg-brand/5 blur-3xl pointer-events-none rounded-full" />
-              <div className="p-6 pb-4 border-b border-white/5 relative z-10 shrink-0">
-                 <h3 className="font-display text-xl font-bold pr-8">{t('referrals')}</h3>
+              {/* Grab Handle */}
+              <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-1 sm:hidden" />
+
+              <div className="p-5 pb-3 border-b border-white/5 flex items-center justify-between shrink-0">
+                 <div>
+                   <h3 className="font-display text-lg font-bold tracking-tight">{t('referrals')}</h3>
+                   <p className="text-white/40 text-xs mt-0.5">Приглашайте друзей и получайте вознаграждение</p>
+                 </div>
+                 <button 
+                   onClick={() => setShowReferrals(false)} 
+                   className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/15 active:scale-95 transition-all cursor-pointer"
+                 >
+                   <X className="w-4 h-4" />
+                 </button>
               </div>
-              <button onClick={() => setShowReferrals(false)} className="absolute top-6 right-6 w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white transition-colors z-20">
-                <X className="w-4 h-4" />
-              </button>
               
-              <div className="relative z-10 overflow-y-auto no-scrollbar p-6 pt-4 flex-1">
-                <p className="text-white/70 text-sm mb-6 leading-relaxed bg-white/5 p-4 rounded-xl border border-white/5">{t('referrals_desc')}</p>
+              <div className="overflow-y-auto custom-scrollbar p-5 pt-4 flex-1 space-y-5">
+                <div className="bg-white/[0.03] border border-white/5 p-4 rounded-2xl">
+                  <p className="text-white/70 text-xs leading-relaxed">{t('referrals_desc')}</p>
+                </div>
                 
-                <div className="mb-8">
-                  <div className="text-sm font-medium text-white/50 mb-2 pl-1">{t('referrals_link')}</div>
+                <div>
+                  <span className="block text-[11px] font-bold text-white/40 uppercase tracking-wider mb-2">
+                    {t('referrals_link')}
+                  </span>
                   <div className="flex gap-2">
-                    <div className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm font-medium text-white/80 overflow-hidden text-ellipsis whitespace-nowrap">
+                    <div className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3.5 py-3 text-xs font-mono font-medium text-white/80 overflow-hidden text-ellipsis whitespace-nowrap">
                       {`https://t.me/GaleaDropBot?startapp=r_${user?.id}`}
                     </div>
                     <button 
                       onClick={() => {
                         navigator.clipboard.writeText(`https://t.me/GaleaDropBot?startapp=r_${user?.id}`);
                         setIsCopied(true);
+                        try { (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch (e) {}
                         setTimeout(() => setIsCopied(false), 2000);
                       }}
-                      className="w-12 shrink-0 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl flex items-center justify-center transition-colors text-white"
+                      className="px-3.5 bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 rounded-xl flex items-center justify-center transition-all text-white cursor-pointer"
                     >
-                      {isCopied ? <Check className="w-5 h-5 text-success" /> : <Copy className="w-5 h-5 text-white/70" />}
+                      {isCopied ? (
+                        <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold">
+                          <Check className="w-4 h-4" />
+                          <span>Скопировано</span>
+                        </div>
+                      ) : (
+                        <Copy className="w-4 h-4 text-white/70" />
+                      )}
                     </button>
                   </div>
                   <button 
                     onClick={() => {
                       const link = `https://t.me/GaleaDropBot?startapp=r_${user?.id}`;
                       const text = t('referrals_desc') || '';
+                      try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch (e) {}
                       (window as any).Telegram?.WebApp?.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`);
                     }}
-                    className="w-full mt-3 py-3 rounded-xl bg-brand/20 text-brand font-bold active:scale-95 transition-transform shadow-lg flex items-center justify-center gap-2"
+                    className="w-full mt-3 py-3.5 rounded-xl bg-brand hover:brightness-110 text-white font-bold text-sm active:scale-[0.98] transition-all shadow-lg shadow-brand/20 flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <Users className="w-5 h-5" />
-                    {t('invite_friends')}
+                    <Users className="w-4 h-4" />
+                    <span>{t('invite_friends')}</span>
                   </button>
                 </div>
 
-                <div className="space-y-4">
-                  <h4 className="font-display font-semibold text-lg">{t('my_referrals')} <span className="text-white/40 text-sm ml-1 font-medium">{referrals.length}</span></h4>
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-display font-bold text-sm tracking-wide text-white">
+                      {t('my_referrals')}
+                    </h4>
+                    <span className="text-white/40 text-xs font-semibold bg-white/5 px-2 py-0.5 rounded-full">
+                      {referrals.length}
+                    </span>
+                  </div>
                   
                   {isLoadingReferrals ? (
                      <div className="flex justify-center py-8">
                         <Activity className="w-6 h-6 text-brand animate-spin" />
                      </div>
                   ) : referrals.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-8 opacity-60 bg-white/5 rounded-2xl border border-white/5">
-                      <Users className="w-10 h-10 text-muted mb-3" />
-                      <p className="text-sm text-center px-4">{t('no_referrals_yet')}</p>
+                    <div className="flex flex-col items-center justify-center py-8 opacity-60 bg-white/[0.02] rounded-2xl border border-white/5">
+                      <Users className="w-8 h-8 text-white/30 mb-2" />
+                      <p className="text-xs text-center text-white/50 px-4">{t('no_referrals_yet')}</p>
                     </div>
                   ) : (
                     <div className="flex flex-col gap-2">
                       {referrals.map((r) => (
-                        <div key={r.id} className="bg-white/5 border border-white/10 rounded-xl p-3 flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-brand/20 overflow-hidden shrink-0 flex items-center justify-center">
+                        <div key={r.id} className="bg-white/[0.03] border border-white/5 rounded-2xl p-3 flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-brand/20 overflow-hidden shrink-0 flex items-center justify-center border border-brand/30">
                             {r.photoUrl ? (
                               <img src={r.photoUrl} alt="avatar" className="w-full h-full object-cover" />
                             ) : (
-                              <User className="w-5 h-5 text-brand" />
+                              <User className="w-4 h-4 text-brand" />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-sm truncate">{r.firstName} {r.lastName}</div>
-                            <div className="text-xs text-white/50 truncate">
+                            <div className="font-semibold text-xs text-white truncate">{r.firstName} {r.lastName}</div>
+                            <div className="text-[11px] text-white/40 truncate">
                                {r.username ? `@${r.username}` : t('no_username')}
                             </div>
                           </div>
                           <div className="text-right shrink-0">
-                             <div className="text-xs text-white/40 mb-0.5">{t('deposited')}</div>
-                             <div className="font-bold text-sm text-brand flex items-center justify-end gap-1">
-                               {r.topupSum?.toFixed(2) || '0.00'} <GramIcon className="w-3 h-3" />
+                             <div className="text-[10px] text-white/40 mb-0.5">{t('deposited')}</div>
+                             <div className="font-bold text-xs text-gold flex items-center justify-end gap-1">
+                               +{r.topupSum?.toFixed(2) || '0.00'} <GramIcon className="w-3 h-3" />
                              </div>
                           </div>
                         </div>
@@ -585,46 +800,56 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
         )}
       </AnimatePresence>
 
-      
-
+      {/* Deposit History Modal (Bottom Sheet style) */}
       <AnimatePresence>
         {showHistory && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
+          <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4">
             <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
               onClick={() => setShowHistory(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-[8px]"
+              className="fixed inset-0 bg-black/80 backdrop-blur-md cursor-pointer"
             />
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-sm bg-surface border border-hairline rounded-3xl shadow-2xl z-50 overflow-hidden flex flex-col max-h-[80vh]"
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+              className="relative z-10 w-full max-w-sm bg-[#14151a] border border-white/10 rounded-t-[32px] sm:rounded-[28px] shadow-2xl overflow-hidden flex flex-col max-h-[80vh] text-white"
             >
-              <div className="absolute inset-0 bg-brand/5 blur-3xl pointer-events-none rounded-full" />
-              <div className="p-6 pb-4 border-b border-white/5 relative z-10 shrink-0">
-                 <h3 className="font-display text-xl font-bold pr-8">{t('deposit_history')}</h3>
+              {/* Grab Handle */}
+              <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-1 sm:hidden" />
+
+              <div className="p-5 pb-3 border-b border-white/5 flex items-center justify-between shrink-0">
+                 <div>
+                   <h3 className="font-display text-lg font-bold tracking-tight">{t('deposit_history')}</h3>
+                   <p className="text-white/40 text-xs mt-0.5">История входящих платежей</p>
+                 </div>
+                 <button 
+                   onClick={() => setShowHistory(false)} 
+                   className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/15 active:scale-95 transition-all cursor-pointer"
+                 >
+                   <X className="w-4 h-4" />
+                 </button>
               </div>
-              <button onClick={() => setShowHistory(false)} className="absolute top-6 right-6 w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white transition-colors z-20">
-                <X className="w-4 h-4" />
-              </button>
               
-              <div className="relative z-10 overflow-y-auto no-scrollbar p-6 pt-4 flex-1">
+              <div className="overflow-y-auto custom-scrollbar p-5 pt-4 flex-1">
                 {(!topups || topups.length === 0) ? (
                   <div className="flex flex-col items-center justify-center py-10 opacity-60">
-                    <Wallet className="w-12 h-12 text-muted mb-3" />
-                    <p className="text-sm text-center">{t('no_deposits_yet')}</p>
+                    <Wallet className="w-10 h-10 text-white/30 mb-2" />
+                    <p className="text-xs text-white/50 text-center">{t('no_deposits_yet')}</p>
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-2.5">
                     {topups.slice().reverse().map((t: any) => (
-                      <div key={t.id} className="bg-white/5 border border-white/10 rounded-2xl p-4 flex justify-between items-center">
+                      <div key={t.id} className="bg-white/[0.03] border border-white/5 rounded-2xl p-3.5 flex justify-between items-center">
                         <div className="flex flex-col">
-                          <span className="text-[13px] text-white/60 mb-1">{new Date(t.ts).toLocaleString('ru-RU')}</span>
-                          <span className="text-[15px] font-medium text-white flex items-center gap-1">{t('deposit')}</span>
+                          <span className="text-[11px] text-white/40 mb-0.5 font-medium">{new Date(t.ts).toLocaleString('ru-RU')}</span>
+                          <span className="text-[13px] font-semibold text-white flex items-center gap-1">{t('deposit')}</span>
                         </div>
-                        <div className="text-[16px] font-bold text-gold flex items-center gap-1">
-                          +{t.amount.toFixed(2)} <GramIcon className="w-4 h-4 drop-shadow-md" />
+                        <div className="text-[14px] font-bold text-gold flex items-center gap-1 font-display">
+                          +{t.amount.toFixed(2)} <GramIcon className="w-3.5 h-3.5 drop-shadow-md" />
                         </div>
                       </div>
                     ))}
@@ -653,8 +878,17 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                 className="relative w-full max-w-sm bg-surface border border-hairline rounded-2xl p-6 shadow-2xl flex flex-col items-center z-50"
               >
                 <div className="w-32 h-32 rounded-2xl mb-4 relative overflow-hidden">
-     <PremiumImage staticMode src={selectedNft.image_url || `/nft/${selectedNft.name}.png`} alt={selectedNft.name} className="w-full h-full relative z-10 " />
-   </div>
+                  <PremiumImage staticMode src={selectedNft.image_url || `/nft/${selectedNft.name}.png`} alt={selectedNft.name} className="w-full h-full relative z-10 " />
+                </div>
+                {selectedNft.backdrop === 'Onyx Black' ? (
+                  <span className="text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full bg-gradient-to-r from-neutral-900 to-black text-amber-300 border border-amber-500/40 mb-2">
+                    Onyx Black
+                  </span>
+                ) : selectedNft.backdrop === 'Black' ? (
+                  <span className="text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full bg-zinc-950 text-zinc-200 border border-zinc-700/80 mb-2">
+                    Black
+                  </span>
+                ) : null}
                 <h3 className="font-display text-2xl font-semibold text-center mb-1">{selectedNft.name}</h3>
                 <p className="text-gold font-medium mb-6 flex items-center justify-center gap-1">{t('value')} {currentPrice.toFixed(2)} <GramIcon className="w-4 h-4 drop-shadow-md" /></p>
                 
@@ -770,40 +1004,74 @@ export default function App() {
   
   const { t, lang, setLang } = useTranslation();
 
-  const [activeTab, setActiveTab] = useState('shop');
+  const [activeTab, setActiveTab] = useState('wallet');
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const [showTopUp, setShowTopUp] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
 
   const [giftsDb, setGiftsDb] = useState<any[]>(defaultGiftsDb);
   const [pricesLoaded, setPricesLoaded] = useState(false);
 
   useEffect(() => {
-    // 1. Fetch our catalog database
-    fetch('/api/admin/gifts', { cache: 'no-store' })
-      .then(r => r.json())
-      .then(data => {
-         const db = (Array.isArray(data) && data.length > 0) ? data : defaultGiftsDb;
-         setGiftsDb(db);
-         
-         // 2. Fetch all real floor prices in a single batch call from kartoshka.free
-         fetchFragmentPrices()
-             .then((prices) => {
-               const bySlug = new Map(prices.map((p) => [p.slug, p]));
+    const loadPrices = () => {
+      // 1. Fetch our catalog database
+      fetch('/api/admin/gifts', { cache: 'no-store' })
+        .then(r => r.json())
+        .then(data => {
+           const db = (Array.isArray(data) && data.length > 0) ? data : defaultGiftsDb;
+           setGiftsDb(db);
+           
+           // 2. Fetch all real floor prices and backdrop prices in batch calls from kartoshka.free
+           Promise.allSettled([
+             fetchFragmentPrices(),
+             fetchFragmentBackdropPrices()
+           ])
+             .then(([pricesRes, backdropsRes]) => {
+               const prices = pricesRes.status === 'fulfilled' ? pricesRes.value : [];
+               const backdrops = backdropsRes.status === 'fulfilled' ? backdropsRes.value : {};
+               const bySlug = new Map(prices.map((p) => [(p.slug || '').toLowerCase(), p]));
+
                setGiftsDb((prev) =>
                  prev.map((g) => {
-                   const p = g.slug ? bySlug.get(g.slug) : undefined;
-                   return p && p.floorPriceTon != null ? { ...g, floor_price_gram: p.floorPriceTon } : g;
+                   const sLower = (g.slug || '').toLowerCase();
+                   const baseP = bySlug.get(sLower);
+                   const bInfo = backdrops[sLower];
+
+                   if (g.backdrop === 'Black') {
+                     if (bInfo && bInfo.blackTon > 0) {
+                       return { ...g, floor_price_gram: bInfo.blackTon };
+                     } else if (baseP && baseP.floorPriceTon != null && bInfo?.blackMult) {
+                       return { ...g, floor_price_gram: Number((baseP.floorPriceTon * bInfo.blackMult).toFixed(2)) };
+                     }
+                     return g;
+                   } else if (g.backdrop === 'Onyx Black') {
+                     if (bInfo && bInfo.onyxTon > 0) {
+                       return { ...g, floor_price_gram: bInfo.onyxTon };
+                     } else if (baseP && baseP.floorPriceTon != null && bInfo?.onyxMult) {
+                       return { ...g, floor_price_gram: Number((baseP.floorPriceTon * bInfo.onyxMult).toFixed(2)) };
+                     }
+                     return g;
+                   } else {
+                     return baseP && baseP.floorPriceTon != null ? { ...g, floor_price_gram: baseP.floorPriceTon } : g;
+                   }
                  })
                );
              })
-             .catch((e) => console.warn('Fragment prices unavailable:', e.message))
+             .catch((e) => console.warn('Variant prices unavailable:', e.message))
              .finally(() => setPricesLoaded(true));
-      })
-      .catch(() => {
-        setGiftsDb(defaultGiftsDb);
-        setPricesLoaded(true);
-      });
+        })
+        .catch(() => {
+          setGiftsDb(defaultGiftsDb);
+          setPricesLoaded(true);
+        });
+    };
+
+    loadPrices();
+
+    // Pull floor prices for all NFTs (including Black and Onyx Black) every 3 hours (3 * 60 * 60 * 1000)
+    const interval = setInterval(loadPrices, 3 * 60 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   // Реальная авторизация через Telegram (проверяется на сервере по initData,
@@ -832,7 +1100,8 @@ export default function App() {
   const [turnover, setTurnover] = useState<number>(0);
   const [topups, setTopups] = useState<any[]>([]);
   const [topUpGlow, setTopUpGlow] = useState(false);
-  const [toastMessage, setToastMessage] = useState<{amount: number; method: 'stars'|'ton'}|null>(null);
+  const [toastMessage, setToastMessage] = useState<{amount: number; method: 'stars'|'ton'; type?: 'topup'|'withdraw'; title?: string}|null>(null);
+  const isInitializedRef = useRef(false);
 
   const currentLevel = Math.min(100, Math.floor(turnover / 1000) + 1);
 
@@ -844,6 +1113,7 @@ export default function App() {
       setInventory(auth.inventory.map((i: any, idx: number) => ({...i, uniqueId: i.uniqueId || i.id || `fallback-${idx}-${Date.now()}`})));
       setTurnover(auth.turnover || 0);
       setTopups(auth.topups || []);
+      isInitializedRef.current = true;
       
       const localSeen = localStorage.getItem('welcome_seen') === 'true';
       if (!auth.welcomeSeen && !localSeen) {
@@ -858,7 +1128,7 @@ export default function App() {
 
   // Дебаунс-синк изменений баланса/инвентаря на сервер (источник правды).
   useEffect(() => {
-    if (auth.status !== 'ready') return;
+    if (auth.status !== 'ready' || !isInitializedRef.current) return;
     const t = setTimeout(() => auth.syncState(balance, inventory, turnover, topups), 600);
     return () => clearTimeout(t);
   }, [balance, inventory, turnover, topups, auth.status]);
@@ -906,11 +1176,11 @@ export default function App() {
   }, [auth.status, pricesLoaded, minTimePassed]);
 
   const navItems = [
-    { id: 'inventory', icon: Package, label: t('my_inventory') || 'Inventory' },
-    { id: 'cases', icon: Box, label: t('nav_cases') },
-    { id: 'shop', icon: Activity, label: t('nav_shop') },
-    { id: 'tasks', icon: ListTodo, label: t('nav_tasks') },
-    { id: 'leaderboard', icon: Trophy, label: t('nav_leaderboard') },
+    { id: 'wallet', icon: Wallet, label: 'Кошелек' },
+    { id: 'shop', icon: Flame, label: t('nav_shop') || 'Игры' },
+    { id: 'cases', icon: Box, label: t('nav_cases') || 'Кейсы' },
+    { id: 'tasks', icon: ListTodo, label: t('nav_tasks') || 'Задания' },
+    { id: 'profile', icon: User, label: 'Профиль' },
     ...(auth.isAdmin ? [{ id: 'admin', icon: Shield, label: t('nav_admin') }] : [])
   ];
 
@@ -978,73 +1248,143 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-canvas text-[color:var(--color-text)] overflow-hidden selection:bg-brand/30">
-      {/* Ambient backdrop: a single soft brand glow + faint grid, not a double-blob gradient */}
+      {/* Clean ambient backdrop: soft brand glow, no grid squares */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-15%] left-1/2 -translate-x-1/2 w-[80%] h-[40%] rounded-full bg-brand/10 blur-[160px]" />
-        <div
-          className="absolute inset-0 opacity-[0.05]"
-          style={{
-            backgroundImage: 'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)',
-            backgroundSize: '32px 32px',
-            maskImage: 'linear-gradient(to bottom, black, transparent 70%)',
-          }}
-        />
       </div>
 
       {/* Main Container simulating mobile view bounds on desktop, or full on mobile */}
       <div className="relative z-10 h-[100dvh] w-full max-w-md mx-auto flex flex-col">
         
-        {/* Header - Dynamic Island Style */}
+        {/* Header - TON Wallet style when in wallet, or Dynamic Island on other tabs */}
         <AnimatePresence>
           {!activeGame && activeTab !== 'profile' && (
             <motion.div 
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="absolute inset-x-2 top-2 z-50 flex justify-center pointer-events-none"
+              transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+              className="absolute inset-x-3 top-2.5 z-50 flex justify-center pointer-events-none"
             >
-              <div className={`relative flex items-center justify-between bg-[#141414]/70 backdrop-blur-[20px] rounded-[32px] p-1.5 w-full shadow-[0_8px_32px_rgba(0,0,0,0.5)] pointer-events-auto transition-all duration-500 ${
-                topUpGlow ? 'border-2 border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.4)]' : 'border border-white/[0.08]'
-              }`}>
-                {/* Avatar -> Profile */}
-                <button 
-                  onClick={() => setActiveTab('profile')} 
-                  className="flex items-center gap-2 pr-3 pl-0.5 hover:bg-white/5 rounded-[22px] transition-colors active:scale-95 z-10"
-                >
-                  <div className="w-[42px] h-[42px] rounded-full overflow-hidden bg-white/10 shrink-0 border border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.1)] flex items-center justify-center relative">
-                    {user?.photoUrl ? (
-                      <img src={user.photoUrl} alt="Avatar" className="absolute w-full h-full object-cover" />
-                    ) : (
-                      <User className="w-5 h-5 text-white/50 relative z-10" />
-                    )}
+              {activeTab === 'wallet' ? (
+                <div className="relative flex items-center justify-between bg-[#131722]/85 backdrop-blur-2xl rounded-[30px] px-3.5 py-2 w-full border border-white/[0.08] shadow-[0_12px_36px_rgba(0,0,0,0.6)] pointer-events-auto transition-all duration-300">
+                  {/* Left: Account Pill */}
+                  <button 
+                    onClick={() => {
+                      setActiveTab('profile');
+                      try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
+                    }} 
+                    className="flex items-center gap-2.5 hover:opacity-90 active:scale-[0.97] transition-all cursor-pointer"
+                  >
+                    <div className="w-[34px] h-[34px] rounded-full overflow-hidden bg-white/10 shrink-0 border border-white/10 flex items-center justify-center relative">
+                      {user?.photoUrl ? (
+                        <img src={user.photoUrl} alt="Avatar" className="absolute w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-4 h-4 text-white/50 relative z-10" />
+                      )}
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <span className="text-[13px] font-bold text-white leading-tight">
+                        {user?.firstName || 'Galea Player'}
+                      </span>
+                      <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        TON Space
+                      </span>
+                    </div>
+                  </button>
+
+                  {/* Center: Subtle Diamond */}
+                  <div className="flex items-center gap-1.5 opacity-80">
+                    <div className="w-6 h-6 rounded-lg bg-[#0098EA]/15 border border-[#0098EA]/30 flex items-center justify-center text-[#0098EA]">
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L3 8.5L12 22L21 8.5L12 2Z" />
+                      </svg>
+                    </div>
+                    <span className="font-display text-[12px] font-bold tracking-tight text-white/90">Platina</span>
                   </div>
-                  <span className="text-[15px] font-bold text-white max-w-[70px] truncate text-left drop-shadow-sm">
-                    LVL {currentLevel}
-                  </span>
-                </button>
 
-                {/* Center Title */}
-                <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center gap-1.5 pointer-events-none whitespace-nowrap z-0">
-                  <PremiumImage staticMode={false} loopWithDelay={true} loopDelayMs={0} src="https://nft.fragment.com/gift/heroichelmet-1.lottie.json" alt="Galea Alba" className="w-[32px] h-[32px] object-contain drop-shadow-md" />
-                  <span className="text-white font-display font-bold text-[16px] tracking-wide" style={{ textShadow: '0px 2px 4px rgba(0,0,0,0.5)' }}>Platina Gift</span>
+                  {/* Right: Quick actions */}
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => {
+                        setActiveTab('profile');
+                        try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
+                      }}
+                      className="text-[11px] font-bold text-white/80 bg-white/[0.06] hover:bg-white/[0.12] px-2.5 py-1 rounded-full border border-white/5 active:scale-95 transition-all cursor-pointer"
+                    >
+                      LVL {currentLevel}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowTopUp(true);
+                        try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch (e) {}
+                      }}
+                      className="w-8 h-8 rounded-full bg-[#0098EA] text-white flex items-center justify-center shadow-md shadow-[#0098EA]/30 active:scale-95 transition-all cursor-pointer font-bold text-sm"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
+              ) : (
+                <div className={`relative flex items-center justify-between bg-[#131418]/85 backdrop-blur-2xl rounded-[32px] p-1.5 w-full shadow-[0_12px_36px_rgba(0,0,0,0.6)] pointer-events-auto transition-all duration-300 ${
+                  topUpGlow ? 'border border-emerald-500/80 shadow-[0_0_25px_rgba(16,185,129,0.35)]' : 'border border-white/[0.08]'
+                }`}>
+                  {/* Avatar -> Profile */}
+                  <button 
+                    onClick={() => {
+                      setActiveTab('profile');
+                      try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
+                    }} 
+                    className="flex items-center gap-2 pr-2.5 pl-1 py-0.5 hover:bg-white/5 rounded-full transition-all active:scale-[0.96] z-10 cursor-pointer"
+                  >
+                    <div className="w-[38px] h-[38px] rounded-full overflow-hidden bg-white/10 shrink-0 border border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.08)] flex items-center justify-center relative">
+                      {user?.photoUrl ? (
+                        <img src={user.photoUrl} alt="Avatar" className="absolute w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-5 h-5 text-white/50 relative z-10" />
+                      )}
+                    </div>
+                    <span className="text-[12px] font-bold text-white/90 bg-white/[0.06] px-2 py-0.5 rounded-full border border-white/5">
+                      LVL {currentLevel}
+                    </span>
+                  </button>
 
-                {/* Balance -> TopUp */}
-                <button 
-                  onClick={() => setShowTopUp(true)} 
-                  className="flex items-center gap-1.5 bg-brand/10 text-brand px-3.5 py-2.5 rounded-[22px] hover:bg-brand/20 active:scale-95 transition-all border border-brand/20 z-10 mr-0.5"
-                >
-                  <span className="font-display text-[15px] font-bold tracking-wide drop-shadow-md">{balance.toFixed(2)}</span>
-                  <GramIcon className="w-[18px] h-[18px] drop-shadow-md" />
-                </button>
-              </div>
+                  {/* Center NFT Heroic Helmet (Model: Galea Alba) */}
+                  <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-none z-0">
+                    <PremiumImage 
+                      staticMode={false} 
+                      loopWithDelay={true} 
+                      loopDelayMs={0} 
+                      src="https://nft.fragment.com/gift/heroichelmet-127.lottie.json" 
+                      alt="Heroic Helmet - Galea Alba" 
+                      className="w-[62px] h-[62px] object-contain drop-shadow-[0_6px_16px_rgba(0,0,0,0.6)]" 
+                    />
+                  </div>
+
+                  {/* Balance -> TopUp */}
+                  <button 
+                    onClick={() => {
+                      setShowTopUp(true);
+                      try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch (e) {}
+                    }} 
+                    className="flex items-center gap-1.5 bg-brand/15 text-brand px-3 py-1.5 rounded-full hover:bg-brand/20 active:scale-[0.96] transition-all duration-150 border border-brand/25 z-10 mr-0.5 cursor-pointer shadow-sm"
+                  >
+                    <span className="font-display text-[14px] font-bold tracking-tight text-white">{balance.toFixed(2)}</span>
+                    <GramIcon className="w-4 h-4 text-brand" />
+                    <span className="w-4 h-4 rounded-full bg-brand text-white text-[11px] font-bold flex items-center justify-center ml-0.5 leading-none">
+                      +
+                    </span>
+                  </button>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Scrollable Content Area */}
         <div className="relative flex-1 w-full overflow-hidden flex flex-col">
-          <main className="flex-1 overflow-y-auto pt-[80px] pb-[120px] px-5 scrollbar-hide relative">
+          <main className="flex-1 overflow-y-auto pt-[76px] pb-[120px] px-4.5 scrollbar-hide relative">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -1054,12 +1394,70 @@ export default function App() {
                 transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
                 className="w-full"
               >
-                {activeTab === 'shop' && <Shop onPlayUpgrade={() => setActiveGame('upgrade')} onPlayCraft={() => setActiveGame('craft')} onPlayMines={() => setActiveGame('mines')} onPlayNewGame={() => setActiveGame('new_game')} giftsDb={giftsDb} pricesLoaded={pricesLoaded} />}
+                {activeTab === 'wallet' && (
+                  <WalletHome
+                    balance={balance}
+                    inventory={inventory}
+                    user={user}
+                    topups={topups}
+                    onOpenTopUp={() => setShowTopUp(true)}
+                    onOpenSend={() => setShowSendModal(true)}
+                    onPlayRocket={() => setActiveGame('new_game')}
+                    onPlayPlinko={() => setActiveGame('plinko')}
+                    onPlayUpgrade={() => setActiveGame('upgrade')}
+                    onPlayCraft={() => setActiveGame('craft')}
+                    onPlayMines={() => setActiveGame('mines')}
+                    onGoToCases={() => setActiveTab('cases')}
+                    onGoToInventory={() => setActiveTab('inventory')}
+                    onOpenSettings={() => setActiveTab('profile')}
+                    giftsDb={giftsDb}
+                  />
+                )}
+                {activeTab === 'shop' && (
+                  <Shop 
+                    onPlayUpgrade={() => setActiveGame('upgrade')} 
+                    onPlayCraft={() => setActiveGame('craft')} 
+                    onPlayMines={() => setActiveGame('mines')} 
+                    onPlayNewGame={() => setActiveGame('new_game')} 
+                    onPlayPlinko={() => setActiveGame('plinko')}
+                    giftsDb={giftsDb} 
+                    pricesLoaded={pricesLoaded} 
+                  />
+                )}
                 {activeTab === 'leaderboard' && <Leaderboard />}
                 {activeTab === 'cases' && <Cases balance={balance} setBalance={setBalance} inventory={inventory} setInventory={setInventory} giftsDb={giftsDb} onAddTurnover={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} turnover={turnover} />}
                 {activeTab === 'tasks' && <Tasks onBalanceUpdate={setBalance} />}
-                {activeTab === 'profile' && <Profile user={user} inventory={inventory} setInventory={setInventory} balance={balance} setBalance={setBalance} turnover={turnover} topups={topups} onOpenTopUp={() => setShowTopUp(true)} config={auth.config} giftsDb={giftsDb} onBack={() => setActiveTab('shop')} />}
-                {activeTab === 'inventory' && <Inventory inventory={inventory} setInventory={setInventory} balance={balance} setBalance={setBalance} turnover={turnover} giftsDb={giftsDb} onGoToCases={() => setActiveTab('cases')} onPlayUpgrade={() => setActiveGame('upgrade')} onPlayCraft={() => setActiveGame('craft')} />}
+                {activeTab === 'profile' && (
+                  <Profile 
+                    user={user} 
+                    inventory={inventory} 
+                    setInventory={setInventory} 
+                    balance={balance} 
+                    setBalance={setBalance} 
+                    turnover={turnover} 
+                    topups={topups} 
+                    onOpenTopUp={() => setShowTopUp(true)} 
+                    config={auth.config} 
+                    giftsDb={giftsDb} 
+                    onBack={() => setActiveTab('wallet')}
+                    onGoToInventory={() => setActiveTab('inventory')}
+                    onGoToLeaderboard={() => setActiveTab('leaderboard')}
+                  />
+                )}
+                {activeTab === 'inventory' && (
+                  <Inventory 
+                    inventory={inventory} 
+                    setInventory={setInventory} 
+                    balance={balance} 
+                    setBalance={setBalance} 
+                    turnover={turnover} 
+                    giftsDb={giftsDb} 
+                    onGoToCases={() => setActiveTab('cases')} 
+                    onPlayUpgrade={() => setActiveGame('upgrade')} 
+                    onPlayCraft={() => setActiveGame('craft')} 
+                    onBack={() => setActiveTab('wallet')}
+                  />
+                )}
                 {activeTab === 'admin' && <AdminPanel giftsDb={giftsDb} setGiftsDb={(newDb) => {
       setGiftsDb(newDb);
       const token = sessionStorage.getItem('pg_session_token');
@@ -1128,6 +1526,31 @@ export default function App() {
                 />
               </motion.div>
             )}
+            {activeGame === 'plinko' && (
+              <motion.div
+                initial={{ opacity: 0, y: '100%' }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="absolute inset-0 z-[100] bg-black"
+              >
+                <Plinko 
+                  onBack={() => setActiveGame(null)} 
+                  inventory={inventory} 
+                  setInventory={setInventory} 
+                  balance={balance} 
+                  setBalance={setBalance} 
+                  onTurnover={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} 
+                  onWin={(amt, mode, item, mult) => {
+                    if (mode === 'nft' && item) auth.recordOpen(item, amt, 'nft', mult, 'plinko');
+                    else if (mode === 'gram') auth.recordOpen(null, amt, 'gram', mult, 'plinko');
+                  }}
+                  giftsDb={giftsDb} 
+                  user={user}
+                  token={auth.token}
+                />
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
 
@@ -1138,40 +1561,42 @@ export default function App() {
               initial={{ y: 100, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 100, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="absolute bottom-2 left-0 right-0 z-[90] pb-[calc(env(safe-area-inset-bottom)+12px)] px-3 pt-2 w-full pointer-events-none"
+              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+              className="absolute bottom-2.5 left-0 right-0 z-[90] pb-[calc(env(safe-area-inset-bottom,0px)+10px)] px-3 w-full pointer-events-none"
             >
-              <div className="pointer-events-auto w-full">
-              <nav className="relative flex items-center p-1.5 rounded-[32px] bg-[#141414]/70 backdrop-blur-[20px] border border-white/[0.08] shadow-[0_16px_40px_-12px_rgba(0,0,0,0.5)]">
+              <div className="pointer-events-auto w-full max-w-sm mx-auto">
+              <nav className="relative flex items-center p-1.5 rounded-[30px] bg-[#14151a]/85 backdrop-blur-2xl border border-white/[0.08] shadow-[0_20px_45px_-10px_rgba(0,0,0,0.7)]">
                 {navItems.map((item) => {
                   const isActive = activeTab === item.id;
                   return (
                     <button
                       key={item.id}
-                      onClick={() => setActiveTab(item.id)}
-                      className={`relative z-10 flex-1 flex flex-col items-center justify-center gap-1 py-2 outline-none transition-colors duration-300 ${
-                        isActive ? 'text-brand drop-shadow-sm' : 'text-white/50 hover:text-white/80'
+                      onClick={() => {
+                        setActiveTab(item.id);
+                        try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
+                      }}
+                      className={`relative z-10 flex-1 flex flex-col items-center justify-center gap-1 py-2 outline-none transition-colors duration-200 active:scale-[0.93] cursor-pointer ${
+                        isActive ? 'text-brand' : 'text-white/40 hover:text-white/70'
                       }`}
                     >
                       {isActive && (
                         <motion.div
                           layoutId="liquid-pill"
-                          className="absolute inset-0 rounded-[28px] bg-brand/15 border border-brand/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] z-0"
-                          style={{ borderRadius: 28 }}
-                          transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
+                          className="absolute inset-0 rounded-[24px] bg-brand/15 border border-brand/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)] z-0"
+                          transition={{ type: 'spring', damping: 28, stiffness: 380 }}
                         />
                       )}
                       <motion.div
                         className="relative z-10 flex flex-col items-center justify-center gap-1 will-change-transform"
                         style={{ WebkitBackfaceVisibility: 'hidden', transform: 'translateZ(0)' }}
                         animate={{ 
-                          scale: isActive ? 1.08 : 1,
-                          y: isActive ? -1 : 0 
+                          scale: isActive ? 1.05 : 1,
+                          y: isActive ? -0.5 : 0 
                         }}
-                        transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
+                        transition={{ type: 'spring', damping: 28, stiffness: 380 }}
                       >
                         <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
-                        <span className="text-[9px] font-bold tracking-normal">{item.label}</span>
+                        <span className="text-[10px] font-bold tracking-tight">{item.label}</span>
                       </motion.div>
                     </button>
                   );
@@ -1181,7 +1606,6 @@ export default function App() {
             </motion.div>
           )}
         </AnimatePresence>
-        
         
         <AnimatePresence>
           {showTopUp && (
@@ -1200,9 +1624,10 @@ export default function App() {
                   }).catch(console.error);
                 }
 
-                // Show visual feedback
+                // Visual and haptic feedback
                 setTopUpGlow(true);
                 setToastMessage({ amount: rawAmount, method });
+                try { (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch (e) {}
                 setTimeout(() => {
                   setTopUpGlow(false);
                   setToastMessage(null);
@@ -1212,27 +1637,66 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        {/* Top-up Toast Notification */}
+        <AnimatePresence>
+          {showSendModal && (
+            <SendModal
+              balance={balance}
+              onClose={() => setShowSendModal(false)}
+              onSuccess={(amount, recipient) => {
+                setBalance(b => Math.max(0, Number((b - amount).toFixed(2))));
+                setTopups(prev => [
+                  ...(prev || []),
+                  {
+                    id: Date.now().toString(),
+                    amount,
+                    recipient,
+                    type: 'withdraw',
+                    ts: new Date().toISOString()
+                  }
+                ]);
+                setToastMessage({ amount, method: 'ton', type: 'withdraw', title: 'Перевод отправлен' });
+                try { (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch (e) {}
+                setTimeout(() => setToastMessage(null), 3500);
+              }}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Toast Notification (Sonner style for top-up & send) */}
         <AnimatePresence>
           {toastMessage && (
             <motion.div
-              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              initial={{ opacity: 0, y: -24, scale: 0.94 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-              className="fixed top-[85px] left-1/2 -translate-x-1/2 z-[200] bg-[#1a1c23] border border-green-500/30 shadow-[0_4px_25px_rgba(34,197,94,0.3)] rounded-2xl p-3 flex items-center gap-3 w-[90%] max-w-sm pointer-events-none"
+              exit={{ opacity: 0, y: -20, scale: 0.94 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 350 }}
+              className={`fixed top-5 left-1/2 -translate-x-1/2 z-[250] bg-[#14151a]/95 backdrop-blur-2xl border shadow-2xl rounded-2xl px-4 py-3 flex items-center gap-3 w-auto min-w-[280px] max-w-sm pointer-events-none ${
+                toastMessage.type === 'withdraw'
+                  ? 'border-blue-500/30 shadow-[0_16px_40px_rgba(0,152,234,0.25)]'
+                  : 'border-emerald-500/30 shadow-[0_16px_40px_rgba(16,185,129,0.25)]'
+              }`}
             >
-              <div className="w-10 h-10 rounded-full bg-green-500/20 flex flex-shrink-0 items-center justify-center">
-                <Check className="w-5 h-5 text-green-500" />
+              <div className={`w-9 h-9 rounded-xl flex flex-shrink-0 items-center justify-center ${
+                toastMessage.type === 'withdraw'
+                  ? 'bg-[#0098EA]/20 border border-[#0098EA]/30 text-[#0098EA]'
+                  : 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
+              }`}>
+                {toastMessage.type === 'withdraw' ? (
+                  <ArrowUpRight className="w-5 h-5 stroke-[2.5]" />
+                ) : (
+                  <Check className="w-5 h-5 stroke-[2.5]" />
+                )}
               </div>
               <div className="flex flex-col flex-1 min-w-0">
-                <span className="text-white font-bold text-[14px]">{t('topup_success')}</span>
-                <span className="text-white/70 text-[13px] font-medium flex items-center gap-1">
-                  +{Number(toastMessage.amount).toFixed(2)} 
+                <span className="text-white font-bold text-[13px] leading-tight">
+                  {toastMessage.type === 'withdraw' ? (toastMessage.title || 'Перевод отправлен') : t('topup_success')}
+                </span>
+                <span className="text-white/70 text-[12px] font-medium flex items-center gap-1 mt-0.5">
+                  {toastMessage.type === 'withdraw' ? '-' : '+'}{Number(toastMessage.amount).toFixed(2)} 
                   {toastMessage.method === 'stars' ? (
-                    <span className="flex items-center gap-1 text-[#FFD700]"><Star className="w-3.5 h-3.5 fill-current" /> Stars</span>
+                    <span className="flex items-center gap-1 text-[#FFD700] font-bold"><Star className="w-3.5 h-3.5 fill-current" /> Stars</span>
                   ) : (
-                    <span className="flex items-center gap-1 text-brand"><GramIcon className="w-3.5 h-3.5" /> Grams</span>
+                    <span className="flex items-center gap-1 text-[#0098EA] font-bold"><GramIcon className="w-3.5 h-3.5 text-[#0098EA]" /> Grams</span>
                   )}
                 </span>
               </div>

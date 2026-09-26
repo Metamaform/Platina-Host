@@ -5,6 +5,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { PremiumImage } from './PremiumImage';
 import { incrementStat, recordGameProgress } from '../lib/stats';
 import { GramIcon } from './GramIcon';
+import { getNftBackdrop } from '../lib/nftUtils';
+import { NftSelectorGrid } from './NftSelectorGrid';
+import { GameLossModal } from './GameLossModal';
 
 const MULTIPLIERS = [2, 5, 10, 15, 100];
 const MAX_BANK = 2500;
@@ -14,7 +17,14 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
   const { t } = useTranslation();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [spinning, setSpinning] = useState(false);
-  const [result, setResult] = useState<{status: 'win' | 'lose', item?: any, refund?: number} | null>(null);
+  const [result, setResult] = useState<{
+    status: 'win' | 'lose';
+    item?: any;
+    refund?: number;
+    lostItems?: any[];
+    totalValue?: number;
+    multiplier?: number;
+  } | null>(null);
   const [multiplier, setMultiplier] = useState<number>(() => {
     try {
       return Number(localStorage.getItem('craft_multiplier')) || 2;
@@ -25,38 +35,50 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
   const pendingResultRef = useRef<any>(null);
 
   const saveModelsToLocal = (uids: string[]) => {
+    if (!uids || uids.length === 0) {
+      localStorage.removeItem('craft_sourceModelIds');
+      return;
+    }
     const models = uids.map(uid => inventory.find(i => i.uniqueId === uid)?.id).filter(Boolean);
-    localStorage.setItem('craft_sourceModelIds', JSON.stringify(models));
+    if (models.length > 0) {
+      localStorage.setItem('craft_sourceModelIds', JSON.stringify(models));
+    } else {
+      localStorage.removeItem('craft_sourceModelIds');
+    }
   };
 
   useEffect(() => {
     localStorage.setItem('craft_multiplier', multiplier.toString());
   }, [multiplier]);
 
+  // Initial load only - do NOT auto-replace bet items with other identical items when inventory changes
+  const isInitRef = useRef(false);
   useEffect(() => {
-    try {
-      const savedModelsJson = localStorage.getItem('craft_sourceModelIds');
-      if (savedModelsJson) {
-        const desiredModelIds = JSON.parse(savedModelsJson) as string[];
-        const newSourceIds: string[] = [];
-        const usedUniqueIds = new Set<string>();
-        
-        for (const modelId of desiredModelIds) {
-          const item = inventory.find(i => i.id === modelId && !i.isWithdrawing && !usedUniqueIds.has(i.uniqueId));
-          if (item) {
-            newSourceIds.push(item.uniqueId);
-            usedUniqueIds.add(item.uniqueId);
+    if (!isInitRef.current) {
+      isInitRef.current = true;
+      try {
+        const savedModelsJson = localStorage.getItem('craft_sourceModelIds');
+        if (savedModelsJson) {
+          const desiredModelIds = JSON.parse(savedModelsJson) as string[];
+          const newSourceIds: string[] = [];
+          const usedUniqueIds = new Set<string>();
+          
+          for (const modelId of desiredModelIds) {
+            const item = inventory.find(i => i.id === modelId && !i.isWithdrawing && !usedUniqueIds.has(i.uniqueId));
+            if (item) {
+              newSourceIds.push(item.uniqueId);
+              usedUniqueIds.add(item.uniqueId);
+            }
+          }
+          if (newSourceIds.length > 0) {
+            setSelectedIds(newSourceIds);
           }
         }
-        
-        setSelectedIds(prev => {
-          if (prev.length === newSourceIds.length && prev.every((id, idx) => id === newSourceIds[idx])) {
-            return prev;
-          }
-          return newSourceIds;
-        });
-      }
-    } catch {}
+      } catch {}
+    } else {
+      // Keep only items that still exist in inventory; NEVER auto-fill others of the same model!
+      setSelectedIds(prev => prev.filter(uid => inventory.some(i => i.uniqueId === uid && !i.isWithdrawing)));
+    }
   }, [inventory]);
 
   useEffect(() => {
@@ -71,6 +93,9 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
   applyResultRef.current = (resultData: any) => {
     const { isWin, wonItem, refundAmount, idsToRemove, multiplier, totalValue } = resultData;
     
+    setSelectedIds([]);
+    localStorage.removeItem('craft_sourceModelIds');
+
     let newBal = balance;
     let newInv = [...inventory];
     
@@ -87,7 +112,7 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
         newInv = [wonItem, ...prev.filter(i => !idsToRemove.includes(i.uniqueId))];
         return newInv;
       });
-      onWin?.({ name: wonItem.name, image_url: wonItem.image_url, slug: wonItem.slug }, wonItem.price);
+      onWin?.({ id: wonItem.id, name: wonItem.name, image_url: wonItem.image_url, slug: wonItem.slug, backdrop: wonItem.backdrop || 'Default' }, wonItem.price);
     } else {
       setInventory((prev: any[]) => {
         newInv = prev.filter(i => !idsToRemove.includes(i.uniqueId));
@@ -164,17 +189,22 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
     let refundAmount = 0;
 
     if (isWin) {
-      // Find the best item that fits within the targetValue
-      const validItems = giftsDb.filter(i => i.floor_price_gram <= targetValue);
+      // Craft output restricted to normal random NFTs without background (Default backdrop)
+      const classicGifts = (giftsDb || []).filter(g => getNftBackdrop(g) === 'Default');
+      const validItems = classicGifts.filter(i => (i.floor_price_gram || i.price || 0) <= targetValue);
       let target;
       if (validItems.length > 0) {
-        target = validItems.sort((a, b) => b.floor_price_gram - a.floor_price_gram)[0];
+        // Pick randomly among the higher-tier items up to targetValue
+        const topTier = validItems.filter(i => (i.floor_price_gram || i.price || 0) >= targetValue * 0.65);
+        const pool = topTier.length > 0 ? topTier : validItems;
+        target = pool[Math.floor(Math.random() * pool.length)];
       } else {
-        target = [...giftsDb].sort((a, b) => a.floor_price_gram - b.floor_price_gram)[0];
+        target = [...classicGifts].sort((a, b) => (a.floor_price_gram || a.price || 0) - (b.floor_price_gram || b.price || 0))[0];
       }
 
-      wonItem = { ...target, uniqueId: Date.now().toString(), price: target.floor_price_gram, image_url: target.image_url };
-      refundAmount = Math.max(0, targetValue - target.floor_price_gram);
+      const itemPrice = Number(target?.floor_price_gram || target?.price || 0);
+      wonItem = { ...target, uniqueId: Date.now().toString(), price: itemPrice, image_url: target.image_url };
+      refundAmount = Math.max(0, Number((targetValue - itemPrice).toFixed(2)));
     }
     
     pendingResultRef.current = {
@@ -193,7 +223,17 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
       applyResultRef.current(pendingResultRef.current);
       pendingResultRef.current = null;
       
-      setResult({ status: isWin ? 'win' : 'lose', item: wonItem, refund: refundAmount });
+      setSelectedIds([]);
+      localStorage.removeItem('craft_sourceModelIds');
+
+      setResult({ 
+        status: isWin ? 'win' : 'lose', 
+        item: wonItem, 
+        refund: refundAmount,
+        lostItems: isWin ? undefined : selectedItems,
+        totalValue: totalValue,
+        multiplier: multiplier
+      });
       setSpinning(false);
     }
   };
@@ -288,42 +328,18 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
           </div>
         </div>
 
-        <div className="mt-8 space-y-8">
-          <div>
-            <h3 className="text-white/50 text-[12px] font-bold uppercase tracking-widest mb-4 px-5">{t('inventory')}</h3>
-            {availableInventory.length === 0 ? (
-              <p className="text-muted text-[14px] px-5 bg-white/5 mx-4 py-4 rounded-2xl text-center border border-white/5 border-dashed">{t('inventory_empty')}</p>
-            ) : (
-              <div className="grid grid-cols-3 gap-3 px-5 pb-4">
-                {availableInventory.map((item) => {
-                  const isSelected = selectedIds.includes(item.uniqueId);
-                  return (
-                    <button
-                      key={item.uniqueId || item.id || Math.random()}
-                      onClick={() => toggleSelection(item.uniqueId)}
-                      disabled={spinning}
-                      className={`relative overflow-hidden w-full aspect-[3/4] max-w-[115px] mx-auto rounded-[24px] border-2 flex flex-col items-center p-2 transition-all ${
-                        isSelected ? 'border-brand bg-brand/10 scale-95 opacity-50' : 'border-white/5 bg-[#181a20] hover:bg-[#1f2129]'
-                      }`}
-                    >
-                      <div className="flex-1 w-full flex items-center justify-center min-h-0 mb-2">
-                        <PremiumImage staticMode src={item.image_url} alt={item.name} className="w-[85%] h-[85%] object-contain drop-shadow-md" />
-                      </div>
-                      <div className="relative z-20 w-full flex flex-col items-center justify-end shrink-0">
-                        <span className="text-[11px] text-white/90 truncate w-[95%] text-center leading-none mb-1.5 drop-shadow-md">{item.name}</span>
-                        <span className="text-[14px] font-bold text-white leading-none drop-shadow-md flex items-center justify-center gap-1">{item.floor_price_gram || item.price || 0} <GramIcon className="w-3.5 h-3.5 drop-shadow-md" /></span>
-                      </div>
-                      {isSelected && (
-                         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                           <div className="bg-brand text-black rounded-full p-1"><X className="w-4 h-4" /></div>
-                         </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+        <div className="mt-8 px-4">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h3 className="text-white/50 text-[12px] font-bold uppercase tracking-widest">{t('inventory')}</h3>
+            <span className="text-xs text-white/40 font-medium">({selectedIds.length}/10)</span>
           </div>
+          <NftSelectorGrid
+            inventory={availableInventory}
+            selectedIds={selectedIds}
+            onSelect={(item) => toggleSelection(item.uniqueId)}
+            maxBetGram={MAX_BANK}
+            emptyText={t('inventory_empty')}
+          />
         </div>
       </div>
 
@@ -345,7 +361,7 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
       </div>
 
       <AnimatePresence>
-        {result && (
+        {result && result.status === 'win' && (
           <motion.div
              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
              className="fixed inset-0 z-[110] flex items-center justify-center bg-black/95 backdrop-blur-sm px-6"
@@ -354,112 +370,97 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
              <motion.div
                initial={{ scale: 0.95, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 10 }}
                onClick={(e) => e.stopPropagation()}
-               className={`w-full max-w-[280px] flex flex-col gap-2.5 mx-auto p-2 rounded-[28px] relative z-10 transition-all duration-300 shadow-2xl ${
-                 result.status === 'win' 
-                   ? 'border border-[#3b82f6]/20 bg-[#16181d] shadow-[0_4px_20px_-10px_rgba(59,130,246,0.1)]' 
-                   : 'bg-[#1c0606] border border-[#3f0d0d] p-8 items-center overflow-hidden shadow-[0_0_50px_rgba(239,68,68,0.15)]'
-               }`}
+               className="w-full max-w-[280px] flex flex-col gap-2.5 mx-auto p-2 rounded-[28px] relative z-10 transition-all duration-300 shadow-2xl border border-[#3b82f6]/20 bg-[#16181d] shadow-[0_4px_20px_-10px_rgba(59,130,246,0.1)]"
              >
-               {result.status === 'win' ? (
-                 <>
-                   <div className="w-full flex justify-center pt-1 relative">
-                     <div className="flex flex-col items-center">
-                       <span className="text-[11px] font-bold text-[#3b82f6] uppercase tracking-widest">Random</span>
-                       <span className="text-[8px] text-white/20 font-bold tracking-widest uppercase mt-0.5">Platina Gift</span>
-                     </div>
-                     <button onClick={() => setResult(null)} className="absolute top-0 right-1 p-1 text-white/40 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
-                   </div>
-                   <div className="relative overflow-hidden w-full aspect-square rounded-[20px] flex flex-col items-center p-1 transition-all duration-300">
-                     <div className="flex-1 w-full flex items-center justify-center min-h-0 mb-2">
-                       <PremiumImage 
-                         staticMode={false} 
-                         loopWithDelay={true} 
-                         loopDelayMs={5000} 
-                         src={result.item?.image_url || `/nft/${result.item?.name}.png`} 
-                         alt={result.item?.name} 
-                         className="w-[85%] h-[85%] object-contain drop-shadow-lg" 
-                       />
-                     </div>
-                     <div className="relative z-20 w-full flex flex-col items-center justify-end shrink-0 pb-1.5 px-1">
-                       <span className="text-[12px] text-white/90 w-full text-center font-bold leading-tight line-clamp-2">{result.item?.name}</span>
-                       <span className="text-[13px] font-bold text-white flex items-center justify-center gap-1 mt-0.5">{Number(result.item?.price || 0).toFixed(2)} <GramIcon className="w-3.5 h-3.5" /></span>
-                     </div>
-                   </div>
-                   
-                   <div className="flex flex-col gap-1.5 w-full mt-1">
-                     <div className="flex gap-1.5 w-full">
-                       <button 
-                         onClick={() => { setResult(null); if(onNavigate) onNavigate('upgrade'); }}
-                         className="flex-1 py-2.5 rounded-[10px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#22c55e] text-white hover:bg-[#16a34a] transition-colors"
-                       >
-                         <TrendingUp className="w-3.5 h-3.5 shrink-0" />
-                         <span className="truncate">{t('upgrade')}</span>
-                       </button>
-                       <button 
-                         onClick={() => { setResult(null); if(onNavigate) onNavigate('craft'); }}
-                         className="flex-1 py-2.5 rounded-[10px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#dc2626] text-white hover:bg-[#b91c1c] transition-colors"
-                       >
-                         <Shuffle className="w-3.5 h-3.5 shrink-0" />
-                         <span className="truncate">{t('craft')}</span>
-                       </button>
-                       <button 
-                         onClick={() => { setResult(null); if(onNavigate) onNavigate('mines'); }}
-                         className="flex-1 py-2.5 rounded-[10px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#a855f7] text-white hover:bg-[#9333ea] transition-colors"
-                       >
-                         <Bomb className="w-3.5 h-3.5 shrink-0" />
-                         <span className="truncate">Mines</span>
-                       </button>
-                     </div>
-                     <button 
-                       onClick={() => { setResult(null); if(onNavigate) onNavigate('inventory'); }}
-                       className="w-full py-3 rounded-[10px] text-[12px] font-bold flex items-center justify-center gap-1.5 bg-[#3b82f6] text-white hover:bg-[#2563eb] transition-colors"
-                     >
-                       {t('my_inventory')}
-                     </button>
-                     <button 
-                       onClick={() => {
-                         const itemPrice = Number(result.item?.price || 0);
-                         setBalance((prev: number) => {
-                           const newBal = Number((prev + itemPrice).toFixed(2));
-                           setInventory((prevInv: any[]) => {
-                             const newInv = prevInv.filter(i => i.uniqueId !== result.item?.uniqueId);
-                             fetch('/api/state', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionStorage.getItem('pg_session_token')}` }, body: JSON.stringify({ balance: newBal, inventory: newInv }) }).catch(()=>{});
-                             return newInv;
-                           });
-                           return newBal;
-                         });
-                         setResult(null);
-                       }}
-                       className="w-full py-3 flex items-center justify-center gap-1.5 rounded-[10px] text-[12px] font-bold bg-[#2a2c33] text-white/90 hover:bg-white/10 transition-colors"
-                     >
-                       {t('sell')} {Number(result.item?.price || 0).toFixed(2)} <GramIcon className="w-4 h-4 opacity-80" />
-                     </button>
-                   </div>
-                 </>
-               ) : (
-                 <>
-                   <button onClick={() => setResult(null)} className="absolute top-4 right-4 text-white/40 hover:text-white z-10 transition-colors"><X className="w-5 h-5" /></button>
-                   <div className="z-10 relative mt-2">
-                     <div className="w-[120px] h-[120px] flex items-center justify-center text-danger/80 bg-danger/10 rounded-[28px]">
-                       <Trash2 className="w-14 h-14" />
-                     </div>
-                   </div>
-                   <h3 className="font-display text-[28px] font-bold z-10 tracking-tight text-white mt-2">{t('fail')}</h3>
-                   <p className="text-white/60 text-[14px] text-center z-10 font-medium px-2 leading-relaxed">
-                     {t('craft_fail')}
-                   </p>
-                   <button
-                     onClick={() => setResult(null)}
-                     className="mt-4 w-full py-4 rounded-[16px] font-bold text-[15px] uppercase tracking-wider z-10 transition-colors bg-white/10 text-white hover:bg-white/20 border border-white/10"
+               <div className="w-full flex justify-center pt-1 relative">
+                 <div className="flex flex-col items-center">
+                   <span className="text-[11px] font-bold text-[#3b82f6] uppercase tracking-widest">Random</span>
+                   <span className="text-[8px] text-white/20 font-bold tracking-widest uppercase mt-0.5">Platina Gift</span>
+                 </div>
+                 <button onClick={() => setResult(null)} className="absolute top-0 right-1 p-1 text-white/40 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
+               </div>
+               <div className="relative overflow-hidden w-full aspect-square rounded-[20px] flex flex-col items-center p-1 transition-all duration-300">
+                 <div className="flex-1 w-full flex items-center justify-center min-h-0 mb-2">
+                   <PremiumImage 
+                     staticMode={false} 
+                     loopWithDelay={true} 
+                     loopDelayMs={5000} 
+                     src={result.item?.image_url || `/nft/${result.item?.name}.png`} 
+                     alt={result.item?.name} 
+                     className="w-[85%] h-[85%] object-contain drop-shadow-lg" 
+                   />
+                 </div>
+                 <div className="relative z-20 w-full flex flex-col items-center justify-end shrink-0 pb-1.5 px-1">
+                   <span className="text-[12px] text-white/90 w-full text-center font-bold leading-tight line-clamp-2">{result.item?.name}</span>
+                   <span className="text-[13px] font-bold text-white flex items-center justify-center gap-1 mt-0.5">{Number(result.item?.price || 0).toFixed(2)} <GramIcon className="w-3.5 h-3.5" /></span>
+                 </div>
+               </div>
+               
+               <div className="flex flex-col gap-1.5 w-full mt-1">
+                 <div className="flex gap-1.5 w-full">
+                   <button 
+                     onClick={() => { setResult(null); if(onNavigate) onNavigate('upgrade'); }}
+                     className="flex-1 py-2.5 rounded-[10px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#22c55e] text-white hover:bg-[#16a34a] transition-colors"
                    >
-                     Close
+                     <TrendingUp className="w-3.5 h-3.5 shrink-0" />
+                     <span className="truncate">{t('upgrade')}</span>
                    </button>
-                 </>
-               )}
+                   <button 
+                     onClick={() => { setResult(null); if(onNavigate) onNavigate('craft'); }}
+                     className="flex-1 py-2.5 rounded-[10px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#dc2626] text-white hover:bg-[#b91c1c] transition-colors"
+                   >
+                     <Shuffle className="w-3.5 h-3.5 shrink-0" />
+                     <span className="truncate">{t('craft')}</span>
+                   </button>
+                   <button 
+                     onClick={() => { setResult(null); if(onNavigate) onNavigate('mines'); }}
+                     className="flex-1 py-2.5 rounded-[10px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#a855f7] text-white hover:bg-[#9333ea] transition-colors"
+                   >
+                     <Bomb className="w-3.5 h-3.5 shrink-0" />
+                     <span className="truncate">Mines</span>
+                   </button>
+                 </div>
+                 <button 
+                   onClick={() => { setResult(null); if(onNavigate) onNavigate('inventory'); }}
+                   className="w-full py-3 rounded-[10px] text-[12px] font-bold flex items-center justify-center gap-1.5 bg-[#3b82f6] text-white hover:bg-[#2563eb] transition-colors"
+                 >
+                   {t('my_inventory')}
+                 </button>
+                 <button 
+                   onClick={() => {
+                     const itemPrice = Number(result.item?.price || 0);
+                     setBalance((prev: number) => {
+                       const newBal = Number((prev + itemPrice).toFixed(2));
+                       setInventory((prevInv: any[]) => {
+                         const newInv = prevInv.filter(i => i.uniqueId !== result.item?.uniqueId);
+                         fetch('/api/state', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionStorage.getItem('pg_session_token')}` }, body: JSON.stringify({ balance: newBal, inventory: newInv }) }).catch(()=>{});
+                         return newInv;
+                       });
+                       return newBal;
+                     });
+                     setResult(null);
+                   }}
+                   className="w-full py-3 flex items-center justify-center gap-1.5 rounded-[10px] text-[12px] font-bold bg-[#2a2c33] text-white/90 hover:bg-white/10 transition-colors"
+                 >
+                   {t('sell')} {Number(result.item?.price || 0).toFixed(2)} <GramIcon className="w-4 h-4 opacity-80" />
+                 </button>
+               </div>
              </motion.div>
            </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Beautiful Defeat Modal */}
+      <GameLossModal
+        isOpen={Boolean(result && result.status === 'lose')}
+        onClose={() => { setResult(null); setSelectedIds([]); }}
+        onRetry={() => {
+          setResult(null);
+          setSelectedIds([]);
+        }}
+        game="craft"
+        onNavigate={onNavigate}
+      />
     </div>
   );
 }

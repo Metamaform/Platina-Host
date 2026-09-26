@@ -158,10 +158,12 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
 
         if (gift) {
           
+          const itemBackdrop = gift.backdrop || (gift.id?.endsWith('_onyx') || gift.name?.includes('Onyx') ? 'Onyx Black' : gift.id?.endsWith('_black') || gift.name?.includes('(Black)') ? 'Black' : 'Default');
           const invItem = {
             ...gift,
             uniqueId: Date.now().toString() + Math.random().toString(),
-            acquiredAt: new Date().toISOString()
+            acquiredAt: new Date().toISOString(),
+            backdrop: itemBackdrop
           };
           if (!gift.isGram) {
             newInventory.push(invItem);
@@ -179,7 +181,7 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
               'Authorization': `Bearer ${sessionStorage.getItem('pg_session_token')}`
             },
             body: JSON.stringify({
-              gift: { id: gift.id, name: gift.name, pattern: gift.pattern, image_url: gift.image_url, lottieUrl: gift.lottieUrl, isGram: gift.isGram },
+              gift: { id: gift.id, name: gift.name, pattern: gift.pattern, image_url: gift.image_url, lottieUrl: gift.lottieUrl, isGram: gift.isGram, backdrop: itemBackdrop },
               price: selectedCase.price,
               isGram: !!gift.isGram,
               multiplier: 1,
@@ -236,21 +238,41 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
             <div className="flex-1 flex flex-col items-center justify-center w-full">
               <h3 className="text-xl font-bold text-white mb-4">{t("you_received")}</h3>
               <div className="flex flex-wrap gap-4 justify-center">
-                {results.map((r, i) => (
-                  <motion.div 
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: i * 0.1 }}
-                    key={i}
-                    className="w-32 h-auto bg-white/5 border border-white/10 rounded-xl flex flex-col items-center justify-center p-3"
-                  >
-                    {r.image_url && <PremiumImage src={r.image_url} alt={r.name || ''} className="w-24 h-24 mb-2 drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]" />}
-                    <div className="text-sm font-bold text-center text-white line-clamp-1 mb-1">{r.name}</div>
-                    <div className="flex items-center justify-center gap-1 bg-black/40 px-2 py-0.5 rounded text-brand font-bold text-sm">
-                      {Number(r.floor_price_gram || r.price || 0).toFixed(2)} <GramIcon className="w-3 h-3" />
-                    </div>
-                  </motion.div>
-                ))}
+                {results.map((r, i) => {
+                  const isOnyx = r.backdrop === 'Onyx Black';
+                  const isBlack = r.backdrop === 'Black';
+                  return (
+                    <motion.div 
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: i * 0.1 }}
+                      key={i}
+                      className={`w-32 h-auto rounded-xl flex flex-col items-center justify-center p-3 relative ${
+                        isOnyx
+                          ? 'bg-gradient-to-b from-[#1f1913] to-[#121214] border border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)]'
+                          : isBlack
+                          ? 'bg-gradient-to-b from-[#18181b] to-[#101012] border border-zinc-700 shadow-md'
+                          : 'bg-white/5 border border-white/10'
+                      }`}
+                    >
+                      {isOnyx && (
+                        <span className="text-[8px] font-black uppercase tracking-wider text-amber-300 px-1.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 mb-1">
+                          Onyx
+                        </span>
+                      )}
+                      {isBlack && (
+                        <span className="text-[8px] font-black uppercase tracking-wider text-zinc-300 px-1.5 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 mb-1">
+                          Black
+                        </span>
+                      )}
+                      {r.image_url && <PremiumImage src={r.image_url} alt={r.name || ''} className="w-24 h-24 mb-2 drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]" />}
+                      <div className="text-sm font-bold text-center text-white line-clamp-1 mb-1">{r.name}</div>
+                      <div className="flex items-center justify-center gap-1 bg-black/40 px-2 py-0.5 rounded text-brand font-bold text-sm">
+                        {Number(r.floor_price_gram || r.price || 0).toFixed(2)} <GramIcon className="w-3 h-3" />
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
               
               <div className="flex flex-col sm:flex-row gap-3 mt-8 w-full max-w-sm">
@@ -385,7 +407,7 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
                 if (!g) return null;
 
                 return (
-                  <div key={idx} className="bg-white/5 border border-white/10 rounded-xl flex flex-col items-center justify-center p-3 relative">
+                  <div key={idx} className="bg-white/5 border border-white/10 rounded-xl flex flex-col items-center justify-center p-3 relative h-full">
                     <div className="w-full flex items-center justify-center h-28 mb-3">
                       <PremiumImage src={g.image_url} alt={g.name || ''} className="w-full h-full drop-shadow-[0_0_15px_rgba(255,255,255,0.15)]" staticMode={true} />
                     </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PremiumImage } from './PremiumImage';
+import { LazyNftCard } from './LazyNftCard';
 import { Plus, Trash2, Edit2, Save, X, RotateCcw, Search, DownloadCloud, RefreshCw, Wand2, Check } from 'lucide-react';
 import defaultGiftsDb from '../gifts_data.json';
 import { fetchTelegramGifts, fetchTasks, Task } from '../lib/api';
@@ -50,10 +51,36 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
 
   const [newCase, setNewCase] = useState<any>({ name: '', price: 100, image: '', items: [] });
   const [newCaseItem, setNewCaseItem] = useState({ giftId: '', chance: 10 });
+  const [caseDropFilter, setCaseDropFilter] = useState<'all' | 'regular' | 'black' | 'onyx'>('all');
   const [editingCaseId, setEditingCaseId] = useState<string | null>(null);
 
   const [lbConfig, setLbConfig] = useState<any>({});
   const [lbSaved, setLbSaved] = useState(false);
+  const [isSyncingPrices, setIsSyncingPrices] = useState(false);
+  const [syncStatusMsg, setSyncStatusMsg] = useState<string | null>(null);
+
+  const handleManualSyncPrices = async () => {
+    setIsSyncingPrices(true);
+    setSyncStatusMsg('Синхронизация всех NFT (обычные + Black + Onyx)...');
+    try {
+      const res = await fetch('/api/fragment/sync', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${sessionStorage.getItem('pg_session_token')}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSyncStatusMsg(`Обновлено: ${data.regularCount} обычных, ${data.backdropsCount} Black/Onyx`);
+        setTimeout(() => window.location.reload(), 1200);
+      } else {
+        setSyncStatusMsg(`Ошибка: ${data.error || 'Сбой запроса'}`);
+      }
+    } catch (e: any) {
+      setSyncStatusMsg(`Ошибка: ${e.message}`);
+    } finally {
+      setIsSyncingPrices(false);
+      setTimeout(() => setSyncStatusMsg(null), 4000);
+    }
+  };
   
   useEffect(() => {
     fetch('/api/leaderboard/config', { cache: 'no-store' })
@@ -157,7 +184,36 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
       setNftSaved(true);
       setTimeout(() => setNftSaved(false), 2000);
     } else {
-      const newDb = (giftsDb || []).map(g => g.id === editingId ? { ...g, ...editForm } : g);
+      const currentGift = (giftsDb || []).find(g => g.id === editingId);
+      const isRegular = !currentGift?.backdrop || currentGift?.backdrop === 'Default' || !currentGift?.id.includes('_');
+      const baseName = currentGift?.baseName || currentGift?.name || editForm.baseName || editForm.name;
+      const slug = currentGift?.slug || editForm.slug;
+
+      const newDb = (giftsDb || []).map(g => {
+        if (g.id === editingId) {
+          return { ...g, ...editForm };
+        }
+        
+        // If editing a regular NFT, automatically apply image and animation/model changes
+        // to its Black and Onyx Black siblings so admin doesn't need to configure each one separately!
+        if (isRegular) {
+          const isSibling = 
+            (baseName && (g.baseName === baseName || g.name?.startsWith(baseName))) ||
+            (slug && g.slug === slug) ||
+            g.id === `${editingId}_black` ||
+            g.id === `${editingId}_onyx`;
+          
+          if (isSibling && (g.backdrop === 'Black' || g.backdrop === 'Onyx Black' || g.id.includes('_black') || g.id.includes('_onyx'))) {
+            return {
+              ...g,
+              image_url: editForm.image_url,
+              lottie_url: editForm.lottie_url !== undefined ? editForm.lottie_url : g.lottie_url,
+              animation_url: editForm.animation_url !== undefined ? editForm.animation_url : g.animation_url,
+            };
+          }
+        }
+        return g;
+      });
       setGiftsDb(newDb);
       setNftSaved(true);
       setTimeout(() => setNftSaved(false), 2000);
@@ -191,18 +247,34 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
       <div className="flex flex-col gap-4 px-2 mb-2">
         <h2 className="font-display text-2xl font-semibold">Админ Панель</h2>
         
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <button 
             onClick={() => {
               localStorage.removeItem('welcome_seen');
               fetch('/api/admin/reset-welcome', { method: 'POST', headers: { 'Authorization': `Bearer ${sessionStorage.getItem('pg_session_token')}` } })
                 .then(() => window.location.reload());
             }}
-            className="flex-1 py-2 text-sm font-bold rounded-xl transition-colors bg-brand text-white shadow-sm active:scale-95"
+            className="flex-1 py-2 text-sm font-bold rounded-xl transition-colors bg-white/10 hover:bg-white/20 text-white shadow-sm active:scale-95"
           >
-            🔄 Сбросить онбординг
+            Сбросить онбординг
+          </button>
+
+          <button 
+            onClick={handleManualSyncPrices}
+            disabled={isSyncingPrices}
+            className="flex-1 py-2 text-sm font-bold rounded-xl transition-colors bg-brand text-white shadow-sm active:scale-95 flex items-center justify-center gap-1.5 disabled:opacity-50"
+            title="Автоматическое обновление раз в 3 часа. Нажмите для принудительного обновления прямо сейчас."
+          >
+            <RefreshCw size={14} className={isSyncingPrices ? 'animate-spin' : ''} />
+            {isSyncingPrices ? 'Синхронизация...' : 'Обновить цены (каждые 3 ч)'}
           </button>
         </div>
+
+        {syncStatusMsg && (
+          <div className="text-xs font-semibold px-3 py-2 rounded-xl bg-brand/10 border border-brand/20 text-brand text-center animate-in fade-in">
+            {syncStatusMsg}
+          </div>
+        )}
         
         <div className="grid grid-cols-2 gap-1 bg-white/5 p-1 rounded-2xl border border-white/10">
           <button 
@@ -324,7 +396,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
                        <option value="Legendary">Legendary</option>
                        <option value="Mythic">Mythic</option>
                      </select>
-                 </div>
+                   </div>
+                   <div className="flex-1">
+                     <label className="text-xs text-muted uppercase tracking-wider font-bold ml-1 mb-1 block">Фон (Backdrop)</label>
+                     <select 
+                       className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white outline-none focus:border-brand transition-colors appearance-none" 
+                       value={editForm.backdrop || 'Default'} 
+                       onChange={e => setEditForm({...editForm, backdrop: e.target.value})}
+                     >
+                       <option value="Default">Default</option>
+                       <option value="Black">Black</option>
+                       <option value="Onyx Black">Onyx Black</option>
+                     </select>
+                   </div>
                  </div>
 
                  <div>
@@ -372,29 +456,41 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
           <div className="flex flex-col gap-3">
             {(giftsDb || [])
               .filter(gift => !dbSearch || gift.name.toLowerCase().includes(dbSearch.toLowerCase()))
-              .map(gift => (
-              <div key={gift.id} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-3 flex items-center gap-4 hover:bg-white/10 transition-colors">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-tr from-white/5 to-white/10 overflow-hidden shrink-0 border border-hairline">
-                  <PremiumImage src={gift.image_url} alt={gift.name} className="w-full h-full" staticMode />
-                </div>
-                <div className="flex flex-col flex-1 truncate">
-                  <span className="text-white font-bold text-lg truncate drop-shadow-md">{gift.name}</span>
-                  <div className="flex items-center gap-1 overflow-hidden mt-0.5">
-                    <span className="text-emerald-400 text-sm font-black flex items-center gap-1">{gift.floor_price_gram} <GramIcon className="w-3 h-3 drop-shadow-md" /></span>
-                    <span className="ml-2 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider border border-white/20 bg-white/5 text-white/60">
-                      {gift.rarity}
-                    </span>
+              .map((gift, idx) => (
+              <LazyNftCard key={gift.id} index={idx} minHeight="76px" placeholderClassName="h-[76px] rounded-2xl">
+                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-3 flex items-center gap-4 hover:bg-white/10 transition-colors">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-tr from-white/5 to-white/10 overflow-hidden shrink-0 border border-hairline">
+                    <PremiumImage src={gift.image_url} alt={gift.name} className="w-full h-full" staticMode />
+                  </div>
+                  <div className="flex flex-col flex-1 truncate">
+                    <span className="text-white font-bold text-lg truncate drop-shadow-md">{gift.name}</span>
+                    <div className="flex items-center gap-1 overflow-hidden mt-0.5">
+                      <span className="text-emerald-400 text-sm font-black flex items-center gap-1">{gift.floor_price_gram} <GramIcon className="w-3 h-3 drop-shadow-md" /></span>
+                      {gift.backdrop === 'Onyx Black' ? (
+                        <span className="ml-2 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border border-amber-500/40 bg-amber-500/20 text-amber-300">
+                          Onyx
+                        </span>
+                      ) : gift.backdrop === 'Black' ? (
+                        <span className="ml-2 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border border-zinc-700 bg-zinc-800 text-zinc-300">
+                          Black
+                        </span>
+                      ) : (
+                        <span className="ml-2 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider border border-white/20 bg-white/5 text-white/60">
+                          {gift.rarity}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-2 shrink-0 pr-1">
+                    <button onClick={() => openEdit(gift)} className="p-2.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-xl transition-colors active:scale-95">
+                      <Edit2 size={18}/>
+                    </button>
+                    <button onClick={() => handleDelete(gift.id)} className="p-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-colors active:scale-95">
+                      <Trash2 size={18}/>
+                    </button>
                   </div>
                 </div>
-                <div className="flex gap-2 shrink-0 pr-1">
-                  <button onClick={() => openEdit(gift)} className="p-2.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-xl transition-colors active:scale-95">
-                    <Edit2 size={18}/>
-                  </button>
-                  <button onClick={() => handleDelete(gift.id)} className="p-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-colors active:scale-95">
-                    <Trash2 size={18}/>
-                  </button>
-                </div>
-              </div>
+              </LazyNftCard>
             ))}
           </div>
 
@@ -451,14 +547,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
                         onClick={() => {
                           const base = defaultGiftsDb.find(g => g.slug === variantCollection);
                           if (base) {
-                            const existingIndex = giftsDb.findIndex(g => g.slug === variantCollection || g.name === base.name);
-                            if (existingIndex !== -1) {
-                              const newDb = [...giftsDb];
-                              newDb[existingIndex] = {
-                                ...newDb[existingIndex],
-                                image_url: v.image,
-                                lottie_url: ''
-                              };
+                            const baseName = base.baseName || base.name;
+                            const hasCollection = giftsDb.some(g => g.slug === variantCollection || g.name === base.name || g.baseName === baseName);
+                            if (hasCollection) {
+                              const newDb = giftsDb.map(g => {
+                                const isMatch = g.slug === variantCollection || g.name === base.name || g.baseName === baseName || g.name?.startsWith(baseName);
+                                if (isMatch) {
+                                  return {
+                                    ...g,
+                                    image_url: v.image,
+                                    lottie_url: ''
+                                  };
+                                }
+                                return g;
+                              });
                               setGiftsDb(newDb);
                             } else {
                               const newGift = {
@@ -788,15 +890,62 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
             <h4 className="text-sm font-semibold text-white">Настройка дропа</h4>
             <span className="text-xs text-white/50">{newCase.items.length} / 100 макс.</span>
           </div>
+
+          {/* Filter for Drop Items: All / Regular / Black / Onyx Black */}
+          <div className="flex gap-1 mb-2 bg-black/40 p-1 rounded-xl border border-white/5">
+            <button
+              type="button"
+              onClick={() => setCaseDropFilter('all')}
+              className={`flex-1 py-1 text-[11px] font-bold rounded-lg transition-colors ${caseDropFilter === 'all' ? 'bg-brand text-white shadow-sm' : 'text-white/50 hover:text-white'}`}
+            >
+              Все
+            </button>
+            <button
+              type="button"
+              onClick={() => setCaseDropFilter('regular')}
+              className={`flex-1 py-1 text-[11px] font-bold rounded-lg transition-colors ${caseDropFilter === 'regular' ? 'bg-white/20 text-white' : 'text-white/50 hover:text-white'}`}
+            >
+              Обычные
+            </button>
+            <button
+              type="button"
+              onClick={() => setCaseDropFilter('black')}
+              className={`flex-1 py-1 text-[11px] font-bold rounded-lg transition-colors ${caseDropFilter === 'black' ? 'bg-zinc-800 text-zinc-200 border border-zinc-700 shadow-sm' : 'text-white/50 hover:text-white'}`}
+            >
+              Black
+            </button>
+            <button
+              type="button"
+              onClick={() => setCaseDropFilter('onyx')}
+              className={`flex-1 py-1 text-[11px] font-bold rounded-lg transition-colors ${caseDropFilter === 'onyx' ? 'bg-gradient-to-r from-amber-500/20 to-neutral-900 text-amber-300 border border-amber-500/40 shadow-sm' : 'text-white/50 hover:text-white'}`}
+            >
+              Onyx Black
+            </button>
+          </div>
+
           <div className="flex flex-col gap-2 mb-2">
             <div className="flex gap-2">
-              <select className="flex-1 bg-black/40 border border-white/10 rounded-lg p-2 text-white" value={newCaseItem.giftId.startsWith('gram_') ? '' : newCaseItem.giftId} onChange={e => setNewCaseItem({...newCaseItem, giftId: e.target.value})}>
+              <select 
+                className="flex-1 bg-black/40 border border-white/10 rounded-lg p-2 text-white text-xs outline-none focus:border-brand" 
+                value={newCaseItem.giftId.startsWith('gram_') ? '' : newCaseItem.giftId} 
+                onChange={e => setNewCaseItem({...newCaseItem, giftId: e.target.value})}
+              >
                 <option value="">Выберите предмет</option>
-                {giftsDb.map(g => (
-                  <option key={g.id} value={g.id}>{g.name}</option>
-                ))}
+                {giftsDb
+                  .filter(g => {
+                    if (caseDropFilter === 'black') return g.backdrop === 'Black';
+                    if (caseDropFilter === 'onyx') return g.backdrop === 'Onyx Black';
+                    if (caseDropFilter === 'regular') return !g.backdrop || g.backdrop === 'Default';
+                    return true;
+                  })
+                  .map(g => (
+                    <option key={g.id} value={g.id}>
+                      {g.backdrop === 'Onyx Black' ? '[Onyx] ' : g.backdrop === 'Black' ? '[Black] ' : ''}
+                      {g.name} — {Number(g.floor_price_gram || g.price || 0).toFixed(2)} TON
+                    </option>
+                  ))}
               </select>
-              <input type="number" className="flex-1 bg-black/40 border border-white/10 rounded-lg p-2 text-white" placeholder="Или кол-во GRAM" value={newCaseItem.giftId.startsWith('gram_') ? newCaseItem.giftId.replace('gram_', '') : ''} onChange={e => setNewCaseItem({...newCaseItem, giftId: e.target.value ? 'gram_' + e.target.value : ''})} />
+              <input type="number" className="flex-1 bg-black/40 border border-white/10 rounded-lg p-2 text-white text-xs" placeholder="Или кол-во GRAM" value={newCaseItem.giftId.startsWith('gram_') ? newCaseItem.giftId.replace('gram_', '') : ''} onChange={e => setNewCaseItem({...newCaseItem, giftId: e.target.value ? 'gram_' + e.target.value : ''})} />
             </div>
             <div className="flex gap-2">
               <input type="number" className="flex-1 bg-black/40 border border-white/10 rounded-lg p-2 text-white" placeholder="Шанс (%)" value={newCaseItem.chance} onChange={e => setNewCaseItem({...newCaseItem, chance: Number(e.target.value)})} />
@@ -813,9 +962,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
               const g = giftsDb.find(x => x.id === item.giftId);
               return (
                 <div key={idx} className="flex justify-between items-center text-xs bg-white/5 p-2 rounded">
-                  <span>{item.giftId.startsWith('gram_') ? item.giftId.replace('gram_', '') + ' GRAM' : (g ? g.name : item.giftId)}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-brand">{item.chance}%</span>
+                    {g?.backdrop === 'Onyx Black' && (
+                      <span className="px-1.5 py-0.5 rounded text-[8px] font-black bg-gradient-to-r from-amber-500/20 to-neutral-900 text-amber-300 border border-amber-500/40">
+                        Onyx
+                      </span>
+                    )}
+                    {g?.backdrop === 'Black' && (
+                      <span className="px-1.5 py-0.5 rounded text-[8px] font-black bg-zinc-800 text-zinc-300 border border-zinc-700">
+                        Black
+                      </span>
+                    )}
+                    <span className="text-white font-medium">
+                      {item.giftId.startsWith('gram_') ? item.giftId.replace('gram_', '') + ' GRAM' : (g ? g.name : item.giftId)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-brand font-bold">{item.chance}%</span>
                     <button onClick={() => {
                       setNewCase({...newCase, items: newCase.items.filter((_:any, i:number) => i !== idx)});
                     }} className="text-red-400 hover:text-red-300"><Trash2 className="w-4 h-4"/></button>

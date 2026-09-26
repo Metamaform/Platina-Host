@@ -1,5 +1,97 @@
 [
   {
+    "id": "rocket-1790082684768-1337",
+    "ts": "2026-09-22T13:11:24.768Z",
+    "firstName": "Web",
+    "price": 423.67,
+    "isGram": false,
+    "gift": {
+      "id": "108_black",
+      "name": "Mini Oscar (Black)",
+      "baseName": "Mini Oscar",
+      "slug": "minioscar",
+      "backdrop": "Black",
+      "rarity": "Black",
+      "description": "Уникальный подарок из коллекции Mini Oscar с черным фоном (Black).",
+      "floor_price_gram": 407.94,
+      "image_url": "https://fragment.com/file/gifts/minioscar/model.pWf1XxFwCn4kFHLZF3jYpwetlnkVBzGbf86KhDID4AHRDWbE3JcLtMs8ecEtzRJZ.webp",
+      "animation_url": "",
+      "lottie_url": "",
+      "priceVal": 407.94,
+      "uniqueId": "x8iud0oxg",
+      "price": 407.94
+    },
+    "multiplier": 1.87
+  },
+  {
+    "id": "rocket-1790082439006-1337",
+    "ts": "2026-09-22T13:07:19.006Z",
+    "firstName": "Web",
+    "price": 187,
+    "isGram": false,
+    "gift": {
+      "id": "68",
+      "name": "Scared Cat",
+      "slug": "scaredcat",
+      "rarity": "Common",
+      "description": "Уникальный подарок из коллекции Scared Cats.",
+      "floor_price_gram": 185.93,
+      "image_url": "https://fragment.com/file/gifts/scaredcat/model.jfyyc8_dqATzg1rhSJ7ZbP1ehDoRi7KPl__0_lKN9ymE78O3E0wspR49ChSAsU2y.webp",
+      "animation_url": "",
+      "lottie_url": "",
+      "backdrop": "Default",
+      "baseName": "Scared Cat",
+      "priceVal": 185.93,
+      "uniqueId": "jphtdho8y",
+      "price": 185.93
+    },
+    "multiplier": 2.2
+  },
+  {
+    "id": "1790082342066-6yjujh",
+    "ts": "2026-09-22T13:05:42.066Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Heart Locket (Black)",
+      "image_url": "https://fragment.com/file/gifts/heartlocket/model.2NiKCqrWaamvKZoMiaJ1n6HegJu5dfV0A90uJgzfc8Z3Y7ACKO55EmG9LoTGruBK.webp",
+      "slug": "heartlocket",
+      "backdrop": "Black"
+    },
+    "price": 6900.3,
+    "isGram": false,
+    "game": "upgrade"
+  },
+  {
+    "id": "1790081566298-n7s7b7",
+    "ts": "2026-09-22T12:52:46.298Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Lunar Snake (Black)",
+      "image_url": "https://fragment.com/file/gifts/lunarsnake/model.68jKHjt4Ve4hTPueiarcOzG6cI-aoJQWSih7ppHrvkD5slmeMJWHBtudBKzHuv-Y.webp",
+      "slug": "lunarsnake",
+      "price": 39.48,
+      "backdrop": "Black"
+    },
+    "price": 39.58333333333333,
+    "isGram": false,
+    "multiplier": 1.9791666666666663,
+    "game": "mines"
+  },
+  {
+    "id": "1790081523612-7h48eu",
+    "ts": "2026-09-22T12:52:03.612Z",
+    "firstName": "Web",
+    "gift": {
+      "name": "Victory Medal (Black)",
+      "image_url": "https://fragment.com/file/gifts/victorymedal/model.T32XCojzYVemqEb1HXULg_yPJPX_e-mRrotsFshgG59rMEfMrhfvz9BWPTWGyjzU.webp",
+      "slug": "victorymedal",
+      "backdrop": "Black"
+    },
+    "price": 226.56,
+    "isGram": false,
+    "game": "upgrade"
+  },
+  {
     "id": "rocket-1789662937235-1337",
     "ts": "2026-09-17T16:35:37.235Z",
     "firstName": "Web",
@@ -2469,71 +2561,6 @@
     "firstName": "Web",
     "price": 5,
     "isGram": true,
-    "multiplier": 1,
-    "game": "cases"
-  },
-  {
-    "id": "1789213731948-kj1eqt",
-    "ts": "2026-09-12T11:48:51.948Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Ice Cream",
-      "image_url": "https://fragment.com/file/gifts/icecream/model.OOpkWM5wh8c8jEBwvL2CpKyijifvQIh03Y02VCZBk_hAFSKpK4vi6HE5oV8n7i03.webp"
-    },
-    "price": 5,
-    "isGram": false,
-    "multiplier": 1,
-    "game": "cases"
-  },
-  {
-    "id": "1789213731945-bnxcyk",
-    "ts": "2026-09-12T11:48:51.945Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Ice Cream",
-      "image_url": "https://fragment.com/file/gifts/icecream/model.OOpkWM5wh8c8jEBwvL2CpKyijifvQIh03Y02VCZBk_hAFSKpK4vi6HE5oV8n7i03.webp"
-    },
-    "price": 5,
-    "isGram": false,
-    "multiplier": 1,
-    "game": "cases"
-  },
-  {
-    "id": "1789213729784-lkkic5",
-    "ts": "2026-09-12T11:48:49.784Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Snow Globe",
-      "image_url": "https://nft.fragment.com/gift/snowglobe-1.webp"
-    },
-    "price": 5,
-    "isGram": false,
-    "multiplier": 1,
-    "game": "cases"
-  },
-  {
-    "id": "1789213729779-hshs5u",
-    "ts": "2026-09-12T11:48:49.779Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Winter Wreath",
-      "image_url": "https://fragment.com/file/gifts/winterwreath/model.E0zz2eidH_EGY3uKoXZ8HHpDOmA3WYFfI3w2xpSI03Uwbv_hNJgrnVfeadxY3equ.webp"
-    },
-    "price": 5,
-    "isGram": false,
-    "multiplier": 1,
-    "game": "cases"
-  },
-  {
-    "id": "1789213729776-vyeq99",
-    "ts": "2026-09-12T11:48:49.776Z",
-    "firstName": "Web",
-    "gift": {
-      "name": "Jingle Bells",
-      "image_url": "https://nft.fragment.com/gift/jinglebells-1.webp"
-    },
-    "price": 5,
-    "isGram": false,
     "multiplier": 1,
     "game": "cases"
   }

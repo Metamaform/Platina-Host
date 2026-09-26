@@ -120,19 +120,13 @@ export function useTelegramAuth() {
           },
           body: JSON.stringify({ balance, inventory, turnover, topups }),
         })
-          .then(res => res.json())
-          .then(data => {
-            if (data.forceReload) {
-              window.location.reload();
-            }
-          })
           .catch(() => {});
     },
     [state.token]
   );
 
   const recordOpen = useCallback(
-    (gift: { name: string; image_url?: string; slug?: string; price?: number } | null, price: number, type: 'nft' | 'gram' = 'nft', multiplier?: number, game?: string) => {
+    (gift: { id?: string; name: string; image_url?: string; slug?: string; price?: number; backdrop?: string } | null, price: number, type: 'nft' | 'gram' = 'nft', multiplier?: number, game?: string) => {
       if (!state.token) return;
       fetch('/api/opens', {
         method: 'POST',

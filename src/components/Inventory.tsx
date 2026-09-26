@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ArrowLeft, ArrowUpRight, ExternalLink, Diamond, TrendingUp, Shuffle, HelpCircle, Info } from 'lucide-react';
+import { X, ArrowLeft, ArrowUpRight, ExternalLink, Diamond, TrendingUp, Shuffle, HelpCircle, Info, AlertCircle } from 'lucide-react';
 import { PremiumImage } from './PremiumImage';
 import { GramIcon } from './GramIcon';
 import { useTranslation } from '../lib/i18n';
+import { cleanNftName, getNftBackdrop } from '../lib/nftUtils';
 
 export function Inventory({
   inventory,
@@ -14,7 +15,8 @@ export function Inventory({
   giftsDb,
   onGoToCases,
   onPlayUpgrade,
-  onPlayCraft
+  onPlayCraft,
+  onBack
 }: {
   inventory: any[];
   setInventory: any;
@@ -25,19 +27,58 @@ export function Inventory({
   onGoToCases: () => void;
   onPlayUpgrade?: () => void;
   onPlayCraft?: () => void;
+  onBack?: () => void;
 }) {
   const { t } = useTranslation();
   const [selectedNft, setSelectedNft] = useState<any>(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [showImportant, setShowImportant] = useState(false);
+  const [activeAnimIndex, setActiveAnimIndex] = useState<number>(0);
+
+  const handleNextAnim = useCallback((fromIndex: number) => {
+    setActiveAnimIndex((current) => {
+      if (current !== fromIndex) return current;
+      if (current >= inventory.length - 1) {
+        return -1; // Finished round, trigger 3-second pause
+      }
+      return current + 1;
+    });
+  }, [inventory.length]);
 
   useEffect(() => {
-    if (showHelp) {
+    if (activeAnimIndex === -1 && inventory.length > 0) {
+      const pauseTimer = setTimeout(() => {
+        setActiveAnimIndex(0);
+      }, 3000);
+      return () => clearTimeout(pauseTimer);
+    }
+  }, [activeAnimIndex, inventory.length]);
+
+  useEffect(() => {
+    if (activeAnimIndex < 0 || activeAnimIndex >= inventory.length) return;
+
+    // Safety fallback: if animation doesn't fire complete, progress after 2.8s
+    const fallbackTimer = setTimeout(() => {
+      handleNextAnim(activeAnimIndex);
+    }, 2800);
+
+    return () => clearTimeout(fallbackTimer);
+  }, [activeAnimIndex, inventory.length, handleNextAnim]);
+
+  useEffect(() => {
+    if (inventory.length > 0 && activeAnimIndex >= inventory.length) {
+      setActiveAnimIndex(0);
+    }
+  }, [inventory.length, activeAnimIndex]);
+
+  useEffect(() => {
+    if (showHelp || showImportant) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'auto';
     }
     return () => { document.body.style.overflow = 'auto'; };
-  }, [showHelp]);
+  }, [showHelp, showImportant]);
 
   const handleSell = (item: any) => {
     const itemPrice = Number(item.price);
@@ -144,17 +185,94 @@ export function Inventory({
             </motion.div>
           </>
         )}
+
+        {showImportant && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[999] bg-black/60 backdrop-blur-sm"
+              onClick={() => setShowImportant(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="fixed z-[1000] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-[#1a1c23] border border-amber-500/20 rounded-[28px] p-6 shadow-2xl flex flex-col max-h-[90vh] overflow-y-auto"
+            >
+              <button 
+                onClick={() => setShowImportant(false)}
+                className="absolute top-4 right-4 p-2 text-white/40 hover:text-white bg-white/5 rounded-full transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              
+              <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center mb-4 text-amber-400">
+                <AlertCircle className="w-6 h-6" />
+              </div>
+              
+              <h3 className="text-xl font-bold text-white mb-4">{t('important_title')}</h3>
+              
+              <div className="space-y-3">
+                <div className="bg-white/5 rounded-xl p-3.5 border border-white/5">
+                  <p className="text-white/90 text-[13px] leading-relaxed">
+                    {t('important_text1')}
+                  </p>
+                </div>
+                
+                <div className="bg-white/5 rounded-xl p-3.5 border border-amber-500/10">
+                  <p className="text-white/80 text-[13px] leading-relaxed">
+                    {t('important_text2')}
+                  </p>
+                </div>
+
+                <div className="bg-white/5 rounded-xl p-3.5 border border-amber-500/10">
+                  <p className="text-white/80 text-[13px] leading-relaxed">
+                    {t('important_text3')}
+                  </p>
+                </div>
+              </div>
+              
+              <button 
+                onClick={() => setShowImportant(false)}
+                className="w-full mt-6 py-3 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-xl active:scale-95 transition-all"
+              >
+                {t('help_got_it')}
+              </button>
+            </motion.div>
+          </>
+        )}
       </AnimatePresence>
 
       <div className="glass-panel rounded-[32px] overflow-hidden p-4 sm:p-5 flex-1 min-h-[400px] border border-white/5">
         <div className="flex items-center justify-between mb-4 px-2">
-          <h3 className="font-display font-bold text-xl">{t('my_inventory')}</h3>
-          <button 
-            onClick={() => setShowHelp(true)}
-            className="p-1.5 text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-colors active:scale-95"
-          >
-            <HelpCircle className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2.5">
+            {onBack && (
+              <button 
+                onClick={onBack}
+                className="w-8 h-8 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all active:scale-95 cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+            )}
+            <h3 className="font-display font-bold text-xl">{t('my_inventory')}</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setShowImportant(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-amber-500/25 active:scale-95 transition-all text-[12px] font-bold"
+            >
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              <span>{t('important_btn')}</span>
+            </button>
+            <button 
+              onClick={() => setShowHelp(true)}
+              className="p-1.5 text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-colors active:scale-95"
+            >
+              <HelpCircle className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {inventory.length === 0 ? (
@@ -205,30 +323,57 @@ export function Inventory({
           <div className="grid grid-cols-2 gap-3 pb-24 px-1">
 
             {inventory.map((item, i) => {
-              let currentPrice = Number(item.price);
+              const itemBackdrop = getNftBackdrop(item);
+              let currentPrice = Number(item.floor_price_gram || item.price || 0);
+
+              let dbItem: any = null;
               if (giftsDb) {
-                const dbItem = giftsDb.find((g: any) => (item.slug && g.slug === item.slug) || g.name === item.name || g.image_url === item.image_url);
+                dbItem = giftsDb.find((g: any) => 
+                  (item.id && g.id === item.id) ||
+                  (itemBackdrop !== 'Default' && g.backdrop === itemBackdrop && (g.name === item.name || cleanNftName(g.name) === cleanNftName(item.name) || g.slug === item.slug)) ||
+                  (itemBackdrop === 'Default' && (g.backdrop || 'Default') === 'Default' && (g.name === item.name || cleanNftName(g.name) === cleanNftName(item.name) || g.slug === item.slug))
+                ) || giftsDb.find((g: any) => item.name && g.name === item.name);
+
                 if (dbItem && dbItem.floor_price_gram != null) {
                   currentPrice = Number(dbItem.floor_price_gram);
                 }
-                if (dbItem) {
-                  item.displayName = dbItem.name;
-                  item.displayImage = dbItem.lottie_url || dbItem.image_url;
-                }
               }
-              const displayName = item.displayName || item.name;
-              const displayImage = item.displayImage || item.image_url || `/nft/${item.name}.png`;
+
+              const displayName = item.displayName || dbItem?.name || item.name;
+              const displayImage = (dbItem && (dbItem.backdrop === itemBackdrop || itemBackdrop === 'Default'))
+                ? (dbItem.lottie_url || dbItem.image_url)
+                : (item.displayImage || item.image_url || dbItem?.lottie_url || dbItem?.image_url || `/nft/${item.name}.png`);
+
+              if (itemBackdrop !== 'Default') {
+                item.backdrop = itemBackdrop;
+              } else if (dbItem?.backdrop) {
+                item.backdrop = dbItem.backdrop;
+              }
+              item.displayImage = displayImage;
+
+              const isOnyx = itemBackdrop === 'Onyx Black';
+              const isBlack = itemBackdrop === 'Black';
 
               return (
+                <div key={item.uniqueId || i} className="w-full">
                 <div
-                  key={item.uniqueId || i}
-                  className={`flex flex-col gap-2.5 w-full mx-auto p-2 rounded-[28px] border border-[#3b82f6]/20 bg-[#16181d] shadow-[0_4px_20px_-10px_rgba(59,130,246,0.1)] transition-all duration-300 ${
+                  className={`flex flex-col gap-2.5 w-full mx-auto p-2 rounded-[28px] border ${
+                    isBlack 
+                      ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/10' 
+                      : isOnyx 
+                        ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/10' 
+                        : 'bg-[#16181d] border-[#3b82f6]/20'
+                  } ${
                     item.isWithdrawing ? 'opacity-80 grayscale-[0.3]' : ''
                   }`}
                 >
                   <div className="w-full flex justify-center pt-1">
                     <div className="flex flex-col items-center">
-                      <span className="text-[11px] font-bold text-[#3b82f6] uppercase tracking-widest">Random</span>
+                      <span className={`text-[11px] font-bold uppercase tracking-widest ${
+                        isOnyx ? 'text-zinc-300' : isBlack ? 'text-zinc-400' : 'text-[#3b82f6]'
+                      }`}>
+                        {isOnyx ? 'Onyx Black' : isBlack ? 'Black' : 'Random'}
+                      </span>
                       <span className="text-[8px] text-white/20 font-bold tracking-widest uppercase mt-0.5">Platina Gift</span>
                     </div>
                   </div>
@@ -240,16 +385,15 @@ export function Inventory({
                     <div className="flex-1 w-full flex items-center justify-center min-h-0 mb-2">
                       <PremiumImage 
                         staticMode={false} 
-                        loopWithDelay={true} 
-                        loopDelayMs={5000} 
-                        delayMs={i * 800} 
+                        isPlaying={activeAnimIndex === i}
+                        onAnimationComplete={() => handleNextAnim(i)}
                         src={displayImage} 
                         alt={displayName} 
                         className="w-[85%] h-[85%] object-contain drop-shadow-lg" 
                       />
                     </div>
                     <div className="relative z-20 w-full flex flex-col items-center justify-end shrink-0 pb-1.5 px-1">
-                      <span className="text-[12px] text-white/90 w-full text-center font-bold leading-tight line-clamp-2">{displayName}</span>
+                      <span className="text-[12px] text-white/90 w-full text-center font-bold leading-tight line-clamp-2">{cleanNftName(displayName)}</span>
                       <span className="text-[13px] font-bold text-white flex items-center justify-center gap-1 mt-0.5">{currentPrice.toFixed(2)} <GramIcon className="w-3.5 h-3.5" /></span>
                     </div>
                     
@@ -312,6 +456,7 @@ export function Inventory({
                       {t('sell')} {currentPrice.toFixed(2)} <GramIcon className="w-4 h-4 opacity-80" />
                     </button>
                   </div>
+                </div>
                 </div>
               );
             })}

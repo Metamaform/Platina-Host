@@ -1,0 +1,961 @@
+{
+  "canvas_size": [
+    1254,
+    1254
+  ],
+  "wheel_center": [
+    617,
+    583
+  ],
+  "radii": {
+    "hub_outer_including_blue_ring": 213,
+    "segments_inner": 212,
+    "segments_outer": 390,
+    "bezel_inner": 404,
+    "bezel_outer": 452
+  },
+  "notes": "Все координаты и радиусы указаны в пикселях относительно исходного изображения 1254x1254. angle_start/angle_end — угол в градусах по часовой стрелке от 0° (0° = направление указателя вверх).",
+  "parts": {
+    "outer_bezel_ring.png": "Внешнее серое кольцо с делениями — статичная рама колеса",
+    "center_hub.png": "Центральная втулка с синим неоновым кольцом — статичный центр",
+    "pointer_gem.png": "Золотой указатель (кристалл) сверху — статичный, не вращается"
+  },
+  "segments": [
+    {
+      "index": 1,
+      "file": "segment_01_green.png",
+      "color": "green",
+      "angle_start": 3.25,
+      "angle_end": 8.24,
+      "bbox_in_full_image": [
+        626,
+        190,
+        676,
+        377
+      ]
+    },
+    {
+      "index": 2,
+      "file": "segment_02_green.png",
+      "color": "green",
+      "angle_start": 8.24,
+      "angle_end": 13.29,
+      "bbox_in_full_image": [
+        644,
+        194,
+        710,
+        380
+      ]
+    },
+    {
+      "index": 3,
+      "file": "segment_03_grey.png",
+      "color": "grey",
+      "angle_start": 13.29,
+      "angle_end": 18.26,
+      "bbox_in_full_image": [
+        662,
+        200,
+        743,
+        385
+      ]
+    },
+    {
+      "index": 4,
+      "file": "segment_04_grey.png",
+      "color": "grey",
+      "angle_start": 18.26,
+      "angle_end": 23.16,
+      "bbox_in_full_image": [
+        680,
+        209,
+        774,
+        392
+      ]
+    },
+    {
+      "index": 5,
+      "file": "segment_05_grey.png",
+      "color": "grey",
+      "angle_start": 23.16,
+      "angle_end": 28.04,
+      "bbox_in_full_image": [
+        697,
+        221,
+        804,
+        399
+      ]
+    },
+    {
+      "index": 6,
+      "file": "segment_06_grey.png",
+      "color": "grey",
+      "angle_start": 28.04,
+      "angle_end": 32.91,
+      "bbox_in_full_image": [
+        713,
+        235,
+        832,
+        409
+      ]
+    },
+    {
+      "index": 7,
+      "file": "segment_07_green.png",
+      "color": "green",
+      "angle_start": 32.91,
+      "angle_end": 37.84,
+      "bbox_in_full_image": [
+        729,
+        252,
+        860,
+        419
+      ]
+    },
+    {
+      "index": 8,
+      "file": "segment_08_green.png",
+      "color": "green",
+      "angle_start": 37.84,
+      "angle_end": 42.7,
+      "bbox_in_full_image": [
+        744,
+        271,
+        885,
+        431
+      ]
+    },
+    {
+      "index": 9,
+      "file": "segment_09_green.png",
+      "color": "green",
+      "angle_start": 42.7,
+      "angle_end": 47.56,
+      "bbox_in_full_image": [
+        757,
+        293,
+        908,
+        443
+      ]
+    },
+    {
+      "index": 10,
+      "file": "segment_10_grey.png",
+      "color": "grey",
+      "angle_start": 47.56,
+      "angle_end": 52.44,
+      "bbox_in_full_image": [
+        770,
+        316,
+        930,
+        457
+      ]
+    },
+    {
+      "index": 11,
+      "file": "segment_11_grey.png",
+      "color": "grey",
+      "angle_start": 52.44,
+      "angle_end": 57.38,
+      "bbox_in_full_image": [
+        782,
+        342,
+        949,
+        472
+      ]
+    },
+    {
+      "index": 12,
+      "file": "segment_12_grey.png",
+      "color": "grey",
+      "angle_start": 57.38,
+      "angle_end": 62.39,
+      "bbox_in_full_image": [
+        792,
+        369,
+        966,
+        488
+      ]
+    },
+    {
+      "index": 13,
+      "file": "segment_13_red.png",
+      "color": "red",
+      "angle_start": 62.39,
+      "angle_end": 67.25,
+      "bbox_in_full_image": [
+        801,
+        399,
+        980,
+        505
+      ]
+    },
+    {
+      "index": 14,
+      "file": "segment_14_red.png",
+      "color": "red",
+      "angle_start": 67.25,
+      "angle_end": 71.94,
+      "bbox_in_full_image": [
+        809,
+        429,
+        991,
+        521
+      ]
+    },
+    {
+      "index": 15,
+      "file": "segment_15_grey.png",
+      "color": "grey",
+      "angle_start": 71.94,
+      "angle_end": 76.61,
+      "bbox_in_full_image": [
+        815,
+        459,
+        1000,
+        537
+      ]
+    },
+    {
+      "index": 16,
+      "file": "segment_16_grey.png",
+      "color": "grey",
+      "angle_start": 76.61,
+      "angle_end": 81.38,
+      "bbox_in_full_image": [
+        820,
+        489,
+        1006,
+        555
+      ]
+    },
+    {
+      "index": 17,
+      "file": "segment_17_grey.png",
+      "color": "grey",
+      "angle_start": 81.38,
+      "angle_end": 86.17,
+      "bbox_in_full_image": [
+        823,
+        521,
+        1010,
+        572
+      ]
+    },
+    {
+      "index": 18,
+      "file": "segment_18_green.png",
+      "color": "green",
+      "angle_start": 86.17,
+      "angle_end": 90.96,
+      "bbox_in_full_image": [
+        825,
+        553,
+        1010,
+        593
+      ]
+    },
+    {
+      "index": 19,
+      "file": "segment_19_green.png",
+      "color": "green",
+      "angle_start": 90.96,
+      "angle_end": 95.94,
+      "bbox_in_full_image": [
+        824,
+        583,
+        1010,
+        627
+      ]
+    },
+    {
+      "index": 20,
+      "file": "segment_20_green.png",
+      "color": "green",
+      "angle_start": 95.94,
+      "angle_end": 100.83,
+      "bbox_in_full_image": [
+        822,
+        601,
+        1008,
+        660
+      ]
+    },
+    {
+      "index": 21,
+      "file": "segment_21_grey.png",
+      "color": "grey",
+      "angle_start": 100.83,
+      "angle_end": 105.86,
+      "bbox_in_full_image": [
+        817,
+        619,
+        1004,
+        693
+      ]
+    },
+    {
+      "index": 22,
+      "file": "segment_22_grey.png",
+      "color": "grey",
+      "angle_start": 105.86,
+      "angle_end": 110.58,
+      "bbox_in_full_image": [
+        812,
+        637,
+        996,
+        724
+      ]
+    },
+    {
+      "index": 23,
+      "file": "segment_23_grey.png",
+      "color": "grey",
+      "angle_start": 110.58,
+      "angle_end": 115.46,
+      "bbox_in_full_image": [
+        805,
+        654,
+        986,
+        754
+      ]
+    },
+    {
+      "index": 24,
+      "file": "segment_24_grey.png",
+      "color": "grey",
+      "angle_start": 115.46,
+      "angle_end": 120.53,
+      "bbox_in_full_image": [
+        796,
+        671,
+        973,
+        785
+      ]
+    },
+    {
+      "index": 25,
+      "file": "segment_25_red.png",
+      "color": "red",
+      "angle_start": 120.53,
+      "angle_end": 125.45,
+      "bbox_in_full_image": [
+        786,
+        687,
+        956,
+        813
+      ]
+    },
+    {
+      "index": 26,
+      "file": "segment_26_red.png",
+      "color": "red",
+      "angle_start": 125.45,
+      "angle_end": 130.53,
+      "bbox_in_full_image": [
+        775,
+        702,
+        938,
+        840
+      ]
+    },
+    {
+      "index": 27,
+      "file": "segment_27_grey.png",
+      "color": "grey",
+      "angle_start": 130.53,
+      "angle_end": 135.84,
+      "bbox_in_full_image": [
+        761,
+        717,
+        917,
+        866
+      ]
+    },
+    {
+      "index": 28,
+      "file": "segment_28_green.png",
+      "color": "green",
+      "angle_start": 135.84,
+      "angle_end": 140.97,
+      "bbox_in_full_image": [
+        747,
+        732,
+        892,
+        889
+      ]
+    },
+    {
+      "index": 29,
+      "file": "segment_29_green.png",
+      "color": "green",
+      "angle_start": 140.97,
+      "angle_end": 146.18,
+      "bbox_in_full_image": [
+        732,
+        744,
+        866,
+        910
+      ]
+    },
+    {
+      "index": 30,
+      "file": "segment_30_green.png",
+      "color": "green",
+      "angle_start": 146.18,
+      "angle_end": 151.43,
+      "bbox_in_full_image": [
+        715,
+        756,
+        838,
+        929
+      ]
+    },
+    {
+      "index": 31,
+      "file": "segment_31_grey.png",
+      "color": "grey",
+      "angle_start": 151.43,
+      "angle_end": 156.64,
+      "bbox_in_full_image": [
+        698,
+        766,
+        807,
+        945
+      ]
+    },
+    {
+      "index": 32,
+      "file": "segment_32_grey.png",
+      "color": "grey",
+      "angle_start": 156.64,
+      "angle_end": 161.84,
+      "bbox_in_full_image": [
+        680,
+        774,
+        775,
+        957
+      ]
+    },
+    {
+      "index": 33,
+      "file": "segment_33_grey.png",
+      "color": "grey",
+      "angle_start": 161.84,
+      "angle_end": 167.09,
+      "bbox_in_full_image": [
+        661,
+        781,
+        742,
+        967
+      ]
+    },
+    {
+      "index": 34,
+      "file": "segment_34_grey.png",
+      "color": "grey",
+      "angle_start": 167.09,
+      "angle_end": 172.54,
+      "bbox_in_full_image": [
+        641,
+        786,
+        708,
+        973
+      ]
+    },
+    {
+      "index": 35,
+      "file": "segment_35_red.png",
+      "color": "red",
+      "angle_start": 172.54,
+      "angle_end": 177.9,
+      "bbox_in_full_image": [
+        621,
+        790,
+        671,
+        976
+      ]
+    },
+    {
+      "index": 36,
+      "file": "segment_36_grey.png",
+      "color": "grey",
+      "angle_start": 177.9,
+      "angle_end": 183.25,
+      "bbox_in_full_image": [
+        591,
+        791,
+        635,
+        976
+      ]
+    },
+    {
+      "index": 37,
+      "file": "segment_37_grey.png",
+      "color": "grey",
+      "angle_start": 183.25,
+      "angle_end": 188.81,
+      "bbox_in_full_image": [
+        554,
+        789,
+        608,
+        976
+      ]
+    },
+    {
+      "index": 38,
+      "file": "segment_38_grey.png",
+      "color": "grey",
+      "angle_start": 188.81,
+      "angle_end": 194.09,
+      "bbox_in_full_image": [
+        519,
+        785,
+        588,
+        972
+      ]
+    },
+    {
+      "index": 39,
+      "file": "segment_39_grey.png",
+      "color": "grey",
+      "angle_start": 194.09,
+      "angle_end": 199.26,
+      "bbox_in_full_image": [
+        485,
+        780,
+        569,
+        965
+      ]
+    },
+    {
+      "index": 40,
+      "file": "segment_40_grey.png",
+      "color": "grey",
+      "angle_start": 199.26,
+      "angle_end": 204.39,
+      "bbox_in_full_image": [
+        452,
+        773,
+        551,
+        955
+      ]
+    },
+    {
+      "index": 41,
+      "file": "segment_41_grey.png",
+      "color": "grey",
+      "angle_start": 204.39,
+      "angle_end": 209.56,
+      "bbox_in_full_image": [
+        421,
+        764,
+        533,
+        942
+      ]
+    },
+    {
+      "index": 42,
+      "file": "segment_42_green.png",
+      "color": "green",
+      "angle_start": 209.56,
+      "angle_end": 214.8,
+      "bbox_in_full_image": [
+        391,
+        754,
+        516,
+        926
+      ]
+    },
+    {
+      "index": 43,
+      "file": "segment_43_green.png",
+      "color": "green",
+      "angle_start": 214.8,
+      "angle_end": 220.04,
+      "bbox_in_full_image": [
+        363,
+        742,
+        500,
+        907
+      ]
+    },
+    {
+      "index": 44,
+      "file": "segment_44_red.png",
+      "color": "red",
+      "angle_start": 220.04,
+      "angle_end": 225.22,
+      "bbox_in_full_image": [
+        337,
+        729,
+        484,
+        885
+      ]
+    },
+    {
+      "index": 45,
+      "file": "segment_45_red.png",
+      "color": "red",
+      "angle_start": 225.22,
+      "angle_end": 230.43,
+      "bbox_in_full_image": [
+        313,
+        715,
+        470,
+        861
+      ]
+    },
+    {
+      "index": 46,
+      "file": "segment_46_grey.png",
+      "color": "grey",
+      "angle_start": 230.43,
+      "angle_end": 235.25,
+      "bbox_in_full_image": [
+        293,
+        700,
+        457,
+        835
+      ]
+    },
+    {
+      "index": 47,
+      "file": "segment_47_grey.png",
+      "color": "grey",
+      "angle_start": 235.25,
+      "angle_end": 240.19,
+      "bbox_in_full_image": [
+        275,
+        685,
+        446,
+        809
+      ]
+    },
+    {
+      "index": 48,
+      "file": "segment_48_grey.png",
+      "color": "grey",
+      "angle_start": 240.19,
+      "angle_end": 245.05,
+      "bbox_in_full_image": [
+        260,
+        669,
+        437,
+        780
+      ]
+    },
+    {
+      "index": 49,
+      "file": "segment_49_grey.png",
+      "color": "grey",
+      "angle_start": 245.05,
+      "angle_end": 250.01,
+      "bbox_in_full_image": [
+        247,
+        652,
+        428,
+        751
+      ]
+    },
+    {
+      "index": 50,
+      "file": "segment_50_green.png",
+      "color": "green",
+      "angle_start": 250.01,
+      "angle_end": 254.74,
+      "bbox_in_full_image": [
+        237,
+        635,
+        421,
+        720
+      ]
+    },
+    {
+      "index": 51,
+      "file": "segment_51_green.png",
+      "color": "green",
+      "angle_start": 254.74,
+      "angle_end": 259.34,
+      "bbox_in_full_image": [
+        230,
+        619,
+        416,
+        689
+      ]
+    },
+    {
+      "index": 52,
+      "file": "segment_52_green.png",
+      "color": "green",
+      "angle_start": 259.34,
+      "angle_end": 264.06,
+      "bbox_in_full_image": [
+        226,
+        601,
+        412,
+        659
+      ]
+    },
+    {
+      "index": 53,
+      "file": "segment_53_grey.png",
+      "color": "grey",
+      "angle_start": 264.06,
+      "angle_end": 269.04,
+      "bbox_in_full_image": [
+        224,
+        583,
+        410,
+        627
+      ]
+    },
+    {
+      "index": 54,
+      "file": "segment_54_grey.png",
+      "color": "grey",
+      "angle_start": 269.04,
+      "angle_end": 273.82,
+      "bbox_in_full_image": [
+        224,
+        553,
+        409,
+        593
+      ]
+    },
+    {
+      "index": 55,
+      "file": "segment_55_grey.png",
+      "color": "grey",
+      "angle_start": 273.82,
+      "angle_end": 278.81,
+      "bbox_in_full_image": [
+        224,
+        520,
+        411,
+        572
+      ]
+    },
+    {
+      "index": 56,
+      "file": "segment_56_grey.png",
+      "color": "grey",
+      "angle_start": 278.81,
+      "angle_end": 283.79,
+      "bbox_in_full_image": [
+        228,
+        487,
+        415,
+        554
+      ]
+    },
+    {
+      "index": 57,
+      "file": "segment_57_green.png",
+      "color": "green",
+      "angle_start": 283.79,
+      "angle_end": 288.93,
+      "bbox_in_full_image": [
+        235,
+        453,
+        420,
+        536
+      ]
+    },
+    {
+      "index": 58,
+      "file": "segment_58_green.png",
+      "color": "green",
+      "angle_start": 288.93,
+      "angle_end": 294.21,
+      "bbox_in_full_image": [
+        245,
+        420,
+        427,
+        518
+      ]
+    },
+    {
+      "index": 59,
+      "file": "segment_59_green.png",
+      "color": "green",
+      "angle_start": 294.21,
+      "angle_end": 299.18,
+      "bbox_in_full_image": [
+        258,
+        389,
+        435,
+        500
+      ]
+    },
+    {
+      "index": 60,
+      "file": "segment_60_grey.png",
+      "color": "grey",
+      "angle_start": 299.18,
+      "angle_end": 304.24,
+      "bbox_in_full_image": [
+        273,
+        360,
+        445,
+        483
+      ]
+    },
+    {
+      "index": 61,
+      "file": "segment_61_grey.png",
+      "color": "grey",
+      "angle_start": 304.24,
+      "angle_end": 309.29,
+      "bbox_in_full_image": [
+        291,
+        333,
+        456,
+        467
+      ]
+    },
+    {
+      "index": 62,
+      "file": "segment_62_grey.png",
+      "color": "grey",
+      "angle_start": 309.29,
+      "angle_end": 314.23,
+      "bbox_in_full_image": [
+        312,
+        307,
+        469,
+        452
+      ]
+    },
+    {
+      "index": 63,
+      "file": "segment_63_red.png",
+      "color": "red",
+      "angle_start": 314.23,
+      "angle_end": 319.2,
+      "bbox_in_full_image": [
+        334,
+        284,
+        482,
+        439
+      ]
+    },
+    {
+      "index": 64,
+      "file": "segment_64_red.png",
+      "color": "red",
+      "angle_start": 319.2,
+      "angle_end": 324.07,
+      "bbox_in_full_image": [
+        359,
+        264,
+        496,
+        426
+      ]
+    },
+    {
+      "index": 65,
+      "file": "segment_65_red.png",
+      "color": "red",
+      "angle_start": 324.07,
+      "angle_end": 328.9,
+      "bbox_in_full_image": [
+        385,
+        246,
+        511,
+        415
+      ]
+    },
+    {
+      "index": 66,
+      "file": "segment_66_grey.png",
+      "color": "grey",
+      "angle_start": 328.9,
+      "angle_end": 333.86,
+      "bbox_in_full_image": [
+        412,
+        229,
+        527,
+        405
+      ]
+    },
+    {
+      "index": 67,
+      "file": "segment_67_grey.png",
+      "color": "grey",
+      "angle_start": 333.86,
+      "angle_end": 338.49,
+      "bbox_in_full_image": [
+        442,
+        217,
+        543,
+        396
+      ]
+    },
+    {
+      "index": 68,
+      "file": "segment_68_grey.png",
+      "color": "grey",
+      "angle_start": 338.49,
+      "angle_end": 343.54,
+      "bbox_in_full_image": [
+        470,
+        205,
+        560,
+        389
+      ]
+    },
+    {
+      "index": 69,
+      "file": "segment_69_grey.png",
+      "color": "grey",
+      "angle_start": 343.54,
+      "angle_end": 348.46,
+      "bbox_in_full_image": [
+        503,
+        197,
+        578,
+        383
+      ]
+    },
+    {
+      "index": 70,
+      "file": "segment_70_green.png",
+      "color": "green",
+      "angle_start": 348.46,
+      "angle_end": 353.69,
+      "bbox_in_full_image": [
+        535,
+        192,
+        597,
+        379
+      ]
+    },
+    {
+      "index": 71,
+      "file": "segment_71_green.png",
+      "color": "green",
+      "angle_start": 353.69,
+      "angle_end": 358.38,
+      "bbox_in_full_image": [
+        571,
+        190,
+        614,
+        376
+      ]
+    },
+    {
+      "index": 72,
+      "file": "segment_72_green.png",
+      "color": "green",
+      "angle_start": 358.38,
+      "angle_end": 363.25,
+      "bbox_in_full_image": [
+        602,
+        190,
+        643,
+        375
+      ]
+    }
+  ]
+}
