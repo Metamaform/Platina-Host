@@ -242,3 +242,54 @@
     transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
+
+/* Native thumb tracks the finger without easing or page-scroll arbitration.
+   Keep a 44px hit area, but preserve the slim 8px visual track. */
+.range-control {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 44px;
+  margin: 0;
+  background: transparent;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+  transition: none;
+}
+.range-control::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 40%);
+}
+.range-control::-moz-range-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 40%);
+}
+.range-control::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  margin-top: -8px;
+  border: 3px solid #222228;
+  border-radius: 50%;
+  background: var(--color-brand);
+  transition: none;
+}
+.range-control::-moz-range-thumb {
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  border: 3px solid #222228;
+  border-radius: 50%;
+  background: var(--color-brand);
+  transition: none;
+}
+.range-control:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 12px;
+}

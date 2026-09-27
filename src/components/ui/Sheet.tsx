@@ -5,7 +5,6 @@ import {
   useMotionValue,
   useTransform,
   animate,
-  MotionValue,
 } from 'motion/react';
 import { X } from 'lucide-react';
 import { springSmooth, easeIn, projectMomentum, rubberband } from '../../lib/motion';
@@ -85,15 +84,15 @@ const SheetInner: React.FC<InnerProps> = ({
     [1, 0],
     { clamp: true }
   );
-  const sheetScale = useTransform(y, [0, 500], [1, 0.96], { clamp: true });
 
   useEffect(() => {
     const measure = () => {
       if (sheetRef.current) heightRef.current = sheetRef.current.offsetHeight;
     };
     measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
+    const observer = new ResizeObserver(measure);
+    if (sheetRef.current) observer.observe(sheetRef.current);
+    return () => observer.disconnect();
   }, []);
 
   // Entrance spring (interruptible; exit below uses the inverse path).
@@ -104,72 +103,81 @@ const SheetInner: React.FC<InnerProps> = ({
     // Start from below the screen and spring up.
     y.set(h);
     animate(y, 0, { ...springSmooth, duration: 0.4 });
+    return () => y.stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const dragState = useRef<{
+    pointerId: number | null;
     startY: number;
+    startOffset: number;
     lastY: number;
     lastT: number;
     velocity: number;
-    dragging: boolean;
-  }>({ startY: 0, lastY: 0, lastT: 0, velocity: 0, dragging: false });
+  }>({ pointerId: null, startY: 0, startOffset: 0, lastY: 0, lastT: 0, velocity: 0 });
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
-      // Only initiate drag from the grab zone (handle/header), not from inputs.
       const target = e.target as HTMLElement;
+      if (!e.isPrimary || e.button !== 0 || dragState.current.pointerId !== null) return;
+      if (!target.closest('[data-sheet-drag-handle]')) return;
       if (target.closest('input,textarea,select,button,a,[data-nodrag]')) return;
-      dragState.current.dragging = true;
-      dragState.current.startY = e.clientY;
-      dragState.current.lastY = e.clientY;
-      dragState.current.lastT = performance.now();
-      dragState.current.velocity = 0;
-      (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+      // Cancel the entrance/snap-back spring so it cannot fight the pointer.
+      y.stop();
+      const h = heightRef.current || 500;
+      const current = y.get();
+      // Undo resistance before applying it again in onPointerMove. This keeps
+      // an interrupted upward snap-back continuous as well as downward drags.
+      const startOffset = current < 0
+        ? current * h / (0.55 * (h - Math.abs(current)))
+        : current;
+      dragState.current = {
+        pointerId: e.pointerId,
+        startY: e.clientY,
+        startOffset,
+        lastY: e.clientY,
+        lastT: performance.now(),
+        velocity: 0,
+      };
+      e.currentTarget.setPointerCapture(e.pointerId);
     },
-    []
+    [y]
   );
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
     const st = dragState.current;
-    if (!st.dragging) return;
+    if (st.pointerId !== e.pointerId) return;
     const now = performance.now();
     const dt = Math.max(1, now - st.lastT);
-    const dy = e.clientY - st.lastY;
-    const instV = (dy / dt) * 1000; // px/s
-    // Smooth the velocity for a stable release value.
+    const instV = ((e.clientY - st.lastY) / dt) * 1000;
     st.velocity = st.velocity * 0.7 + instV * 0.3;
     st.lastY = e.clientY;
     st.lastT = now;
 
-    let offset = e.clientY - st.startY;
+    let offset = st.startOffset + e.clientY - st.startY;
     const h = heightRef.current || 500;
-    // Resistance above the resting position (rubber band), free below.
     if (offset < 0) offset = rubberband(offset, h);
     y.set(Math.max(offset, -h * 0.4));
   }, [y]);
 
-  const onPointerUp = useCallback(
-    (e: React.PointerEvent) => {
+  const finishDrag = useCallback(
+    (e: React.PointerEvent, cancelled = false) => {
       const st = dragState.current;
-      if (!st.dragging) return;
-      st.dragging = false;
+      if (st.pointerId !== e.pointerId) return;
+      st.pointerId = null;
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
       const h = heightRef.current || 500;
-      const current = y.get();
-      const velocity = st.velocity;
-
-      // Momentum projection: where is this flick going?
-      const projected = current + projectMomentum(velocity);
-      const shouldClose = velocity > 400 || projected > h * 0.45;
+      // A flick followed by a pause is a hold, not a fast dismissal.
+      const velocity = cancelled || performance.now() - st.lastT > 100 ? 0 : st.velocity;
+      const projected = y.get() + projectMomentum(velocity);
+      const shouldClose = !cancelled && (velocity > 400 || projected > h * 0.45);
 
       if (shouldClose) {
         haptics.impact('light');
-        // Hand the release velocity to the exit spring (velocity handoff).
         animate(y, h + 60, {
-          type: 'spring',
-          bounce: 0,
-          duration: 0.32,
-          velocity,
+          type: 'spring', bounce: 0, duration: 0.32, velocity,
           onComplete: onClose,
         });
       } else {
@@ -195,19 +203,22 @@ const SheetInner: React.FC<InnerProps> = ({
       {/* Sheet */}
       <motion.div
         ref={sheetRef}
-        style={{ y, scale: sheetScale, transformOrigin: 'bottom center' }}
+        style={{ y, willChange: 'transform' }}
         exit={{ y: '110%', transition: { duration: 0.28, ease: easeIn } }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
-        className="relative w-full max-w-md bg-surface border-t sm:border border-hairline rounded-t-[28px] sm:rounded-[28px] text-[color:var(--color-text)] shadow-[0_-12px_40px_rgba(0,0,0,0.7)] overflow-hidden flex flex-col touch-none"
+        onPointerUp={(e) => finishDrag(e)}
+        onPointerCancel={(e) => finishDrag(e, true)}
+        onLostPointerCapture={(e) => finishDrag(e, true)}
+        className="relative w-full max-w-md bg-surface border-t sm:border border-hairline rounded-t-[28px] sm:rounded-[28px] text-[color:var(--color-text)] shadow-[0_-12px_40px_rgba(0,0,0,0.7)] overflow-hidden flex flex-col"
       >
         {/* Grab handle */}
-        <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mt-2.5 mb-1 sm:hidden cursor-grab active:cursor-grabbing" />
+        <div data-sheet-drag-handle className="pt-2.5 pb-3 sm:hidden touch-none select-none cursor-grab active:cursor-grabbing">
+          <div className="w-10 h-1 bg-white/20 rounded-full mx-auto" />
+        </div>
 
         {(title || icon) && (
-          <div className="px-5 pt-3 pb-3 border-b border-hairline flex items-center justify-between shrink-0 cursor-grab active:cursor-grabbing">
+          <div data-sheet-drag-handle className="px-5 pt-3 pb-3 border-b border-hairline flex items-center justify-between shrink-0 touch-none select-none cursor-grab active:cursor-grabbing">
             <div className="flex items-center gap-3 min-w-0">
               {icon && <div className="shrink-0">{icon}</div>}
               <div className="min-w-0">
@@ -226,7 +237,7 @@ const SheetInner: React.FC<InnerProps> = ({
         )}
 
         <div
-          className="overflow-y-auto custom-scrollbar p-5 pt-4 flex-1"
+          className="overflow-y-auto overscroll-contain custom-scrollbar p-5 pt-4 flex-1 min-h-0"
           style={{ maxHeight }}
           data-nodrag
         >

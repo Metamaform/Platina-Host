@@ -8,6 +8,7 @@ import { PremiumImage } from './PremiumImage';
 import { getNftBackdrop } from '../lib/nftUtils';
 import { NftSelectorGrid } from './NftSelectorGrid';
 import { GameLossModal } from './GameLossModal';
+import { RangeControl } from './ui/RangeControl';
 
 function getMultiplier(mines: number, opened: number): number {
   if (opened === 0) return 1;
@@ -707,19 +708,13 @@ export function Mines({
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-4">
-                  <div className="bg-black/40 px-4 py-1.5 rounded-full text-white font-bold font-display text-[15px] min-w-[40px] text-center">
-                    {minesCount}
-                  </div>
-                  <input
-                    type="range"
-                    min="1"
-                    max="24"
-                    value={minesCount}
-                    onChange={(e) => setMinesCount(Number(e.target.value))}
-                    className="flex-1 h-2 bg-black/40 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:bg-brand [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:border-[3px] [&::-webkit-slider-thumb]:border-[#222228]"
-                  />
-                </div>
+                <RangeControl
+                  min={1}
+                  max={24}
+                  value={minesCount}
+                  label={t('choose_mines')}
+                  onValueCommit={setMinesCount}
+                />
               </div>
 
               <button

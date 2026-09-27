@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { ArrowLeft, ArrowDownLeft, ArrowUpRight, Package, Star, Gem, Wallet, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowDownLeft, ArrowUpRight, Package, Gem, Wallet, Loader2 } from 'lucide-react';
 import { TonConnectButton, useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import { GramIcon } from './GramIcon';
+import { StarsIcon } from './StarsIcon';
 import { useTranslation } from '../lib/i18n';
 import { useRates, formatUsd } from '../hooks/useRates';
 import { haptics } from '../lib/haptics';
@@ -40,7 +41,7 @@ export function BalancePage({
   const [method, setMethod] = useState<TopUpMethod>('stars');
 
   const tabs: { id: TopUpMethod; label: string; icon: React.ReactNode }[] = [
-    { id: 'stars', label: t('stars'), icon: <Star className="w-4 h-4 text-[#FFD700] fill-[#FFD700]/30" /> },
+    { id: 'stars', label: t('stars'), icon: <StarsIcon className="w-4 h-4" /> },
     { id: 'ton', label: 'Gram', icon: <GramIcon className="w-4 h-4 text-brand" /> },
     { id: 'nft', label: 'NFT', icon: <Gem className="w-4 h-4 text-violet-400" /> },
   ];
@@ -71,7 +72,7 @@ export function BalancePage({
           <div className="absolute -bottom-20 -left-10 w-48 h-48 rounded-full bg-black/20 blur-3xl pointer-events-none" />
 
           <div className="relative flex items-start justify-between gap-3 mb-6">
-            <span className="font-display text-lg font-bold tracking-tight">Platina Gifts Card</span>
+            <span className="font-display text-lg font-bold tracking-tight">platina gift</span>
             <Gem className="w-6 h-6 text-white/80 shrink-0" />
           </div>
 
@@ -222,7 +223,7 @@ function AmountForm({
 
   const handleTopUp = async () => {
     if (method === 'stars' && parsedAmount < 1) {
-      setError('Minimum amount - 1 stars');
+      setError('Minimum amount - 1 Stars');
       return;
     } else if (method === 'ton' && parsedAmount <= 0) {
       setError('Enter amount greater than 0');
@@ -290,7 +291,7 @@ function AmountForm({
       // TON Logic — send to the configured project top-up address, NOT the
       // user's own wallet (previous bug sent funds back to the sender).
       if (!tonTopupAddress) {
-        setError('TON top-up is not configured. Use Telegram Stars.');
+        setError('TON top-up is not configured. Use Stars.');
         setLoading(false);
         return;
       }
@@ -355,7 +356,7 @@ function AmountForm({
           <div className="text-white/70 font-bold flex items-center gap-1.5 shrink-0 bg-white/5 px-2.5 py-1.5 rounded-xl border border-white/5 text-xs">
             {method === 'stars' ? (
               <>
-                <Star className="w-4 h-4 text-[#FFD700] fill-[#FFD700]" /> XTR
+                <StarsIcon className="w-4 h-4" /> Stars
               </>
             ) : (
               <>

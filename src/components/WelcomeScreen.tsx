@@ -255,7 +255,7 @@ export function WelcomeScreen({ onComplete, token }: WelcomeScreenProps) {
                 if (swipe < -50 || (swipe < -20 && velocity.x < -500)) paginate(1);
                 else if (swipe > 50 || (swipe > 20 && velocity.x > 500)) paginate(-1);
               }}
-              className="absolute inset-0 flex flex-col w-full h-full will-change-transform"
+              className="absolute inset-0 flex flex-col w-full h-full will-change-transform touch-pan-y"
             >
               {/* Image Area */}
               <div className="h-[48%] bg-[#1C1C1E] flex items-center justify-center p-6 relative">
