@@ -1,19 +1,33 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { X, ArrowUpRight, Check, AlertCircle, ArrowRight, ShieldCheck } from 'lucide-react';
+import { motion } from 'motion/react';
+import { ArrowUpRight, Check, ClipboardPaste } from 'lucide-react';
+import { TonConnectButton, useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import { GramIcon } from './GramIcon';
+import { useTranslation } from '../lib/i18n';
+import { haptics } from '../lib/haptics';
+import { useRates, formatUsd } from '../hooks/useRates';
+import { Sheet } from './ui/Sheet';
+import { Button } from './ui/kit';
 
 interface SendModalProps {
   balance: number;
   onClose: () => void;
   onSuccess: (amount: number, recipient: string) => void;
+  demoMode?: boolean;
 }
 
-export const SendModal: React.FC<SendModalProps> = ({
-  balance,
-  onClose,
-  onSuccess
-}) => {
+function looksLikeTonAddress(s: string): boolean {
+  const t = s.trim();
+  // raw 64-hex or user-friendly base64url (48 chars)
+  return /^[0-9a-fA-F]{64}$/.test(t) || /^(EQ|UQ|Ef|Uf|0)[A-Za-z0-9_-]{46,47}$/.test(t);
+}
+
+export const SendModal: React.FC<SendModalProps> = ({ balance, onClose, onSuccess, demoMode }) => {
+  const { t } = useTranslation();
+  const rates = useRates();
+  const wallet = useTonWallet();
+  const [tonConnectUI] = useTonConnectUI();
+
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -23,10 +37,9 @@ export const SendModal: React.FC<SendModalProps> = ({
   const numAmount = parseFloat(amount) || 0;
 
   const handleQuickAmount = (pct: number) => {
-    const val = (balance * pct).toFixed(2);
-    setAmount(val);
+    setAmount((balance * pct).toFixed(2));
     setError(null);
-    try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
+    haptics.selection();
   };
 
   const handlePaste = async () => {
@@ -35,230 +48,172 @@ export const SendModal: React.FC<SendModalProps> = ({
       if (text) {
         setRecipient(text.trim());
         setError(null);
-        try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
+        haptics.selection();
       }
-    } catch (e) {
-      // Fallback
-    }
+    } catch {}
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     setError(null);
     if (!recipient.trim()) {
-      setError('Укажите адрес кошелька TON или @username получателя');
-      try { (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error'); } catch (e) {}
+      setError(t('enter_recipient'));
+      haptics.notify('error');
       return;
     }
-
     if (numAmount <= 0) {
-      setError('Введите сумму перевода больше 0');
-      try { (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error'); } catch (e) {}
+      setError(t('enter_amount'));
+      haptics.notify('error');
+      return;
+    }
+    if (numAmount > balance) {
+      setError(t('insufficient'));
+      haptics.notify('error');
       return;
     }
 
-    if (numAmount > balance) {
-      setError('Недостаточно средств на балансе');
-      try { (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error'); } catch (e) {}
+    haptics.impact('medium');
+
+    // Demo mode: simulate an internal transfer.
+    if (demoMode) {
+      setIsSending(true);
+      setTimeout(() => {
+        setIsSending(false);
+        setIsSent(true);
+        haptics.notify('success');
+        setTimeout(() => {
+          onSuccess(numAmount, recipient.trim());
+          onClose();
+        }, 1000);
+      }, 600);
+      return;
+    }
+
+    // Real mode: only send on-chain TON to a valid address with a connected
+    // wallet. Never silently burn internal balance.
+    if (!looksLikeTonAddress(recipient)) {
+      setError(t('enter_recipient'));
+      haptics.notify('error');
+      return;
+    }
+    if (!wallet) {
+      setError(t('connect_wallet'));
+      haptics.notify('error');
       return;
     }
 
     setIsSending(true);
-    try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch (e) {}
-
-    setTimeout(() => {
-      setIsSending(false);
+    try {
+      await tonConnectUI.sendTransaction({
+        validUntil: Math.floor(Date.now() / 1000) + 600,
+        messages: [{ address: recipient.trim(), amount: Math.floor(numAmount * 1e9).toString() }],
+      });
       setIsSent(true);
-      try { (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch (e) {}
+      haptics.notify('success');
       setTimeout(() => {
         onSuccess(numAmount, recipient.trim());
         onClose();
-      }, 1200);
-    }, 1000);
+      }, 1000);
+    } catch (e) {
+      setError(t('error'));
+      haptics.notify('error');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4">
-      {/* Backdrop */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        onClick={onClose}
-        className="absolute inset-0 bg-black/80 backdrop-blur-md"
-      />
-
-      {/* Sheet Container */}
-      <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-        className="relative w-full max-w-md bg-[#131720] border-t sm:border border-white/[0.09] rounded-t-[32px] sm:rounded-[32px] p-6 text-white shadow-[0_-12px_40px_rgba(0,0,0,0.8)] z-10 max-h-[92vh] overflow-y-auto"
-      >
-        {/* Mobile Drag Indicator */}
-        <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-4 sm:hidden" />
-
-        {/* Header */}
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-[#0098EA]/15 border border-[#0098EA]/30 flex items-center justify-center text-[#0098EA]">
-              <ArrowUpRight className="w-5 h-5 stroke-[2.5]" />
-            </div>
-            <div>
-              <h2 className="font-display text-lg font-bold tracking-tight">Отправить Gram</h2>
-              <p className="text-[11px] text-white/40">Сеть The Open Network (TON)</p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center text-white/50 hover:text-white transition-colors cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
+    <Sheet
+      open
+      onClose={onClose}
+      title={t('send_title')}
+      subtitle={t('send_subtitle')}
+      icon={
+        <div className="w-9 h-9 rounded-full bg-brand/15 border border-brand/30 flex items-center justify-center text-brand">
+          <ArrowUpRight className="w-5 h-5 stroke-[2.5]" />
         </div>
-
-        {isSent ? (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="py-12 flex flex-col items-center justify-center text-center space-y-3"
-          >
-            <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-              <Check className="w-8 h-8 stroke-[3]" />
+      }
+    >
+      {isSent ? (
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="py-10 flex flex-col items-center text-center space-y-3">
+          <div className="w-16 h-16 rounded-full bg-positive/20 border border-positive/30 flex items-center justify-center text-positive">
+            <Check className="w-8 h-8 stroke-[3]" />
+          </div>
+          <h3 className="font-display text-xl font-bold text-white">{t('sent_title')}</h3>
+          <p className="text-muted text-sm max-w-xs">
+            {numAmount.toFixed(2)} GRAM → {recipient.slice(0, 8)}…
+          </p>
+        </motion.div>
+      ) : (
+        <div className="space-y-4">
+          {/* Recipient */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs font-semibold text-muted">
+              <span>{t('recipient')}</span>
+              <button onClick={handlePaste} className="flex items-center gap-1 text-brand font-bold cursor-pointer active:scale-95 transition-transform">
+                <ClipboardPaste className="w-3.5 h-3.5" /> {t('paste')}
+              </button>
             </div>
-            <h3 className="font-display text-xl font-bold text-white">Перевод отправлен</h3>
-            <p className="text-white/60 text-sm max-w-xs">
-              {numAmount.toFixed(2)} GRAM успешно переведены на адрес {recipient.slice(0, 8)}...
-            </p>
-          </motion.div>
-        ) : (
-          <div className="space-y-4">
-            {/* Recipient Address Input */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs font-semibold text-white/60">
-                <span>Получатель</span>
-                <span className="text-[11px] text-white/40">TON адрес или @username</span>
-              </div>
-              <div className="relative flex items-center">
-                <input
-                  type="text"
-                  value={recipient}
-                  onChange={(e) => {
-                    setRecipient(e.target.value);
-                    setError(null);
-                  }}
-                  placeholder="EQ... или @username"
-                  className="w-full bg-[#18202d] border border-white/10 focus:border-[#0098EA]/60 rounded-2xl px-4 py-3 text-sm font-medium text-white placeholder-white/25 outline-none transition-colors pr-20"
-                />
-                <button
-                  type="button"
-                  onClick={handlePaste}
-                  className="absolute right-2 px-2.5 py-1 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-xs font-bold text-[#0098EA] transition-colors cursor-pointer"
-                >
-                  Вставить
-                </button>
-              </div>
-            </div>
+            <input
+              value={recipient}
+              onChange={(e) => { setRecipient(e.target.value); setError(null); }}
+              placeholder={t('recipient_ph')}
+              className="w-full bg-black/30 border border-hairline focus:border-brand/40 rounded-xl px-4 py-3 text-sm font-medium text-white placeholder-white/25 outline-none transition-colors font-mono"
+            />
+          </div>
 
-            {/* Amount Input */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs font-semibold text-white/60">
-                <span>Сумма</span>
-                <span className="text-[11px] text-white/50">
-                  Доступно: <span className="text-white font-bold">{balance.toFixed(2)} GRAM</span>
-                </span>
-              </div>
-              <div className="relative flex items-center">
+          {/* Amount */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs font-semibold text-muted">
+              <span>{t('amount')}</span>
+              <span>{t('available')}: <span className="text-white font-bold">{balance.toFixed(2)} GRAM</span></span>
+            </div>
+            <div className="bg-black/30 border border-hairline rounded-xl p-4 focus-within:border-brand/40 transition-colors">
+              <div className="flex items-center justify-between gap-3">
                 <input
-                  type="number"
-                  step="any"
                   value={amount}
+                  inputMode="decimal"
                   onChange={(e) => {
-                    setAmount(e.target.value);
-                    setError(null);
+                    let v = e.target.value.replace(/,/g, '.');
+                    if (/^\d*\.?\d*$/.test(v)) { setAmount(v); setError(null); }
                   }}
                   placeholder="0.00"
-                  className="w-full bg-[#18202d] border border-white/10 focus:border-[#0098EA]/60 rounded-2xl px-4 py-3.5 text-lg font-bold font-display text-white placeholder-white/25 outline-none transition-colors pr-24"
+                  className="flex-1 bg-transparent text-2xl font-display font-black text-white outline-none min-w-0"
                 />
-                <div className="absolute right-3 flex items-center gap-1.5">
-                  <GramIcon className="w-5 h-5 text-[#0098EA]" />
-                  <span className="text-xs font-bold text-white/80">GRAM</span>
-                </div>
+                <GramIcon className="w-6 h-6 text-brand shrink-0" />
               </div>
-
-              {/* Quick Amount Chips */}
-              <div className="grid grid-cols-4 gap-2 pt-1">
-                {[
-                  { label: '25%', val: 0.25 },
-                  { label: '50%', val: 0.5 },
-                  { label: '75%', val: 0.75 },
-                  { label: 'МАКС', val: 1 }
-                ].map((chip) => (
-                  <button
-                    key={chip.label}
-                    type="button"
-                    onClick={() => handleQuickAmount(chip.val)}
-                    className="py-1.5 rounded-xl bg-[#18202d] border border-white/5 hover:border-white/15 text-xs font-bold text-white/70 hover:text-white transition-all active:scale-95 cursor-pointer"
-                  >
-                    {chip.label}
+              <div className="grid grid-cols-4 gap-1.5 mt-3 pt-3 border-t border-hairline">
+                {[0.25, 0.5, 0.75, 1].map((p) => (
+                  <button key={p} onClick={() => handleQuickAmount(p)} className="py-1.5 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border border-hairline active:scale-95 transition-all cursor-pointer">
+                    {p === 1 ? 'MAX' : `${p * 100}%`}
                   </button>
                 ))}
               </div>
-            </div>
-
-            {/* Network Fee & Notice */}
-            <div className="p-3.5 rounded-2xl bg-[#18202d]/70 border border-white/5 space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-white/45">Комиссия сети</span>
-                <span className="text-emerald-400 font-semibold font-mono">~0.005 TON (0 GRAM)</span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-white/45">Примерная стоимость</span>
-                <span className="text-white/80 font-medium font-mono">
-                  ≈ ${(numAmount * 0.95).toFixed(2)} USD
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 pt-1 text-[11px] text-white/40 border-t border-white/5">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#0098EA]" />
-                <span>Защищенный смарт-контракт сети TON</span>
+              <div className="flex justify-between items-center mt-3">
+                <span className="text-muted text-[12px]">≈</span>
+                <span className="text-muted text-[12px] font-medium">{formatUsd(numAmount, rates.gramUsd)}</span>
               </div>
             </div>
-
-            {/* Error Message */}
-            <AnimatePresence>
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  className="flex items-center gap-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-medium"
-                >
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{error}</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Submit Action */}
-            <button
-              type="button"
-              onClick={handleSend}
-              disabled={isSending || numAmount <= 0 || !recipient.trim()}
-              className="w-full py-3.5 rounded-2xl bg-[#0098EA] hover:bg-[#0087d1] text-white font-bold text-sm tracking-wide shadow-lg shadow-[#0098EA]/30 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer mt-2"
-            >
-              {isSending ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <>
-                  <span>Отправить {numAmount > 0 ? `${numAmount.toFixed(2)} GRAM` : ''}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
           </div>
-        )}
-      </motion.div>
-    </div>
+
+          {error && (
+            <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="text-negative text-xs font-semibold text-center">
+              {error}
+            </motion.p>
+          )}
+
+          {!wallet && !demoMode && (
+            <div className="flex flex-col items-center gap-3 py-2">
+              <p className="text-muted text-[12px] text-center">{t('connect_wallet')}</p>
+              <TonConnectButton />
+            </div>
+          )}
+
+          <Button full size="lg" loading={isSending} onClick={handleSend} disabled={numAmount <= 0 || !recipient.trim()}>
+            {!isSending && <ArrowUpRight className="w-4 h-4" />}
+            <span>{isSending ? t('sending') : `${t('send_btn')} ${numAmount > 0 ? numAmount.toFixed(2) : ''} GRAM`}</span>
+          </Button>
+        </div>
+      )}
+    </Sheet>
   );
 };

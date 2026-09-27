@@ -62,8 +62,11 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
     
     // The items were added at the end of the inventory in openCases
     
+    // Remove exactly the won NFTs by uniqueId (not a blind tail-slice, which
+    // could delete unrelated items if inventory changed meanwhile).
     const nfts = results.filter(r => !r.isGram);
-    const revertedInventory = inventory.slice(0, inventory.length - nfts.length);
+    const wonIds = new Set(nfts.map((r) => r.uniqueId));
+    const revertedInventory = inventory.filter((i) => !wonIds.has(i.uniqueId));
     const newBalance = balance + totalGrams;
 
     

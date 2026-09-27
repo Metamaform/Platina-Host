@@ -1,36 +1,58 @@
 @import "tailwindcss";
 
 /*
-  Design tokens — "Platina Gift"
-  Direction: a premium collectibles case, not a generic purple SaaS-glass dashboard.
-  Graphite/platinum surfaces, one electric signal color (TON-blue) for actions,
-  a warm foil gold reserved for value/rarity. Display type has real presence;
-  body type stays quiet and legible.
+  ============================================================================
+  Design tokens — "Platina Gift", styled after GRAM Wallet / TON Space.
+  ----------------------------------------------------------------------------
+  Direction (emilkowalski/skills · apple-design · mobile-native):
+  · Deep, slightly-blue graphite canvas; layered card surfaces with hairline
+    borders and soft translucent shadows — never solid borders.
+  · One electric signal colour (TON blue) for actions; a violet→blue gradient
+    reserved for the balance hero; warm foil-gold for value / rarity.
+  · Type: large display numerals get tight negative tracking; body stays quiet.
+  · Motion lives in `src/lib/motion.ts` (springs), reduced-motion respected.
+  ============================================================================
 */
 @theme {
   --font-display: "Space Grotesk", "Inter", sans-serif;
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-  --color-canvas: #0c1017;       /* wallet.ton.org deep slate background */
-  --color-canvas-deep: #080b10;  /* deepest backdrop layer */
-  --color-surface: #151b26;      /* wallet.ton.org card and panel background */
-  --color-surface-alt: #1c2433;  /* hover / raised card state */
-  --color-hairline: rgba(255, 255, 255, 0.08);
+  /* Surfaces — deep graphite with a cool blue tint (wallet.ton.org / GRAM) */
+  --color-canvas: #0a0e14;        /* app backdrop */
+  --color-canvas-deep: #060a10;   /* deepest layer (behind glows) */
+  --color-surface: #141a22;       /* card / panel */
+  --color-surface-2: #1b232e;     /* nested card, hover */
+  --color-surface-3: #232c39;     /* raised / pressed */
 
-  --color-text: #F3F6F9;
-  --color-muted: #8E9BAE;
+  --color-hairline: rgba(255, 255, 255, 0.07);
+  --color-hairline-strong: rgba(255, 255, 255, 0.12);
 
-  --color-brand: #0098EA;        /* Official TON blue */
+  --color-text: #f3f6f9;
+  --color-muted: #8e9bae;
+
+  /* Signal + value */
+  --color-brand: #0098ea;         /* Official TON blue */
   --color-brand-dim: #007dc4;
-  --color-gold: #E8B860;         /* value / rarity accents */
-  --color-gold-dim: #B8863B;
+  --color-violet: #7b6cf6;        /* hero gradient partner */
+  --color-gold: #e8b860;          /* value / rarity */
+  --color-gold-dim: #b8863b;
 
-  --color-positive: #22C55E;
-  --color-danger: #EF4444;
+  /* Semantic */
+  --color-positive: #22c55e;
+  --color-negative: #ef4444;
+
+  /* Radii — GRAM Wallet favours generous rounding */
+  --radius-card: 24px;
+  --radius-item: 16px;
+
+  /* Soft translucent shadows (no hard 1px borders for depth) */
+  --shadow-card: 0 10px 30px -12px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-float: 0 24px 60px -20px rgba(0, 0, 0, 0.7);
 }
 
 @layer base {
-  html, body {
+  html,
+  body {
     background-color: var(--color-canvas);
     color: var(--color-text);
     font-family: var(--font-sans);
@@ -40,20 +62,36 @@
     @apply antialiased selection:bg-brand/30;
   }
 
-  button, a, [role="button"], .tab, .chip {
+  button,
+  a,
+  [role="button"],
+  .tab,
+  .chip {
     touch-action: manipulation;
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
   }
 
-  input, textarea, select {
-    font-size: 16px;
+  input,
+  textarea,
+  select {
+    font-size: 16px; /* prevents iOS zoom-on-focus */
   }
 
-  h1, h2, h3, .font-display {
+  h1,
+  h2,
+  h3,
+  .font-display {
     font-family: var(--font-display);
     letter-spacing: -0.01em;
+  }
+
+  /* Large display numerals: tighter tracking as size grows */
+  .display-xl {
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+    font-optical-sizing: auto;
   }
 }
 
@@ -67,36 +105,58 @@
   .facet-card::before {
     content: "";
     position: absolute;
-    top: 0; right: 0;
-    width: 14px; height: 14px;
-    background: linear-gradient(135deg, transparent 50%, var(--color-hairline) 50%);
+    top: 0;
+    right: 0;
+    width: 14px;
+    height: 14px;
+    background: linear-gradient(135deg, transparent 50%, var(--color-hairline-strong) 50%);
     pointer-events: none;
   }
 
   .glass-panel {
-    @apply bg-surface/90 backdrop-blur-xl border border-hairline shadow-lg shadow-black/30;
+    @apply bg-surface/90 backdrop-blur-xl border border-hairline;
+    box-shadow: var(--shadow-card);
   }
 
   .glass-panel-interactive {
-    @apply bg-surface/90 backdrop-blur-xl border border-hairline shadow-lg shadow-black/30 transition-all duration-300 hover:bg-surface-alt hover:border-white/15;
+    @apply bg-surface/90 backdrop-blur-xl border border-hairline transition-all duration-300 hover:bg-surface-2 hover:border-white/15;
+    box-shadow: var(--shadow-card);
   }
 
   .text-glow {
     text-shadow: 0 0 20px currentColor;
   }
 
-  /* Thin gold hairline used under headings / active nav — the recurring
-     "foil edge" detail instead of a full pill/blob highlight. */
+  /* Thin gold hairline under headings / active nav — the "foil edge" detail */
   .foil-underline {
     position: relative;
   }
   .foil-underline::after {
     content: "";
     position: absolute;
-    left: 0; right: 0; bottom: -6px;
+    left: 0;
+    right: 0;
+    bottom: -6px;
     height: 2px;
     background: linear-gradient(90deg, var(--color-gold), transparent);
     border-radius: 2px;
+  }
+
+  /* GRAM-Wallet hero gradient (violet -> blue -> TON blue) */
+  .hero-gradient {
+    background: linear-gradient(135deg, #6d5df6 0%, #3b82f6 48%, #0098ea 100%);
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 
@@ -104,6 +164,20 @@
   100% {
     transform: translateX(100%);
   }
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.animate-card-in {
+  animation: card-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* Custom scrollbar for a sleek look */
@@ -121,4 +195,26 @@
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.22);
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced motion & transparency (apple-design §14):
+   gentler, non-vestibular equivalents — cross-fades instead of slides/springs.
+--------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass-panel,
+  .glass-panel-interactive {
+    backdrop-filter: none;
+    @apply bg-surface;
+  }
 }

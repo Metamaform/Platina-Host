@@ -96,7 +96,11 @@ function readJson<T>(file: string, fallback: T): T {
 
 function writeJson(file: string, data: unknown) {
   ensureDataDir();
-  fs.writeFileSync(file, JSON.stringify(data, null, 2));
+  // Atomic write: stage to a temp file then rename, so a crash mid-write can
+  // never leave a truncated/corrupt JSON that readJson would fail to parse.
+  const tmp = `${file}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
+  fs.renameSync(tmp, file);
 }
 
 export interface StoredUser {
@@ -411,6 +415,8 @@ export interface AdminConfig {
   botChannelUrl?: string;
   botAppUrl?: string;
   demoMode?: boolean;
+  /** TON address that receives TON top-ups. If empty, TON top-up is disabled. */
+  tonTopupAddress?: string;
 }
 
 let adminConfigCache: AdminConfig | null = null;
@@ -521,8 +527,14 @@ export function checkLeaderboardEnd() {
   return false;
 }
 
+let lastEndCheck = 0;
 export function getLeaderboardData(currentUserId: number, limit: number = 100) {
-  checkLeaderboardEnd();
+  // Throttle season-end processing to once a minute instead of every request.
+  const now = Date.now();
+  if (now - lastEndCheck > 60_000) {
+    lastEndCheck = now;
+    checkLeaderboardEnd();
+  }
   const allUsers = Object.values(users());
   const getUserTurnover = (u: StoredUser) => {
     if (typeof u.seasonTurnover === 'number' && u.seasonTurnover > 0) return u.seasonTurnover;
@@ -602,23 +614,47 @@ export function saveTasksConfig(tasks: TaskConfig[]) {
   writeJson(TASKS_FILE, tasks);
 }
 
-export function completeUserTask(userId: number, taskId: string, reward: number): boolean {
+export function isSameUtcDay(a: string | number | Date, b: Date): boolean {
+  const d = new Date(a);
+  return (
+    d.getUTCFullYear() === b.getUTCFullYear() &&
+    d.getUTCMonth() === b.getUTCMonth() &&
+    d.getUTCDate() === b.getUTCDate()
+  );
+}
+
+export function completeUserTask(
+  userId: number,
+  taskId: string,
+  reward: number,
+  daily = false
+): boolean {
   const allUsers = users();
   const user = allUsers[String(userId)];
   if (!user) return false;
-  
+
   if (!user.completedTasks) {
     user.completedTasks = {};
   }
-  
-  // if already completed, return false
-  if (user.completedTasks[taskId]) {
-    return false;
+
+  const existing = user.completedTasks[taskId];
+  const now = new Date();
+
+  // Daily tasks reset each UTC day: a completion from a previous day does not
+  // block today's claim. One-off tasks stay completed forever.
+  if (existing) {
+    if (daily && isSameUtcDay(existing.completedAt, now)) {
+      return false; // already claimed today
+    }
+    if (!daily) {
+      return false; // one-off already completed
+    }
+    // daily from a previous day → fall through and re-claim
   }
-  
-  user.completedTasks[taskId] = { completedAt: new Date().toISOString() };
+
+  user.completedTasks[taskId] = { completedAt: now.toISOString() };
   user.balance = (user.balance || 0) + reward;
-  
+
   writeJson(USERS_FILE, allUsers);
   return true;
 }

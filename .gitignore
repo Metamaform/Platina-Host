@@ -4,3 +4,8 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Build output & local scratch
+dist/
+image-search/
+error.log

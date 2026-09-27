@@ -74,7 +74,7 @@ export const LazyNftCard: React.FC<LazyNftCardProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`w-full animate-in fade-in zoom-in-95 ${staggerClass} ${className}`}
+      className={`w-full animate-card-in ${staggerClass} ${className}`}
       style={{
         contentVisibility: 'auto',
         containIntrinsicSize: typeof minHeight === 'number' ? `${minHeight}px` : (minHeight || '160px 200px')

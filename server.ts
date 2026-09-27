@@ -1,13 +1,13 @@
 import "dotenv/config";
 import express from "express";
+import compression from "compression";
 import path from "path";
 import fs from "fs";
-import https from "https";
 import TelegramBot from "node-telegram-bot-api";
 import { createServer as createViteServer } from "vite";
 import { verifyTelegramInitData, TelegramAuthError } from "./src/lib/telegramAuth.server.ts";
 import { issueToken, verifyToken } from "./src/lib/session.server.ts";
-import { getUser, upsertUserProfile, setUserLanguage, saveUserState, recordOpen, getRecentOpens, getLeaderboardConfig, getLeaderboardData, saveLeaderboardConfig, getAdminConfig, saveAdminConfig, getReferrals, getTasksConfig, saveTasksConfig, completeUserTask, getCasesConfig, saveCasesConfig, getPromocodes, savePromocodes, getPromoRedemptions, savePromoRedemptions, getGiftsConfig, saveGiftsConfig, setWelcomeSeen, resetWelcomeSeen, syncUserFromSupabase } from "./src/lib/store.server.ts";
+import { getUser, upsertUserProfile, setUserLanguage, saveUserState, recordOpen, getRecentOpens, getLeaderboardConfig, getLeaderboardData, saveLeaderboardConfig, getAdminConfig, saveAdminConfig, getReferrals, getTasksConfig, saveTasksConfig, completeUserTask, getCasesConfig, saveCasesConfig, getPromocodes, savePromocodes, getPromoRedemptions, savePromoRedemptions, getGiftsConfig, saveGiftsConfig, setWelcomeSeen, resetWelcomeSeen, syncUserFromSupabase, isSameUtcDay } from "./src/lib/store.server.ts";
 import { getFragmentGiftPrices, getFragmentBackdropPrices, syncAllNftPrices, lastSyncStats, lastSyncTime, isSyncing, TTL_MS } from "./src/lib/fragmentPrices.server.ts";
 import { getRocketState, placeRocketBet, cashoutRocketBet } from "./src/lib/rocket.server.ts";
 import { supabaseServer } from "./src/lib/supabase.server.ts";
@@ -17,7 +17,8 @@ import baseGiftsDb from "./src/gifts_data.json" with { type: "json" };
 const botToken = (process.env.TELEGRAM_BOT_TOKEN || "").trim();
 const bot = botToken ? new TelegramBot(botToken, { polling: true }) : null;
 
-let cachedGramPriceUsd = 0.00084;
+// Sensible default ≈ TON spot; refreshed from CoinGecko when reachable.
+let cachedGramPriceUsd = 2.6;
 let lastGramPriceFetch = 0;
 
 let cachedStarPriceUsd = 0.017;
@@ -254,6 +255,8 @@ if (bot) {
 async function startServer() {
   const app = express();
 let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
+  const PORT = Number(process.env.PORT) || 3000;
+  app.use(compression());
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -295,10 +298,7 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
 
 
 
-  const cache = new Map();
-  const CACHE_TTL = 60 * 1000 * 5; // 5 minutes
 
-  const PORT = 3000;
 
   // Fetch prices in background every hour
   setInterval(async () => {
@@ -419,6 +419,7 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
           botSupportUrl: config.botSupportUrl || 'https://t.me/platina_help',
           botChannelUrl: config.botChannelUrl || 'https://t.me/platina_gift',
           demoMode: config.demoMode || false,
+          tonTopupAddress: config.tonTopupAddress || '',
         }
       });
     } catch (e: any) {
@@ -492,6 +493,17 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
     // Calculate rate based on parsed star price and commission
     const rate = (starUsd / gramUsd) * 0.95; 
     res.json({ rate });
+  });
+
+  // Live FX rates for the client (replaces the hard-coded 0.95 USD/GRAM).
+  app.get("/api/rates", async (req, res) => {
+    const gramUsd = await getGramPriceUsd();
+    const starUsd = await getStarPriceUsd();
+    res.json({
+      gramUsd,
+      starUsd,
+      starsToGram: gramUsd > 0 ? (starUsd / gramUsd) * 0.95 : 0,
+    });
   });
 
   // Синхронизация состояния (баланс/инвентарь) — источник правды теперь сервер,
@@ -654,11 +666,19 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
 
 app.post("/api/state", requireAuth, (req, res) => {
     const userId = (req as any).userId as number;
-    const { balance, inventory, turnover, topups } = req.body || {};
+    let { balance, inventory, turnover, topups } = req.body || {};
     if (typeof balance !== "number" || !Array.isArray(inventory)) {
       res.status(400).json({ error: "Ожидаются balance:number и inventory:array" });
       return;
     }
+    // Guard rails: the client syncs its state, but refuse absurd values that
+    // would corrupt the ledger (NaN/Infinity, negatives, oversized arrays).
+    if (!Number.isFinite(balance)) balance = 0;
+    if (balance < 0) balance = 0;
+    balance = Math.min(balance, 1e9);
+    if (typeof turnover === "number" && (!Number.isFinite(turnover) || turnover < 0)) turnover = 0;
+    if (Array.isArray(inventory) && inventory.length > 2000) inventory = inventory.slice(0, 2000);
+    if (Array.isArray(topups) && topups.length > 500) topups = topups.slice(-500);
     const sanitizedInventory = inventory.map((item: any) => {
       const bd = getNftBackdrop(item);
       return {
@@ -866,6 +886,30 @@ app.post("/api/state", requireAuth, (req, res) => {
   // ---------------------------------------------------------------------
   const lottieCache = new Map<string, any>();
 
+  // SSRF guard: the download/lottie proxies must only reach trusted media
+  // origins (fragment / telegram CDNs). Arbitrary URLs are rejected.
+  const PROXY_ALLOWED_HOSTS = [
+    'fragment.com',
+    'www.fragment.com',
+    'nft.fragment.com',
+    'telegram.org',
+    'telegram-stickers.org',
+    't.me',
+    'cdn.telegram.org',
+    'storage.googleapis.com',
+  ];
+  function isAllowedProxyUrl(raw: unknown): boolean {
+    if (typeof raw !== 'string' || !raw) return false;
+    try {
+      const u = new URL(raw);
+      if (u.protocol !== 'https:') return false;
+      const host = u.hostname.replace(/^www\./, '');
+      return PROXY_ALLOWED_HOSTS.some((h) => host === h || host.endsWith('.' + h));
+    } catch {
+      return false;
+    }
+  }
+
   app.get("/api/proxy/variants", async (req, res) => {
     const slug = req.query.slug;
     if (!slug) return res.status(400).json({ error: "Missing slug" });
@@ -900,8 +944,8 @@ app.post("/api/state", requireAuth, (req, res) => {
 
   app.get("/api/proxy/download", async (req, res) => {
     const targetUrl = req.query.url;
-    if (!targetUrl || typeof targetUrl !== 'string') {
-      return res.status(400).json({ error: "Missing url parameter" });
+    if (!isAllowedProxyUrl(targetUrl)) {
+      return res.status(400).json({ error: "Disallowed or missing url" });
     }
     try {
       const response = await fetch(targetUrl, {
@@ -930,10 +974,10 @@ app.post("/api/state", requireAuth, (req, res) => {
 
   app.get("/api/proxy/lottie", async (req, res) => {
     const targetUrl = req.query.url as string;
-    if (!targetUrl) {
-      return res.status(400).json({ error: "Missing url parameter" });
+    if (!isAllowedProxyUrl(targetUrl)) {
+      return res.status(400).json({ error: "Disallowed or missing url" });
     }
-    
+
     if (lottieCache.has(targetUrl)) {
       return res.json(lottieCache.get(targetUrl));
     }
@@ -996,12 +1040,15 @@ app.post("/api/state", requireAuth, (req, res) => {
     const now = new Date();
     const validTasks = (Array.isArray(tasks) ? tasks : []).filter(t => !t.expiresAt || new Date(t.expiresAt) > now);
     
-    // map with completed status
-    const tasksWithStatus = validTasks.map(t => ({
-      ...t,
-      completed: !!(storedUser?.completedTasks?.[t.id])
-    }));
-    
+    // map with completed status (daily tasks reset each UTC day)
+    const tasksWithStatus = validTasks.map(t => {
+      const done = storedUser?.completedTasks?.[t.id];
+      const completed = t.type === 'daily'
+        ? !!(done && isSameUtcDay(done.completedAt, now))
+        : !!done;
+      return { ...t, completed };
+    });
+
     res.json({ tasks: tasksWithStatus });
   });
 
@@ -1021,7 +1068,7 @@ app.post("/api/state", requireAuth, (req, res) => {
        return res.status(400).json({ error: 'Task expired' });
     }
     
-    const success = completeUserTask(userId, task.id, task.reward);
+    const success = completeUserTask(userId, task.id, task.reward, task.type === 'daily');
     if (success) {
       const storedUser = getUser(userId);
       res.json({ success: true, balance: storedUser?.balance });
@@ -1213,7 +1260,6 @@ app.get("/api/admin/gifts", (req, res) => {
       } catch (e) {
         console.error("Error saving gifts config", e);
       }
-      cache.clear(); // Clear memory cache for /api/gifts
       res.json({ ok: true });
     } else {
       console.log("Invalid gifts data received");
@@ -1294,6 +1340,12 @@ app.get("/api/admin/gifts", (req, res) => {
     }
   });
 
+  // 404 handler for API routes. Registered BEFORE the SPA/static catch-all so
+  // unknown /api/* paths return JSON instead of index.html in production.
+  app.use('/api', (req, res) => {
+    res.status(404).json({ error: 'API route not found' });
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -1303,18 +1355,20 @@ app.get("/api/admin/gifts", (req, res) => {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
+    app.use(express.static(distPath, {
+      // Hashed/static media can be cached aggressively; index.html is
+      // handled by the catch-all with no-store below.
+      setHeaders: (res, filePath) => {
+        if (!filePath.endsWith('index.html')) {
+          res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+        }
+      },
+    }));
     app.get("*", (req, res) => {
+      res.setHeader('Cache-Control', 'no-store');
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
-
-  
-  
-  // 404 handler for API routes
-  app.use('/api', (req, res) => {
-    res.status(404).json({ error: 'API route not found' });
-  });
 
   // Global error handler
 
