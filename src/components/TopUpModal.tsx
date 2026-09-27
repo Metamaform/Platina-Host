@@ -9,9 +9,11 @@ interface TopUpModalProps {
   onClose: () => void;
   onSuccess: (amount: number, method: 'stars' | 'ton', rawAmount: number) => void;
   demoMode?: boolean;
+  /** Project TON address that receives TON top-ups. Empty disables TON top-up. */
+  tonTopupAddress?: string;
 }
 
-export function TopUpModal({ onClose, onSuccess, demoMode }: TopUpModalProps) {
+export function TopUpModal({ onClose, onSuccess, demoMode, tonTopupAddress }: TopUpModalProps) {
   const { t } = useTranslation();
   const [tonConnectUI] = useTonConnectUI();
   const wallet = useTonWallet();
@@ -110,15 +112,21 @@ export function TopUpModal({ onClose, onSuccess, demoMode }: TopUpModalProps) {
         setLoading(false);
       }
     } else {
-      // TON Logic
+      // TON Logic — send to the configured project top-up address, NOT the
+      // user's own wallet (previous bug sent funds back to the sender).
+      if (!tonTopupAddress) {
+        setError('TON top-up is not configured. Use Telegram Stars.');
+        setLoading(false);
+        return;
+      }
       if (!wallet) return;
       try {
         const transaction = {
           validUntil: Math.floor(Date.now() / 1000) + 600,
           messages: [
             {
-              address: wallet.account.address, 
-              amount: (gramAmount * 1e9).toString(), 
+              address: tonTopupAddress,
+              amount: (gramAmount * 1e9).toString(),
             }
           ]
         };

@@ -30,7 +30,7 @@ export const PremiumImage: React.FC<PremiumImageProps> = ({
   const [error, setError] = useState(false);
 
   if (!src) {
-    return <div className={`relative flex items-center justify-center overflow-hidden ${className}`}><div className="absolute inset-0 bg-white/5 rounded-inherit"></div></div>;
+    return <div className={`relative flex items-center justify-center overflow-hidden ${className}`}><div className="absolute inset-0 bg-white/5 rounded-xl"></div></div>;
   }
 
   let effectiveSrc = src;

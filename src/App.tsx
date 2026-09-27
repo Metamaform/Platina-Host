@@ -1,30 +1,39 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { setLoggerUserId } from './lib/logger';
 import { ShoppingBag, User, Gem, Gift, Wallet, ChevronRight, Activity, CircleDashed, ArrowUpCircle, Shield, LayoutGrid, Trophy, X, ListTodo, Settings, Bomb, Box, Package, ArrowLeft, ArrowUpRight, Users, History, MessageCircle, ExternalLink, Copy, Check, Star, Rocket, Flame, Sparkles } from 'lucide-react';
 import defaultGiftsDb from './gifts_data.json';
-import { Craft } from './components/Craft';
-import { Upgrade } from './components/Upgrade';
-import { Mines } from './components/Mines';
-import { NewGame } from './components/NewGame';
-import { Plinko } from './components/Plinko';
 import { LiveFeed } from './components/LiveFeed';
 import { PremiumImage } from './components/PremiumImage';
-import { AdminPanel } from './components/AdminPanel';
-import { Cases } from './components/Cases';
-import { Leaderboard } from './components/Leaderboard';
-import { Tasks } from './components/Tasks';
 import { GramIcon } from './components/GramIcon';
 import { TopUpModal } from './components/TopUpModal';
 import { addTurnover } from './lib/stats';
 import { useTelegramAuth } from './lib/useTelegramAuth';
 import { useTranslation, i18n } from './lib/i18n';
 import { CleanModelLottie } from './components/CleanModelLottie';
-import { Inventory } from './components/Inventory';
 import { fetchFragmentPrices, fetchFragmentBackdropPrices } from './lib/api';
-import { WelcomeScreen } from './components/WelcomeScreen';
 import { WalletHome } from './components/WalletHome';
 import { SendModal } from './components/SendModal';
+
+// Route-level code splitting: heavy game / panel screens load on demand so the
+// initial bundle stays small and the first paint is fast.
+const Craft = lazy(() => import('./components/Craft').then((m) => ({ default: m.Craft })));
+const Upgrade = lazy(() => import('./components/Upgrade').then((m) => ({ default: m.Upgrade })));
+const Mines = lazy(() => import('./components/Mines').then((m) => ({ default: m.Mines })));
+const NewGame = lazy(() => import('./components/NewGame').then((m) => ({ default: m.NewGame })));
+const Plinko = lazy(() => import('./components/Plinko').then((m) => ({ default: m.Plinko })));
+const Cases = lazy(() => import('./components/Cases').then((m) => ({ default: m.Cases })));
+const AdminPanel = lazy(() => import('./components/AdminPanel').then((m) => ({ default: m.AdminPanel })));
+const Leaderboard = lazy(() => import('./components/Leaderboard').then((m) => ({ default: m.Leaderboard })));
+const Tasks = lazy(() => import('./components/Tasks').then((m) => ({ default: m.Tasks })));
+const Inventory = lazy(() => import('./components/Inventory').then((m) => ({ default: m.Inventory })));
+const WelcomeScreen = lazy(() => import('./components/WelcomeScreen').then((m) => ({ default: m.WelcomeScreen })));
+
+const LazyFallback = () => (
+  <div className="flex items-center justify-center py-16">
+    <div className="w-8 h-8 rounded-full border-2 border-brand border-t-transparent animate-spin" />
+  </div>
+);
 
 
 
@@ -63,15 +72,15 @@ function Shop({  onPlayUpgrade, onPlayCraft, onPlayMines, onPlayNewGame, onPlayP
   const { t, lang } = useTranslation();
   const getLocalizedImage = (id: string, base: string) => {
     if (lang === 'zh') {
-      if (id === 'upgrade') return '/apgreyd_chaina.png?v=2';
-      if (id === 'craft') return '/craft_chaina.png?v=2';
-      if (id === 'mines') return '/mines_chaina.png?v=2';
-      if (id === 'subscribe') return '/subscribe_chaina.png?v=2';
+      if (id === 'upgrade') return '/apgreyd_chaina.webp?v=2';
+      if (id === 'craft') return '/craft_chaina.webp?v=2';
+      if (id === 'mines') return '/mines_chaina.webp?v=2';
+      if (id === 'subscribe') return '/subscribe_chaina.webp?v=2';
     } else if (lang === 'en') {
-      if (id === 'upgrade') return '/upgrade_en.png?v=2';
-      if (id === 'craft') return '/craft_en.png?v=2';
-      if (id === 'mines') return '/mines_en.png?v=2';
-      if (id === 'subscribe') return '/subscribe_en.png?v=2';
+      if (id === 'upgrade') return '/upgrade_en.webp?v=2';
+      if (id === 'craft') return '/craft_en.webp?v=2';
+      if (id === 'mines') return '/mines_en.webp?v=2';
+      if (id === 'subscribe') return '/subscribe_en.webp?v=2';
     }
     return base;
   };
@@ -81,7 +90,7 @@ function Shop({  onPlayUpgrade, onPlayCraft, onPlayMines, onPlayNewGame, onPlayP
       id: 'upgrade',
       name: t('upgrade'),
       description: t('upgrade_desc'),
-      fullCardImage: getLocalizedImage('upgrade', '/apgreyd_nft.png?v=2'),
+      fullCardImage: getLocalizedImage('upgrade', '/apgreyd_nft.webp?v=2'),
       color: 'from-brand/25 via-violet-500/20 to-cyan-500/25',
       badge: t('hot')
     },
@@ -89,7 +98,7 @@ function Shop({  onPlayUpgrade, onPlayCraft, onPlayMines, onPlayNewGame, onPlayP
       id: 'craft',
       name: t('craft'),
       description: t('craft_desc'),
-      fullCardImage: getLocalizedImage('craft', '/kraft_nft.png?v=4'),
+      fullCardImage: getLocalizedImage('craft', '/kraft_nft.webp?v=4'),
       color: 'from-emerald-500/25 via-teal-500/20 to-green-500/25',
       badge: t('new')
     },
@@ -97,7 +106,7 @@ function Shop({  onPlayUpgrade, onPlayCraft, onPlayMines, onPlayNewGame, onPlayP
       id: 'mines',
       name: t('mines'),
       description: t('mines_desc'),
-      fullCardImage: getLocalizedImage('mines', '/mines_nft.jpg?v=5')
+      fullCardImage: getLocalizedImage('mines', '/mines_nft.webp?v=5')
     }
   ];
 
@@ -112,7 +121,7 @@ function Shop({  onPlayUpgrade, onPlayCraft, onPlayMines, onPlayNewGame, onPlayP
         className="block w-full rounded-3xl overflow-hidden cursor-pointer transform-gpu active:scale-[0.98] transition-transform isolate bg-transparent relative" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}
       >
         <img 
-          src={getLocalizedImage('subscribe', '/subscribe_nft.jpg') || undefined} 
+          src={getLocalizedImage('subscribe', '/subscribe_nft.webp') || undefined} 
           alt="Subscribe" 
           className="w-full h-auto transition-transform duration-300 group-hover:scale-[1.02] rounded-3xl "
         />
@@ -370,8 +379,8 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
     }
   };
 
-  const firstName = user?.firstName || 'Alexey';
-  const username = user?.username ? `@${user.username}` : '@alexey_dev';
+  const firstName = user?.firstName || 'Player';
+  const username = user?.username ? `@${user.username}` : null;
   const photoUrl = user?.photoUrl;
   
   const [selectedNft, setSelectedNft] = useState<any>(null);
@@ -436,7 +445,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
       setIsLoadingReferrals(true);
       fetch('/api/referrals', {
         headers: {
-          'Authorization': `Bearer ${(window as any).Telegram?.WebApp?.initData}`
+          'Authorization': `Bearer ${sessionStorage.getItem('pg_session_token') || ''}`
         }
       })
       .then(r => r.json())
@@ -496,7 +505,9 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
           <div className="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-emerald-400 border-3 border-[#121316] shadow-sm" />
         </div>
         <h2 className="font-display text-2xl font-bold text-white mb-0.5 tracking-tight">{firstName}</h2>
-        <p className="text-brand font-semibold text-xs tracking-wide">{username ? `@${username}` : 'Galea Player'}</p>
+        {username && (
+          <p className="text-brand font-semibold text-xs tracking-wide">{username}</p>
+        )}
       </div>
       
       {/* Turnover & Level Card */}
@@ -842,14 +853,14 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                   </div>
                 ) : (
                   <div className="flex flex-col gap-2.5">
-                    {topups.slice().reverse().map((t: any) => (
-                      <div key={t.id} className="bg-white/[0.03] border border-white/5 rounded-2xl p-3.5 flex justify-between items-center">
+                    {topups.slice().reverse().map((tx: any) => (
+                      <div key={tx.id} className="bg-white/[0.03] border border-white/5 rounded-2xl p-3.5 flex justify-between items-center">
                         <div className="flex flex-col">
-                          <span className="text-[11px] text-white/40 mb-0.5 font-medium">{new Date(t.ts).toLocaleString('ru-RU')}</span>
+                          <span className="text-[11px] text-white/40 mb-0.5 font-medium">{new Date(tx.ts).toLocaleString('ru-RU')}</span>
                           <span className="text-[13px] font-semibold text-white flex items-center gap-1">{t('deposit')}</span>
                         </div>
                         <div className="text-[14px] font-bold text-gold flex items-center gap-1 font-display">
-                          +{t.amount.toFixed(2)} <GramIcon className="w-3.5 h-3.5 drop-shadow-md" />
+                          +{Number(tx.amount || 0).toFixed(2)} <GramIcon className="w-3.5 h-3.5 drop-shadow-md" />
                         </div>
                       </div>
                     ))}
@@ -1424,9 +1435,9 @@ export default function App() {
                     pricesLoaded={pricesLoaded} 
                   />
                 )}
-                {activeTab === 'leaderboard' && <Leaderboard />}
-                {activeTab === 'cases' && <Cases balance={balance} setBalance={setBalance} inventory={inventory} setInventory={setInventory} giftsDb={giftsDb} onAddTurnover={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} turnover={turnover} />}
-                {activeTab === 'tasks' && <Tasks onBalanceUpdate={setBalance} />}
+                {activeTab === 'leaderboard' && <Suspense fallback={<LazyFallback />}><Leaderboard /></Suspense>}
+                {activeTab === 'cases' && <Suspense fallback={<LazyFallback />}><Cases balance={balance} setBalance={setBalance} inventory={inventory} setInventory={setInventory} giftsDb={giftsDb} onAddTurnover={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} turnover={turnover} /></Suspense>}
+                {activeTab === 'tasks' && <Suspense fallback={<LazyFallback />}><Tasks onBalanceUpdate={setBalance} /></Suspense>}
                 {activeTab === 'profile' && (
                   <Profile 
                     user={user} 
@@ -1445,20 +1456,22 @@ export default function App() {
                   />
                 )}
                 {activeTab === 'inventory' && (
-                  <Inventory 
-                    inventory={inventory} 
-                    setInventory={setInventory} 
-                    balance={balance} 
-                    setBalance={setBalance} 
-                    turnover={turnover} 
-                    giftsDb={giftsDb} 
-                    onGoToCases={() => setActiveTab('cases')} 
-                    onPlayUpgrade={() => setActiveGame('upgrade')} 
-                    onPlayCraft={() => setActiveGame('craft')} 
-                    onBack={() => setActiveTab('wallet')}
-                  />
+                  <Suspense fallback={<LazyFallback />}>
+                    <Inventory 
+                      inventory={inventory} 
+                      setInventory={setInventory} 
+                      balance={balance} 
+                      setBalance={setBalance} 
+                      turnover={turnover} 
+                      giftsDb={giftsDb} 
+                      onGoToCases={() => setActiveTab('cases')} 
+                      onPlayUpgrade={() => setActiveGame('upgrade')} 
+                      onPlayCraft={() => setActiveGame('craft')} 
+                      onBack={() => setActiveTab('wallet')}
+                    />
+                  </Suspense>
                 )}
-                {activeTab === 'admin' && <AdminPanel giftsDb={giftsDb} setGiftsDb={(newDb) => {
+                {activeTab === 'admin' && <Suspense fallback={<LazyFallback />}><AdminPanel giftsDb={giftsDb} setGiftsDb={(newDb) => {
       setGiftsDb(newDb);
       const token = sessionStorage.getItem('pg_session_token');
       fetch('/api/admin/gifts', {
@@ -1466,7 +1479,7 @@ export default function App() {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ gifts: newDb })
       });
-    }} />}
+    }} /></Suspense>}
               </motion.div>
             </AnimatePresence>
           </main>
@@ -1480,7 +1493,7 @@ export default function App() {
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                 className="absolute inset-0 z-[100] bg-black"
               >
-                <Upgrade onBack={() => setActiveGame(null)} inventory={inventory} setInventory={setInventory} giftsDb={giftsDb} onWin={(item, price) => auth.recordOpen(item, price, 'nft', undefined, 'upgrade')} balance={balance} setBalance={setBalance} onBet={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} onNavigate={(t) => { setActiveGame(null); setTimeout(() => { if(t==='inventory') setActiveTab('inventory'); else setActiveGame(t as any); }, 50); }} />
+                <Suspense fallback={<LazyFallback />}><Upgrade onBack={() => setActiveGame(null)} inventory={inventory} setInventory={setInventory} giftsDb={giftsDb} onWin={(item, price) => auth.recordOpen(item, price, 'nft', undefined, 'upgrade')} balance={balance} setBalance={setBalance} onBet={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} onNavigate={(t) => { setActiveGame(null); setTimeout(() => { if(t==='inventory') setActiveTab('inventory'); else setActiveGame(t as any); }, 50); }} /></Suspense>
               </motion.div>
             )}
             {activeGame === 'craft' && (
@@ -1491,7 +1504,7 @@ export default function App() {
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                 className="absolute inset-0 z-[100] bg-black"
               >
-                <Craft onBack={() => setActiveGame(null)} inventory={inventory} setInventory={setInventory} giftsDb={giftsDb} onWin={(item, price) => auth.recordOpen(item, price, 'nft', undefined, 'craft')} onTurnover={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} balance={balance} setBalance={setBalance} onNavigate={(t) => { setActiveGame(null); setTimeout(() => { if(t==='inventory') setActiveTab('inventory'); else setActiveGame(t as any); }, 50); }} />
+                <Suspense fallback={<LazyFallback />}><Craft onBack={() => setActiveGame(null)} inventory={inventory} setInventory={setInventory} giftsDb={giftsDb} onWin={(item, price) => auth.recordOpen(item, price, 'nft', undefined, 'craft')} onTurnover={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} balance={balance} setBalance={setBalance} onNavigate={(t) => { setActiveGame(null); setTimeout(() => { if(t==='inventory') setActiveTab('inventory'); else setActiveGame(t as any); }, 50); }} /></Suspense>
               </motion.div>
             )}
             {activeGame === 'mines' && (
@@ -1502,7 +1515,7 @@ export default function App() {
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                 className="absolute inset-0 z-[100] bg-black"
               >
-                <Mines onBack={() => setActiveGame(null)} inventory={inventory} setInventory={setInventory} balance={balance} setBalance={setBalance} onTurnover={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} onWin={(amt, mode, item, mult) => { if (mode === 'nft' && item) auth.recordOpen(item, amt, 'nft', mult, 'mines'); else if (mode === 'gram') auth.recordOpen(null, amt, 'gram', mult, 'mines'); }} giftsDb={giftsDb} onNavigate={(t) => { setActiveGame(null); setTimeout(() => { if(t==='inventory') setActiveTab('inventory'); else setActiveGame(t as any); }, 50); }} />
+                <Suspense fallback={<LazyFallback />}><Mines onBack={() => setActiveGame(null)} inventory={inventory} setInventory={setInventory} balance={balance} setBalance={setBalance} onTurnover={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} onWin={(amt, mode, item, mult) => { if (mode === 'nft' && item) auth.recordOpen(item, amt, 'nft', mult, 'mines'); else if (mode === 'gram') auth.recordOpen(null, amt, 'gram', mult, 'mines'); }} giftsDb={giftsDb} onNavigate={(t) => { setActiveGame(null); setTimeout(() => { if(t==='inventory') setActiveTab('inventory'); else setActiveGame(t as any); }, 50); }} /></Suspense>
               </motion.div>
             )}
             {activeGame === 'new_game' && (
@@ -1513,6 +1526,7 @@ export default function App() {
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                 className="absolute inset-0 z-[100] bg-black"
               >
+                <Suspense fallback={<LazyFallback />}>
                 <NewGame 
                   onBack={() => setActiveGame(null)} 
                   inventory={inventory} 
@@ -1524,6 +1538,7 @@ export default function App() {
                   user={user}
                   token={auth.token}
                 />
+                </Suspense>
               </motion.div>
             )}
             {activeGame === 'plinko' && (
@@ -1534,6 +1549,7 @@ export default function App() {
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                 className="absolute inset-0 z-[100] bg-black"
               >
+                <Suspense fallback={<LazyFallback />}>
                 <Plinko 
                   onBack={() => setActiveGame(null)} 
                   inventory={inventory} 
@@ -1549,6 +1565,7 @@ export default function App() {
                   user={user}
                   token={auth.token}
                 />
+                </Suspense>
               </motion.div>
             )}
           </AnimatePresence>
@@ -1611,6 +1628,7 @@ export default function App() {
           {showTopUp && (
             <TopUpModal 
               demoMode={auth.config?.demoMode}
+              tonTopupAddress={auth.config?.tonTopupAddress}
               onClose={() => setShowTopUp(false)} 
               onSuccess={(amount, method, rawAmount) => {
                 setBalance(b => b + amount);
@@ -1641,6 +1659,7 @@ export default function App() {
           {showSendModal && (
             <SendModal
               balance={balance}
+              demoMode={auth.config?.demoMode}
               onClose={() => setShowSendModal(false)}
               onSuccess={(amount, recipient) => {
                 setBalance(b => Math.max(0, Number((b - amount).toFixed(2))));
@@ -1706,7 +1725,7 @@ export default function App() {
         
         <AnimatePresence>
           {showWelcomeScreen && (
-            <WelcomeScreen onComplete={() => setShowWelcomeScreen(false)} token={auth.token} />
+            <Suspense fallback={null}><WelcomeScreen onComplete={() => setShowWelcomeScreen(false)} token={auth.token} /></Suspense>
           )}
         </AnimatePresence>
       </div>
