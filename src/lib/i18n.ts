@@ -267,12 +267,15 @@ const translations: Record<Language, Record<string, string>> = {
     'daily_desc': 'Ежедневные задания обновляются каждые 24 часа.',
     'no_tasks': 'Нет доступных заданий.',
     
-    // TopUpModal.tsx
+    // BalancePage.tsx (top-up)
     'topup_title': 'Пополнение баланса',
     'topup_desc': 'Подключите кошелек и пополните счет в',
     'sum_ton': 'Сумма (TON)',
     'you_get': 'Вы получите:',
     'pay': 'Оплатить',
+    'processing': 'Обработка...',
+    'topup_nft_desc': 'Продайте NFT из инвентаря — его стоимость сразу зачислится на баланс в GRAM.',
+    'topup_nft_empty': 'В инвентаре пока нет NFT',
     'waiting': 'Ожидание...',
     'start_in': 'Старт через',
     'sec': 'с',
@@ -558,12 +561,15 @@ const translations: Record<Language, Record<string, string>> = {
     'daily_desc': 'Daily tasks are updated every 24 hours.',
     'no_tasks': 'No tasks available.',
     
-    // TopUpModal.tsx
+    // BalancePage.tsx (top-up)
     'topup_title': 'Top up balance',
     'topup_desc': 'Connect wallet and top up your account with',
     'sum_ton': 'Amount (TON)',
     'you_get': 'You receive:',
     'pay': 'Pay',
+    'processing': 'Processing...',
+    'topup_nft_desc': 'Sell an NFT from your inventory — its value is credited to your balance in GRAM instantly.',
+    'topup_nft_empty': 'No NFTs in your inventory yet',
     'waiting': 'Waiting...',
     'players_list': 'Players list',
     'welcome_loading': 'Loading...',
@@ -870,12 +876,15 @@ const translations: Record<Language, Record<string, string>> = {
     'daily_desc': '每日任务每 24 小时更新一次。',
     'no_tasks': '没有可用的任务。',
     
-    // TopUpModal.tsx
+    // BalancePage.tsx (top-up)
     'topup_title': '充值余额',
     'topup_desc': '连接钱包并在以下账户中充值',
     'sum_ton': '金额 (TON)',
     'you_get': '您将收到:',
     'pay': '支付',
+    'processing': '处理中...',
+    'topup_nft_desc': '出售库存中的 NFT — 其价值将立即以 GRAM 存入您的余额。',
+    'topup_nft_empty': '库存中暂无 NFT',
     'waiting': '等待中...',
     'start_in': '开始于',
     'sec': '秒',
