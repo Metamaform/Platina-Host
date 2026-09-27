@@ -1465,6 +1465,84 @@ app.get("/api/admin/gifts", (req, res) => {
     }
   });
 
+  // ----------------------------------------------------
+  // Referral invite share (Профиль → «Пригласить друзей»).
+  // Prepares a message on the bot side (savePreparedInlineMessage)
+  // with a banner photo + localized text; the client then calls
+  // Telegram.WebApp.shareMessage(preparedMessageId) — Telegram opens
+  // the native «Отправить сообщение» modal with the message preview
+  // («с помощью @bot», фото + текст) and «Выбрать получателей…».
+  // ----------------------------------------------------
+  const INVITE_BANNER_PATH = '/platina-invite.jpg';
+  const INVITE_CAPTIONS: Record<string, (link: string) => string> = {
+    ru: (link) =>
+      `🎁 Заходи в Platina Gift и выигрывай свои NFT-подарки!\n\nПопади в еженедельный топ и получай гарантированные призы!\n\nПрисоединяйся ко мне по моей ссылке:\n${link}\n\nНаш канал: @Platina_Gift\nПоддержка: @Platina_Help`,
+    en: (link) =>
+      `🎁 Join Platina Gift and win your NFT gifts!\n\nGet into the weekly top and receive guaranteed prizes!\n\nJoin me via my link:\n${link}\n\nOur channel: @Platina_Gift\nSupport: @Platina_Help`,
+    zh: (link) =>
+      `🎁 加入 Platina Gift，赢取你的 NFT 礼物！\n\n进入每周排行榜，获得保证奖品！\n\n通过我的链接加入：\n${link}\n\n频道: @Platina_Gift\n技术支持: @Platina_Help`,
+  };
+
+  app.post('/api/share/invite', requireAuth, async (req, res) => {
+    try {
+      const userId = (req as any).userId as number;
+      const user = getUser(userId);
+
+      // Та же реферальная ссылка, что показывается в профиле.
+      const refLink = `https://t.me/GaleaDropBot?startapp=r_${userId}`;
+
+      const langCode = String(user?.languageCode || 'ru').toLowerCase();
+      const lang = langCode.startsWith('en') ? 'en' : langCode.startsWith('zh') ? 'zh' : 'ru';
+      const caption = (INVITE_CAPTIONS[lang] || INVITE_CAPTIONS.ru)(refLink);
+
+      let preparedMessageId: string | null = null;
+      if (botToken) {
+        try {
+          const proto = String(req.headers['x-forwarded-proto'] || req.protocol || 'https').split(',')[0];
+          const host = String(req.headers['x-forwarded-host'] || req.headers.host || '');
+          const base = (process.env.APP_URL && !process.env.APP_URL.includes('MY_APP_URL'))
+            ? process.env.APP_URL.replace(/\/$/, '')
+            : `${proto}://${host}`;
+          const photoUrl = `${base}${INVITE_BANNER_PATH}`;
+
+          const tgRes = await fetch(`https://api.telegram.org/bot${botToken}/savePreparedInlineMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              user_id: userId,
+              result: {
+                type: 'photo',
+                id: `invite_${Date.now()}_${userId}`,
+                photo_url: photoUrl,
+                thumbnail_url: photoUrl,
+                title: 'Platina Gift',
+                description: 'Играй и выигрывай NFT-подарки',
+                caption,
+              },
+              allow_user_chats: true,
+              allow_bot_chats: true,
+              allow_group_chats: true,
+              allow_channel_chats: true,
+            }),
+          });
+          const tgJson: any = await tgRes.json().catch(() => ({}));
+          if (tgJson?.ok && tgJson?.result?.id) {
+            preparedMessageId = tgJson.result.id;
+          } else {
+            console.warn('[share/invite] savePreparedInlineMessage:', tgJson?.description || 'unavailable');
+          }
+        } catch (tgErr) {
+          console.warn('[share/invite] Telegram request failed:', tgErr);
+        }
+      }
+
+      res.json({ preparedMessageId, caption, link: refLink });
+    } catch (e) {
+      console.error('[share/invite]', e);
+      res.status(500).json({ error: 'Internal error' });
+    }
+  });
+
   // 404 handler for API routes. Registered BEFORE the SPA/static catch-all so
   // unknown /api/* paths return JSON instead of index.html in production.
   app.use('/api', (req, res) => {
