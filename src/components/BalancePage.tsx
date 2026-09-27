@@ -1,36 +1,23 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, ArrowDown, ArrowUp, ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Package, Gem, QrCode, Wallet, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowDown, ArrowUp, ArrowLeftRight, ArrowDownLeft, Package, Gem, Wallet, Loader2, QrCode, Eye, EyeOff } from 'lucide-react';
 import { TonConnectButton, useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import { GramIcon } from './GramIcon';
 import { StarsIcon } from './StarsIcon';
 import { useTranslation } from '../lib/i18n';
 import { haptics } from '../lib/haptics';
 import { springSnappy } from '../lib/motion';
+import { WalletBalanceCard } from '../features/wallet/WalletBalanceCard';
+import { QuickActions } from '../features/wallet/QuickActions';
+import { PremiumCardCarousel } from '../features/wallet/PremiumCardCarousel';
+import { WithdrawDialog } from '../features/wallet/WithdrawDialog/WithdrawDialog';
 
 /* ---------------------------------------------------------------------------
- * StackingIcon — «Стейкинг»: стопка монет (эллисп сверху + дуга снизу),
- * повторяет иконку из макета IMG_0933.jpeg.
- * ------------------------------------------------------------------------- */
-function StackingIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <ellipse cx="12" cy="8" rx="8" ry="4" />
-      <path d="M4 14.5c0 2.2 3.6 4 8 4s8-1.8 8-4" />
-    </svg>
-  );
-}
-
-/* Темы карточки баланса: классическая (пастельная), чёрная, платинум.
-   Названия по требованию — английские, не переводятся. */
-const CARD_THEMES = ['Classic', 'Black', 'Platinum'] as const;
-
-/* ---------------------------------------------------------------------------
- * BalancePage — отдельная страница баланса (не пункт нижнего меню).
- * Открывается по тапу на баланс в шапке.
- * Сверху — карточка «hero» с балансом в GRAM: три темы оформления
- * (Classic / Black / Platinum), переключение свайпом или точками,
- * ниже — пополнение в стиле Gram Wallet: Telegram Stars / Gram / NFT.
+ * BalancePage — экран кошелька по ТЗ:
+ * Фон #050505, основная карточка градиент #AA80EE→#AD9ADE→#67CEEA,
+ * 4 быстрых действия: Пополнить / Вывод / Обменять / Стейкинг,
+ * блок «Мои карты» с PLATINUM и BLACK,
+ * сценарий вывода (bottom sheet / dialog).
  * ------------------------------------------------------------------------- */
 
 type TopUpMethod = 'stars' | 'ton' | 'nft';
@@ -41,8 +28,16 @@ interface BalancePageProps {
   onSuccess: (amount: number, method: 'stars' | 'ton', rawAmount: number) => void;
   onClose: () => void;
   demoMode?: boolean;
-  /** Project TON address that receives TON top-ups. Empty disables TON top-up. */
   tonTopupAddress?: string;
+}
+
+function StackingIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <ellipse cx="12" cy="8" rx="8" ry="4" />
+      <path d="M4 14.5c0 2.2 3.6 4 8 4s8-1.8 8-4" />
+    </svg>
+  );
 }
 
 export function BalancePage({
@@ -55,52 +50,19 @@ export function BalancePage({
 }: BalancePageProps) {
   const { t } = useTranslation();
   const [method, setMethod] = useState<TopUpMethod>('stars');
-
   const topupRef = useRef<HTMLDivElement>(null);
   const [hint, setHint] = useState<string | null>(null);
   const hintTimer = useRef<number | null>(null);
+  const [showWithdraw, setShowWithdraw] = useState(false);
+  const withdrawTriggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => () => { if (hintTimer.current) window.clearTimeout(hintTimer.current); }, []);
 
   const showHint = (msg: string) => {
     setHint(msg);
     if (hintTimer.current) window.clearTimeout(hintTimer.current);
-    hintTimer.current = window.setTimeout(() => setHint(null), 2000);
+    hintTimer.current = window.setTimeout(() => setHint(null), 2200);
   };
-
-  /* Баланс на карточке — в GRAM (макет: крупное число по центру). */
-  const gramLabel = balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-  /* Три темы карточки: 0 — классическая пастельная (макет), 1 — чёрная,
-     2 — платинум. Переключение обычным свайпом влево/вправо + тап по точкам. */
-  const [cardIdx, setCardIdx] = useState(0);
-  const swipe = useRef<{ x: number; y: number } | null>(null);
-
-  const switchCard = (next: number) => {
-    const clamped = Math.max(0, Math.min(2, next));
-    if (clamped !== cardIdx) {
-      haptics.selection();
-      setCardIdx(clamped);
-    }
-  };
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    swipe.current = { x: e.clientX, y: e.clientY };
-    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* ignore */ }
-  };
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    if (!swipe.current) return;
-    const dx = e.clientX - swipe.current.x;
-    const dy = e.clientY - swipe.current.y;
-    swipe.current = null;
-    /* Свайп по горизонтали (если сдвиг вертикальный — не мешаем скроллу страницы). */
-    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy)) {
-      switchCard(dx < 0 ? cardIdx + 1 : cardIdx - 1);
-    }
-  };
-
-  const handlePointerCancel = () => { swipe.current = null; };
 
   const tabs: { id: TopUpMethod; label: string; icon: React.ReactNode }[] = [
     { id: 'stars', label: t('stars'), icon: <StarsIcon className="w-4 h-4" /> },
@@ -108,180 +70,77 @@ export function BalancePage({
     { id: 'nft', label: 'NFT', icon: <Gem className="w-4 h-4 text-violet-400" /> },
   ];
 
-  /* Ряд из 4 кнопок под карточкой — Пополнить / Отправить / Обменять / Стейкинг.
-     «Отправить», «Обменять» и «Стейкинг» в проекте ещё не реализованы —
-     показываем «СКОРО», как и принято для незавершённых фич. */
-  const actions: { id: string; icon: React.ReactNode; label: string; onClick: () => void }[] = [
-    {
-      id: 'topup',
-      icon: <ArrowDown className="w-7 h-7" strokeWidth={2.75} />,
-      label: t('topup'),
-      onClick: () => {
-        haptics.impact('light');
-        topupRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      },
-    },
-    {
-      id: 'send',
-      icon: <ArrowUp className="w-7 h-7" strokeWidth={2.75} />,
-      label: t('send'),
-      onClick: () => { haptics.impact('light'); showHint(t('soon')); },
-    },
-    {
-      id: 'exchange',
-      icon: <ArrowLeftRight className="w-7 h-7" strokeWidth={2.75} />,
-      label: t('exchange'),
-      onClick: () => { haptics.impact('light'); showHint(t('soon')); },
-    },
-    {
-      id: 'staking',
-      icon: <StackingIcon className="w-7 h-7" />,
-      label: t('staking'),
-      onClick: () => { haptics.impact('light'); showHint(t('soon')); },
-    },
-  ];
+  // Форматирование баланса для карточки: используем GRAM как основную валюту,
+  // но отображаем как fiat $0 по ТЗ для hero (в данном продукте - GRAM баланс)
+  const fiatDisplay = balance.toFixed(2); // будет отформатировано внутри WalletBalanceCard как $X,XXX.XX
+  // Для соответствия ТЗ - карточка показывает баланс в USD, но в продукте у нас GRAM, показываем GRAM как fiat для демо
+  // В WalletBalanceCard мы передаем amount как строку
 
   return (
-    <div className="flex flex-col h-full bg-canvas text-[color:var(--color-text)] overflow-hidden">
-      {/* Top bar — back + title */}
-      <div className="flex items-center gap-3 px-4 pt-4 pb-1 shrink-0">
+    <div className="flex flex-col h-full bg-[#050505] text-[color:var(--color-text)] overflow-hidden">
+      {/* Top bar */}
+      <div className="flex items-center gap-3 px-4 pt-4 pb-2 shrink-0 bg-[#050505]">
         <button
           onClick={() => {
             onClose();
             haptics.impact('light');
           }}
-          className="w-10 h-10 rounded-full bg-white/[0.06] border border-white/5 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all active:scale-95 cursor-pointer"
+          className="w-10 h-10 rounded-full bg-white/[0.06] border border-white/5 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1683FF]"
+          aria-label="Назад"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="font-display text-[22px] font-bold tracking-tight text-white">{t('balance')}</h1>
+        <h1 className="font-display text-[22px] font-bold tracking-tight text-white">Кошелёк</h1>
       </div>
 
-      <div className="flex-1 overflow-y-auto scrollbar-hide px-4 pt-2 pb-10 space-y-5">
-        {/* ------------------------------------------------------------------
-            HERO — карточка баланса: три темы (Classic / Black / Platinum).
-            Classic — пастельный градиент по макету IMG_0933.jpeg, Black —
-            IMG_0945 (чёрная с дудлами и бликом), Platinum — текстура из
-            IMG_0946. Свайп листает темы, точки внизу показывают выбранную
-            (активная — белая, остальные — серые).
-        ------------------------------------------------------------------- */}
-        <div
-          className="relative rounded-[28px] overflow-hidden shadow-[0_20px_50px_-18px_rgba(0,0,0,0.55)] select-none [touch-action:pan-y]"
-          onPointerDown={handlePointerDown}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerCancel}
+      <main aria-label="Кошелёк" className="flex-1 overflow-y-auto scrollbar-hide px-4 pt-2 pb-10 space-y-5 bg-[#050505] w-full max-w-[720px] mx-auto">
+        {/* Основная карточка кошелька по ТЗ */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.22, ease: 'easeOut' }}
+          className="motion-reduce:transition-none"
         >
-          {/* Трек фонов: 0 — Classic, 1 — Black, 2 — Platinum.
-              Свайп листает его по горизонтали, контент остаётся на месте. */}
-          <div
-            className="absolute inset-0 flex w-[300%] transition-transform duration-300 ease-out motion-reduce:transition-none"
-            style={{ transform: `translateX(-${(cardIdx * 100) / 3}%)` }}
-          >
-            {/* 0 — Classic: пастельная тема (макет IMG_0933.jpeg) */}
-            <div className="relative w-1/3 h-full">
-              {/* Fallback-градиент на случай, если фон не загрузился */}
-              <div className="absolute inset-0 bg-[linear-gradient(135deg,#9d89de_0%,#b58cd6_35%,#a7a3de_60%,#7496d4_100%)]" />
-              <img
-                src="/balance-card-bg.jpg"
-                alt=""
-                draggable={false}
-                className="absolute inset-0 w-full h-full object-cover"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-              />
-              {/* Мягкое свечение в центре, как в макете */}
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.35)_0%,rgba(255,255,255,0)_55%)] pointer-events-none" />
-            </div>
+          <WalletBalanceCard fiatAmount={fiatDisplay} currency="USD" />
+        </motion.div>
 
-            {/* 1 — Black: глубоко-чёрная с белыми дудлами и бликом (IMG_0945) */}
-            <div className="relative w-1/3 h-full">
-              <div className="absolute inset-0 bg-[linear-gradient(135deg,#101012_0%,#0a0a0b_55%,#131315_100%)]" />
-              <img
-                src="/balance-card-bg-black.jpg"
-                alt=""
-                draggable={false}
-                className="absolute inset-0 w-full h-full object-cover"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-              />
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0)_55%)] pointer-events-none" />
-            </div>
+        {/* Быстрые действия — 4 кнопки, вторая — Вывод */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.22, ease: 'easeOut', delay: 0.06 }}
+        >
+          <QuickActions
+            onDeposit={() => {
+              haptics.impact('light');
+              topupRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
+            onWithdraw={() => {
+              haptics.impact('light');
+              setShowWithdraw(true);
+            }}
+            onSwap={() => {
+              haptics.impact('light');
+              showHint(t('soon'));
+            }}
+            onStaking={() => {
+              haptics.impact('light');
+              showHint(t('soon'));
+            }}
+          />
+        </motion.div>
 
-            {/* 2 — Platinum: волновая текстура из IMG_0946 + серебристый sheen */}
-            <div className="relative w-1/3 h-full">
-              <div className="absolute inset-0 bg-[linear-gradient(160deg,#17171a_0%,#0c0c0e_50%,#111218_100%)]" />
-              <img
-                src="/balance-card-bg-platinum.jpg"
-                alt=""
-                draggable={false}
-                className="absolute inset-0 w-full h-full object-cover"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-              />
-              {/* Диагональный серебристый блик сверху-справа, как у платиновой карты */}
-              <div className="absolute inset-0 bg-[linear-gradient(215deg,rgba(255,255,255,0.14)_0%,rgba(255,255,255,0.04)_30%,rgba(255,255,255,0)_55%)] pointer-events-none" />
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0)_55%)] pointer-events-none" />
-            </div>
-          </div>
+        {/* Премиальные карточки */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.22, ease: 'easeOut', delay: 0.12 }}
+        >
+          <PremiumCardCarousel />
+        </motion.div>
 
-          {/* Контент поверх любого из фонов */}
-          <div className="relative flex flex-col items-center justify-center px-6 py-14 min-h-[240px]">
-            {/* Крупный баланс в GRAM */}
-            <div className="font-display display-xl text-white text-[64px] font-black leading-none drop-shadow-[0_4px_18px_rgba(80,70,160,0.35)]">
-              {gramLabel}
-            </div>
-            <div className="mt-3 text-white/75 font-bold text-[13px] tracking-[0.22em]">GRAM</div>
-
-            {/* Низ карточки: «Platina» + QR, название темы и точки-индикаторы */}
-            <div className="absolute bottom-4 inset-x-0 flex flex-col items-center gap-2">
-              <div className="flex items-center justify-center gap-2">
-                <span className="font-display text-white text-[22px] font-bold tracking-tight">Platina</span>
-                <QrCode className="w-[22px] h-[22px] text-white" strokeWidth={2.2} />
-              </div>
-              {/* Название текущей темы: Classic / Black / Platinum */}
-              <div className="text-white/70 text-[10px] font-bold uppercase tracking-[0.3em] leading-none">
-                {CARD_THEMES[cardIdx]}
-              </div>
-              <div className="flex items-center gap-2" role="tablist" aria-label="Card theme">
-                {CARD_THEMES.map((name, i) => (
-                  <button
-                    key={name}
-                    type="button"
-                    role="tab"
-                    aria-selected={cardIdx === i}
-                    aria-label={name}
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onClick={() => switchCard(i)}
-                    className={`h-2 w-2 rounded-full transition-all duration-200 cursor-pointer active:scale-125 ${
-                      cardIdx === i
-                        ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.7)] scale-110'
-                        : 'bg-white/30 hover:bg-white/50'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ------------------------------------------------------------------
-            Ряд кнопок под карточкой — как в макете:
-            Пополнить / Отправить / Обменять / Стейкинг
-        ------------------------------------------------------------------- */}
-        <div className="grid grid-cols-4 gap-2.5">
-          {actions.map((a) => (
-            <button
-              key={a.id}
-              onClick={a.onClick}
-              className="flex flex-col items-center justify-center gap-2 py-3.5 rounded-[24px] bg-[#17171A] border border-white/[0.06] active:scale-[0.96] transition-transform duration-150 cursor-pointer shadow-[0_8px_20px_-10px_rgba(0,0,0,0.6)]"
-            >
-              <span className="text-[#3B82F6]">{a.icon}</span>
-              <span className="text-white font-bold text-[13px] leading-none text-center whitespace-nowrap">{a.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* ------------------------------------------------------------------
-            Пополнение — Telegram Stars / Gram / NFT (как в Gram Wallet)
-        ------------------------------------------------------------------- */}
-        <div ref={topupRef} className="scroll-mt-4">
+        {/* Пополнение */}
+        <div ref={topupRef} className="scroll-mt-4 pt-2">
           <div className="flex items-center gap-2.5 mb-3.5">
             <div className="w-8 h-8 rounded-xl bg-brand/15 border border-brand/25 text-brand flex items-center justify-center shrink-0">
               <ArrowDownLeft className="w-4.5 h-4.5" />
@@ -289,7 +148,6 @@ export function BalancePage({
             <h2 className="font-display text-lg font-bold tracking-tight text-white">{t('topup_title')}</h2>
           </div>
 
-          {/* Method segmented control */}
           <div className="w-full flex relative bg-white/[0.04] rounded-2xl p-1 mb-4 border border-white/5">
             {tabs.map((tab) => {
               const active = method === tab.id;
@@ -300,7 +158,7 @@ export function BalancePage({
                     setMethod(tab.id);
                     haptics.selection();
                   }}
-                  className={`relative z-10 flex-1 py-2.5 rounded-xl text-[12px] font-bold flex justify-center items-center gap-1.5 transition-colors duration-200 cursor-pointer active:scale-[0.98] ${
+                  className={`relative z-10 flex-1 py-2.5 rounded-xl text-[12px] font-bold flex justify-center items-center gap-1.5 transition-colors duration-200 cursor-pointer active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1683FF] ${
                     active ? 'text-white' : 'text-white/40 hover:text-white/70'
                   }`}
                 >
@@ -324,7 +182,7 @@ export function BalancePage({
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => haptics.impact('light')}
-              className="w-full py-3.5 rounded-2xl bg-brand hover:bg-brand-dim text-white font-semibold flex items-center justify-center gap-2 transition-colors active:scale-[0.98]"
+              className="w-full py-3.5 rounded-2xl bg-brand hover:bg-brand-dim text-white font-semibold flex items-center justify-center gap-2 transition-colors active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1683FF]"
             >
               <Gem className="w-5 h-5" />
               {t('topup_nft_button')}
@@ -343,22 +201,29 @@ export function BalancePage({
         <section className="rounded-[24px] bg-white/[0.03] border border-white/[0.06] p-4">
           <div className="flex items-center gap-2.5 mb-3">
             <div className="w-8 h-8 rounded-xl bg-violet-500/15 border border-violet-500/25 text-violet-400 flex items-center justify-center">
-              <ArrowUpRight className="w-4.5 h-4.5" />
+              <ArrowDownLeft className="w-4.5 h-4.5 rotate-180" />
             </div>
             <h2 className="font-display text-lg font-bold text-white">{t('withdraw')}</h2>
           </div>
           <p className="text-white/50 text-[13px] leading-relaxed mb-4">{t('withdraw_nft_description')}</p>
           <button
             onClick={() => { haptics.impact('light'); onGoToInventory(); }}
-            className="w-full py-3.5 rounded-2xl bg-white/[0.06] hover:bg-white/10 border border-white/10 text-white font-semibold flex items-center justify-center gap-2 transition-colors active:scale-[0.98] cursor-pointer"
+            className="w-full py-3.5 rounded-2xl bg-white/[0.06] hover:bg-white/10 border border-white/10 text-white font-semibold flex items-center justify-center gap-2 transition-colors active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1683FF]"
           >
             <Package className="w-5 h-5" />
             {t('go_to_inventory')}
           </button>
         </section>
-      </div>
+      </main>
 
-      {/* Тост «СКОРО» для нереализованных действий */}
+      {/* Withdraw Dialog */}
+      <AnimatePresence>
+        {showWithdraw && (
+          <WithdrawDialog open={showWithdraw} onClose={() => setShowWithdraw(false)} />
+        )}
+      </AnimatePresence>
+
+      {/* Toast */}
       <AnimatePresence>
         {hint && (
           <motion.div
@@ -367,6 +232,7 @@ export function BalancePage({
             exit={{ opacity: 0, y: 10, scale: 0.98 }}
             transition={springSnappy}
             className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[140] px-5 py-2.5 rounded-full bg-[#17171A]/95 backdrop-blur-xl border border-white/[0.08] text-white text-[13px] font-bold tracking-wide shadow-[0_16px_40px_-12px_rgba(0,0,0,0.7)] pointer-events-none whitespace-nowrap"
+            aria-live="polite"
           >
             {hint}
           </motion.div>
@@ -377,8 +243,7 @@ export function BalancePage({
 }
 
 /* ---------------------------------------------------------------------------
- * AmountForm — пополнение Telegram Stars / Gram (TON).
- * Логика перенесена из TopUpModal: инвойс Stars через бота, TON через TonConnect.
+ * AmountForm — пополнение Telegram Stars / Gram (TON)
  * ------------------------------------------------------------------------- */
 function AmountForm({
   method,
@@ -397,7 +262,7 @@ function AmountForm({
   const [amount, setAmount] = useState<string>(method === 'stars' ? '50' : '1');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [starsRate, setStarsRate] = useState(0.95); // fallback
+  const [starsRate, setStarsRate] = useState(0.95);
 
   useEffect(() => {
     if (method !== 'stars') return;
@@ -459,7 +324,6 @@ function AmountForm({
                 } else if (status === 'failed') {
                   setError('Payment failed');
                 }
-                // 'cancelled' — user closed the invoice, do nothing
               });
             } else if (twa.openTelegramLink) {
               twa.openTelegramLink(data.invoiceLink);
@@ -481,8 +345,6 @@ function AmountForm({
         setLoading(false);
       }
     } else {
-      // TON Logic — send to the configured project top-up address, NOT the
-      // user's own wallet (previous bug sent funds back to the sender).
       if (!tonTopupAddress) {
         setError('TON top-up is not configured. Use Stars.');
         setLoading(false);
@@ -527,7 +389,6 @@ function AmountForm({
 
   return (
     <div className="w-full flex flex-col space-y-4">
-      {/* Input Card */}
       <div className="w-full bg-white/[0.04] border border-white/[0.07] rounded-[24px] p-4 flex flex-col focus-within:border-brand/40 transition-colors shadow-inner">
         <div className="flex items-center justify-between gap-3">
           <input
@@ -559,7 +420,6 @@ function AmountForm({
           </div>
         </div>
 
-        {/* Quick Preset Chips */}
         <div className="grid grid-cols-4 gap-1.5 mt-3 pt-3 border-t border-white/5">
           {(method === 'stars' ? ['25', '50', '100', '250'] : ['1', '3', '5', '10']).map((preset) => (
             <button
@@ -569,7 +429,7 @@ function AmountForm({
                 setAmount(preset);
                 haptics.selection();
               }}
-              className={`py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95 cursor-pointer ${
+              className={`py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1683FF] ${
                 amount === preset
                   ? 'bg-brand/20 text-brand border border-brand/30'
                   : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border border-white/5'
@@ -582,7 +442,6 @@ function AmountForm({
 
         <div className="h-px w-full bg-white/5 my-3" />
 
-        {/* You Get Calculation */}
         <div className="flex justify-between items-center">
           <span className="text-white/50 text-[12px] font-medium">{t('you_get')}</span>
           <span className="text-gold font-display font-bold flex items-center gap-1 text-[15px]">
@@ -596,16 +455,16 @@ function AmountForm({
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-rose-400 text-xs font-semibold w-full text-center"
+          role="alert"
         >
           {error}
         </motion.p>
       )}
 
-      {/* Pay Button */}
       <button
         onClick={handleTopUp}
         disabled={loading || gramAmount <= 0}
-        className="w-full py-4 rounded-2xl font-bold text-[15px] bg-brand hover:brightness-110 active:scale-[0.98] text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 flex justify-center items-center gap-2 shadow-lg shadow-brand/25 cursor-pointer"
+        className="w-full py-4 rounded-2xl font-bold text-[15px] bg-brand hover:brightness-110 active:scale-[0.98] text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 flex justify-center items-center gap-2 shadow-lg shadow-brand/25 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1683FF]"
       >
         {loading ? (
           <>
