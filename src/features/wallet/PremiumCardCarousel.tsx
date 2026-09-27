@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { QrCode, Loader2 } from 'lucide-react';
-import { toPng } from 'html-to-image';
+import { toJpeg } from 'html-to-image';
 import { GramIcon } from '../../components/GramIcon';
 import { haptics } from '../../lib/haptics';
 
@@ -11,6 +11,39 @@ interface PremiumCardCarouselProps {
   username?: string | null;
   /** Колбэк для показа подсказки/ошибки (тост) */
   onHint?: (msg: string) => void;
+}
+
+/** Подпись к фото карты (единый текст для всех способов отправки). */
+function buildCardCaption(displayBalance: string, username?: string | null): string {
+  const handle = username ? (username.startsWith('@') ? username : `@${username}`) : 'Platina';
+  return `Player balance ${handle}: ${displayBalance} GRAM.\n\nCome play Platina Gift!\nOur Telegram channel: @platina_gift`;
+}
+
+/**
+ * Отправляет именно ФОТО с текстом (не ссылку!).
+ * Web Share API Level 2: файл + подпись уходят одним сообщением.
+ * Возвращает 'shared' | 'cancelled' | 'unsupported'.
+ */
+async function sharePhotoWithCaption(
+  jpegDataUrl: string,
+  caption: string,
+): Promise<'shared' | 'cancelled' | 'unsupported'> {
+  try {
+    const blob = await (await fetch(jpegDataUrl)).blob();
+    const file = new File([blob], 'platina-card.jpg', { type: 'image/jpeg' });
+    const nav = navigator as Navigator & { canShare?: (data: ShareData) => boolean };
+    if (typeof nav.canShare === 'function' && nav.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], text: caption, title: 'Platina Gift Card' });
+        return 'shared';
+      } catch (shareErr: any) {
+        if (shareErr?.name === 'AbortError') return 'cancelled';
+      }
+    }
+  } catch {
+    // fallthrough
+  }
+  return 'unsupported';
 }
 
 function GlowBlack() {
@@ -24,8 +57,10 @@ function GlowBlack() {
 
 /**
  * Основная карта кошелька — карта BLACK с балансом в граммах.
- * Кнопка QR: рендерит карту в PNG и отправляет её через Telegram
- * (shareMessage → выбор чата), с англоязычной подписью.
+ * Кнопка QR: рендерит карту в JPEG и отправляет её через Telegram
+ * (shareMessage → выбор чата) как фото с подписью, с англоязычным текстом.
+ * Если нативный шеринг недоступен — фото уходит файлом через системный
+ * шеринг или ботом в чат пользователя (никогда не ссылкой).
  */
 export function PremiumCardCarousel({ balance = 0, username, onHint }: PremiumCardCarouselProps) {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -44,10 +79,12 @@ export function PremiumCardCarousel({ balance = 0, username, onHint }: PremiumCa
     try {
       const tg = (window as any).Telegram?.WebApp;
       const token = sessionStorage.getItem('pg_session_token');
+      const caption = buildCardCaption(displayBalance, username);
 
-      // Снимок карты (кнопка QR исключается через data-атрибут)
+      // Снимок карты в JPEG (Telegram требует JPEG для photo_url в inline-результатах)
       // skipFonts: true предотвращает чтение cross-origin шрифтов и сетевые сбои cssRules
-      const image = await toPng(cardRef.current, {
+      const image = await toJpeg(cardRef.current, {
+        quality: 0.94,
         pixelRatio: 2,
         cacheBust: true,
         skipFonts: true,
@@ -56,15 +93,11 @@ export function PremiumCardCarousel({ balance = 0, username, onHint }: PremiumCa
       });
 
       if (!token) {
-        // Если пользователь не авторизован (например гостевой режим)
-        if (navigator.share) {
-          await navigator.share({
-            title: 'Platina Gift Card',
-            text: `Player balance: ${displayBalance} GRAM`,
-            url: window.location.href,
-          }).catch(() => {});
+        // Гостевой режим: отправляем фото с текстом через системный шеринг
+        const result = await sharePhotoWithCaption(image, caption);
+        if (result === 'shared') {
           haptics.notify('success');
-        } else {
+        } else if (result !== 'cancelled') {
           onHint?.('Sharing is available inside Telegram');
         }
         return;
@@ -80,30 +113,40 @@ export function PremiumCardCarousel({ balance = 0, username, onHint }: PremiumCa
         throw new Error(data?.error || 'Share failed');
       }
 
+      // 1. Нативный шеринг Telegram: фото + подпись, выбор чата
       if (data?.preparedMessageId && tg && typeof tg.shareMessage === 'function') {
         tg.shareMessage(data.preparedMessageId, (sent: boolean) => {
           if (sent) haptics.notify('success');
         });
-      } else if (data?.photoUrl && navigator.share) {
-        try {
-          await navigator.share({
-            title: 'Platina Gift Card',
-            text: `Player balance: ${displayBalance} GRAM`,
-            url: data.photoUrl,
-          });
+        return;
+      }
+
+      // 2. Web Share с самим фото и подписью (никаких ссылок!)
+      const result = await sharePhotoWithCaption(image, data?.caption || caption);
+      if (result === 'shared') {
+        haptics.notify('success');
+        return;
+      }
+      if (result === 'cancelled') return;
+
+      // 3. Бот отправляет карту в чат пользователя — фото с текстом гарантированно
+      try {
+        const sendRes = await fetch('/api/wallet/share-card/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ image }),
+        });
+        if (sendRes.ok) {
+          onHint?.('Card sent to your chat with the bot — forward it anywhere');
           haptics.notify('success');
-        } catch (shareErr: any) {
-          if (shareErr?.name !== 'AbortError') {
-            if (navigator.clipboard?.writeText) {
-              await navigator.clipboard.writeText(data.photoUrl);
-              onHint?.('Link copied');
-              haptics.notify('success');
-            } else {
-              onHint?.('Sharing is available inside Telegram');
-            }
-          }
+          return;
         }
-      } else if (data?.photoUrl && navigator.clipboard?.writeText) {
+      } catch {
+        // fallthrough to link copy
+      }
+
+      // 4. Совсем последний вариант — ссылка на фото
+      if (data?.photoUrl && navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(data.photoUrl);
         onHint?.('Link copied');
         haptics.notify('success');

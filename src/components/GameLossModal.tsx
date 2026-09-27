@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { X, RotateCcw, Bomb, Flame, Trash2, ShieldAlert } from 'lucide-react';
+import { X, RotateCcw, Flame, Trash2, ShieldAlert } from 'lucide-react';
 import { useTranslation } from '../lib/i18n';
 
 export interface LossStat {
@@ -103,7 +103,12 @@ export const GameLossModal: React.FC<GameLossModalProps> = ({
             {/* Main Badge Container */}
             <div className="w-[88px] h-[88px] rounded-[24px] bg-gradient-to-b from-[#2e1014] via-[#1d0a0d] to-[#120608] border border-red-500/40 flex items-center justify-center relative shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_8px_20px_rgba(239,68,68,0.25)]">
               {game === 'mines' && (
-                <Bomb className="w-11 h-11 text-red-500 drop-shadow-[0_0_14px_rgba(239,68,68,0.7)]" />
+                <img
+                  src="/bomb-planted.png"
+                  alt="Bomb Planted"
+                  className="w-[68%] h-[68%] object-contain drop-shadow-[0_0_14px_rgba(239,68,68,0.7)] select-none"
+                  draggable={false}
+                />
               )}
 
               {game === 'rocket' && (
