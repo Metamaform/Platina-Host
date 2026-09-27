@@ -400,6 +400,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
   const [showLevelModal, setShowLevelModal] = useState<boolean>(false);
   const [showHistory, setShowHistory] = useState<boolean>(false);
   const [showReferrals, setShowReferrals] = useState<boolean>(false);
+  const [isSharingInvite, setIsSharingInvite] = useState<boolean>(false);
   const [referrals, setReferrals] = useState<any[]>([]);
   const [promoCode, setPromoCode] = useState('');
   const [promoStatus, setPromoStatus] = useState<{msg: string, type: 'error'|'success'} | null>(null);
@@ -439,6 +440,49 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
 
 
 
+  // Отправка приглашения — ТОЛЬКО нативным Telegram shareMessage:
+  // сервер готовит сообщение (savePreparedInlineMessage: фото-баннер +
+  // текст со ссылкой), а клиент вызывает tg.shareMessage(id) → Telegram
+  // показывает системное окно «Отправить сообщение» с предпросмотром
+  // («с помощью @bot» + фото + текст) и кнопкой «Выбрать получателей…».
+  const handleShareInvite = async () => {
+    if (isSharingInvite) return;
+    const twa = (window as any).Telegram?.WebApp;
+    const token = sessionStorage.getItem('pg_session_token');
+    try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch (e) {}
+
+    if (token && twa && typeof twa.shareMessage === 'function') {
+      setIsSharingInvite(true);
+      try {
+        const res = await fetch('/api/share/invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data?.preparedMessageId) {
+          twa.shareMessage(data.preparedMessageId, (sent: boolean) => {
+            if (sent) {
+              try { (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch (e) {}
+            }
+          });
+          return;
+        }
+        console.warn('[share/invite] no preparedMessageId:', data?.error || res.status);
+      } catch (e) {
+        console.warn('[share/invite]', e);
+      } finally {
+        setIsSharingInvite(false);
+      }
+    }
+
+    // Fallback (вне Telegram или если prepare не удался) — классический шеринг ссылки.
+    const link = `https://t.me/GaleaDropBot?startapp=r_${user?.id}`;
+    const text = t('referrals_desc') || '';
+    try {
+      twa?.openTelegramLink?.(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`);
+    } catch (e) {}
+  };
+
   const [isLoadingReferrals, setIsLoadingReferrals] = useState(false);
   useEffect(() => {
     if (showReferrals) {
@@ -476,9 +520,9 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
             setShowSettings(true);
             try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch (e) {}
           }} 
-          className="absolute top-0 right-0 w-10 h-10 rounded-full bg-white/[0.06] border border-white/5 flex items-center justify-center text-white/60 hover:text-white transition-all active:scale-95 z-20 cursor-pointer"
+          className="absolute top-0 right-0 w-11 h-11 rounded-full bg-[#f2f1ec] flex items-center justify-center text-[#17181c] shadow-[0_2px_8px_rgba(0,0,0,0.35)] hover:brightness-105 transition-all active:scale-95 z-20 cursor-pointer"
         >
-          <Settings className="w-5 h-5" />
+          <Settings className="w-5 h-5" strokeWidth={2.2} />
         </button>
         {onBack && (
           <button 
@@ -486,9 +530,9 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               onBack();
               try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch (e) {}
             }} 
-            className="absolute top-0 left-0 w-10 h-10 rounded-full bg-white/[0.06] border border-white/5 flex items-center justify-center text-white/60 hover:text-white transition-all active:scale-95 z-20 cursor-pointer"
+            className="absolute top-0 left-0 w-11 h-11 rounded-full bg-[#f2f1ec] flex items-center justify-center text-[#17181c] shadow-[0_2px_8px_rgba(0,0,0,0.35)] hover:brightness-105 transition-all active:scale-95 z-20 cursor-pointer"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5" strokeWidth={2.2} />
           </button>
         )}
         <div className="relative mb-3 mt-1">
@@ -511,7 +555,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
       </div>
       
       {/* Turnover & Level Card */}
-      <div className="bg-[#15161b] border border-white/[0.08] p-5 rounded-[24px] shadow-lg">
+      <div className="bg-[#1d1e23] border border-white/[0.07] p-5 rounded-[26px] shadow-[0_18px_45px_-16px_rgba(0,0,0,0.7)]">
         <div className="flex justify-between items-end mb-3">
           <div>
             <div className="text-white/40 text-[11px] mb-1 font-bold uppercase tracking-wider">{t('turnover')}</div>
@@ -525,7 +569,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                 setShowLevelModal(true);
                 try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
               }} 
-              className="text-brand text-xs font-bold active:scale-95 transition-transform cursor-pointer bg-brand/10 hover:bg-brand/15 px-2.5 py-1 rounded-lg border border-brand/20"
+              className="text-white text-xs font-bold active:scale-95 transition-transform cursor-pointer bg-brand hover:brightness-110 px-3 py-1.5 rounded-full shadow-[0_4px_14px_rgba(0,152,234,0.35)]"
             >
               {t('level')} {currentLevel}
             </button>
@@ -546,14 +590,14 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
       </div>
 
       {/* Promocode Card */}
-      <div className="bg-[#15161b] border border-white/[0.08] rounded-[24px] p-4.5 flex flex-col gap-2.5 shadow-lg">
+      <div className="bg-[#1d1e23] border border-white/[0.07] rounded-[26px] p-4.5 flex flex-col gap-2.5 shadow-[0_18px_45px_-16px_rgba(0,0,0,0.7)]">
         <h3 className="font-display text-sm font-bold text-white tracking-wide">{t('enter_promocode')}</h3>
         <div className="flex gap-2">
           <input 
             value={promoCode} 
             onChange={(e) => setPromoCode(e.target.value.toUpperCase())} 
             placeholder={t('promocode_placeholder')} 
-            className="flex-1 bg-black/30 border border-white/10 focus:border-brand/40 rounded-xl px-4 py-3 text-sm font-bold text-white placeholder-white/25 uppercase outline-none transition-colors" 
+            className="flex-1 bg-black/30 border border-white/10 focus:border-brand/40 rounded-full px-4 py-3 text-sm font-bold text-white placeholder-white/25 uppercase outline-none transition-colors" 
           />
           <button 
             onClick={() => {
@@ -561,7 +605,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch (e) {}
             }} 
             disabled={isActivating || !promoCode.trim()} 
-            className="px-5 py-3 bg-brand hover:brightness-110 text-white font-bold text-sm rounded-xl active:scale-95 transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed shadow-md shadow-brand/20 cursor-pointer"
+            className="px-5 py-3 bg-brand hover:brightness-110 text-white font-bold text-sm rounded-full active:scale-95 transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_6px_18px_rgba(0,152,234,0.3)] cursor-pointer"
           >
             {isActivating ? '...' : t('promo_ok')}
           </button>
@@ -578,18 +622,18 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
       </div>
 
       {/* Menu Action List */}
-      <div className="bg-[#15161b] border border-white/[0.08] p-1.5 rounded-[24px] flex flex-col space-y-1 shadow-lg">
+      <div className="bg-[#1d1e23] border border-white/[0.07] p-2 rounded-[26px] flex flex-col space-y-1 shadow-[0_18px_45px_-16px_rgba(0,0,0,0.7)]">
         {onGoToInventory && (
           <button 
             onClick={() => {
               onGoToInventory();
               try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
             }} 
-            className="flex items-center justify-between p-3.5 hover:bg-white/[0.04] transition-all rounded-2xl group active:scale-[0.98] cursor-pointer"
+            className="flex items-center justify-between p-3 hover:bg-white/[0.04] transition-all rounded-[20px] group active:scale-[0.98] cursor-pointer"
           >
             <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400 flex items-center justify-center shrink-0">
-                <Package className="w-5 h-5" />
+              <div className="w-11 h-11 rounded-full bg-[#f2f1ec] text-[#17181c] flex items-center justify-center shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+                <Package className="w-5 h-5" strokeWidth={2.2} />
               </div>
               <div className="flex flex-col text-left">
                 <span className="font-semibold text-[14px] text-white leading-tight">{t('my_inventory') || 'Мой инвентарь NFT'}</span>
@@ -606,11 +650,11 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               onGoToLeaderboard();
               try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
             }} 
-            className="flex items-center justify-between p-3.5 hover:bg-white/[0.04] transition-all rounded-2xl group active:scale-[0.98] cursor-pointer"
+            className="flex items-center justify-between p-3 hover:bg-white/[0.04] transition-all rounded-[20px] group active:scale-[0.98] cursor-pointer"
           >
             <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
-                <Trophy className="w-5 h-5" />
+              <div className="w-11 h-11 rounded-full bg-[#f2f1ec] text-[#17181c] flex items-center justify-center shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+                <Trophy className="w-5 h-5" strokeWidth={2.2} />
               </div>
               <div className="flex flex-col text-left">
                 <span className="font-semibold text-[14px] text-white leading-tight">{t('nav_leaderboard') || 'Таблица лидеров'}</span>
@@ -626,11 +670,11 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
             setShowReferrals(true);
             try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
           }} 
-          className="flex items-center justify-between p-3.5 hover:bg-white/[0.04] transition-all rounded-2xl group active:scale-[0.98] cursor-pointer"
+          className="flex items-center justify-between p-3 hover:bg-white/[0.04] transition-all rounded-[20px] group active:scale-[0.98] cursor-pointer"
         >
           <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-brand/10 border border-brand/20 text-brand flex items-center justify-center shrink-0">
-              <Users className="w-5 h-5" />
+            <div className="w-11 h-11 rounded-full bg-[#f2f1ec] text-[#17181c] flex items-center justify-center shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+              <Users className="w-5 h-5" strokeWidth={2.2} />
             </div>
             <div className="flex flex-col text-left">
               <span className="font-semibold text-[14px] text-white leading-tight">{t('referrals') || 'Реферальная система'}</span>
@@ -645,11 +689,11 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
             setShowHistory(true);
             try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
           }} 
-          className="flex items-center justify-between p-3.5 hover:bg-white/[0.04] transition-all rounded-2xl group active:scale-[0.98] cursor-pointer"
+          className="flex items-center justify-between p-3 hover:bg-white/[0.04] transition-all rounded-[20px] group active:scale-[0.98] cursor-pointer"
         >
           <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
-              <History className="w-5 h-5" />
+            <div className="w-11 h-11 rounded-full bg-[#f2f1ec] text-[#17181c] flex items-center justify-center shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+              <History className="w-5 h-5" strokeWidth={2.2} />
             </div>
             <div className="flex flex-col text-left">
               <span className="font-semibold text-[14px] text-white leading-tight">{t('deposit_history') || 'История пополнений'}</span>
@@ -663,11 +707,11 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
           href={config?.supportUrl || 'https://t.me/platina_help'} 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="flex items-center justify-between p-3.5 hover:bg-white/[0.04] transition-all rounded-2xl group active:scale-[0.98] cursor-pointer"
+          className="flex items-center justify-between p-3 hover:bg-white/[0.04] transition-all rounded-[20px] group active:scale-[0.98] cursor-pointer"
         >
           <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
-              <MessageCircle className="w-5 h-5" />
+            <div className="w-11 h-11 rounded-full bg-[#f2f1ec] text-[#17181c] flex items-center justify-center shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+              <MessageCircle className="w-5 h-5" strokeWidth={2.2} />
             </div>
             <div className="flex flex-col text-left">
               <span className="font-semibold text-[14px] text-white leading-tight">{t('support') || 'Поддержка'}</span>
@@ -694,7 +738,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-              className="relative z-10 w-full max-w-md bg-[#14151a] border border-white/10 rounded-t-[32px] sm:rounded-[28px] shadow-2xl overflow-hidden flex flex-col max-h-[85vh] text-white"
+              className="relative z-10 w-full max-w-md bg-[#1a1b1f] border border-white/[0.07] rounded-t-[32px] sm:rounded-[28px] shadow-2xl overflow-hidden flex flex-col max-h-[85vh] text-white"
             >
               {/* Grab Handle */}
               <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-1 sm:hidden" />
@@ -706,9 +750,9 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                  </div>
                  <button 
                    onClick={() => setShowReferrals(false)} 
-                   className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/15 active:scale-95 transition-all cursor-pointer"
+                   className="w-9 h-9 rounded-full bg-[#f2f1ec] flex items-center justify-center text-[#17181c] hover:brightness-105 active:scale-95 transition-all cursor-pointer"
                  >
-                   <X className="w-4 h-4" />
+                   <X className="w-4 h-4" strokeWidth={2.5} />
                  </button>
               </div>
               
@@ -722,7 +766,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                     {t('referrals_link')}
                   </span>
                   <div className="flex gap-2">
-                    <div className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3.5 py-3 text-xs font-mono font-medium text-white/80 overflow-hidden text-ellipsis whitespace-nowrap">
+                    <div className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-3.5 py-3.5 text-xs font-mono font-medium text-white/80 overflow-hidden text-ellipsis whitespace-nowrap">
                       {`https://t.me/GaleaDropBot?startapp=r_${user?.id}`}
                     </div>
                     <button 
@@ -732,28 +776,28 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                         try { (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch (e) {}
                         setTimeout(() => setIsCopied(false), 2000);
                       }}
-                      className="px-3.5 bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 rounded-xl flex items-center justify-center transition-all text-white cursor-pointer"
+                      className="px-3.5 bg-[#f2f1ec] hover:brightness-105 active:scale-95 rounded-2xl flex items-center justify-center transition-all text-[#17181c] cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.35)]"
                     >
                       {isCopied ? (
-                        <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold">
-                          <Check className="w-4 h-4" />
+                        <div className="flex items-center gap-1.5 text-emerald-600 text-xs font-bold">
+                          <Check className="w-4 h-4" strokeWidth={2.5} />
                           <span>Скопировано</span>
                         </div>
                       ) : (
-                        <Copy className="w-4 h-4 text-white/70" />
+                        <Copy className="w-4 h-4" strokeWidth={2.2} />
                       )}
                     </button>
                   </div>
                   <button 
-                    onClick={() => {
-                      const link = `https://t.me/GaleaDropBot?startapp=r_${user?.id}`;
-                      const text = t('referrals_desc') || '';
-                      try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch (e) {}
-                      (window as any).Telegram?.WebApp?.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`);
-                    }}
-                    className="w-full mt-3 py-3.5 rounded-xl bg-brand hover:brightness-110 text-white font-bold text-sm active:scale-[0.98] transition-all shadow-lg shadow-brand/20 flex items-center justify-center gap-2 cursor-pointer"
+                    onClick={() => { void handleShareInvite(); }}
+                    disabled={isSharingInvite}
+                    className="w-full mt-3 py-3.5 rounded-full bg-brand hover:brightness-110 text-white font-bold text-sm active:scale-[0.98] transition-all shadow-lg shadow-brand/25 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-wait"
                   >
-                    <Users className="w-4 h-4" />
+                    {isSharingInvite ? (
+                      <Activity className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Users className="w-4 h-4" />
+                    )}
                     <span>{t('invite_friends')}</span>
                   </button>
                 </div>
@@ -827,7 +871,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-              className="relative z-10 w-full max-w-sm bg-[#14151a] border border-white/10 rounded-t-[32px] sm:rounded-[28px] shadow-2xl overflow-hidden flex flex-col max-h-[80vh] text-white"
+              className="relative z-10 w-full max-w-sm bg-[#1a1b1f] border border-white/[0.07] rounded-t-[32px] sm:rounded-[28px] shadow-2xl overflow-hidden flex flex-col max-h-[80vh] text-white"
             >
               {/* Grab Handle */}
               <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-1 sm:hidden" />
@@ -839,9 +883,9 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                  </div>
                  <button 
                    onClick={() => setShowHistory(false)} 
-                   className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/15 active:scale-95 transition-all cursor-pointer"
+                   className="w-9 h-9 rounded-full bg-[#f2f1ec] flex items-center justify-center text-[#17181c] hover:brightness-105 active:scale-95 transition-all cursor-pointer"
                  >
-                   <X className="w-4 h-4" />
+                   <X className="w-4 h-4" strokeWidth={2.5} />
                  </button>
               </div>
               
@@ -886,7 +930,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative w-full max-w-sm bg-surface border border-hairline rounded-2xl p-6 shadow-2xl flex flex-col items-center z-50"
+                className="relative w-full max-w-sm bg-[#1a1b1f] border border-white/[0.07] rounded-[26px] p-6 shadow-2xl flex flex-col items-center z-50"
               >
                 <div className="w-32 h-32 rounded-2xl mb-4 relative overflow-hidden">
                   <PremiumImage staticMode src={selectedNft.image_url || `/nft/${selectedNft.name}.png`} alt={selectedNft.name} className="w-full h-full relative z-10 " />
@@ -907,13 +951,13 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                   <button 
                     onClick={() => handleSell({ ...selectedNft, price: currentPrice })}
                     disabled={selectedNft.isWithdrawing}
-                    className="w-full py-3.5 rounded-xl bg-brand hover:bg-brand-dim disabled:bg-white/10 disabled:text-muted text-white font-semibold transition-colors shadow-lg active:scale-95 flex items-center justify-center gap-1"
+                    className="w-full py-3.5 rounded-full bg-brand hover:bg-brand-dim disabled:bg-white/10 disabled:text-muted text-white font-semibold transition-colors shadow-[0_6px_18px_rgba(0,152,234,0.3)] active:scale-95 flex items-center justify-center gap-1 cursor-pointer"
                   >
                     {t('sell_for')} {currentPrice.toFixed(2)} <GramIcon className="w-4 h-4 drop-shadow-md" />
                   </button>
                   <button 
                     onClick={() => handleToggleWithdraw(selectedNft)}
-                    className={`w-full py-3.5 rounded-xl font-semibold transition-colors border active:scale-95 ${selectedNft.isWithdrawing ? 'bg-danger/10 border-danger/30 text-danger' : 'bg-white/5 border-hairline hover:bg-white/10'}`}
+                    className={`w-full py-3.5 rounded-full font-semibold transition-colors border active:scale-95 cursor-pointer ${selectedNft.isWithdrawing ? 'bg-danger/10 border-danger/30 text-danger' : 'bg-white/5 border-white/10 hover:bg-white/10 text-white'}`}
                   >
                     {selectedNft.isWithdrawing ? t('cancel_withdraw') : t('withdraw_nft')}
                   </button>
@@ -938,17 +982,17 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-surface border border-hairline p-8 rounded-3xl w-full max-w-sm text-center relative shadow-2xl"
+              className="bg-[#1a1b1f] border border-white/[0.07] p-8 rounded-[26px] w-full max-w-sm text-center relative shadow-2xl"
             >
               <button 
                 onClick={() => setShowLevelModal(false)}
-                className="absolute top-4 right-4 text-muted hover:text-white transition-colors p-2"
+                className="absolute top-4 right-4 w-9 h-9 rounded-full bg-[#f2f1ec] flex items-center justify-center text-[#17181c] hover:brightness-105 active:scale-95 transition-all cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" strokeWidth={2.5} />
               </button>
               
-              <div className="w-16 h-16 rounded-full bg-brand/20 text-brand flex items-center justify-center mx-auto mb-5">
-                <Gift className="w-8 h-8" />
+              <div className="w-16 h-16 rounded-full bg-[#f2f1ec] text-[#17181c] flex items-center justify-center mx-auto mb-5 shadow-[0_4px_14px_rgba(0,0,0,0.4)]">
+                <Gift className="w-8 h-8" strokeWidth={2} />
               </div>
               
               <h3 className="font-display text-2xl font-semibold mb-3">{t('level_rewards')}</h3>
@@ -958,7 +1002,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               
               <button 
                 onClick={() => setShowLevelModal(false)}
-                className="w-full py-3.5 rounded-xl bg-brand text-white font-semibold active:scale-95 transition-transform shadow-lg"
+                className="w-full py-3.5 rounded-full bg-brand text-white font-semibold active:scale-95 transition-transform shadow-[0_6px_18px_rgba(0,152,234,0.3)] cursor-pointer"
               >
                 {t('got_it')}
               </button>
@@ -981,23 +1025,23 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-sm bg-surface border border-hairline rounded-3xl shadow-2xl z-50 overflow-hidden flex flex-col p-6"
+              className="relative w-full max-w-sm bg-[#1a1b1f] border border-white/[0.07] rounded-[26px] shadow-2xl z-50 overflow-hidden flex flex-col p-6"
             >
               <h3 className="font-display text-xl font-bold mb-4">{t('settings') || 'Settings'}</h3>
-              <button onClick={() => setShowSettings(false)} className="absolute top-6 right-6 w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white transition-colors z-20">
-                <X className="w-4 h-4" />
+              <button onClick={() => setShowSettings(false)} className="absolute top-5 right-5 w-9 h-9 rounded-full bg-[#f2f1ec] flex items-center justify-center text-[#17181c] hover:brightness-105 active:scale-95 transition-all cursor-pointer z-20">
+                <X className="w-4 h-4" strokeWidth={2.5} />
               </button>
               
               <div className="space-y-4">
                 <div className="text-sm font-medium text-white/70 mb-2">{t('language') || 'Language'}</div>
                 <div className="grid grid-cols-1 gap-2">
-                  <button onClick={() => { handleSetLang('en'); setShowSettings(false); }} className={`p-3 rounded-xl border flex items-center justify-between ${lang === 'en' ? 'bg-brand/20 border-brand text-brand font-bold' : 'bg-white/5 border-hairline text-white'}`}>
+                  <button onClick={() => { handleSetLang('en'); setShowSettings(false); }} className={`p-3.5 rounded-full border flex items-center justify-between transition-colors cursor-pointer ${lang === 'en' ? 'bg-brand border-transparent text-white font-bold shadow-[0_6px_18px_rgba(0,152,234,0.3)]' : 'bg-white/[0.05] border-white/10 text-white hover:bg-white/[0.08]'}`}>
                     English {lang === 'en' && <Gem className="w-4 h-4" />}
                   </button>
-                  <button onClick={() => { handleSetLang('ru'); setShowSettings(false); }} className={`p-3 rounded-xl border flex items-center justify-between ${lang === 'ru' ? 'bg-brand/20 border-brand text-brand font-bold' : 'bg-white/5 border-hairline text-white'}`}>
+                  <button onClick={() => { handleSetLang('ru'); setShowSettings(false); }} className={`p-3.5 rounded-full border flex items-center justify-between transition-colors cursor-pointer ${lang === 'ru' ? 'bg-brand border-transparent text-white font-bold shadow-[0_6px_18px_rgba(0,152,234,0.3)]' : 'bg-white/[0.05] border-white/10 text-white hover:bg-white/[0.08]'}`}>
                     Русский {lang === 'ru' && <Gem className="w-4 h-4" />}
                   </button>
-                  <button onClick={() => { handleSetLang('zh'); setShowSettings(false); }} className={`p-3 rounded-xl border flex items-center justify-between ${lang === 'zh' ? 'bg-brand/20 border-brand text-brand font-bold' : 'bg-white/5 border-hairline text-white'}`}>
+                  <button onClick={() => { handleSetLang('zh'); setShowSettings(false); }} className={`p-3.5 rounded-full border flex items-center justify-between transition-colors cursor-pointer ${lang === 'zh' ? 'bg-brand border-transparent text-white font-bold shadow-[0_6px_18px_rgba(0,152,234,0.3)]' : 'bg-white/[0.05] border-white/10 text-white hover:bg-white/[0.08]'}`}>
                     中文 {lang === 'zh' && <Gem className="w-4 h-4" />}
                   </button>
                 </div>
@@ -1276,8 +1320,8 @@ export default function App() {
               transition={{ type: 'spring', damping: 28, stiffness: 350 }}
               className="absolute inset-x-3 top-2.5 z-50 flex justify-center pointer-events-none"
             >
-                <div className={`relative flex items-center justify-between bg-[#2a2a2c]/95 backdrop-blur-2xl rounded-[28px] p-2 w-full shadow-[0_12px_36px_rgba(0,0,0,0.6)] pointer-events-auto transition-all duration-300 ${
-                  topUpGlow ? 'border border-emerald-500/80 shadow-[0_0_25px_rgba(16,185,129,0.35)]' : 'border border-white/[0.06]'
+                <div className={`relative flex items-center gap-2 bg-[#26272b]/95 backdrop-blur-2xl rounded-full p-2 w-full shadow-[0_12px_36px_rgba(0,0,0,0.6)] pointer-events-auto border transition-all duration-300 ${
+                  topUpGlow ? 'border-emerald-500/80 shadow-[0_0_25px_rgba(16,185,129,0.35)]' : 'border-white/[0.07]'
                 }`}>
                   {/* Avatar -> Profile */}
                   <button 
@@ -1285,43 +1329,49 @@ export default function App() {
                       setActiveTab('profile');
                       try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
                     }} 
-                    className="flex items-center gap-2 pr-2.5 pl-1 py-0.5 hover:bg-white/[0.06] rounded-full transition-all active:scale-[0.96] z-10 cursor-pointer"
+                    className="relative shrink-0 rounded-full transition-transform active:scale-[0.95] cursor-pointer outline-none"
                   >
-                    <div className="w-[40px] h-[40px] rounded-full overflow-hidden bg-[#e8e8ea] shrink-0 border-2 border-white/[0.12] shadow-[0_0_10px_rgba(255,255,255,0.08)] flex items-center justify-center relative">
+                    <span className={`block w-11 h-11 rounded-full overflow-hidden bg-[#e8e8ea] flex items-center justify-center relative transition-shadow ${
+                      activeTab === 'profile'
+                        ? 'ring-2 ring-brand ring-offset-2 ring-offset-[#26272b] shadow-[0_0_16px_rgba(0,152,234,0.5)]'
+                        : 'ring-2 ring-[#f2f1ec] shadow-[0_2px_8px_rgba(0,0,0,0.35)]'
+                    }`}>
                       {user?.photoUrl ? (
                         <img src={user.photoUrl} alt="Avatar" className="absolute w-full h-full object-cover" />
                       ) : (
                         <User className="w-5 h-5 text-[#1c1e21] relative z-10" />
                       )}
-                    </div>
-                    <span className="text-[12px] font-bold text-[#1c1e21] bg-[#e8e8ea] px-2.5 py-1 rounded-full">
-                      LVL {currentLevel}
                     </span>
                   </button>
 
+                  {/* Level chip (cream badge, like the menu icons) */}
+                  <span className="text-[11px] font-bold text-[#17181c] bg-[#f2f1ec] px-2.5 py-1.5 rounded-full whitespace-nowrap shrink-0 leading-none shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+                    LVL {currentLevel}
+                  </span>
+
                   {/* Center NFT Heroic Helmet (Model: Galea Alba) */}
-                  <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-none z-0">
+                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden min-[350px]:flex items-center justify-center pointer-events-none z-0">
                     <PremiumImage 
                       staticMode={false} 
                       loopWithDelay={true} 
                       loopDelayMs={0} 
                       src="https://nft.fragment.com/gift/heroichelmet-127.lottie.json" 
                       alt="Heroic Helmet - Galea Alba" 
-                      className="w-[62px] h-[62px] object-contain drop-shadow-[0_6px_16px_rgba(0,0,0,0.6)]" 
+                      className="w-[52px] h-[52px] object-contain drop-shadow-[0_6px_16px_rgba(0,0,0,0.6)]" 
                     />
                   </div>
 
-                  {/* Balance -> Balance page */}
+                  {/* Balance -> Balance page (active-accent blue, like the menu) */}
                   <button 
                     onClick={() => {
                       setShowBalancePage(true);
                       try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch (e) {}
                     }} 
-                    className="flex items-center gap-1.5 bg-brand text-white px-3 py-2 rounded-full hover:brightness-110 active:scale-[0.96] transition-all duration-150 z-10 mr-0.5 cursor-pointer shadow-[0_4px_14px_rgba(0,152,234,0.35)]"
+                    className="ml-auto relative z-10 flex items-center gap-1.5 bg-brand text-white pl-3.5 pr-1.5 py-1.5 rounded-full hover:brightness-110 active:scale-[0.96] transition-all duration-150 cursor-pointer shadow-[0_6px_18px_rgba(0,152,234,0.4)]"
                   >
-                    <span className="font-display text-[14px] font-bold tracking-tight text-white">{balance.toFixed(2)}</span>
+                    <span className="font-display text-[14px] font-bold tracking-tight text-white whitespace-nowrap">{balance.toFixed(2)}</span>
                     <GramIcon className="w-4 h-4 text-white" />
-                    <span className="w-4 h-4 rounded-full bg-white text-brand text-[11px] font-bold flex items-center justify-center ml-0.5 leading-none">
+                    <span className="w-5 h-5 rounded-full bg-white text-brand text-[12px] font-bold flex items-center justify-center leading-none">
                       +
                     </span>
                   </button>
@@ -1332,7 +1382,7 @@ export default function App() {
 
         {/* Scrollable Content Area */}
         <div className="relative flex-1 w-full overflow-hidden flex flex-col">
-          <main className="flex-1 overflow-y-auto pt-[76px] pb-[120px] px-4.5 scrollbar-hide relative">
+          <main className="flex-1 overflow-y-auto pt-[78px] pb-[124px] px-4.5 scrollbar-hide relative">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -1500,7 +1550,7 @@ export default function App() {
               className="absolute bottom-2.5 left-0 right-0 z-[90] pb-[calc(env(safe-area-inset-bottom,0px)+10px)] px-3 w-full pointer-events-none"
             >
               <div className="pointer-events-auto w-full max-w-sm mx-auto">
-              <nav className="relative flex items-stretch gap-1 p-2 rounded-[28px] bg-[#2a2a2c]/95 backdrop-blur-2xl border border-white/[0.06] shadow-[0_20px_45px_-10px_rgba(0,0,0,0.7)]">
+              <nav className="relative flex items-stretch gap-0.5 p-1.5 rounded-full bg-[#26272b]/95 backdrop-blur-2xl border border-white/[0.07] shadow-[0_24px_55px_-12px_rgba(0,0,0,0.75)]">
                 {navItems.map((item) => {
                   const isActive = activeTab === item.id;
                   return (
@@ -1510,34 +1560,37 @@ export default function App() {
                         setActiveTab(item.id);
                         try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
                       }}
-                      className={`relative z-10 flex-1 flex flex-col items-center justify-center gap-1.5 py-2 outline-none transition-colors duration-200 active:scale-[0.93] cursor-pointer rounded-[20px] ${
-                        isActive ? 'text-brand' : 'text-white hover:text-white/80'
-                      }`}
+                      className="relative flex-1 min-w-0 py-1 outline-none cursor-pointer active:scale-[0.95] transition-transform duration-200"
                     >
                       {isActive && (
                         <motion.div
                           layoutId="liquid-pill"
-                          className="absolute inset-0 rounded-[20px] bg-white/[0.09] shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)] z-0"
+                          className="absolute inset-x-0.5 inset-y-0 rounded-full bg-white/[0.055] shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)] overflow-hidden z-0"
                           transition={springSnappy}
-                        />
+                        >
+                          {/* мягкий зелёный отсвет слева снизу, как в эталоне */}
+                          <div className="absolute -bottom-5 -left-3 w-20 h-20 rounded-full bg-emerald-400/15 blur-2xl pointer-events-none" />
+                          <div className="absolute -top-4 right-0 w-16 h-16 rounded-full bg-brand/10 blur-2xl pointer-events-none" />
+                        </motion.div>
                       )}
                       <motion.div
-                        className="relative z-10 flex flex-col items-center justify-center gap-1.5 will-change-transform"
+                        className="relative z-10 flex flex-col items-center justify-center gap-1 will-change-transform"
                         style={{ WebkitBackfaceVisibility: 'hidden', transform: 'translateZ(0)' }}
                         animate={{ 
-                          scale: isActive ? 1.05 : 1,
+                          scale: isActive ? 1.04 : 1,
                           y: isActive ? -0.5 : 0 
                         }}
                         transition={springSnappy}
                       >
-                        <span className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors duration-200 ${
+                        {/* Круглая «значок»-иконка: кремовая — неактивная, синяя — активная */}
+                        <span className={`w-[42px] h-[42px] rounded-full flex items-center justify-center transition-colors duration-200 ${
                           isActive
-                            ? 'bg-brand shadow-[0_4px_12px_rgba(0,152,234,0.35)]'
-                            : 'bg-[#e8e8ea]'
+                            ? 'bg-brand shadow-[0_6px_16px_rgba(0,152,234,0.45)]'
+                            : 'bg-[#f2f1ec] shadow-[0_2px_8px_rgba(0,0,0,0.35)]'
                         }`}>
-                          <item.icon size={20} strokeWidth={2.2} className={isActive ? 'text-white' : 'text-[#1c1e21]'} />
+                          <item.icon size={20} strokeWidth={2.3} className={isActive ? 'text-[#0b1119]' : 'text-[#17181c]'} />
                         </span>
-                        <span className={`text-[11px] font-bold tracking-tight leading-none ${isActive ? 'text-brand' : 'text-white'}`}>{item.label}</span>
+                        <span className={`text-[11px] font-bold tracking-tight leading-none max-w-full truncate px-1 ${isActive ? 'text-brand' : 'text-white'}`}>{item.label}</span>
                       </motion.div>
                     </button>
                   );
