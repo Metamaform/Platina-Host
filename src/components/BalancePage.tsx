@@ -21,11 +21,15 @@ function StackingIcon({ className }: { className?: string }) {
   );
 }
 
+/* Темы карточки баланса: классическая (пастельная), чёрная, платинум.
+   Названия по требованию — английские, не переводятся. */
+const CARD_THEMES = ['Classic', 'Black', 'Platinum'] as const;
+
 /* ---------------------------------------------------------------------------
  * BalancePage — отдельная страница баланса (не пункт нижнего меню).
  * Открывается по тапу на баланс в шапке.
- * Сверху — карточка «hero» с балансом в GRAM: две темы оформления
- * (пастельная как в макете и чёрная), переключение свайпом или точками,
+ * Сверху — карточка «hero» с балансом в GRAM: три темы оформления
+ * (Classic / Black / Platinum), переключение свайпом или точками,
  * ниже — пополнение в стиле Gram Wallet: Telegram Stars / Gram / NFT.
  * ------------------------------------------------------------------------- */
 
@@ -67,13 +71,13 @@ export function BalancePage({
   /* Баланс на карточке — в GRAM (макет: крупное число по центру). */
   const gramLabel = balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-  /* Две темы карточки: 0 — пастельная (как в макете), 1 — чёрная.
-     Переключение обычным свайпом влево/вправо + тап по точкам. */
+  /* Три темы карточки: 0 — классическая пастельная (макет), 1 — чёрная,
+     2 — платинум. Переключение обычным свайпом влево/вправо + тап по точкам. */
   const [cardIdx, setCardIdx] = useState(0);
   const swipe = useRef<{ x: number; y: number } | null>(null);
 
   const switchCard = (next: number) => {
-    const clamped = Math.max(0, Math.min(1, next));
+    const clamped = Math.max(0, Math.min(2, next));
     if (clamped !== cardIdx) {
       haptics.selection();
       setCardIdx(clamped);
@@ -155,10 +159,11 @@ export function BalancePage({
 
       <div className="flex-1 overflow-y-auto scrollbar-hide px-4 pt-2 pb-10 space-y-5">
         {/* ------------------------------------------------------------------
-            HERO — карточка баланса по макету IMG_0933.jpeg:
-            пастельный градиент с дудлами, крупная сумма в GRAM по центру,
-            «Platina» + QR внизу; свайп переключает на чёрную тему,
-            2 точки внизу показывают выбранную тему (белая — активная).
+            HERO — карточка баланса: три темы (Classic / Black / Platinum).
+            Classic — пастельный градиент по макету IMG_0933.jpeg, Black —
+            IMG_0945 (чёрная с дудлами и бликом), Platinum — текстура из
+            IMG_0946. Свайп листает темы, точки внизу показывают выбранную
+            (активная — белая, остальные — серые).
         ------------------------------------------------------------------- */}
         <div
           className="relative rounded-[28px] overflow-hidden shadow-[0_20px_50px_-18px_rgba(0,0,0,0.55)] select-none [touch-action:pan-y]"
@@ -166,14 +171,14 @@ export function BalancePage({
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerCancel}
         >
-          {/* Трек фонов: 0 — пастельная тема (макет), 1 — чёрная тема.
+          {/* Трек фонов: 0 — Classic, 1 — Black, 2 — Platinum.
               Свайп листает его по горизонтали, контент остаётся на месте. */}
           <div
-            className="absolute inset-0 flex w-[200%] transition-transform duration-300 ease-out motion-reduce:transition-none"
-            style={{ transform: `translateX(-${cardIdx * 50}%)` }}
+            className="absolute inset-0 flex w-[300%] transition-transform duration-300 ease-out motion-reduce:transition-none"
+            style={{ transform: `translateX(-${(cardIdx * 100) / 3}%)` }}
           >
-            {/* 0 — пастельная (как в макете IMG_0933.jpeg) */}
-            <div className="relative w-1/2 h-full">
+            {/* 0 — Classic: пастельная тема (макет IMG_0933.jpeg) */}
+            <div className="relative w-1/3 h-full">
               {/* Fallback-градиент на случай, если фон не загрузился */}
               <div className="absolute inset-0 bg-[linear-gradient(135deg,#9d89de_0%,#b58cd6_35%,#a7a3de_60%,#7496d4_100%)]" />
               <img
@@ -187,17 +192,32 @@ export function BalancePage({
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.35)_0%,rgba(255,255,255,0)_55%)] pointer-events-none" />
             </div>
 
-            {/* 1 — чёрная тема */}
-            <div className="relative w-1/2 h-full">
-              <div className="absolute inset-0 bg-[linear-gradient(135deg,#070708_0%,#0a0a0c_50%,#060607_100%)]" />
+            {/* 1 — Black: глубоко-чёрная с белыми дудлами и бликом (IMG_0945) */}
+            <div className="relative w-1/3 h-full">
+              <div className="absolute inset-0 bg-[linear-gradient(135deg,#101012_0%,#0a0a0b_55%,#131315_100%)]" />
               <img
-                src="/balance-card-bg-dark.jpg"
+                src="/balance-card-bg-black.jpg"
                 alt=""
                 draggable={false}
                 className="absolute inset-0 w-full h-full object-cover"
                 onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
               />
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0)_55%)] pointer-events-none" />
+            </div>
+
+            {/* 2 — Platinum: волновая текстура из IMG_0946 + серебристый sheen */}
+            <div className="relative w-1/3 h-full">
+              <div className="absolute inset-0 bg-[linear-gradient(160deg,#17171a_0%,#0c0c0e_50%,#111218_100%)]" />
+              <img
+                src="/balance-card-bg-platinum.jpg"
+                alt=""
+                draggable={false}
+                className="absolute inset-0 w-full h-full object-cover"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+              />
+              {/* Диагональный серебристый блик сверху-справа, как у платиновой карты */}
+              <div className="absolute inset-0 bg-[linear-gradient(215deg,rgba(255,255,255,0.14)_0%,rgba(255,255,255,0.04)_30%,rgba(255,255,255,0)_55%)] pointer-events-none" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0)_55%)] pointer-events-none" />
             </div>
           </div>
 
@@ -209,20 +229,24 @@ export function BalancePage({
             </div>
             <div className="mt-3 text-white/75 font-bold text-[13px] tracking-[0.22em]">GRAM</div>
 
-            {/* Низ карточки: «Platina» + QR и точки-индикаторы темы */}
-            <div className="absolute bottom-4 inset-x-0 flex flex-col items-center gap-2.5">
+            {/* Низ карточки: «Platina» + QR, название темы и точки-индикаторы */}
+            <div className="absolute bottom-4 inset-x-0 flex flex-col items-center gap-2">
               <div className="flex items-center justify-center gap-2">
                 <span className="font-display text-white text-[22px] font-bold tracking-tight">Platina</span>
                 <QrCode className="w-[22px] h-[22px] text-white" strokeWidth={2.2} />
               </div>
+              {/* Название текущей темы: Classic / Black / Platinum */}
+              <div className="text-white/70 text-[10px] font-bold uppercase tracking-[0.3em] leading-none">
+                {CARD_THEMES[cardIdx]}
+              </div>
               <div className="flex items-center gap-2" role="tablist" aria-label="Card theme">
-                {[0, 1].map((i) => (
+                {CARD_THEMES.map((name, i) => (
                   <button
-                    key={i}
+                    key={name}
                     type="button"
                     role="tab"
                     aria-selected={cardIdx === i}
-                    aria-label={i === 0 ? 'Pastel' : 'Dark'}
+                    aria-label={name}
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={() => switchCard(i)}
                     className={`h-2 w-2 rounded-full transition-all duration-200 cursor-pointer active:scale-125 ${
