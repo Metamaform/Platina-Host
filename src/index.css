@@ -243,6 +243,41 @@
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Wallet screen — critical styles per T3
+--------------------------------------------------------------------------- */
+.wallet-card { position: relative; overflow: hidden; border-radius: 36px;
+  background: linear-gradient(145deg, #aa80ee 0%, #ad9ade 44%, #67ceea 100%); }
+.wallet-card__pattern { position: absolute; inset: 0; opacity: .1; pointer-events: none; }
+.wallet-card__content { position: relative; z-index: 1; min-height: 290px;
+  display: grid; place-items: center; color: #fff; }
+.quick-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.quick-action { min-height: 112px; border: 1px solid #353539; border-radius: 28px;
+  background: #171719; color: #fff; font: 700 20px/1.1 system-ui; }
+.quick-action svg { display: block; margin: 0 auto 12px; color: #1683ff; }
+@media (max-width: 540px) { .quick-actions { overflow-x: auto; grid-template-columns: repeat(4, 142px); scroll-snap-type: x mandatory; } }
+
+/* Focus visible for wallet */
+.quick-action:focus-visible,
+.wallet-card button:focus-visible {
+  outline: 2px solid #1683FF;
+  outline-offset: 2px;
+}
+
+/* Bottom sheet animation */
+@keyframes sheet-in {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes wallet-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .wallet-enter { animation: wallet-fade-in 200ms ease-out both; }
+  .sheet-enter { animation: sheet-in 260ms cubic-bezier(0.22,1,0.36,1) both; }
+}
+
 /* Native thumb tracks the finger without easing or page-scroll arbitration.
    Keep a 44px hit area, but preserve the slim 8px visual track. */
 .range-control {
