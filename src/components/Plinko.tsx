@@ -5,6 +5,7 @@ import { useTranslation } from '../lib/i18n';
 import { GramIcon } from './GramIcon';
 import { NftSelectorGrid } from './NftSelectorGrid';
 import { cleanNftName } from '../lib/nftUtils';
+import { preparePlinkoRewards, selectPlinkoReward, rewardIdentity } from '../lib/plinkoRewards';
 import { PremiumImage } from './PremiumImage';
 import { BetHistoryModal, BetHistoryRecord } from './BetHistoryModal';
 import { GameRoundInfoModal } from './GameRoundInfoModal';
@@ -215,8 +216,10 @@ export const Plinko: React.FC<PlinkoProps> = ({
   const inventoryRef = useRef(inventory);
   inventoryRef.current = inventory;
 
-  const activeGiftsDbRef = useRef(activeGiftsDb);
-  activeGiftsDbRef.current = activeGiftsDb;
+  const rewards = useMemo(() => preparePlinkoRewards(activeGiftsDb), [activeGiftsDb]);
+  const rewardsRef = useRef(rewards);
+  rewardsRef.current = rewards;
+  const lastRewardRef = useRef<string | undefined>(undefined);
 
   const userRef = useRef(user);
   userRef.current = user;
@@ -367,13 +370,12 @@ export const Plinko: React.FC<PlinkoProps> = ({
   // Preload user avatar image for canvas rendering (without crossOrigin to prevent Telegram CDN CORS blockage)
   const avatarImgRef = useRef<HTMLImageElement | null>(null);
   useEffect(() => {
-    if (user?.photoUrl) {
-      const img = new Image();
-      img.src = user.photoUrl;
-      img.onload = () => {
-        avatarImgRef.current = img;
-      };
-    }
+    avatarImgRef.current = null;
+    if (!user?.photoUrl) return;
+    const img = new Image();
+    img.onload = () => { avatarImgRef.current = img; };
+    img.src = user.photoUrl;
+    return () => { img.onload = null; avatarImgRef.current = null; };
   }, [user?.photoUrl]);
 
   // Shared/global drop history (live drops feed, max 50)
@@ -677,28 +679,9 @@ export const Plinko: React.FC<PlinkoProps> = ({
       localStorage.setItem(gKey, JSON.stringify(gStats));
     } catch {}
 
-    // Sort active gifts DB by price ascending
-    const sorted = [...activeGiftsDbRef.current]
-      .map(g => ({
-        ...g,
-        priceVal: Number(g.floor_price_gram || g.price || 0)
-      }))
-      .filter(g => g.priceVal > 0)
-      .sort((a, b) => a.priceVal - b.priceVal);
-
-    // Only grant NFT if wonGrams is high enough to afford at least the cheapest NFT (wonGrams >= sorted[0].priceVal)
-    let chosenGift: any = null;
+    let chosenGift = selectPlinkoReward(rewardsRef.current, wonGrams, lastRewardRef.current);
+    if (chosenGift) lastRewardRef.current = rewardIdentity(chosenGift);
     let remainder = 0;
-
-    if (sorted.length > 0 && wonGrams >= sorted[0].priceVal) {
-      // Find highest gift affordable with wonGrams
-      for (let i = sorted.length - 1; i >= 0; i--) {
-        if (sorted[i].priceVal <= wonGrams) {
-          chosenGift = sorted[i];
-          break;
-        }
-      }
-    }
 
     let nextInventory = inventoryRef.current || [];
     let nextBalance = balanceRef.current;
@@ -710,6 +693,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
 
       const finalGift = {
         ...chosenGift,
+        price: giftPrice,
         uniqueId: `nft-plinko-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
       };
 
@@ -823,7 +807,8 @@ export const Plinko: React.FC<PlinkoProps> = ({
   const onBallCompletedRef = useRef(onBallCompleted);
   onBallCompletedRef.current = onBallCompleted;
 
-  // --- High Performance Canvas Engine (Single Continuous Loop, Zero Allocations) ---
+  // One on-demand canvas loop: sleep when the board is idle.
+  const wakeCanvasRef = useRef<() => void>(() => {});
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const activeBallRef = useRef<PhysicsBall | null>(null);
 
@@ -848,13 +833,17 @@ export const Plinko: React.FC<PlinkoProps> = ({
     canvas.width = BOARD_WIDTH * dpr;
     canvas.height = BOARD_HEIGHT * dpr;
 
-    let animId: number;
+    let animId = 0;
     let isMounted = true;
+    let lastFrame = performance.now();
 
     const render = () => {
+      animId = 0;
       if (!isMounted) return;
 
       const now = performance.now();
+      const frameScale = Math.min(3, Math.max(0, (now - lastFrame) / (1000 / 60)));
+      lastFrame = now;
       const pegGlows = pegGlowsRef.current;
       const bucketBounces = bucketBouncesRef.current;
 
@@ -865,7 +854,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
       // 1. Decay peg glows (flat array, zero allocations)
       for (let i = 0; i < TOTAL_PEGS; i++) {
         if (pegGlows[i] > 0.02) {
-          pegGlows[i] *= 0.88;
+          pegGlows[i] *= Math.pow(0.88, frameScale);
         } else {
           pegGlows[i] = 0;
         }
@@ -874,7 +863,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
       // 2. Decay bucket bounces (flat array, zero allocations)
       for (let i = 0; i < 9; i++) {
         if (bucketBounces[i] > 0.02) {
-          bucketBounces[i] *= 0.85;
+          bucketBounces[i] *= Math.pow(0.85, frameScale);
         } else {
           bucketBounces[i] = 0;
         }
@@ -959,10 +948,10 @@ export const Plinko: React.FC<PlinkoProps> = ({
           }
 
           const dir = seg.x1 >= seg.x0 ? 1 : -1;
-          ball.rotation += dir * 0.08;
+          ball.rotation += dir * 0.08 * frameScale;
 
           if (ball.squish < 1.0) {
-            ball.squish = Math.min(1.0, ball.squish + 0.05);
+            ball.squish = Math.min(1.0, ball.squish + 0.05 * frameScale);
           }
 
           // Record trail into ring buffer
@@ -1061,24 +1050,35 @@ export const Plinko: React.FC<PlinkoProps> = ({
         if (completedBall) {
           activeBallRef.current = null;
           trailCountRef.current = 0;
-          const completedData = completedBall;
-          setTimeout(() => {
-            onBallCompletedRef.current(completedData.ball, completedData.bucketIdx);
-          }, 16);
+          // Settle once after drawing; no delayed callbacks accumulating between rounds.
         }
       }
 
       ctx.restore();
-      animId = requestAnimationFrame(render);
+      if (completedBall) {
+        onBallCompletedRef.current(completedBall.ball, completedBall.bucketIdx);
+      }
+      if (activeBallRef.current || pegGlows.some(v => v > 0) || bucketBounces.some(v => v > 0)) {
+        animId = requestAnimationFrame(render);
+      }
     };
 
-    animId = requestAnimationFrame(render);
+    const wake = () => {
+      if (!isMounted || animId) return;
+      lastFrame = performance.now();
+      animId = requestAnimationFrame(render);
+    };
+    wakeCanvasRef.current = wake;
+    wake();
 
     return () => {
       isMounted = false;
       cancelAnimationFrame(animId);
+      wakeCanvasRef.current = () => {};
     };
   }, [pegs]);
+
+  useEffect(() => { wakeCanvasRef.current(); }, [risk]);
 
   // Handle Bet Submission & Ball Drop (Strictly 1 ball at a time)
   const handleDropBall = () => {
@@ -1190,6 +1190,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
     };
 
     activeBallRef.current = newBall;
+    wakeCanvasRef.current();
     trailCountRef.current = 0;
     trailHeadRef.current = 0;
     setIsDropping(true);
@@ -1386,12 +1387,12 @@ export const Plinko: React.FC<PlinkoProps> = ({
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                {dropHistory.map((item, idx) => {
+                {dropHistory.map((item) => {
                   const multStr = item.multiplier.toFixed(2);
 
                   return (
                     <motion.div
-                      key={item.id ? `${item.id}-${idx}` : `drop-history-${idx}`}
+                      key={item.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       onClick={() => setShowBetHistory(true)}

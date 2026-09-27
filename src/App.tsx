@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { springSmooth, springSnappy } from './lib/motion';
 import { setLoggerUserId } from './lib/logger';
 import { ShoppingBag, User, Gem, Gift, Wallet, ChevronRight, Activity, CircleDashed, ArrowUpCircle, Shield, LayoutGrid, Trophy, X, ListTodo, Settings, Bomb, Box, Package, ArrowLeft, ArrowUpRight, Users, History, MessageCircle, ExternalLink, Copy, Check, Star, Rocket, Flame, Sparkles } from 'lucide-react';
 import defaultGiftsDb from './gifts_data.json';
@@ -1184,6 +1185,7 @@ export default function App() {
   }, [auth.status, pricesLoaded, minTimePassed]);
 
   const navItems = [
+    { id: 'inventory', icon: Package, label: t('inventory') },
     { id: 'shop', icon: Flame, label: t('nav_shop') || 'Игры' },
     { id: 'cases', icon: Box, label: t('nav_cases') || 'Кейсы' },
     { id: 'tasks', icon: ListTodo, label: t('nav_tasks') || 'Задания' },
@@ -1405,7 +1407,7 @@ export default function App() {
                 initial={{ opacity: 0, y: '100%' }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: '100%' }}
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                transition={springSmooth}
                 className="absolute inset-0 z-[100] bg-black"
               >
                 <Suspense fallback={<LazyFallback />}><Upgrade onBack={() => setActiveGame(null)} inventory={inventory} setInventory={setInventory} giftsDb={giftsDb} onWin={(item, price) => auth.recordOpen(item, price, 'nft', undefined, 'upgrade')} balance={balance} setBalance={setBalance} onBet={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} onNavigate={(t) => { setActiveGame(null); setTimeout(() => { if(t==='inventory') setActiveTab('inventory'); else setActiveGame(t as any); }, 50); }} /></Suspense>
@@ -1416,7 +1418,7 @@ export default function App() {
                 initial={{ opacity: 0, y: '100%' }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: '100%' }}
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                transition={springSmooth}
                 className="absolute inset-0 z-[100] bg-black"
               >
                 <Suspense fallback={<LazyFallback />}><Craft onBack={() => setActiveGame(null)} inventory={inventory} setInventory={setInventory} giftsDb={giftsDb} onWin={(item, price) => auth.recordOpen(item, price, 'nft', undefined, 'craft')} onTurnover={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} balance={balance} setBalance={setBalance} onNavigate={(t) => { setActiveGame(null); setTimeout(() => { if(t==='inventory') setActiveTab('inventory'); else setActiveGame(t as any); }, 50); }} /></Suspense>
@@ -1427,7 +1429,7 @@ export default function App() {
                 initial={{ opacity: 0, y: '100%' }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: '100%' }}
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                transition={springSmooth}
                 className="absolute inset-0 z-[100] bg-black"
               >
                 <Suspense fallback={<LazyFallback />}><Mines onBack={() => setActiveGame(null)} inventory={inventory} setInventory={setInventory} balance={balance} setBalance={setBalance} onTurnover={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} onWin={(amt, mode, item, mult) => { if (mode === 'nft' && item) auth.recordOpen(item, amt, 'nft', mult, 'mines'); else if (mode === 'gram') auth.recordOpen(null, amt, 'gram', mult, 'mines'); }} giftsDb={giftsDb} onNavigate={(t) => { setActiveGame(null); setTimeout(() => { if(t==='inventory') setActiveTab('inventory'); else setActiveGame(t as any); }, 50); }} /></Suspense>
@@ -1438,7 +1440,7 @@ export default function App() {
                 initial={{ opacity: 0, y: '100%' }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: '100%' }}
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                transition={springSmooth}
                 className="absolute inset-0 z-[100] bg-black"
               >
                 <Suspense fallback={<LazyFallback />}>
@@ -1461,7 +1463,7 @@ export default function App() {
                 initial={{ opacity: 0, y: '100%' }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: '100%' }}
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                transition={springSmooth}
                 className="absolute inset-0 z-[100] bg-black"
               >
                 <Suspense fallback={<LazyFallback />}>
@@ -1493,7 +1495,7 @@ export default function App() {
               initial={{ y: 100, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 100, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+              transition={springSnappy}
               className="absolute bottom-2.5 left-0 right-0 z-[90] pb-[calc(env(safe-area-inset-bottom,0px)+10px)] px-3 w-full pointer-events-none"
             >
               <div className="pointer-events-auto w-full max-w-sm mx-auto">
@@ -1515,7 +1517,7 @@ export default function App() {
                         <motion.div
                           layoutId="liquid-pill"
                           className="absolute inset-0 rounded-[24px] bg-brand/15 border border-brand/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)] z-0"
-                          transition={{ type: 'spring', damping: 28, stiffness: 380 }}
+                          transition={springSnappy}
                         />
                       )}
                       <motion.div
@@ -1525,7 +1527,7 @@ export default function App() {
                           scale: isActive ? 1.05 : 1,
                           y: isActive ? -0.5 : 0 
                         }}
-                        transition={{ type: 'spring', damping: 28, stiffness: 380 }}
+                        transition={springSnappy}
                       >
                         <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
                         <span className="text-[10px] font-bold tracking-tight">{item.label}</span>
@@ -1545,14 +1547,16 @@ export default function App() {
               initial={{ opacity: 0, y: '100%' }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              transition={springSmooth}
               className="absolute inset-0 z-[100] bg-canvas"
             >
             <BalancePage 
               balance={balance}
-              setBalance={setBalance}
-              inventory={inventory}
-              setInventory={setInventory}
+              onGoToInventory={() => {
+                setShowBalancePage(false);
+                setActiveGame(null);
+                setActiveTab('inventory');
+              }}
               demoMode={auth.config?.demoMode}
               tonTopupAddress={auth.config?.tonTopupAddress}
               onClose={() => setShowBalancePage(false)} 

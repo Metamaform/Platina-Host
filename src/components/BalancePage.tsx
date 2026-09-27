@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, ArrowDownLeft, Star, Gem, Wallet, Loader2, Check, X } from 'lucide-react';
+import { motion } from 'motion/react';
+import { ArrowLeft, ArrowDownLeft, ArrowUpRight, Package, Star, Gem, Wallet, Loader2 } from 'lucide-react';
 import { TonConnectButton, useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import { GramIcon } from './GramIcon';
-import { PremiumImage } from './PremiumImage';
 import { useTranslation } from '../lib/i18n';
 import { useRates, formatUsd } from '../hooks/useRates';
 import { haptics } from '../lib/haptics';
-import { springSmooth, springSnappy } from '../lib/motion';
+import { springSnappy } from '../lib/motion';
 
 /* ---------------------------------------------------------------------------
  * BalancePage — отдельная страница баланса (не пункт нижнего меню).
@@ -20,9 +19,7 @@ type TopUpMethod = 'stars' | 'ton' | 'nft';
 
 interface BalancePageProps {
   balance: number;
-  setBalance: React.Dispatch<React.SetStateAction<number>>;
-  inventory: any[];
-  setInventory: React.Dispatch<React.SetStateAction<any[]>>;
+  onGoToInventory: () => void;
   onSuccess: (amount: number, method: 'stars' | 'ton', rawAmount: number) => void;
   onClose: () => void;
   demoMode?: boolean;
@@ -32,9 +29,7 @@ interface BalancePageProps {
 
 export function BalancePage({
   balance,
-  setBalance,
-  inventory,
-  setInventory,
+  onGoToInventory,
   onSuccess,
   onClose,
   demoMode,
@@ -74,6 +69,11 @@ export function BalancePage({
           {/* soft inner glows for material depth */}
           <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-white/15 blur-3xl pointer-events-none" />
           <div className="absolute -bottom-20 -left-10 w-48 h-48 rounded-full bg-black/20 blur-3xl pointer-events-none" />
+
+          <div className="relative flex items-start justify-between gap-3 mb-6">
+            <span className="font-display text-lg font-bold tracking-tight">Platina Gifts Card</span>
+            <Gem className="w-6 h-6 text-white/80 shrink-0" />
+          </div>
 
           <div className="relative flex items-center gap-2 text-[11px] font-bold text-white/80 uppercase tracking-widest">
             <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
@@ -140,7 +140,16 @@ export function BalancePage({
           </div>
 
           {method === 'nft' ? (
-            <NftTopUp inventory={inventory} setBalance={setBalance} setInventory={setInventory} />
+            <a
+              href="https://t.me/platina_relayer"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => haptics.impact('light')}
+              className="w-full py-3.5 rounded-2xl bg-brand hover:bg-brand-dim text-white font-semibold flex items-center justify-center gap-2 transition-colors active:scale-[0.98]"
+            >
+              <Gem className="w-5 h-5" />
+              {t('topup_nft_button')}
+            </a>
           ) : (
             <AmountForm
               key={method}
@@ -151,6 +160,23 @@ export function BalancePage({
             />
           )}
         </div>
+
+        <section className="rounded-[24px] bg-white/[0.03] border border-white/[0.06] p-4">
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-8 h-8 rounded-xl bg-violet-500/15 border border-violet-500/25 text-violet-400 flex items-center justify-center">
+              <ArrowUpRight className="w-4.5 h-4.5" />
+            </div>
+            <h2 className="font-display text-lg font-bold text-white">{t('withdraw')}</h2>
+          </div>
+          <p className="text-white/50 text-[13px] leading-relaxed mb-4">{t('withdraw_nft_description')}</p>
+          <button
+            onClick={() => { haptics.impact('light'); onGoToInventory(); }}
+            className="w-full py-3.5 rounded-2xl bg-white/[0.06] hover:bg-white/10 border border-white/10 text-white font-semibold flex items-center justify-center gap-2 transition-colors active:scale-[0.98] cursor-pointer"
+          >
+            <Package className="w-5 h-5" />
+            {t('go_to_inventory')}
+          </button>
+        </section>
       </div>
     </div>
   );
@@ -396,156 +422,6 @@ function AmountForm({
           <span>{t('pay')}</span>
         )}
       </button>
-    </div>
-  );
-}
-
-/* ---------------------------------------------------------------------------
- * NftTopUp — пополнение баланса NFT: продаём предмет из инвентаря,
- * его стоимость сразу зачисляется на баланс в GRAM.
- * ------------------------------------------------------------------------- */
-function NftTopUp({
-  inventory,
-  setBalance,
-  setInventory,
-}: {
-  inventory: any[];
-  setBalance: React.Dispatch<React.SetStateAction<number>>;
-  setInventory: React.Dispatch<React.SetStateAction<any[]>>;
-}) {
-  const { t } = useTranslation();
-  const [selectedNft, setSelectedNft] = useState<any>(null);
-  const [soldPrice, setSoldPrice] = useState<number | null>(null);
-
-  const handleSell = (item: any) => {
-    const price = Number(item.price) || 0;
-    setBalance((prev: number) => Number((prev + price).toFixed(2)));
-    setInventory((prev: any[]) => prev.filter((i: any) => i.uniqueId !== item.uniqueId));
-    setSelectedNft(null);
-    setSoldPrice(price);
-    haptics.notify('success');
-    setTimeout(() => setSoldPrice(null), 2600);
-  };
-
-  return (
-    <div>
-      {/* Success banner */}
-      <AnimatePresence>
-        {soldPrice !== null && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={springSmooth}
-            className="mb-3 flex items-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-emerald-400 text-[13px] font-semibold"
-          >
-            <Check className="w-4 h-4 stroke-[2.5]" />
-            +{soldPrice.toFixed(2)} GRAM
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <p className="text-white/45 text-[12px] font-medium mb-3 leading-relaxed">{t('topup_nft_desc')}</p>
-
-      {inventory.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-10 rounded-[24px] bg-white/[0.03] border border-white/[0.06]">
-          <div className="w-12 h-12 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-3">
-            <Gem className="w-6 h-6 text-violet-400" />
-          </div>
-          <p className="text-white/50 text-[13px] text-center font-medium px-6">{t('topup_nft_empty')}</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-3">
-          {inventory.map((item: any, idx: number) => {
-            const price = Number(item.price) || 0;
-            const isWithdrawing = !!item.isWithdrawing;
-            const image = item.displayImage || item.image_url || (item.name ? `/nft/${item.name}.png` : undefined);
-            return (
-              <button
-                key={item.uniqueId || idx}
-                onClick={() => {
-                  if (isWithdrawing) return;
-                  setSelectedNft(item);
-                  haptics.impact('light');
-                }}
-                disabled={isWithdrawing}
-                className={`rounded-[20px] p-3 flex flex-col items-center gap-2 border transition-all active:scale-[0.97] cursor-pointer ${
-                  isWithdrawing
-                    ? 'bg-white/[0.02] border-white/[0.04] opacity-50 cursor-not-allowed'
-                    : 'bg-white/[0.04] border-white/[0.07] hover:border-white/15'
-                }`}
-              >
-                <div className="w-full aspect-square rounded-2xl overflow-hidden relative bg-white/[0.04]">
-                  <PremiumImage staticMode src={image} alt={item.name || 'NFT'} className="w-full h-full" />
-                </div>
-                <span className="text-white text-[12px] font-semibold w-full truncate text-center">
-                  {item.name || 'NFT'}
-                </span>
-                <span className="text-gold font-display font-bold text-[13px] flex items-center gap-1">
-                  {price.toFixed(2)} <GramIcon className="w-3.5 h-3.5 drop-shadow-md" />
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Confirm sell modal */}
-      <AnimatePresence>
-        {selectedNft && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedNft(null)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-[8px]"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={springSmooth}
-              className="relative w-full max-w-sm bg-surface border border-hairline rounded-[24px] p-6 shadow-2xl flex flex-col items-center z-50"
-            >
-              <button
-                onClick={() => setSelectedNft(null)}
-                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-
-              <div className="w-32 h-32 rounded-2xl mb-4 relative overflow-hidden">
-                <PremiumImage
-                  staticMode
-                  src={selectedNft.displayImage || selectedNft.image_url || (selectedNft.name ? `/nft/${selectedNft.name}.png` : undefined)}
-                  alt={selectedNft.name || 'NFT'}
-                  className="w-full h-full"
-                />
-              </div>
-              <h3 className="font-display text-2xl font-semibold text-white text-center mb-1">{selectedNft.name}</h3>
-              <p className="text-gold font-medium mb-6 flex items-center justify-center gap-1">
-                {t('value')} {Number(selectedNft.price || 0).toFixed(2)} <GramIcon className="w-4 h-4 drop-shadow-md" />
-              </p>
-
-              <div className="w-full space-y-3">
-                <button
-                  onClick={() => handleSell(selectedNft)}
-                  className="w-full py-3.5 rounded-xl bg-brand hover:bg-brand-dim text-white font-semibold transition-colors shadow-lg active:scale-95 flex items-center justify-center gap-1 cursor-pointer"
-                >
-                  {t('sell_for')} {Number(selectedNft.price || 0).toFixed(2)} <GramIcon className="w-4 h-4 drop-shadow-md" />
-                </button>
-                <button
-                  onClick={() => setSelectedNft(null)}
-                  className="w-full py-3.5 rounded-xl font-semibold transition-colors border bg-white/5 border-hairline hover:bg-white/10 text-white/80 active:scale-95 cursor-pointer"
-                >
-                  {t('cancel') || 'Cancel'}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
