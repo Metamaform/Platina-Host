@@ -356,46 +356,12 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
   }, [giftsDb, totalBet, searchQuery, sortOrder, targetBackdropFilter]);
 
   return (
-    <div className="h-full w-full flex flex-col bg-[#0a0a0c] text-white relative overflow-hidden">
+    <div className="h-full w-full flex flex-col bg-canvas text-white relative overflow-hidden">
       <audio ref={audioRef} src="/tick.mp3" preload="auto" />
-      
-      {/* Scattered Background NFTs */}
-      <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.25] mix-blend-screen overflow-hidden">
-        {[
-          // Plane: Left to Right, High up
-          { src: '/Plane.webp', size: 60, blur: '3px', x: ['-20vw', '120vw'], y: ['5vh', '15vh', '5vh'], rot: [0, 90], durX: 45, durY: 25, del: 0 },
-          // Smoke: Right to Left, Mid-high
-          { src: '/Spectral%20Smoke.webp', size: 85, blur: '5px', x: ['120vw', '-20vw'], y: ['25vh', '15vh', '25vh'], rot: [20, -40], durX: 55, durY: 30, del: -15 },
-          // Ring: Left to Right, Mid
-          { src: '/Diamond%20Ring.webp', size: 50, blur: '2px', x: ['-20vw', '120vw'], y: ['35vh', '45vh', '35vh'], rot: [-30, 60], durX: 40, durY: 20, del: -5 },
-          // Inception: Right to Left, Mid-low
-          { src: '/Inception.webp', size: 75, blur: '4px', x: ['120vw', '-20vw'], y: ['55vh', '45vh', '55vh'], rot: [45, -45], durX: 50, durY: 28, del: -20 },
-          // Toading: Left to Right, Low
-          { src: '/Toading....webp', size: 45, blur: '1px', x: ['-20vw', '120vw'], y: ['65vh', '75vh', '65vh'], rot: [10, 100], durX: 38, durY: 22, del: -10 },
-          // Major: Right to Left, Very low
-          { src: '/Major.webp', size: 80, blur: '6px', x: ['120vw', '-20vw'], y: ['85vh', '75vh', '85vh'], rot: [-10, -90], durX: 48, durY: 26, del: -25 },
-          // Shimeria: Left to Right, Bottom edge
-          { src: '/Shimeria.webp', size: 65, blur: '3px', x: ['-20vw', '120vw'], y: ['90vh', '100vh', '90vh'], rot: [50, -50], durX: 42, durY: 24, del: -8 },
-        ].map((img, i) => (
-          <motion.img
-            key={i}
-            src={img.src}
-            alt=""
-            className="absolute top-0 left-0"
-            style={{ width: img.size, filter: `blur(${img.blur})` }}
-            initial={{ x: img.x[0], y: img.y[0], rotate: img.rot[0] }}
-            animate={{
-              x: img.x,
-              y: img.y,
-              rotate: img.rot
-            }}
-            transition={{
-              x: { duration: img.durX, repeat: Infinity, ease: "linear", delay: img.del },
-              y: { duration: img.durY, repeat: Infinity, ease: "easeInOut", delay: img.del },
-              rotate: { duration: img.durX * 1.5, repeat: Infinity, ease: "linear" }
-            }}
-          />
-        ))}
+
+      {/* Тот же ambient-фон, что и во всём приложении */}
+      <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden="true">
+        <div className="absolute top-[-15%] left-1/2 -translate-x-1/2 w-[80%] h-[40%] rounded-full bg-white/[0.07] blur-[160px]" />
       </div>
       
       <button onClick={() => {

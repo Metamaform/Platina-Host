@@ -460,7 +460,12 @@ export function Mines({
                       className="absolute inset-0 flex items-center justify-center pointer-events-none"
                     >
                       {cell.isMine ? (
-                        <Bomb className="w-10 h-10 text-danger drop-shadow-md" />
+                        <img
+                          src="/bomb-planted.png"
+                          alt="Bomb Planted"
+                          className="w-[68%] h-[68%] object-contain drop-shadow-[0_4px_14px_rgba(239,68,68,0.45)] select-none pointer-events-none"
+                          draggable={false}
+                        />
                       ) : cell.cellNft ? (
                         <PremiumImage 
                           staticMode={!cell.manualReveal}
