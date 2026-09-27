@@ -88,7 +88,7 @@ export function BalancePage({
           transition={{ duration: 0.22, ease: 'easeOut' }}
           className="motion-reduce:transition-none"
         >
-          <PremiumCardCarousel balance={balance} username={username} />
+          <PremiumCardCarousel balance={balance} username={username} onHint={showHint} />
         </motion.div>
 
         {/* Быстрые действия — Пополнить / Вывод */}
@@ -103,7 +103,7 @@ export function BalancePage({
               topupRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }}
             onWithdraw={() => {
-              haptics.notification('warning');
+              haptics.notify('warning');
               showHint('Скоро будет доступен вывод в Gram');
             }}
           />
