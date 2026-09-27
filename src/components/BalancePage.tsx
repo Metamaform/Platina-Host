@@ -1,18 +1,35 @@
-import React, { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
-import { ArrowLeft, ArrowDownLeft, ArrowUpRight, Package, Gem, Wallet, Loader2 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ArrowLeft, ArrowDown, ArrowUp, ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Package, Gem, QrCode, Wallet, Loader2 } from 'lucide-react';
 import { TonConnectButton, useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import { GramIcon } from './GramIcon';
 import { StarsIcon } from './StarsIcon';
 import { useTranslation } from '../lib/i18n';
-import { useRates, formatUsd } from '../hooks/useRates';
 import { haptics } from '../lib/haptics';
 import { springSnappy } from '../lib/motion';
 
 /* ---------------------------------------------------------------------------
+ * StackingIcon — «Стейкинг»: стопка монет (эллисп сверху + дуга снизу),
+ * повторяет иконку из макета IMG_0933.jpeg.
+ * ------------------------------------------------------------------------- */
+function StackingIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <ellipse cx="12" cy="8" rx="8" ry="4" />
+      <path d="M4 14.5c0 2.2 3.6 4 8 4s8-1.8 8-4" />
+    </svg>
+  );
+}
+
+/* Темы карточки баланса: классическая (пастельная), чёрная, платинум.
+   Названия по требованию — английские, не переводятся. */
+const CARD_THEMES = ['Classic', 'Black', 'Platinum'] as const;
+
+/* ---------------------------------------------------------------------------
  * BalancePage — отдельная страница баланса (не пункт нижнего меню).
  * Открывается по тапу на баланс в шапке.
- * Сверху — карточка «hero» с балансом в GRAM и переводом в долларах,
+ * Сверху — карточка «hero» с балансом в GRAM: три темы оформления
+ * (Classic / Black / Platinum), переключение свайпом или точками,
  * ниже — пополнение в стиле Gram Wallet: Telegram Stars / Gram / NFT.
  * ------------------------------------------------------------------------- */
 
@@ -37,13 +54,91 @@ export function BalancePage({
   tonTopupAddress,
 }: BalancePageProps) {
   const { t } = useTranslation();
-  const rates = useRates();
   const [method, setMethod] = useState<TopUpMethod>('stars');
+
+  const topupRef = useRef<HTMLDivElement>(null);
+  const [hint, setHint] = useState<string | null>(null);
+  const hintTimer = useRef<number | null>(null);
+
+  useEffect(() => () => { if (hintTimer.current) window.clearTimeout(hintTimer.current); }, []);
+
+  const showHint = (msg: string) => {
+    setHint(msg);
+    if (hintTimer.current) window.clearTimeout(hintTimer.current);
+    hintTimer.current = window.setTimeout(() => setHint(null), 2000);
+  };
+
+  /* Баланс на карточке — в GRAM (макет: крупное число по центру). */
+  const gramLabel = balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  /* Три темы карточки: 0 — классическая пастельная (макет), 1 — чёрная,
+     2 — платинум. Переключение обычным свайпом влево/вправо + тап по точкам. */
+  const [cardIdx, setCardIdx] = useState(0);
+  const swipe = useRef<{ x: number; y: number } | null>(null);
+
+  const switchCard = (next: number) => {
+    const clamped = Math.max(0, Math.min(2, next));
+    if (clamped !== cardIdx) {
+      haptics.selection();
+      setCardIdx(clamped);
+    }
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    swipe.current = { x: e.clientX, y: e.clientY };
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* ignore */ }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!swipe.current) return;
+    const dx = e.clientX - swipe.current.x;
+    const dy = e.clientY - swipe.current.y;
+    swipe.current = null;
+    /* Свайп по горизонтали (если сдвиг вертикальный — не мешаем скроллу страницы). */
+    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy)) {
+      switchCard(dx < 0 ? cardIdx + 1 : cardIdx - 1);
+    }
+  };
+
+  const handlePointerCancel = () => { swipe.current = null; };
 
   const tabs: { id: TopUpMethod; label: string; icon: React.ReactNode }[] = [
     { id: 'stars', label: t('stars'), icon: <StarsIcon className="w-4 h-4" /> },
     { id: 'ton', label: 'Gram', icon: <GramIcon className="w-4 h-4 text-brand" /> },
     { id: 'nft', label: 'NFT', icon: <Gem className="w-4 h-4 text-violet-400" /> },
+  ];
+
+  /* Ряд из 4 кнопок под карточкой — Пополнить / Отправить / Обменять / Стейкинг.
+     «Отправить», «Обменять» и «Стейкинг» в проекте ещё не реализованы —
+     показываем «СКОРО», как и принято для незавершённых фич. */
+  const actions: { id: string; icon: React.ReactNode; label: string; onClick: () => void }[] = [
+    {
+      id: 'topup',
+      icon: <ArrowDown className="w-7 h-7" strokeWidth={2.75} />,
+      label: t('topup'),
+      onClick: () => {
+        haptics.impact('light');
+        topupRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      },
+    },
+    {
+      id: 'send',
+      icon: <ArrowUp className="w-7 h-7" strokeWidth={2.75} />,
+      label: t('send'),
+      onClick: () => { haptics.impact('light'); showHint(t('soon')); },
+    },
+    {
+      id: 'exchange',
+      icon: <ArrowLeftRight className="w-7 h-7" strokeWidth={2.75} />,
+      label: t('exchange'),
+      onClick: () => { haptics.impact('light'); showHint(t('soon')); },
+    },
+    {
+      id: 'staking',
+      icon: <StackingIcon className="w-7 h-7" />,
+      label: t('staking'),
+      onClick: () => { haptics.impact('light'); showHint(t('soon')); },
+    },
   ];
 
   return (
@@ -64,46 +159,129 @@ export function BalancePage({
 
       <div className="flex-1 overflow-y-auto scrollbar-hide px-4 pt-2 pb-10 space-y-5">
         {/* ------------------------------------------------------------------
-            HERO — карточка баланса: GRAM + перевод в долларах (стиль Gram Wallet)
+            HERO — карточка баланса: три темы (Classic / Black / Platinum).
+            Classic — пастельный градиент по макету IMG_0933.jpeg, Black —
+            IMG_0945 (чёрная с дудлами и бликом), Platinum — текстура из
+            IMG_0946. Свайп листает темы, точки внизу показывают выбранную
+            (активная — белая, остальные — серые).
         ------------------------------------------------------------------- */}
-        <div className="hero-gradient rounded-[28px] p-6 text-white relative overflow-hidden shadow-[0_20px_50px_-15px_rgba(0,152,234,0.5)]">
-          {/* soft inner glows for material depth */}
-          <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-white/15 blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-20 -left-10 w-48 h-48 rounded-full bg-black/20 blur-3xl pointer-events-none" />
+        <div
+          className="relative rounded-[28px] overflow-hidden shadow-[0_20px_50px_-18px_rgba(0,0,0,0.55)] select-none [touch-action:pan-y]"
+          onPointerDown={handlePointerDown}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerCancel}
+        >
+          {/* Трек фонов: 0 — Classic, 1 — Black, 2 — Platinum.
+              Свайп листает его по горизонтали, контент остаётся на месте. */}
+          <div
+            className="absolute inset-0 flex w-[300%] transition-transform duration-300 ease-out motion-reduce:transition-none"
+            style={{ transform: `translateX(-${(cardIdx * 100) / 3}%)` }}
+          >
+            {/* 0 — Classic: пастельная тема (макет IMG_0933.jpeg) */}
+            <div className="relative w-1/3 h-full">
+              {/* Fallback-градиент на случай, если фон не загрузился */}
+              <div className="absolute inset-0 bg-[linear-gradient(135deg,#9d89de_0%,#b58cd6_35%,#a7a3de_60%,#7496d4_100%)]" />
+              <img
+                src="/balance-card-bg.jpg"
+                alt=""
+                draggable={false}
+                className="absolute inset-0 w-full h-full object-cover"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+              />
+              {/* Мягкое свечение в центре, как в макете */}
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.35)_0%,rgba(255,255,255,0)_55%)] pointer-events-none" />
+            </div>
 
-          <div className="relative flex items-start justify-between gap-3 mb-6">
-            <span className="font-display text-lg font-bold tracking-tight">platina gift</span>
-            <Gem className="w-6 h-6 text-white/80 shrink-0" />
+            {/* 1 — Black: глубоко-чёрная с белыми дудлами и бликом (IMG_0945) */}
+            <div className="relative w-1/3 h-full">
+              <div className="absolute inset-0 bg-[linear-gradient(135deg,#101012_0%,#0a0a0b_55%,#131315_100%)]" />
+              <img
+                src="/balance-card-bg-black.jpg"
+                alt=""
+                draggable={false}
+                className="absolute inset-0 w-full h-full object-cover"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+              />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0)_55%)] pointer-events-none" />
+            </div>
+
+            {/* 2 — Platinum: волновая текстура из IMG_0946 + серебристый sheen */}
+            <div className="relative w-1/3 h-full">
+              <div className="absolute inset-0 bg-[linear-gradient(160deg,#17171a_0%,#0c0c0e_50%,#111218_100%)]" />
+              <img
+                src="/balance-card-bg-platinum.jpg"
+                alt=""
+                draggable={false}
+                className="absolute inset-0 w-full h-full object-cover"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+              />
+              {/* Диагональный серебристый блик сверху-справа, как у платиновой карты */}
+              <div className="absolute inset-0 bg-[linear-gradient(215deg,rgba(255,255,255,0.14)_0%,rgba(255,255,255,0.04)_30%,rgba(255,255,255,0)_55%)] pointer-events-none" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0)_55%)] pointer-events-none" />
+            </div>
           </div>
 
-          <div className="relative flex items-center gap-2 text-[11px] font-bold text-white/80 uppercase tracking-widest">
-            <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
-            {t('balance')}
-          </div>
+          {/* Контент поверх любого из фонов */}
+          <div className="relative flex flex-col items-center justify-center px-6 py-14 min-h-[240px]">
+            {/* Крупный баланс в GRAM */}
+            <div className="font-display display-xl text-white text-[64px] font-black leading-none drop-shadow-[0_4px_18px_rgba(80,70,160,0.35)]">
+              {gramLabel}
+            </div>
+            <div className="mt-3 text-white/75 font-bold text-[13px] tracking-[0.22em]">GRAM</div>
 
-          <div className="relative mt-3 flex items-baseline gap-2">
-            <span className="font-display display-xl text-[44px] font-black text-white">
-              {balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
-            <span className="text-2xl font-bold text-white/90">GRAM</span>
+            {/* Низ карточки: «Platina» + QR, название темы и точки-индикаторы */}
+            <div className="absolute bottom-4 inset-x-0 flex flex-col items-center gap-2">
+              <div className="flex items-center justify-center gap-2">
+                <span className="font-display text-white text-[22px] font-bold tracking-tight">Platina</span>
+                <QrCode className="w-[22px] h-[22px] text-white" strokeWidth={2.2} />
+              </div>
+              {/* Название текущей темы: Classic / Black / Platinum */}
+              <div className="text-white/70 text-[10px] font-bold uppercase tracking-[0.3em] leading-none">
+                {CARD_THEMES[cardIdx]}
+              </div>
+              <div className="flex items-center gap-2" role="tablist" aria-label="Card theme">
+                {CARD_THEMES.map((name, i) => (
+                  <button
+                    key={name}
+                    type="button"
+                    role="tab"
+                    aria-selected={cardIdx === i}
+                    aria-label={name}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => switchCard(i)}
+                    className={`h-2 w-2 rounded-full transition-all duration-200 cursor-pointer active:scale-125 ${
+                      cardIdx === i
+                        ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.7)] scale-110'
+                        : 'bg-white/30 hover:bg-white/50'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
+        </div>
 
-          {/* Перевод в долларах */}
-          <div className="relative mt-1 text-[14px] text-white/75 font-medium">
-            ≈ {formatUsd(balance, rates.gramUsd)} USD
-          </div>
-
-          {/* Live rate chip */}
-          <div className="relative mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/15 border border-white/10 text-[11px] font-semibold text-white/90">
-            <GramIcon className="w-3.5 h-3.5" />
-            1 GRAM ≈ ${rates.gramUsd.toFixed(2)}
-          </div>
+        {/* ------------------------------------------------------------------
+            Ряд кнопок под карточкой — как в макете:
+            Пополнить / Отправить / Обменять / Стейкинг
+        ------------------------------------------------------------------- */}
+        <div className="grid grid-cols-4 gap-2.5">
+          {actions.map((a) => (
+            <button
+              key={a.id}
+              onClick={a.onClick}
+              className="flex flex-col items-center justify-center gap-2 py-3.5 rounded-[24px] bg-[#17171A] border border-white/[0.06] active:scale-[0.96] transition-transform duration-150 cursor-pointer shadow-[0_8px_20px_-10px_rgba(0,0,0,0.6)]"
+            >
+              <span className="text-[#3B82F6]">{a.icon}</span>
+              <span className="text-white font-bold text-[13px] leading-none text-center whitespace-nowrap">{a.label}</span>
+            </button>
+          ))}
         </div>
 
         {/* ------------------------------------------------------------------
             Пополнение — Telegram Stars / Gram / NFT (как в Gram Wallet)
         ------------------------------------------------------------------- */}
-        <div>
+        <div ref={topupRef} className="scroll-mt-4">
           <div className="flex items-center gap-2.5 mb-3.5">
             <div className="w-8 h-8 rounded-xl bg-brand/15 border border-brand/25 text-brand flex items-center justify-center shrink-0">
               <ArrowDownLeft className="w-4.5 h-4.5" />
@@ -179,6 +357,21 @@ export function BalancePage({
           </button>
         </section>
       </div>
+
+      {/* Тост «СКОРО» для нереализованных действий */}
+      <AnimatePresence>
+        {hint && (
+          <motion.div
+            initial={{ opacity: 0, y: 16, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.98 }}
+            transition={springSnappy}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[140] px-5 py-2.5 rounded-full bg-[#17171A]/95 backdrop-blur-xl border border-white/[0.08] text-white text-[13px] font-bold tracking-wide shadow-[0_16px_40px_-12px_rgba(0,0,0,0.7)] pointer-events-none whitespace-nowrap"
+          >
+            {hint}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

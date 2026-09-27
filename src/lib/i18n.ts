@@ -308,6 +308,8 @@ const translations: Record<Language, Record<string, string>> = {
     'history': 'История',
     'topup': 'Пополнить',
     'send': 'Отправить',
+    'exchange': 'Обменять',
+    'staking': 'Стейкинг',
     'receive': 'Получить',
     'collection': 'Коллекция NFT',
     'connected': 'Подключен',
@@ -620,6 +622,8 @@ const translations: Record<Language, Record<string, string>> = {
     'history': 'History',
     'topup': 'Top up',
     'send': 'Send',
+    'exchange': 'Exchange',
+    'staking': 'Staking',
     'receive': 'Receive',
     'collection': 'NFT Collection',
     'connected': 'Connected',
@@ -884,6 +888,10 @@ const translations: Record<Language, Record<string, string>> = {
     
     // BalancePage.tsx (top-up)
     'topup_title': '充值余额',
+    'topup': '充值',
+    'send': '发送',
+    'exchange': '兑换',
+    'staking': '质押',
     'topup_desc': '连接钱包并在以下账户中充值',
     'sum_ton': '金额 (TON)',
     'you_get': '您将收到:',
