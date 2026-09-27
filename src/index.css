@@ -220,3 +220,25 @@
     @apply bg-surface;
   }
 }
+
+/* Consistent touch feedback without transitioning layout or expensive filters.
+   Motion-driven transforms remain owned by Motion, not CSS. */
+@layer base {
+  button, a, [role="button"], input, select, textarea {
+    -webkit-tap-highlight-color: transparent;
+    transition-property: color, background-color, border-color, opacity;
+    transition-duration: 220ms;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  button, a, [role="button"] {
+    touch-action: manipulation;
+  }
+}
+
+@layer utilities {
+  .transition-all {
+    transition-property: color, background-color, border-color, opacity, transform, scale;
+    transition-duration: 220ms;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
