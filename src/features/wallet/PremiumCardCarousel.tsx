@@ -44,15 +44,31 @@ export function PremiumCardCarousel({ balance = 0, username, onHint }: PremiumCa
     try {
       const tg = (window as any).Telegram?.WebApp;
       const token = sessionStorage.getItem('pg_session_token');
-      if (!token) throw new Error('Not authorized');
 
       // Снимок карты (кнопка QR исключается через data-атрибут)
+      // skipFonts: true предотвращает чтение cross-origin шрифтов и сетевые сбои cssRules
       const image = await toPng(cardRef.current, {
         pixelRatio: 2,
         cacheBust: true,
+        skipFonts: true,
         backgroundColor: '#070708',
         filter: (node) => !(node instanceof HTMLElement && node.dataset.shareExclude === '1'),
       });
+
+      if (!token) {
+        // Если пользователь не авторизован (например гостевой режим)
+        if (navigator.share) {
+          await navigator.share({
+            title: 'Platina Gift Card',
+            text: `Player balance: ${displayBalance} GRAM`,
+            url: window.location.href,
+          }).catch(() => {});
+          haptics.notify('success');
+        } else {
+          onHint?.('Sharing is available inside Telegram');
+        }
+        return;
+      }
 
       const res = await fetch('/api/wallet/share-card', {
         method: 'POST',
@@ -60,19 +76,42 @@ export function PremiumCardCarousel({ balance = 0, username, onHint }: PremiumCa
         body: JSON.stringify({ image }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data?.preparedMessageId) {
+      if (!res.ok && !data?.photoUrl) {
         throw new Error(data?.error || 'Share failed');
       }
 
-      if (tg && typeof tg.shareMessage === 'function') {
+      if (data?.preparedMessageId && tg && typeof tg.shareMessage === 'function') {
         tg.shareMessage(data.preparedMessageId, (sent: boolean) => {
           if (sent) haptics.notify('success');
         });
+      } else if (data?.photoUrl && navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Platina Gift Card',
+            text: `Player balance: ${displayBalance} GRAM`,
+            url: data.photoUrl,
+          });
+          haptics.notify('success');
+        } catch (shareErr: any) {
+          if (shareErr?.name !== 'AbortError') {
+            if (navigator.clipboard?.writeText) {
+              await navigator.clipboard.writeText(data.photoUrl);
+              onHint?.('Link copied');
+              haptics.notify('success');
+            } else {
+              onHint?.('Sharing is available inside Telegram');
+            }
+          }
+        }
+      } else if (data?.photoUrl && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(data.photoUrl);
+        onHint?.('Link copied');
+        haptics.notify('success');
       } else {
-        onHint?.('Sharing is available only inside Telegram');
+        onHint?.('Sharing is available inside Telegram');
       }
     } catch (e: any) {
-      console.error('[share-card]', e);
+      console.warn('[share-card]', e);
       haptics.notify('error');
       onHint?.(e?.message || 'Не удалось поделиться картой');
     } finally {

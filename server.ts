@@ -1372,8 +1372,6 @@ app.get("/api/admin/gifts", (req, res) => {
       if (!m) { res.status(400).json({ error: 'Bad image' }); return; }
       const buf = Buffer.from(m[1], 'base64');
       if (buf.length > 4 * 1024 * 1024) { res.status(413).json({ error: 'Image too large' }); return; }
-      if (!botToken) { res.status(503).json({ error: 'Bot token is not configured' }); return; }
-
       pruneSharedCards();
       const id = crypto.randomBytes(12).toString('hex');
       sharedCards.set(id, { buf, exp: Date.now() + SHARE_TTL_MS });
@@ -1385,34 +1383,42 @@ app.get("/api/admin/gifts", (req, res) => {
         : `${proto}://${host}`;
       const photoUrl = `${base}/api/share/card/${id}.png`;
 
-      const handle = user?.username ? `@${user.username}` : (user?.firstName || 'Player');
-      const caption = `Player balance ${handle}.\n\nCome play Platina Gift!\nOur Telegram channel: @platina_gift`;
+      let preparedMessageId: string | null = null;
+      if (botToken) {
+        try {
+          const handle = user?.username ? `@${user.username}` : (user?.firstName || 'Player');
+          const caption = `Player balance ${handle}.\n\nCome play Platina Gift!\nOur Telegram channel: @platina_gift`;
 
-      const tgRes = await fetch(`https://api.telegram.org/bot${botToken}/savePreparedInlineMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: userId,
-          result: {
-            type: 'photo',
-            id: `card_${id}`,
-            photo_url: photoUrl,
-            thumbnail_url: photoUrl,
-            caption,
-          },
-          allow_user_chats: true,
-          allow_bot_chats: true,
-          allow_group_chats: true,
-          allow_channel_chats: true,
-        }),
-      });
-      const tgJson: any = await tgRes.json().catch(() => ({}));
-      if (!tgJson?.ok) {
-        console.error('[share-card] savePreparedInlineMessage failed', tgJson);
-        res.status(502).json({ error: tgJson?.description || 'Telegram error' });
-        return;
+          const tgRes = await fetch(`https://api.telegram.org/bot${botToken}/savePreparedInlineMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              user_id: userId,
+              result: {
+                type: 'photo',
+                id: `card_${id}`,
+                photo_url: photoUrl,
+                thumbnail_url: photoUrl,
+                caption,
+              },
+              allow_user_chats: true,
+              allow_bot_chats: true,
+              allow_group_chats: true,
+              allow_channel_chats: true,
+            }),
+          });
+          const tgJson: any = await tgRes.json().catch(() => ({}));
+          if (tgJson?.ok && tgJson?.result?.id) {
+            preparedMessageId = tgJson.result.id;
+          } else {
+            console.warn('[share-card] savePreparedInlineMessage note:', tgJson?.description || 'unavailable');
+          }
+        } catch (tgErr) {
+          console.warn('[share-card] Telegram request failed:', tgErr);
+        }
       }
-      res.json({ preparedMessageId: tgJson.result.id, photoUrl });
+
+      res.json({ preparedMessageId, photoUrl });
     } catch (e) {
       console.error('[share-card]', e);
       res.status(500).json({ error: 'Internal error' });
