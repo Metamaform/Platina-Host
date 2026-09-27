@@ -19,9 +19,9 @@
 
   /* Surfaces — soft neutral gray ("мягкий серый"), layered lightness keeps the
      canvas < surface < surface-2 < surface-3 hierarchy.
-     Canvas darkened a notch ("чуть темнее фон"). */
-  --color-canvas: #26272b;        /* app backdrop — soft gray, slightly darker */
-  --color-canvas-deep: #1e1f22;   /* deepest layer (behind glows) */
+     Canvas — тёмный графит (скрин 0948). */
+  --color-canvas: #1a1a1a;        /* app backdrop — тёмный графит */
+  --color-canvas-deep: #121212;   /* deepest layer (behind glows) */
   --color-surface: #35363b;       /* card / panel */
   --color-surface-2: #3e3f45;     /* nested card, hover */
   --color-surface-3: #47484e;     /* raised / pressed */

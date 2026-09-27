@@ -1276,8 +1276,8 @@ export default function App() {
               transition={{ type: 'spring', damping: 28, stiffness: 350 }}
               className="absolute inset-x-3 top-2.5 z-50 flex justify-center pointer-events-none"
             >
-                <div className={`relative flex items-center justify-between bg-[#131418]/85 backdrop-blur-2xl rounded-[32px] p-1.5 w-full shadow-[0_12px_36px_rgba(0,0,0,0.6)] pointer-events-auto transition-all duration-300 ${
-                  topUpGlow ? 'border border-emerald-500/80 shadow-[0_0_25px_rgba(16,185,129,0.35)]' : 'border border-white/[0.08]'
+                <div className={`relative flex items-center justify-between bg-[#2a2a2c]/95 backdrop-blur-2xl rounded-[28px] p-2 w-full shadow-[0_12px_36px_rgba(0,0,0,0.6)] pointer-events-auto transition-all duration-300 ${
+                  topUpGlow ? 'border border-emerald-500/80 shadow-[0_0_25px_rgba(16,185,129,0.35)]' : 'border border-white/[0.06]'
                 }`}>
                   {/* Avatar -> Profile */}
                   <button 
@@ -1285,16 +1285,16 @@ export default function App() {
                       setActiveTab('profile');
                       try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
                     }} 
-                    className="flex items-center gap-2 pr-2.5 pl-1 py-0.5 hover:bg-white/5 rounded-full transition-all active:scale-[0.96] z-10 cursor-pointer"
+                    className="flex items-center gap-2 pr-2.5 pl-1 py-0.5 hover:bg-white/[0.06] rounded-full transition-all active:scale-[0.96] z-10 cursor-pointer"
                   >
-                    <div className="w-[38px] h-[38px] rounded-full overflow-hidden bg-white/10 shrink-0 border border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.08)] flex items-center justify-center relative">
+                    <div className="w-[40px] h-[40px] rounded-full overflow-hidden bg-[#e8e8ea] shrink-0 border-2 border-white/[0.12] shadow-[0_0_10px_rgba(255,255,255,0.08)] flex items-center justify-center relative">
                       {user?.photoUrl ? (
                         <img src={user.photoUrl} alt="Avatar" className="absolute w-full h-full object-cover" />
                       ) : (
-                        <User className="w-5 h-5 text-white/50 relative z-10" />
+                        <User className="w-5 h-5 text-[#1c1e21] relative z-10" />
                       )}
                     </div>
-                    <span className="text-[12px] font-bold text-white/90 bg-white/[0.06] px-2 py-0.5 rounded-full border border-white/5">
+                    <span className="text-[12px] font-bold text-[#1c1e21] bg-[#e8e8ea] px-2.5 py-1 rounded-full">
                       LVL {currentLevel}
                     </span>
                   </button>
@@ -1317,11 +1317,11 @@ export default function App() {
                       setShowBalancePage(true);
                       try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch (e) {}
                     }} 
-                    className="flex items-center gap-1.5 bg-brand/15 text-brand px-3 py-1.5 rounded-full hover:bg-brand/20 active:scale-[0.96] transition-all duration-150 border border-brand/25 z-10 mr-0.5 cursor-pointer shadow-sm"
+                    className="flex items-center gap-1.5 bg-brand text-white px-3 py-2 rounded-full hover:brightness-110 active:scale-[0.96] transition-all duration-150 z-10 mr-0.5 cursor-pointer shadow-[0_4px_14px_rgba(0,152,234,0.35)]"
                   >
                     <span className="font-display text-[14px] font-bold tracking-tight text-white">{balance.toFixed(2)}</span>
-                    <GramIcon className="w-4 h-4 text-brand" />
-                    <span className="w-4 h-4 rounded-full bg-brand text-white text-[11px] font-bold flex items-center justify-center ml-0.5 leading-none">
+                    <GramIcon className="w-4 h-4 text-white" />
+                    <span className="w-4 h-4 rounded-full bg-white text-brand text-[11px] font-bold flex items-center justify-center ml-0.5 leading-none">
                       +
                     </span>
                   </button>
@@ -1409,7 +1409,7 @@ export default function App() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: '100%' }}
                 transition={springSmooth}
-                className="absolute inset-0 z-[100] bg-black"
+                className="absolute inset-0 z-[100] bg-canvas"
               >
                 <Suspense fallback={<LazyFallback />}><Upgrade onBack={() => setActiveGame(null)} inventory={inventory} setInventory={setInventory} giftsDb={giftsDb} onWin={(item, price) => auth.recordOpen(item, price, 'nft', undefined, 'upgrade')} balance={balance} setBalance={setBalance} onBet={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} onNavigate={(t) => { setActiveGame(null); setTimeout(() => { if(t==='inventory') setActiveTab('inventory'); else setActiveGame(t as any); }, 50); }} /></Suspense>
               </motion.div>
@@ -1420,7 +1420,7 @@ export default function App() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: '100%' }}
                 transition={springSmooth}
-                className="absolute inset-0 z-[100] bg-black"
+                className="absolute inset-0 z-[100] bg-canvas"
               >
                 <Suspense fallback={<LazyFallback />}><Craft onBack={() => setActiveGame(null)} inventory={inventory} setInventory={setInventory} giftsDb={giftsDb} onWin={(item, price) => auth.recordOpen(item, price, 'nft', undefined, 'craft')} onTurnover={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} balance={balance} setBalance={setBalance} onNavigate={(t) => { setActiveGame(null); setTimeout(() => { if(t==='inventory') setActiveTab('inventory'); else setActiveGame(t as any); }, 50); }} /></Suspense>
               </motion.div>
@@ -1431,7 +1431,7 @@ export default function App() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: '100%' }}
                 transition={springSmooth}
-                className="absolute inset-0 z-[100] bg-black"
+                className="absolute inset-0 z-[100] bg-canvas"
               >
                 <Suspense fallback={<LazyFallback />}><Mines onBack={() => setActiveGame(null)} inventory={inventory} setInventory={setInventory} balance={balance} setBalance={setBalance} onTurnover={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} onWin={(amt, mode, item, mult) => { if (mode === 'nft' && item) auth.recordOpen(item, amt, 'nft', mult, 'mines'); else if (mode === 'gram') auth.recordOpen(null, amt, 'gram', mult, 'mines'); }} giftsDb={giftsDb} onNavigate={(t) => { setActiveGame(null); setTimeout(() => { if(t==='inventory') setActiveTab('inventory'); else setActiveGame(t as any); }, 50); }} /></Suspense>
               </motion.div>
@@ -1442,7 +1442,7 @@ export default function App() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: '100%' }}
                 transition={springSmooth}
-                className="absolute inset-0 z-[100] bg-black"
+                className="absolute inset-0 z-[100] bg-canvas"
               >
                 <Suspense fallback={<LazyFallback />}>
                 <NewGame 
@@ -1465,7 +1465,7 @@ export default function App() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: '100%' }}
                 transition={springSmooth}
-                className="absolute inset-0 z-[100] bg-black"
+                className="absolute inset-0 z-[100] bg-canvas"
               >
                 <Suspense fallback={<LazyFallback />}>
                 <Plinko 
@@ -1500,7 +1500,7 @@ export default function App() {
               className="absolute bottom-2.5 left-0 right-0 z-[90] pb-[calc(env(safe-area-inset-bottom,0px)+10px)] px-3 w-full pointer-events-none"
             >
               <div className="pointer-events-auto w-full max-w-sm mx-auto">
-              <nav className="relative flex items-center p-1.5 rounded-[30px] bg-[#14151a]/85 backdrop-blur-2xl border border-white/[0.08] shadow-[0_20px_45px_-10px_rgba(0,0,0,0.7)]">
+              <nav className="relative flex items-stretch gap-1 p-2 rounded-[28px] bg-[#2a2a2c]/95 backdrop-blur-2xl border border-white/[0.06] shadow-[0_20px_45px_-10px_rgba(0,0,0,0.7)]">
                 {navItems.map((item) => {
                   const isActive = activeTab === item.id;
                   return (
@@ -1510,19 +1510,19 @@ export default function App() {
                         setActiveTab(item.id);
                         try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
                       }}
-                      className={`relative z-10 flex-1 flex flex-col items-center justify-center gap-1 py-2 outline-none transition-colors duration-200 active:scale-[0.93] cursor-pointer ${
-                        isActive ? 'text-brand' : 'text-white/40 hover:text-white/70'
+                      className={`relative z-10 flex-1 flex flex-col items-center justify-center gap-1.5 py-2 outline-none transition-colors duration-200 active:scale-[0.93] cursor-pointer rounded-[20px] ${
+                        isActive ? 'text-brand' : 'text-white hover:text-white/80'
                       }`}
                     >
                       {isActive && (
                         <motion.div
                           layoutId="liquid-pill"
-                          className="absolute inset-0 rounded-[24px] bg-brand/15 border border-brand/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)] z-0"
+                          className="absolute inset-0 rounded-[20px] bg-white/[0.09] shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)] z-0"
                           transition={springSnappy}
                         />
                       )}
                       <motion.div
-                        className="relative z-10 flex flex-col items-center justify-center gap-1 will-change-transform"
+                        className="relative z-10 flex flex-col items-center justify-center gap-1.5 will-change-transform"
                         style={{ WebkitBackfaceVisibility: 'hidden', transform: 'translateZ(0)' }}
                         animate={{ 
                           scale: isActive ? 1.05 : 1,
@@ -1530,8 +1530,14 @@ export default function App() {
                         }}
                         transition={springSnappy}
                       >
-                        <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
-                        <span className="text-[10px] font-bold tracking-tight">{item.label}</span>
+                        <span className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors duration-200 ${
+                          isActive
+                            ? 'bg-brand shadow-[0_4px_12px_rgba(0,152,234,0.35)]'
+                            : 'bg-[#e8e8ea]'
+                        }`}>
+                          <item.icon size={20} strokeWidth={2.2} className={isActive ? 'text-white' : 'text-[#1c1e21]'} />
+                        </span>
+                        <span className={`text-[11px] font-bold tracking-tight leading-none ${isActive ? 'text-brand' : 'text-white'}`}>{item.label}</span>
                       </motion.div>
                     </button>
                   );
