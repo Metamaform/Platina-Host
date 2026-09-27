@@ -6,7 +6,7 @@ import defaultGiftsDb from './gifts_data.json';
 import { LiveFeed } from './components/LiveFeed';
 import { PremiumImage } from './components/PremiumImage';
 import { GramIcon } from './components/GramIcon';
-import { TopUpModal } from './components/TopUpModal';
+import { BalancePage } from './components/BalancePage';
 import { addTurnover } from './lib/stats';
 import { useTelegramAuth } from './lib/useTelegramAuth';
 import { useTranslation, i18n } from './lib/i18n';
@@ -1015,7 +1015,7 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('shop');
   const [activeGame, setActiveGame] = useState<string | null>(null);
-  const [showTopUp, setShowTopUp] = useState(false);
+  const [showBalancePage, setShowBalancePage] = useState(false);
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
 
   const [giftsDb, setGiftsDb] = useState<any[]>(defaultGiftsDb);
@@ -1265,7 +1265,7 @@ export default function App() {
         
         {/* Header - Dynamic Island */}
         <AnimatePresence>
-          {!activeGame && activeTab !== 'profile' && (
+          {!activeGame && !showBalancePage && activeTab !== 'profile' && (
             <motion.div 
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1308,10 +1308,10 @@ export default function App() {
                     />
                   </div>
 
-                  {/* Balance -> TopUp */}
+                  {/* Balance -> Balance page */}
                   <button 
                     onClick={() => {
-                      setShowTopUp(true);
+                      setShowBalancePage(true);
                       try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch (e) {}
                     }} 
                     className="flex items-center gap-1.5 bg-brand/15 text-brand px-3 py-1.5 rounded-full hover:bg-brand/20 active:scale-[0.96] transition-all duration-150 border border-brand/25 z-10 mr-0.5 cursor-pointer shadow-sm"
@@ -1362,7 +1362,7 @@ export default function App() {
                     setBalance={setBalance} 
                     turnover={turnover} 
                     topups={topups} 
-                    onOpenTopUp={() => setShowTopUp(true)} 
+                    onOpenTopUp={() => setShowBalancePage(true)} 
                     config={auth.config} 
                     giftsDb={giftsDb} 
                     onBack={() => setActiveTab('shop')}
@@ -1488,7 +1488,7 @@ export default function App() {
 
         {/* Liquid Glass Bottom Nav */}
         <AnimatePresence>
-          {!activeGame && (
+          {!activeGame && !showBalancePage && (
             <motion.div
               initial={{ y: 100, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -1540,11 +1540,22 @@ export default function App() {
         </AnimatePresence>
         
         <AnimatePresence>
-          {showTopUp && (
-            <TopUpModal 
+          {showBalancePage && (
+            <motion.div
+              initial={{ opacity: 0, y: '100%' }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="absolute inset-0 z-[100] bg-canvas"
+            >
+            <BalancePage 
+              balance={balance}
+              setBalance={setBalance}
+              inventory={inventory}
+              setInventory={setInventory}
               demoMode={auth.config?.demoMode}
               tonTopupAddress={auth.config?.tonTopupAddress}
-              onClose={() => setShowTopUp(false)} 
+              onClose={() => setShowBalancePage(false)} 
               onSuccess={(amount, method, rawAmount) => {
                 setBalance(b => b + amount);
                 setTopups(prev => [...(prev || []), { id: Date.now().toString(), amount, ts: new Date().toISOString() }]);
@@ -1567,6 +1578,7 @@ export default function App() {
                 }, 3500);
               }} 
             />
+            </motion.div>
           )}
         </AnimatePresence>
 
