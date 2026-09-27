@@ -2,11 +2,12 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { springSmooth, springSnappy } from './lib/motion';
 import { setLoggerUserId } from './lib/logger';
-import { ShoppingBag, User, Gem, Gift, Wallet, ChevronRight, Activity, CircleDashed, ArrowUpCircle, Shield, LayoutGrid, Trophy, X, ListTodo, Settings, Bomb, Box, Package, ArrowLeft, ArrowUpRight, Users, History, MessageCircle, ExternalLink, Copy, Check, Star, Rocket, Flame, Sparkles } from 'lucide-react';
+import { ShoppingBag, User, Gem, Gift, Wallet, ChevronRight, Activity, CircleDashed, ArrowUpCircle, Shield, LayoutGrid, Trophy, X, ListTodo, Settings, Bomb, Box, Package, ArrowLeft, ArrowUpRight, Users, History, MessageCircle, ExternalLink, Copy, Check, Rocket, Flame, Sparkles } from 'lucide-react';
 import defaultGiftsDb from './gifts_data.json';
 import { LiveFeed } from './components/LiveFeed';
 import { PremiumImage } from './components/PremiumImage';
 import { GramIcon } from './components/GramIcon';
+import { StarsIcon } from './components/StarsIcon';
 import { BalancePage } from './components/BalancePage';
 import { addTurnover } from './lib/stats';
 import { useTelegramAuth } from './lib/useTelegramAuth';
@@ -1619,7 +1620,7 @@ export default function App() {
                 <span className="text-white/70 text-[12px] font-medium flex items-center gap-1 mt-0.5">
                   {toastMessage.type === 'withdraw' ? '-' : '+'}{Number(toastMessage.amount).toFixed(2)} 
                   {toastMessage.method === 'stars' ? (
-                    <span className="flex items-center gap-1 text-[#FFD700] font-bold"><Star className="w-3.5 h-3.5 fill-current" /> Stars</span>
+                    <span className="flex items-center gap-1 text-[#FFD700] font-bold"><StarsIcon className="w-3.5 h-3.5" /> Stars</span>
                   ) : (
                     <span className="flex items-center gap-1 text-[#0098EA] font-bold"><GramIcon className="w-3.5 h-3.5 text-[#0098EA]" /> Grams</span>
                   )}
