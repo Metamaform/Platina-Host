@@ -4,6 +4,8 @@ import { GramIcon } from '../../components/GramIcon';
 interface PremiumCardCarouselProps {
   /** Баланс в граммах, отображаемый на карте BLACK */
   balance?: number;
+  /** Ник пользователя (например, @username) — выводится в нижней части карты */
+  username?: string | null;
 }
 
 function GlowBlack() {
@@ -16,9 +18,9 @@ function GlowBlack() {
 }
 
 /**
- * Блок «Мои карты» — одна карта BLACK с балансом в граммах.
+ * Основная карта кошелька — карта BLACK с балансом в граммах.
  */
-export function PremiumCardCarousel({ balance = 0 }: PremiumCardCarouselProps) {
+export function PremiumCardCarousel({ balance = 0, username }: PremiumCardCarouselProps) {
   const value = Number(balance) || 0;
   const displayBalance = value.toLocaleString('en-US', {
     minimumFractionDigits: 2,
@@ -27,10 +29,6 @@ export function PremiumCardCarousel({ balance = 0 }: PremiumCardCarouselProps) {
 
   return (
     <div className="w-full">
-      <div className="mb-3 px-1">
-        <h2 className="font-display text-[18px] font-bold text-white tracking-tight">Мои карты</h2>
-      </div>
-
       <div className="relative w-full min-h-[200px] rounded-[32px] border overflow-hidden select-none bg-[#070708] border-white/15 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.06)]">
         {/* Background effects */}
         <GlowBlack />
@@ -59,7 +57,7 @@ export function PremiumCardCarousel({ balance = 0 }: PremiumCardCarouselProps) {
 
           {/* Footer */}
           <div className="mt-6">
-            <span className="text-white/60 text-[14px] font-medium tracking-wide">Multichain</span>
+            <span className="text-white/60 text-[14px] font-medium tracking-wide truncate block max-w-full">{username || 'Platina'}</span>
           </div>
         </div>
       </div>

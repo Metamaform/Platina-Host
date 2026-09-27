@@ -9,6 +9,8 @@ interface QuickActionsProps {
 interface QuickActionConfig {
   id: 'deposit' | 'withdraw';
   label: string;
+  /** Небольшая подпись под названием (например, «Скоро») */
+  caption?: string;
   icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
   iconTint: string;
   onClick: () => void;
@@ -22,17 +24,17 @@ interface QuickActionConfig {
 export function QuickActions({ onDeposit, onWithdraw }: QuickActionsProps) {
   const actions: QuickActionConfig[] = [
     { id: 'deposit', label: 'Пополнить', icon: ArrowDown, iconTint: 'text-brand', onClick: onDeposit },
-    { id: 'withdraw', label: 'Вывод', icon: ArrowUp, iconTint: 'text-white/90', onClick: onWithdraw },
+    { id: 'withdraw', label: 'Вывод', caption: 'Скоро — вывод в Gram', icon: ArrowUp, iconTint: 'text-white/90', onClick: onWithdraw },
   ];
 
   return (
     <nav aria-label="Быстрые действия" className="quick-actions grid grid-cols-2 gap-3">
-      {actions.map(({ id, label, icon: Icon, iconTint, onClick }) => (
+      {actions.map(({ id, label, caption, icon: Icon, iconTint, onClick }) => (
         <button
           key={id}
           type="button"
           onClick={onClick}
-          aria-label={label}
+          aria-label={caption ? `${label}. ${caption}` : label}
           className="group relative overflow-hidden min-h-[88px] rounded-[24px] px-3 py-4 flex flex-col items-center justify-center gap-2.5
             bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10]
             shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_16px_32px_-20px_rgba(0,0,0,0.85)]
@@ -55,8 +57,15 @@ export function QuickActions({ onDeposit, onWithdraw }: QuickActionsProps) {
           >
             <Icon className="h-4 w-4" strokeWidth={2.5} aria-hidden="true" />
           </span>
-          <span className="relative text-[15px] font-semibold tracking-tight text-white leading-none whitespace-nowrap">
-            {label}
+          <span className="relative flex flex-col items-center gap-1">
+            <span className="text-[15px] font-semibold tracking-tight text-white leading-none whitespace-nowrap">
+              {label}
+            </span>
+            {caption && (
+              <span className="text-[11px] font-medium text-white/50 leading-none whitespace-nowrap">
+                {caption}
+              </span>
+            )}
           </span>
         </button>
       ))}
