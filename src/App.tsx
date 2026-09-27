@@ -1553,11 +1553,7 @@ export default function App() {
             >
             <BalancePage 
               balance={balance}
-              onGoToInventory={() => {
-                setShowBalancePage(false);
-                setActiveGame(null);
-                setActiveTab('inventory');
-              }}
+              username={user?.username ? `@${user.username}` : (user?.firstName || null)}
               demoMode={auth.config?.demoMode}
               tonTopupAddress={auth.config?.tonTopupAddress}
               onClose={() => setShowBalancePage(false)} 

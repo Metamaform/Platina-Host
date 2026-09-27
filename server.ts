@@ -3,6 +3,7 @@ import express from "express";
 import compression from "compression";
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
 import TelegramBot from "node-telegram-bot-api";
 import { createServer as createViteServer } from "vite";
 import { verifyTelegramInitData, TelegramAuthError } from "./src/lib/telegramAuth.server.ts";
@@ -1337,6 +1338,84 @@ app.get("/api/admin/gifts", (req, res) => {
     } catch (error: any) {
       console.error("Proxy error:", error);
       res.status(500).json({ error: error.message || "Internal Server Error" });
+    }
+  });
+
+  // ----------------------------------------------------
+  // Share wallet card (QR button on the BLACK card)
+  // Client renders the card to PNG -> we host it briefly at a public URL ->
+  // savePreparedInlineMessage -> client calls Telegram.WebApp.shareMessage(id),
+  // which opens the chat picker and sends the photo + caption.
+  // ----------------------------------------------------
+  const sharedCards = new Map<string, { buf: Buffer; exp: number }>();
+  const SHARE_TTL_MS = 15 * 60 * 1000;
+  const pruneSharedCards = () => {
+    const now = Date.now();
+    for (const [k, v] of sharedCards) if (v.exp < now) sharedCards.delete(k);
+  };
+
+  app.get('/api/share/card/:id.png', (req, res) => {
+    pruneSharedCards();
+    const entry = sharedCards.get(String(req.params.id));
+    if (!entry) { res.status(404).end(); return; }
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=900');
+    res.end(entry.buf);
+  });
+
+  app.post('/api/wallet/share-card', requireAuth, async (req, res) => {
+    try {
+      const userId = (req as any).userId as number;
+      const user = getUser(userId);
+      const dataUrl = String(req.body?.image || '');
+      const m = /^data:image\/png;base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl);
+      if (!m) { res.status(400).json({ error: 'Bad image' }); return; }
+      const buf = Buffer.from(m[1], 'base64');
+      if (buf.length > 4 * 1024 * 1024) { res.status(413).json({ error: 'Image too large' }); return; }
+      if (!botToken) { res.status(503).json({ error: 'Bot token is not configured' }); return; }
+
+      pruneSharedCards();
+      const id = crypto.randomBytes(12).toString('hex');
+      sharedCards.set(id, { buf, exp: Date.now() + SHARE_TTL_MS });
+
+      const proto = String(req.headers['x-forwarded-proto'] || req.protocol || 'https').split(',')[0];
+      const host = String(req.headers['x-forwarded-host'] || req.headers.host || '');
+      const base = (process.env.APP_URL && !process.env.APP_URL.includes('MY_APP_URL'))
+        ? process.env.APP_URL.replace(/\/$/, '')
+        : `${proto}://${host}`;
+      const photoUrl = `${base}/api/share/card/${id}.png`;
+
+      const handle = user?.username ? `@${user.username}` : (user?.firstName || 'Player');
+      const caption = `Player balance ${handle}.\n\nCome play Platina Gift!\nOur Telegram channel: @platina_gift`;
+
+      const tgRes = await fetch(`https://api.telegram.org/bot${botToken}/savePreparedInlineMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          result: {
+            type: 'photo',
+            id: `card_${id}`,
+            photo_url: photoUrl,
+            thumbnail_url: photoUrl,
+            caption,
+          },
+          allow_user_chats: true,
+          allow_bot_chats: true,
+          allow_group_chats: true,
+          allow_channel_chats: true,
+        }),
+      });
+      const tgJson: any = await tgRes.json().catch(() => ({}));
+      if (!tgJson?.ok) {
+        console.error('[share-card] savePreparedInlineMessage failed', tgJson);
+        res.status(502).json({ error: tgJson?.description || 'Telegram error' });
+        return;
+      }
+      res.json({ preparedMessageId: tgJson.result.id, photoUrl });
+    } catch (e) {
+      console.error('[share-card]', e);
+      res.status(500).json({ error: 'Internal error' });
     }
   });
 

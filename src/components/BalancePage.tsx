@@ -1,31 +1,29 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, ArrowDownLeft, Package, Gem, Wallet, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowDownLeft, Gem, Wallet, Loader2 } from 'lucide-react';
 import { TonConnectButton, useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import { GramIcon } from './GramIcon';
 import { StarsIcon } from './StarsIcon';
 import { useTranslation } from '../lib/i18n';
 import { haptics } from '../lib/haptics';
 import { springSnappy } from '../lib/motion';
-import { WalletBalanceCard } from '../features/wallet/WalletBalanceCard';
 import { QuickActions } from '../features/wallet/QuickActions';
 import { PremiumCardCarousel } from '../features/wallet/PremiumCardCarousel';
-import { WithdrawDialog } from '../features/wallet/WithdrawDialog/WithdrawDialog';
 
 /* ---------------------------------------------------------------------------
  * BalancePage — экран кошелька / пополнения:
  * фон как во всём приложении (canvas + мягкое свечение),
- * основная карточка с балансом в граммах (значок GRAM рядом),
- * 2 быстрых действия: Пополнить / Вывод (жидкое стекло),
- * блок «Мои карты» — одна карта BLACK,
- * сценарий вывода (bottom sheet / dialog).
+ * основная карта BLACK с балансом в граммах и ником пользователя,
+ * 2 быстрых действия: Пополнить / Вывод (жидкое стекло; вывод в Gram — скоро).
  * ------------------------------------------------------------------------- */
 
 type TopUpMethod = 'stars' | 'ton' | 'nft';
 
 interface BalancePageProps {
   balance: number;
-  onGoToInventory: () => void;
+  /** Ник пользователя для отображения на карте */
+  username?: string | null;
+  onGoToInventory?: () => void;
   onSuccess: (amount: number, method: 'stars' | 'ton', rawAmount: number) => void;
   onClose: () => void;
   demoMode?: boolean;
@@ -34,7 +32,7 @@ interface BalancePageProps {
 
 export function BalancePage({
   balance,
-  onGoToInventory,
+  username,
   onSuccess,
   onClose,
   demoMode,
@@ -45,8 +43,6 @@ export function BalancePage({
   const topupRef = useRef<HTMLDivElement>(null);
   const [hint, setHint] = useState<string | null>(null);
   const hintTimer = useRef<number | null>(null);
-  const [showWithdraw, setShowWithdraw] = useState(false);
-  const withdrawTriggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => () => { if (hintTimer.current) window.clearTimeout(hintTimer.current); }, []);
 
@@ -61,9 +57,6 @@ export function BalancePage({
     { id: 'ton', label: 'Gram', icon: <GramIcon className="w-4 h-4 text-brand" /> },
     { id: 'nft', label: 'NFT', icon: <Gem className="w-4 h-4 text-violet-400" /> },
   ];
-
-  // Баланс приложения — в граммах; карточки показывают его как есть + значок GRAM
-  const gramDisplay = balance.toFixed(2);
 
   return (
     <div className="relative flex flex-col h-full bg-canvas text-[color:var(--color-text)] overflow-hidden">
@@ -88,14 +81,14 @@ export function BalancePage({
       </div>
 
       <main aria-label="Кошелёк" className="relative z-10 flex-1 overflow-y-auto scrollbar-hide px-4 pt-2 pb-10 space-y-5 w-full max-w-[720px] mx-auto">
-        {/* Основная карточка кошелька: баланс в граммах */}
+        {/* Основная карта кошелька — BLACK: баланс в граммах + ник */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, ease: 'easeOut' }}
           className="motion-reduce:transition-none"
         >
-          <WalletBalanceCard amount={gramDisplay} />
+          <PremiumCardCarousel balance={balance} username={username} onHint={showHint} />
         </motion.div>
 
         {/* Быстрые действия — Пополнить / Вывод */}
@@ -110,19 +103,10 @@ export function BalancePage({
               topupRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }}
             onWithdraw={() => {
-              haptics.impact('light');
-              setShowWithdraw(true);
+              haptics.notify('warning');
+              showHint('Скоро будет доступен вывод в Gram');
             }}
           />
-        </motion.div>
-
-        {/* Карта BLACK */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.22, ease: 'easeOut', delay: 0.12 }}
-        >
-          <PremiumCardCarousel balance={balance} />
         </motion.div>
 
         {/* Пополнение */}
@@ -184,30 +168,7 @@ export function BalancePage({
           )}
         </div>
 
-        <section className="rounded-[24px] bg-white/[0.03] border border-white/[0.06] p-4">
-          <div className="flex items-center gap-2.5 mb-3">
-            <div className="w-8 h-8 rounded-xl bg-violet-500/15 border border-violet-500/25 text-violet-400 flex items-center justify-center">
-              <ArrowDownLeft className="w-4.5 h-4.5 rotate-180" />
-            </div>
-            <h2 className="font-display text-lg font-bold text-white">{t('withdraw')}</h2>
-          </div>
-          <p className="text-white/50 text-[13px] leading-relaxed mb-4">{t('withdraw_nft_description')}</p>
-          <button
-            onClick={() => { haptics.impact('light'); onGoToInventory(); }}
-            className="w-full py-3.5 rounded-2xl bg-white/[0.06] hover:bg-white/10 border border-white/10 text-white font-semibold flex items-center justify-center gap-2 transition-colors active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1683FF]"
-          >
-            <Package className="w-5 h-5" />
-            {t('go_to_inventory')}
-          </button>
-        </section>
       </main>
-
-      {/* Withdraw Dialog */}
-      <AnimatePresence>
-        {showWithdraw && (
-          <WithdrawDialog open={showWithdraw} onClose={() => setShowWithdraw(false)} />
-        )}
-      </AnimatePresence>
 
       {/* Toast */}
       <AnimatePresence>
