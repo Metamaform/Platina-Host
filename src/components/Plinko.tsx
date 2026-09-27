@@ -59,6 +59,8 @@ interface TrajectorySegment {
   x1: number;
   y1: number;
   apexHeight: number;
+  /** Lateral bow of the arc (px) — keeps the ball clear of pegs while bouncing */
+  bowX: number;
   durationMs: number;
   pegIndex?: number;
   isLast?: boolean;
@@ -93,6 +95,15 @@ const PIN_SPACING = 32;
 const BALL_RADIUS = 9.0;
 const PIN_RADIUS = 3.5;
 const R_CONTACT = BALL_RADIUS + PIN_RADIUS + 0.3; // strictly outside peg perimeter
+// Collision-normalized minimum: ball center never gets closer than this to any peg
+const R_MIN = BALL_RADIUS + PIN_RADIUS + 0.25;
+const R_MIN_SQ = R_MIN * R_MIN;
+// Contact point on a peg: top rim, rotated toward the side the ball deflects to
+const CONTACT_THETA = 0.45;
+const CONTACT_DX = R_CONTACT * Math.sin(CONTACT_THETA);
+const CONTACT_DY = -R_CONTACT * Math.cos(CONTACT_THETA);
+// Flight speed used to normalize segment durations (~constant speed per drop)
+const FLIGHT_SPEED_PX_PER_MS = 0.19;
 const BUCKET_Y = START_Y + ROWS * ROW_GAP + 14;
 const TOTAL_PEGS = 52; // 3+4+5+6+7+8+9+10 = 52
 
@@ -510,84 +521,132 @@ export const Plinko: React.FC<PlinkoProps> = ({
   const bucketsRef = useRef(buckets);
   bucketsRef.current = buckets;
 
-  // Build smooth, deterministic ballistic trajectory for the entire drop
+  // Build a smooth, deterministic ballistic trajectory for the entire drop.
+  // Collision-normalized: every arc is relaxed so the ball never enters a peg —
+  // contacts touch the peg rim (R_CONTACT) and all in-between flight keeps at
+  // least R_MIN clearance. Segments are quadratic arcs (lateral bow + apex).
   const buildTrajectory = useCallback((path: number[], targetBucket: number): TrajectorySegment[] => {
-    const segments: TrajectorySegment[] = [];
-
     // Funnel apex (drop entry)
     const funnelX = BOARD_WIDTH / 2;
     const funnelY = 14;
 
-    // Row 0 peg is at column 1 (center of 3 pins: 0, 1, 2)
-    let currentCol = 1;
-    const peg0X = getPegX(0, currentCol);
-    const peg0Y = getPegY(0);
-
-    const firstDir = path[0];
-    const angle0 = firstDir === 1 ? -1.02 : 1.02; // ~58 degrees
-    const hit0X = peg0X + R_CONTACT * Math.sin(angle0);
-    const hit0Y = peg0Y - R_CONTACT * Math.cos(angle0);
-
-    let currentX = funnelX;
-    let currentY = funnelY;
-
-    // Segment 0: Funnel down to initial pin hit
-    segments.push({
-      x0: currentX,
-      y0: currentY,
-      x1: hit0X,
-      y1: hit0Y,
-      apexHeight: 2.0,
-      durationMs: 190,
-      pegIndex: getPegIndex(0, currentCol)
-    });
-
-    currentX = hit0X;
-    currentY = hit0Y;
-
-    // Segments 1 to ROWS - 1: Natural parabolic pin-to-pin bounces
+    // Peg columns hit: row 0 -> col 1 (center of 3 pins); path[r] = 1 steps
+    // right into the next staggered row, path[r] = 0 steps left.
+    const cols = new Array<number>(ROWS);
+    cols[0] = 1;
     for (let r = 0; r < ROWS - 1; r++) {
-      const dir = path[r];
-      const nextCol = currentCol + dir;
-      const nextPegX = getPegX(r + 1, nextCol);
-      const nextPegY = getPegY(r + 1);
-
-      const entryAngle = dir === 1 ? -1.02 : 1.02; // ~58 degrees
-      const hitNextX = nextPegX + R_CONTACT * Math.sin(entryAngle);
-      const hitNextY = nextPegY - R_CONTACT * Math.cos(entryAngle);
-
-      segments.push({
-        x0: currentX,
-        y0: currentY,
-        x1: hitNextX,
-        y1: hitNextY,
-        apexHeight: 4.0, // 4.0px organic bounce apex
-        durationMs: 200,
-        pegIndex: getPegIndex(r + 1, nextCol)
-      });
-
-      currentX = hitNextX;
-      currentY = hitNextY;
-      currentCol = nextCol;
+      cols[r + 1] = cols[r] + (path[r] === 1 ? 1 : 0);
     }
 
-    // Final Segment: Parabolic descent from Row 7 directly into Target Bucket
-    const targetBucketX = getBucketX(targetBucket);
-    const targetBucketY = BUCKET_Y + 4;
+    // The ball contacts each peg on the side it deflects to, so bounces never
+    // cut through the peg they just hit. Last peg contacts on the bucket side.
+    const sides = new Array<number>(ROWS);
+    for (let r = 0; r < ROWS - 1; r++) {
+      sides[r] = path[r] === 1 ? 1 : -1;
+    }
+    const lastPegX = getPegX(ROWS - 1, cols[ROWS - 1]);
+    const bucketX = getBucketX(targetBucket);
+    sides[ROWS - 1] = bucketX >= lastPegX ? 1 : -1;
 
-    segments.push({
-      x0: currentX,
-      y0: currentY,
-      x1: targetBucketX,
-      y1: targetBucketY,
-      apexHeight: 2.5,
-      durationMs: 220,
-      pegIndex: undefined,
-      isLast: true
-    });
+    // Waypoints: funnel -> peg contacts (rows 0..ROWS-1) -> bucket
+    const pts: { x: number; y: number; pegIndex?: number }[] = [{ x: funnelX, y: funnelY }];
+    for (let r = 0; r < ROWS; r++) {
+      const px = getPegX(r, cols[r]);
+      const py = getPegY(r);
+      pts.push({
+        x: px + sides[r] * CONTACT_DX,
+        y: py + CONTACT_DY,
+        pegIndex: getPegIndex(r, cols[r])
+      });
+    }
+    const targetBucketY = BUCKET_Y + 4;
+    pts.push({ x: bucketX, y: targetBucketY });
+
+    const segments: TrajectorySegment[] = [];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const seg: TrajectorySegment = {
+        x0: pts[i].x,
+        y0: pts[i].y,
+        x1: pts[i + 1].x,
+        y1: pts[i + 1].y,
+        apexHeight: 6.0,
+        bowX: 0,
+        durationMs: 0,
+        pegIndex: pts[i + 1].pegIndex,
+        isLast: i === pts.length - 2
+      };
+
+      // Pegs that could possibly interfere with this arc
+      const minX = Math.min(seg.x0, seg.x1) - 30;
+      const maxX = Math.max(seg.x0, seg.x1) + 30;
+      const minY = Math.min(seg.y0, seg.y1) - 50;
+      const maxY = Math.max(seg.y0, seg.y1) + 30;
+      const near: { x: number; y: number }[] = [];
+      for (let pi = 0; pi < TOTAL_PEGS; pi++) {
+        const peg = pegs[pi];
+        if (peg.x >= minX && peg.x <= maxX && peg.y >= minY && peg.y <= maxY) near.push(peg);
+      }
+
+      // Relax the arc away from any peg it would intersect. Endpoints (the peg
+      // contacts themselves) stay fixed — only the bow/apex are nudged.
+      const sampleArc = (p: number) => {
+        const q = 4 * p * (1 - p);
+        return {
+          x: seg.x0 + (seg.x1 - seg.x0) * p + q * seg.bowX,
+          y: seg.y0 + (seg.y1 - seg.y0) * p - q * seg.apexHeight
+        };
+      };
+      for (let iter = 0; iter < 40; iter++) {
+        let worstD = Infinity;
+        let worstP = 0.5;
+        let worstPeg: { x: number; y: number } | null = null;
+        for (let k = 1; k < 48; k++) {
+          const p = k / 48;
+          const s = sampleArc(p);
+          for (let ni = 0; ni < near.length; ni++) {
+            const dx = s.x - near[ni].x;
+            const dy = s.y - near[ni].y;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            if (d < worstD) {
+              worstD = d;
+              worstP = p;
+              worstPeg = near[ni];
+            }
+          }
+        }
+        if (worstD >= R_MIN || !worstPeg) break;
+        const s = sampleArc(worstP);
+        const dx = s.x - worstPeg.x;
+        const dy = s.y - worstPeg.y;
+        const d = Math.max(Math.sqrt(dx * dx + dy * dy), 1e-6);
+        const need = R_MIN - d + 0.15;
+        const lev = Math.max(4 * worstP * (1 - worstP), 0.12);
+        seg.bowX += (dx / d) * need * (1.35 / lev);
+        seg.apexHeight += -(dy / d) * need * (1.35 / lev);
+        const bow = Math.hypot(seg.bowX, seg.apexHeight);
+        if (bow > 42) {
+          seg.bowX *= 42 / bow;
+          seg.apexHeight *= 42 / bow;
+        }
+      }
+
+      // Normalize flight speed: duration proportional to arc length
+      let arcLen = 0;
+      let px = seg.x0;
+      let py = seg.y0;
+      for (let k = 1; k <= 16; k++) {
+        const s = sampleArc(k / 16);
+        arcLen += Math.hypot(s.x - px, s.y - py);
+        px = s.x;
+        py = s.y;
+      }
+      seg.durationMs = Math.min(340, Math.max(115, arcLen / FLIGHT_SPEED_PX_PER_MS));
+
+      segments.push(seg);
+    }
 
     return segments;
-  }, [getPegX, getPegY, getBucketX]);
+  }, [getPegX, getPegY, getBucketX, pegs]);
 
   // Handle completed ball landing: grant NFT on ANY multiplier (including <= 1.0x) with remainder (>= 0.00) to balance
   const onBallCompleted = useCallback((ball: PhysicsBall, bucketIdx: number) => {
@@ -881,9 +940,23 @@ export const Plinko: React.FC<PlinkoProps> = ({
           const elapsed = now - ball.segmentStartTime;
           const progress = Math.min(1.0, elapsed / seg.durationMs);
 
-          // Parabolic interpolation
-          ball.x = seg.x0 + (seg.x1 - seg.x0) * progress;
-          ball.y = seg.y0 + (seg.y1 - seg.y0) * progress - 4 * seg.apexHeight * progress * (1 - progress);
+          // Quadratic arc interpolation (lateral bow + vertical apex)
+          const bow = 4 * progress * (1 - progress);
+          ball.x = seg.x0 + (seg.x1 - seg.x0) * progress + bow * seg.bowX;
+          ball.y = seg.y0 + (seg.y1 - seg.y0) * progress - bow * seg.apexHeight;
+
+          // Collision normalization: keep the ball strictly outside every peg
+          for (let pi = 0; pi < TOTAL_PEGS; pi++) {
+            const dx = ball.x - pegs[pi].x;
+            const dy = ball.y - pegs[pi].y;
+            const dSq = dx * dx + dy * dy;
+            if (dSq < R_MIN_SQ && dSq > 1e-6) {
+              const d = Math.sqrt(dSq);
+              const push = (R_MIN - d) / d;
+              ball.x += dx * push;
+              ball.y += dy * push;
+            }
+          }
 
           const dir = seg.x1 >= seg.x0 ? 1 : -1;
           ball.rotation += dir * 0.08;
