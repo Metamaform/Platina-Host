@@ -12,8 +12,6 @@ import { useTelegramAuth } from './lib/useTelegramAuth';
 import { useTranslation, i18n } from './lib/i18n';
 import { CleanModelLottie } from './components/CleanModelLottie';
 import { fetchFragmentPrices, fetchFragmentBackdropPrices } from './lib/api';
-import { WalletHome } from './components/WalletHome';
-import { SendModal } from './components/SendModal';
 
 // Route-level code splitting: heavy game / panel screens load on demand so the
 // initial bundle stays small and the first paint is fast.
@@ -1015,10 +1013,9 @@ export default function App() {
   
   const { t, lang, setLang } = useTranslation();
 
-  const [activeTab, setActiveTab] = useState('wallet');
+  const [activeTab, setActiveTab] = useState('shop');
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const [showTopUp, setShowTopUp] = useState(false);
-  const [showSendModal, setShowSendModal] = useState(false);
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
 
   const [giftsDb, setGiftsDb] = useState<any[]>(defaultGiftsDb);
@@ -1187,7 +1184,6 @@ export default function App() {
   }, [auth.status, pricesLoaded, minTimePassed]);
 
   const navItems = [
-    { id: 'wallet', icon: Wallet, label: 'Кошелек' },
     { id: 'shop', icon: Flame, label: t('nav_shop') || 'Игры' },
     { id: 'cases', icon: Box, label: t('nav_cases') || 'Кейсы' },
     { id: 'tasks', icon: ListTodo, label: t('nav_tasks') || 'Задания' },
@@ -1259,15 +1255,15 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-canvas text-[color:var(--color-text)] overflow-hidden selection:bg-brand/30">
-      {/* Clean ambient backdrop: soft brand glow, no grid squares */}
+      {/* Clean ambient backdrop: soft neutral glow, no grid squares */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-15%] left-1/2 -translate-x-1/2 w-[80%] h-[40%] rounded-full bg-brand/10 blur-[160px]" />
+        <div className="absolute top-[-15%] left-1/2 -translate-x-1/2 w-[80%] h-[40%] rounded-full bg-white/[0.07] blur-[160px]" />
       </div>
 
       {/* Main Container simulating mobile view bounds on desktop, or full on mobile */}
       <div className="relative z-10 h-[100dvh] w-full max-w-md mx-auto flex flex-col">
         
-        {/* Header - TON Wallet style when in wallet, or Dynamic Island on other tabs */}
+        {/* Header - Dynamic Island */}
         <AnimatePresence>
           {!activeGame && activeTab !== 'profile' && (
             <motion.div 
@@ -1277,67 +1273,6 @@ export default function App() {
               transition={{ type: 'spring', damping: 28, stiffness: 350 }}
               className="absolute inset-x-3 top-2.5 z-50 flex justify-center pointer-events-none"
             >
-              {activeTab === 'wallet' ? (
-                <div className="relative flex items-center justify-between bg-[#131722]/85 backdrop-blur-2xl rounded-[30px] px-3.5 py-2 w-full border border-white/[0.08] shadow-[0_12px_36px_rgba(0,0,0,0.6)] pointer-events-auto transition-all duration-300">
-                  {/* Left: Account Pill */}
-                  <button 
-                    onClick={() => {
-                      setActiveTab('profile');
-                      try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
-                    }} 
-                    className="flex items-center gap-2.5 hover:opacity-90 active:scale-[0.97] transition-all cursor-pointer"
-                  >
-                    <div className="w-[34px] h-[34px] rounded-full overflow-hidden bg-white/10 shrink-0 border border-white/10 flex items-center justify-center relative">
-                      {user?.photoUrl ? (
-                        <img src={user.photoUrl} alt="Avatar" className="absolute w-full h-full object-cover" />
-                      ) : (
-                        <User className="w-4 h-4 text-white/50 relative z-10" />
-                      )}
-                    </div>
-                    <div className="flex flex-col text-left">
-                      <span className="text-[13px] font-bold text-white leading-tight">
-                        {user?.firstName || 'Galea Player'}
-                      </span>
-                      <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        TON Space
-                      </span>
-                    </div>
-                  </button>
-
-                  {/* Center: Subtle Diamond */}
-                  <div className="flex items-center gap-1.5 opacity-80">
-                    <div className="w-6 h-6 rounded-lg bg-[#0098EA]/15 border border-[#0098EA]/30 flex items-center justify-center text-[#0098EA]">
-                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2L3 8.5L12 22L21 8.5L12 2Z" />
-                      </svg>
-                    </div>
-                    <span className="font-display text-[12px] font-bold tracking-tight text-white/90">Platina</span>
-                  </div>
-
-                  {/* Right: Quick actions */}
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => {
-                        setActiveTab('profile');
-                        try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
-                      }}
-                      className="text-[11px] font-bold text-white/80 bg-white/[0.06] hover:bg-white/[0.12] px-2.5 py-1 rounded-full border border-white/5 active:scale-95 transition-all cursor-pointer"
-                    >
-                      LVL {currentLevel}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowTopUp(true);
-                        try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch (e) {}
-                      }}
-                      className="w-8 h-8 rounded-full bg-[#0098EA] text-white flex items-center justify-center shadow-md shadow-[#0098EA]/30 active:scale-95 transition-all cursor-pointer font-bold text-sm"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              ) : (
                 <div className={`relative flex items-center justify-between bg-[#131418]/85 backdrop-blur-2xl rounded-[32px] p-1.5 w-full shadow-[0_12px_36px_rgba(0,0,0,0.6)] pointer-events-auto transition-all duration-300 ${
                   topUpGlow ? 'border border-emerald-500/80 shadow-[0_0_25px_rgba(16,185,129,0.35)]' : 'border border-white/[0.08]'
                 }`}>
@@ -1388,7 +1323,6 @@ export default function App() {
                     </span>
                   </button>
                 </div>
-              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -1405,25 +1339,6 @@ export default function App() {
                 transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
                 className="w-full"
               >
-                {activeTab === 'wallet' && (
-                  <WalletHome
-                    balance={balance}
-                    inventory={inventory}
-                    user={user}
-                    topups={topups}
-                    onOpenTopUp={() => setShowTopUp(true)}
-                    onOpenSend={() => setShowSendModal(true)}
-                    onPlayRocket={() => setActiveGame('new_game')}
-                    onPlayPlinko={() => setActiveGame('plinko')}
-                    onPlayUpgrade={() => setActiveGame('upgrade')}
-                    onPlayCraft={() => setActiveGame('craft')}
-                    onPlayMines={() => setActiveGame('mines')}
-                    onGoToCases={() => setActiveTab('cases')}
-                    onGoToInventory={() => setActiveTab('inventory')}
-                    onOpenSettings={() => setActiveTab('profile')}
-                    giftsDb={giftsDb}
-                  />
-                )}
                 {activeTab === 'shop' && (
                   <Shop 
                     onPlayUpgrade={() => setActiveGame('upgrade')} 
@@ -1450,7 +1365,7 @@ export default function App() {
                     onOpenTopUp={() => setShowTopUp(true)} 
                     config={auth.config} 
                     giftsDb={giftsDb} 
-                    onBack={() => setActiveTab('wallet')}
+                    onBack={() => setActiveTab('shop')}
                     onGoToInventory={() => setActiveTab('inventory')}
                     onGoToLeaderboard={() => setActiveTab('leaderboard')}
                   />
@@ -1467,7 +1382,7 @@ export default function App() {
                       onGoToCases={() => setActiveTab('cases')} 
                       onPlayUpgrade={() => setActiveGame('upgrade')} 
                       onPlayCraft={() => setActiveGame('craft')} 
-                      onBack={() => setActiveTab('wallet')}
+                      onBack={() => setActiveTab('shop')}
                     />
                   </Suspense>
                 )}
@@ -1655,31 +1570,6 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        <AnimatePresence>
-          {showSendModal && (
-            <SendModal
-              balance={balance}
-              demoMode={auth.config?.demoMode}
-              onClose={() => setShowSendModal(false)}
-              onSuccess={(amount, recipient) => {
-                setBalance(b => Math.max(0, Number((b - amount).toFixed(2))));
-                setTopups(prev => [
-                  ...(prev || []),
-                  {
-                    id: Date.now().toString(),
-                    amount,
-                    recipient,
-                    type: 'withdraw',
-                    ts: new Date().toISOString()
-                  }
-                ]);
-                setToastMessage({ amount, method: 'ton', type: 'withdraw', title: 'Перевод отправлен' });
-                try { (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch (e) {}
-                setTimeout(() => setToastMessage(null), 3500);
-              }}
-            />
-          )}
-        </AnimatePresence>
 
         {/* Toast Notification (Sonner style for top-up & send) */}
         <AnimatePresence>
