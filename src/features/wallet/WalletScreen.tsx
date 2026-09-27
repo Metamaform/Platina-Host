@@ -15,7 +15,7 @@ interface WalletScreenProps {
 }
 
 export function WalletScreen({ balance, onClose, onDeposit, onGoToInventory }: WalletScreenProps) {
-  const [summary, setSummary] = useState<WalletSummary | null>(null);
+  const [, setSummary] = useState<WalletSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showWithdraw, setShowWithdraw] = useState(false);
@@ -48,18 +48,22 @@ export function WalletScreen({ balance, onClose, onDeposit, onGoToInventory }: W
     setTimeout(() => setHint(null), 2500);
   };
 
-  // Use GRAM balance prop for main card if summary not loaded, else use fiat
-  const fiatAmount = summary?.totalFiat.amount || '0';
+  // Баланс — в граммах (свойство balance), карточка показывает его с значком GRAM
+  const gramDisplay = balance.toFixed(2);
   // For skeleton, use loading flag
 
   return (
     <main
       aria-label="Кошелёк"
-      className="min-h-full bg-[#050505] text-white flex flex-col items-center"
+      className="relative min-h-full bg-canvas text-white flex flex-col items-center overflow-hidden"
       style={{
         animation: 'walletFadeIn 220ms ease-out',
       }}
     >
+      {/* Тот же ambient-фон, что и во всём приложении */}
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        <div className="absolute top-[-15%] left-1/2 -translate-x-1/2 w-[80%] h-[40%] rounded-full bg-white/[0.07] blur-[160px]" />
+      </div>
       <style>{`
         @keyframes walletFadeIn {
           from { opacity: 0; transform: translateY(8px); }
@@ -80,7 +84,7 @@ export function WalletScreen({ balance, onClose, onDeposit, onGoToInventory }: W
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, ease: 'easeOut' }}
         >
-          <WalletBalanceCard fiatAmount={fiatAmount} currency="USD" loading={loading} />
+          <WalletBalanceCard amount={gramDisplay} loading={loading} />
         </motion.div>
 
         {/* Quick Actions */}
@@ -95,18 +99,16 @@ export function WalletScreen({ balance, onClose, onDeposit, onGoToInventory }: W
               if (onDeposit) onDeposit();
             }}
             onWithdraw={() => setShowWithdraw(true)}
-            onSwap={() => showHint('Обмен — скоро')}
-            onStaking={() => showHint('Стейкинг — скоро')}
           />
         </motion.div>
 
-        {/* Premium Cards */}
+        {/* Карта BLACK */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, ease: 'easeOut', delay: 0.1 }}
         >
-          <PremiumCardCarousel />
+          <PremiumCardCarousel balance={balance} />
         </motion.div>
 
         {/* Additional info / inventory shortcut */}

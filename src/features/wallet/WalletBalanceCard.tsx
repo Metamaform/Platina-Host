@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Eye, EyeOff, QrCode } from 'lucide-react';
+import { GramIcon } from '../../components/GramIcon';
 
 interface WalletBalanceCardProps {
-  balanceAtomic?: string; // optional atomic string for formatting? We'll receive formatted fiat for now
-  fiatAmount: string; // e.g. "9999.99" or "0"
-  currency?: 'USD' | 'EUR';
-  onTogglePrivacy?: (hidden: boolean) => void;
-  isPrivacyDefaultHidden?: boolean;
+  /** Баланс в граммах как числовая строка, например "1234.56" */
+  amount: string;
   loading?: boolean;
 }
 
@@ -43,7 +41,7 @@ function FinancialPattern() {
   );
 }
 
-export function WalletBalanceCard({ fiatAmount, currency = 'USD', loading }: WalletBalanceCardProps) {
+export function WalletBalanceCard({ amount, loading }: WalletBalanceCardProps) {
   const storageKey = 'wallet_balance_hidden';
   const [hidden, setHidden] = useState<boolean>(() => {
     try {
@@ -59,7 +57,11 @@ export function WalletBalanceCard({ fiatAmount, currency = 'USD', loading }: Wal
     } catch {}
   }, [hidden]);
 
-  const displayBalance = hidden ? '•••••' : (currency === 'USD' ? `$${Number(fiatAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `${fiatAmount} ${currency}`);
+  const value = Number(amount) || 0;
+  const displayBalance = value.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
   // Skeleton
   if (loading) {
@@ -86,7 +88,7 @@ export function WalletBalanceCard({ fiatAmount, currency = 'USD', loading }: Wal
       <FinancialPattern />
 
       {/* Content */}
-      <div className="wallet-card__content relative z-[1] min-h-[290px] flex flex-col items-center justify-center px-6 py-14 text-white">
+      <div className="relative z-[1] min-h-[290px] flex flex-col items-center justify-center px-6 py-14 text-white">
         {/* Privacy toggle */}
         <button
           type="button"
@@ -99,16 +101,22 @@ export function WalletBalanceCard({ fiatAmount, currency = 'USD', loading }: Wal
           {hidden ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
         </button>
 
-        {/* Balance */}
+        {/* Баланс в граммах: число + маленький значок.
+            При скрытии — реальный блюр цифр (не точки). */}
         <div
-          className="font-display font-bold leading-none text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.25)] text-center"
+          className="flex items-center justify-center gap-[0.14em] font-display font-bold leading-none text-white text-center drop-shadow-[0_4px_24px_rgba(0,0,0,0.25)]"
           style={{
             fontWeight: 800,
-            fontSize: 'clamp(56px, 12vw, 96px)',
+            fontSize: 'clamp(46px, 11vw, 82px)',
             letterSpacing: '-0.03em',
+            filter: hidden ? 'blur(24px)' : 'blur(0px)',
+            transition: 'filter 320ms ease',
           }}
+          aria-hidden={hidden}
+          aria-label={hidden ? 'Баланс скрыт' : `Баланс: ${displayBalance} грамм`}
         >
-          {hidden ? '••••' : displayBalance}
+          <span className="whitespace-nowrap">{displayBalance}</span>
+          <GramIcon className="h-[0.4em] w-[0.4em] mb-[0.07em] drop-shadow-md" />
         </div>
 
         {/* Bottom brand block */}
@@ -117,7 +125,6 @@ export function WalletBalanceCard({ fiatAmount, currency = 'USD', loading }: Wal
             <span className="font-display text-white text-[22px] font-bold tracking-tight drop-shadow-sm">Platina</span>
             <QrCode className="w-[22px] h-[22px] text-white" strokeWidth={2.2} aria-hidden="true" />
           </div>
-          <div className="text-white/80 text-[11px] font-bold uppercase tracking-[0.2em]">Multichain Wallet</div>
         </div>
       </div>
     </div>

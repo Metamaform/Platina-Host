@@ -244,21 +244,16 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Wallet screen — critical styles per T3
+   Wallet screen — critical styles
 --------------------------------------------------------------------------- */
 .wallet-card { position: relative; overflow: hidden; border-radius: 36px;
   background: linear-gradient(145deg, #aa80ee 0%, #ad9ade 44%, #67ceea 100%); }
 .wallet-card__pattern { position: absolute; inset: 0; opacity: .1; pointer-events: none; }
-.wallet-card__content { position: relative; z-index: 1; min-height: 290px;
-  display: grid; place-items: center; color: #fff; }
-.quick-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
-.quick-action { min-height: 112px; border: 1px solid #353539; border-radius: 28px;
-  background: #171719; color: #fff; font: 700 20px/1.1 system-ui; }
-.quick-action svg { display: block; margin: 0 auto 12px; color: #1683ff; }
-@media (max-width: 540px) { .quick-actions { overflow-x: auto; grid-template-columns: repeat(4, 142px); scroll-snap-type: x mandatory; } }
+/* Быстрые действия: 2 кнопки (Пополнить / Вывод) в ряд, «жидкое стекло» */
+.quick-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 
 /* Focus visible for wallet */
-.quick-action:focus-visible,
+.quick-actions button:focus-visible,
 .wallet-card button:focus-visible {
   outline: 2px solid #1683FF;
   outline-offset: 2px;
