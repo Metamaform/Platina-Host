@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, ArrowDown, ArrowUp, ArrowLeftRight, ArrowDownLeft, Package, Gem, Wallet, Loader2, QrCode, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, ArrowDownLeft, Package, Gem, Wallet, Loader2 } from 'lucide-react';
 import { TonConnectButton, useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import { GramIcon } from './GramIcon';
 import { StarsIcon } from './StarsIcon';
@@ -13,10 +13,11 @@ import { PremiumCardCarousel } from '../features/wallet/PremiumCardCarousel';
 import { WithdrawDialog } from '../features/wallet/WithdrawDialog/WithdrawDialog';
 
 /* ---------------------------------------------------------------------------
- * BalancePage — экран кошелька по ТЗ:
- * Фон #050505, основная карточка градиент #AA80EE→#AD9ADE→#67CEEA,
- * 4 быстрых действия: Пополнить / Вывод / Обменять / Стейкинг,
- * блок «Мои карты» с PLATINUM и BLACK,
+ * BalancePage — экран кошелька / пополнения:
+ * фон как во всём приложении (canvas + мягкое свечение),
+ * основная карточка с балансом в граммах (значок GRAM рядом),
+ * 2 быстрых действия: Пополнить / Вывод (жидкое стекло),
+ * блок «Мои карты» — одна карта BLACK,
  * сценарий вывода (bottom sheet / dialog).
  * ------------------------------------------------------------------------- */
 
@@ -29,15 +30,6 @@ interface BalancePageProps {
   onClose: () => void;
   demoMode?: boolean;
   tonTopupAddress?: string;
-}
-
-function StackingIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <ellipse cx="12" cy="8" rx="8" ry="4" />
-      <path d="M4 14.5c0 2.2 3.6 4 8 4s8-1.8 8-4" />
-    </svg>
-  );
 }
 
 export function BalancePage({
@@ -70,16 +62,18 @@ export function BalancePage({
     { id: 'nft', label: 'NFT', icon: <Gem className="w-4 h-4 text-violet-400" /> },
   ];
 
-  // Форматирование баланса для карточки: используем GRAM как основную валюту,
-  // но отображаем как fiat $0 по ТЗ для hero (в данном продукте - GRAM баланс)
-  const fiatDisplay = balance.toFixed(2); // будет отформатировано внутри WalletBalanceCard как $X,XXX.XX
-  // Для соответствия ТЗ - карточка показывает баланс в USD, но в продукте у нас GRAM, показываем GRAM как fiat для демо
-  // В WalletBalanceCard мы передаем amount как строку
+  // Баланс приложения — в граммах; карточки показывают его как есть + значок GRAM
+  const gramDisplay = balance.toFixed(2);
 
   return (
-    <div className="flex flex-col h-full bg-[#050505] text-[color:var(--color-text)] overflow-hidden">
+    <div className="relative flex flex-col h-full bg-canvas text-[color:var(--color-text)] overflow-hidden">
+      {/* Тот же ambient-фон, что и во всём приложении */}
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        <div className="absolute top-[-15%] left-1/2 -translate-x-1/2 w-[80%] h-[40%] rounded-full bg-white/[0.07] blur-[160px]" />
+      </div>
+
       {/* Top bar */}
-      <div className="flex items-center gap-3 px-4 pt-4 pb-2 shrink-0 bg-[#050505]">
+      <div className="relative z-10 flex items-center gap-3 px-4 pt-4 pb-2 shrink-0">
         <button
           onClick={() => {
             onClose();
@@ -93,18 +87,18 @@ export function BalancePage({
         <h1 className="font-display text-[22px] font-bold tracking-tight text-white">Кошелёк</h1>
       </div>
 
-      <main aria-label="Кошелёк" className="flex-1 overflow-y-auto scrollbar-hide px-4 pt-2 pb-10 space-y-5 bg-[#050505] w-full max-w-[720px] mx-auto">
-        {/* Основная карточка кошелька по ТЗ */}
+      <main aria-label="Кошелёк" className="relative z-10 flex-1 overflow-y-auto scrollbar-hide px-4 pt-2 pb-10 space-y-5 w-full max-w-[720px] mx-auto">
+        {/* Основная карточка кошелька: баланс в граммах */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, ease: 'easeOut' }}
           className="motion-reduce:transition-none"
         >
-          <WalletBalanceCard fiatAmount={fiatDisplay} currency="USD" />
+          <WalletBalanceCard amount={gramDisplay} />
         </motion.div>
 
-        {/* Быстрые действия — 4 кнопки, вторая — Вывод */}
+        {/* Быстрые действия — Пополнить / Вывод */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -119,24 +113,16 @@ export function BalancePage({
               haptics.impact('light');
               setShowWithdraw(true);
             }}
-            onSwap={() => {
-              haptics.impact('light');
-              showHint(t('soon'));
-            }}
-            onStaking={() => {
-              haptics.impact('light');
-              showHint(t('soon'));
-            }}
           />
         </motion.div>
 
-        {/* Премиальные карточки */}
+        {/* Карта BLACK */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, ease: 'easeOut', delay: 0.12 }}
         >
-          <PremiumCardCarousel />
+          <PremiumCardCarousel balance={balance} />
         </motion.div>
 
         {/* Пополнение */}
