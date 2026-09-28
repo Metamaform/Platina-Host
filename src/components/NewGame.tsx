@@ -6,7 +6,7 @@ import { GramIcon } from './GramIcon';
 import { PremiumImage } from './PremiumImage';
 import { CleanModelLottie } from './CleanModelLottie';
 import { BoomIcon } from './BoomIcon';
-import { multAtTime, RocketBet, ServerRocketState, getRocketReachedGift } from '../lib/rocketShared';
+import { multAtTime, RocketBet, ServerRocketState, buildRocketLadder, getRocketReachedGiftFromLadder } from '../lib/rocketShared';
 import { cleanNftName, getNftBackdrop } from '../lib/nftUtils';
 import { NftSelectorGrid } from './NftSelectorGrid';
 import { GameLossModal } from './GameLossModal';
@@ -52,6 +52,9 @@ export const NewGame: React.FC<NewGameProps> = ({
   // Live animated multiplier for smooth 60fps rendering
   const [liveMult, setLiveMult] = useState<number>(1.0);
   const [liveCountdown, setLiveCountdown] = useState<number>(5);
+  const multiplierRef = useRef<HTMLSpanElement | null>(null);
+  const lastUiFrameRef = useRef(0);
+  const displayedRoundRef = useRef<number | null>(null);
   const circleRef = useRef<SVGCircleElement | null>(null);
   const lastCountdownRef = useRef<number>(5);
   const lastMultRef = useRef<number>(1.0);
@@ -188,10 +191,11 @@ export const NewGame: React.FC<NewGameProps> = ({
       if (effectiveToken) {
         headers['Authorization'] = `Bearer ${effectiveToken}`;
       }
+      const requestedAt = Date.now();
       const res = await fetch('/api/rocket/state', { headers });
       if (!res.ok) return;
       const data: ServerRocketState = await res.json();
-      const rawOffset = data.serverTime - Date.now();
+      const rawOffset = data.serverTime - (requestedAt + Date.now()) / 2;
       setClockOffset((prev) => (prev === 0 ? rawOffset : prev * 0.7 + rawOffset * 0.3));
       setServerState(data);
     } catch (e) {
@@ -248,8 +252,21 @@ export const NewGame: React.FC<NewGameProps> = ({
         nextGameState = 'crashed';
       }
 
-      if (nextMult !== lastMultRef.current || nextGameState !== lastStateRef.current) {
-        lastMultRef.current = nextMult;
+      // Clock corrections must not make a flying multiplier run backwards.
+      const sameRound = displayedRoundRef.current === serverState.roundId;
+      if (sameRound && nextGameState === 'flying' && lastStateRef.current === 'flying') {
+        nextMult = Math.max(nextMult, lastMultRef.current);
+      }
+      displayedRoundRef.current = serverState.roundId;
+      const multiplierText = `x${nextMult.toFixed(2)}`;
+      if (multiplierRef.current && multiplierRef.current.textContent !== multiplierText) {
+        multiplierRef.current.textContent = multiplierText;
+      }
+      const stateChanged = nextGameState !== lastStateRef.current;
+      lastMultRef.current = nextMult;
+      // The large bet list and NFT catalog don't need a React render every frame.
+      if (performance.now() - lastUiFrameRef.current >= 50 || stateChanged || !sameRound) {
+        lastUiFrameRef.current = performance.now();
         setLiveMult(nextMult);
       }
 
@@ -380,6 +397,17 @@ export const NewGame: React.FC<NewGameProps> = ({
       .sort((a, b) => a.priceVal - b.priceVal);
   }, [activeGiftsDb]);
 
+  // Build each price ladder only when the catalog/bets change, not for every
+  // player on every animation frame (previously this sorted the whole catalog).
+  const giftLadders = useMemo(() => {
+    const ladders = new Map<number, any[]>();
+    const amounts = [userBetInRound?.betAmount || 0, ...sortedDisplayList.map(b => b.betAmount || 0)];
+    for (const amount of amounts) {
+      if (!ladders.has(amount)) ladders.set(amount, buildRocketLadder(sortedGifts, amount));
+    }
+    return ladders;
+  }, [sortedGifts, sortedDisplayList, userBetInRound]);
+
   // Current active bet value in GRAMs (betAmount * liveMult)
   const currentBetValue = useMemo(() => {
     if (!userBetInRound) return 0;
@@ -391,8 +419,8 @@ export const NewGame: React.FC<NewGameProps> = ({
     if (!userBetInRound || currentBetValue <= 0) {
       return { reachedGift: null, nextGift: null, remainder: 0 };
     }
-    return getRocketReachedGift(sortedGifts, currentBetValue, userBetInRound.betAmount || 0);
-  }, [sortedGifts, currentBetValue, userBetInRound]);
+    return getRocketReachedGiftFromLadder(giftLadders.get(userBetInRound.betAmount || 0) || [], currentBetValue);
+  }, [giftLadders, currentBetValue, userBetInRound]);
 
   const reachedGiftPrice = reachedGift ? reachedGift.priceVal : 0;
   const nextGiftPrice = nextGift ? nextGift.priceVal : 0;
@@ -878,11 +906,12 @@ export const NewGame: React.FC<NewGameProps> = ({
 
               <AnimatePresence>
                 {currentGameState !== 'waiting' && (
-                  <motion.span 
+                  <motion.span
+                    ref={multiplierRef}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    className={`font-display font-black tracking-tight drop-shadow-md transition-colors z-10 ${
+                    className={`font-display font-black tabular-nums tracking-tight drop-shadow-md transition-colors z-10 ${
                       currentGameState === 'crashed' 
                         ? 'text-4xl text-red-500' 
                         : liveMult < 1.2 
@@ -893,9 +922,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                               ? 'text-5xl text-brand'
                               : 'text-5xl text-yellow-400'
                     }`}
-                  >
-                    x{(currentGameState === 'crashed' ? (serverState?.crashMultiplier || liveMult) : liveMult).toFixed(2)}
-                  </motion.span>
+                  />
                 )}
               </AnimatePresence>
 
@@ -1041,11 +1068,12 @@ export const NewGame: React.FC<NewGameProps> = ({
 
                   // Live bet calculations while in flight
                   const currentLiveValue = Number(((open.betAmount || 0) * liveMult).toFixed(2));
-                  const { reachedGift: liveNft } = getRocketReachedGift(sortedGifts, currentLiveValue, open.betAmount || 0);
+                  const { reachedGift: liveNft } = getRocketReachedGiftFromLadder(isFlyingActive ? giftLadders.get(open.betAmount || 0) || [] : [], currentLiveValue);
 
                   return (
                     <motion.div
                       layout
+                      layoutDependency={sortedDisplayList}
                       key={open.id}
                       initial={{ opacity: 0, y: -20, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}

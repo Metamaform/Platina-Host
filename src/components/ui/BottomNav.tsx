@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useTransition } from 'react';
+import React from 'react';
 import { LiquidSegment } from './LiquidSegment';
 
 interface NavItem {
@@ -13,23 +13,10 @@ interface BottomNavProps {
   onSelect: (id: string) => void;
 }
 
-/**
- * Нижнее меню. Пилюля живёт в локальном state и сдвигается сразу,
- * а тяжёлая смена вкладки уходит в startTransition — клик не ждёт
- * перерисовку страницы и layout-анимацию.
- */
+/** The shared segment owns the immediate pill movement and deferred content update. */
 export function BottomNav({ items, activeId, onSelect }: BottomNavProps) {
-  const [visual, setVisual] = useState(activeId);
-  const [, startTransition] = useTransition();
-
-  useEffect(() => {
-    setVisual(activeId);
-  }, [activeId]);
-
   const select = (id: string) => {
-    if (id === visual) return;
-    setVisual(id);
-    startTransition(() => onSelect(id));
+    onSelect(id);
     try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch { /* optional */ }
   };
 
@@ -38,7 +25,7 @@ export function BottomNav({ items, activeId, onSelect }: BottomNavProps) {
       variant="nav"
       dragSelect
       ariaLabel="Навигация"
-      value={visual}
+      value={activeId}
       onChange={select}
       options={items.map((item) => ({
         value: item.id,
