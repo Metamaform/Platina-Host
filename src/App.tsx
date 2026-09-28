@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { springSmooth, springSnappy, springLiquid } from './lib/motion';
+import { springSmooth, springSnappy } from './lib/motion';
+import { BottomNav } from './components/ui/BottomNav';
+import { LiquidSegment } from './components/ui/LiquidSegment';
+import { LiquidDialog } from './components/ui/LiquidDialog';
 import { setLoggerUserId } from './lib/logger';
 import { ShoppingBag, User, Gem, Gift, Wallet, ChevronRight, Activity, CircleDashed, ArrowUpCircle, Shield, LayoutGrid, Trophy, X, ListTodo, Settings, Bomb, Box, Package, ArrowLeft, ArrowUpRight, Users, History, MessageCircle, ExternalLink, Copy, Check, Rocket, Flame, Sparkles } from 'lucide-react';
 import defaultGiftsDb from './gifts_data.json';
@@ -574,7 +577,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
             setShowSettings(true);
             try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch (e) {}
           }} 
-          className="absolute top-0 right-0 w-10 h-10 rounded-full bg-white/[0.14] hover:bg-white/[0.22] border border-white/[0.20] shadow-[0_4px_16px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] flex items-center justify-center text-white transition-all active:scale-95 z-20 cursor-pointer"
+          className="absolute top-0 right-0 w-9 h-9 rounded-full bg-white/[0.06] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] flex items-center justify-center text-white/80 hover:text-white transition-transform active:scale-95 z-20 cursor-pointer"
         >
           <Settings className="w-5 h-5 text-white" strokeWidth={2.2} />
         </button>
@@ -584,7 +587,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               onBack();
               try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch (e) {}
             }} 
-            className="absolute top-0 left-0 w-10 h-10 rounded-full bg-white/[0.14] hover:bg-white/[0.22] border border-white/[0.20] shadow-[0_4px_16px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] flex items-center justify-center text-white transition-all active:scale-95 z-20 cursor-pointer"
+            className="absolute top-0 left-0 w-9 h-9 rounded-full bg-white/[0.06] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] flex items-center justify-center text-white/80 hover:text-white transition-transform active:scale-95 z-20 cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5 text-white" strokeWidth={2.2} />
           </button>
@@ -712,12 +715,12 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               onGoToInventory();
               try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
             }} 
-            className="flex items-center justify-between p-3.5 bg-white/[0.04] hover:bg-white/[0.09] active:bg-white/[0.14] border border-white/[0.06] hover:border-white/[0.12] transition-all rounded-[20px] group active:scale-[0.98] cursor-pointer shadow-sm"
+            className="flex items-center justify-between px-2.5 py-2.5 rounded-2xl hover:bg-white/[0.05] active:bg-white/[0.08] transition-colors group cursor-pointer"
           >
             <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-[0_4px_14px_rgba(139,92,246,0.5)] border border-violet-400/40 flex items-center justify-center shrink-0">
-                <Package className="w-5 h-5" strokeWidth={2.2} />
-              </div>
+              <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] border border-white/[0.10] text-violet-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+                <Package size={16} strokeWidth={2.4} />
+              </span>
               <div className="flex flex-col text-left">
                 <span className="font-semibold text-[14px] text-white leading-tight">{t('my_inventory') || 'Мой инвентарь NFT'}</span>
                 <span className="text-[11px] text-white/40 mt-0.5">{inventory.length} предметов · вывод и продажа</span>
@@ -733,12 +736,12 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               onGoToLeaderboard();
               try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
             }} 
-            className="flex items-center justify-between p-3.5 bg-white/[0.04] hover:bg-white/[0.09] active:bg-white/[0.14] border border-white/[0.06] hover:border-white/[0.12] transition-all rounded-[20px] group active:scale-[0.98] cursor-pointer shadow-sm"
+            className="flex items-center justify-between px-2.5 py-2.5 rounded-2xl hover:bg-white/[0.05] active:bg-white/[0.08] transition-colors group cursor-pointer"
           >
             <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-yellow-600 text-white shadow-[0_4px_14px_rgba(245,158,11,0.5)] border border-amber-400/40 flex items-center justify-center shrink-0">
-                <Trophy className="w-5 h-5" strokeWidth={2.2} />
-              </div>
+              <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] border border-white/[0.10] text-amber-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+                <Trophy size={16} strokeWidth={2.4} />
+              </span>
               <div className="flex flex-col text-left">
                 <span className="font-semibold text-[14px] text-white leading-tight">{t('nav_leaderboard') || 'Таблица лидеров'}</span>
                 <span className="text-[11px] text-white/40 mt-0.5">Топ игроков по обороту</span>
@@ -753,12 +756,12 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
             setShowReferrals(true);
             try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
           }} 
-          className="flex items-center justify-between p-3.5 bg-white/[0.04] hover:bg-white/[0.09] active:bg-white/[0.14] border border-white/[0.06] hover:border-white/[0.12] transition-all rounded-[20px] group active:scale-[0.98] cursor-pointer shadow-sm"
+          className="flex items-center justify-between px-2.5 py-2.5 rounded-2xl hover:bg-white/[0.05] active:bg-white/[0.08] transition-colors group cursor-pointer"
         >
           <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0098ea] to-[#00b4d8] text-white shadow-[0_4px_14px_rgba(0,152,234,0.5)] border border-sky-400/40 flex items-center justify-center shrink-0">
-              <Users className="w-5 h-5" strokeWidth={2.2} />
-            </div>
+            <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] border border-white/[0.10] text-brand shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+              <Users size={16} strokeWidth={2.4} />
+            </span>
             <div className="flex flex-col text-left">
               <span className="font-semibold text-[14px] text-white leading-tight">{t('referrals') || 'Реферальная система'}</span>
               <span className="text-[11px] text-white/40 mt-0.5">Приглашай друзей и получай процент</span>
@@ -772,12 +775,12 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
             setShowHistory(true);
             try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
           }} 
-          className="flex items-center justify-between p-3.5 bg-white/[0.04] hover:bg-white/[0.09] active:bg-white/[0.14] border border-white/[0.06] hover:border-white/[0.12] transition-all rounded-[20px] group active:scale-[0.98] cursor-pointer shadow-sm"
+          className="flex items-center justify-between px-2.5 py-2.5 rounded-2xl hover:bg-white/[0.05] active:bg-white/[0.08] transition-colors group cursor-pointer"
         >
           <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 text-white shadow-[0_4px_14px_rgba(37,99,235,0.5)] border border-blue-400/40 flex items-center justify-center shrink-0">
-              <History className="w-5 h-5" strokeWidth={2.2} />
-            </div>
+            <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] border border-white/[0.10] text-sky-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+              <History size={16} strokeWidth={2.4} />
+            </span>
             <div className="flex flex-col text-left">
               <span className="font-semibold text-[14px] text-white leading-tight">{t('deposit_history') || 'История пополнений'}</span>
               <span className="text-[11px] text-white/40 mt-0.5">Все транзакции вашего счета</span>
@@ -790,12 +793,12 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
           href={config?.supportUrl || 'https://t.me/platina_help'} 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="flex items-center justify-between p-3.5 bg-white/[0.04] hover:bg-white/[0.09] active:bg-white/[0.14] border border-white/[0.06] hover:border-white/[0.12] transition-all rounded-[20px] group active:scale-[0.98] cursor-pointer shadow-sm"
+          className="flex items-center justify-between px-2.5 py-2.5 rounded-2xl hover:bg-white/[0.05] active:bg-white/[0.08] transition-colors group cursor-pointer"
         >
           <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-fuchsia-600 to-pink-600 text-white shadow-[0_4px_14px_rgba(217,70,239,0.5)] border border-fuchsia-400/40 flex items-center justify-center shrink-0">
-              <MessageCircle className="w-5 h-5" strokeWidth={2.2} />
-            </div>
+            <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] border border-white/[0.10] text-fuchsia-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+              <MessageCircle size={16} strokeWidth={2.4} />
+            </span>
             <div className="flex flex-col text-left">
               <span className="font-semibold text-[14px] text-white leading-tight">{t('support') || 'Поддержка'}</span>
               <span className="text-[11px] text-white/40 mt-0.5">Оперативная помощь @platina_help</span>
@@ -1084,186 +1087,70 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
         })()}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {showLevelModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md"
-            onClick={() => setShowLevelModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-              className="group relative bg-[#16171b]/95 backdrop-blur-2xl border border-white/[0.12] p-8 rounded-[28px] w-full max-w-sm text-center shadow-2xl overflow-hidden"
-            >
-              {/* верхний блик жидкого стекла */}
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
-              />
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.08] blur-2xl opacity-70"
-              />
+      {showLevelModal && (
+        <LiquidDialog
+          title={t('level_rewards')}
+          subtitle="Награды за уровень"
+          icon={<Gift className="w-4 h-4" />}
+          onClose={() => setShowLevelModal(false)}
+          actionLabel={t('got_it')}
+        >
+          <p className="text-white/75 text-[13px] leading-relaxed pb-2">
+            {t('level_prizes_soon')}
+          </p>
+        </LiquidDialog>
+      )}
 
-              <button 
-                onClick={() => setShowLevelModal(false)}
-                className="relative z-10 absolute top-4 right-4 w-8 h-8 rounded-full bg-white/[0.10] hover:bg-white/[0.18] border border-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] flex items-center justify-center text-white/80 hover:text-white active:scale-95 transition-all cursor-pointer"
+      {showSettings && (
+        <LiquidDialog
+          title={t('settings') || 'Настройки'}
+          subtitle="Язык и параметры приложения"
+          icon={<Settings className="w-4 h-4" />}
+          onClose={() => setShowSettings(false)}
+          actionLabel={t('got_it') || 'Готово'}
+        >
+          <div className="space-y-4 pb-1">
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-white/50 mb-2">
+                {t('language') || 'Язык интерфейса'}
+              </div>
+              <LiquidSegment<'ru' | 'en' | 'zh'>
+                ariaLabel="Язык"
+                value={lang === 'en' || lang === 'zh' ? lang : 'ru'}
+                onChange={(code) => {
+                  handleSetLang(code);
+                  try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch { /* optional */ }
+                }}
+                options={[
+                  { value: 'ru', label: 'Русский', icon: <span className="text-[14px] leading-none">🇷🇺</span> },
+                  { value: 'en', label: 'English', icon: <span className="text-[14px] leading-none">🇬🇧</span> },
+                  { value: 'zh', label: '中文', icon: <span className="text-[14px] leading-none">🇨🇳</span> },
+                ]}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-3 px-1 py-1">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/[0.06] border border-white/[0.10] text-amber-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+                  <Sparkles className="w-3.5 h-3.5" />
+                </span>
+                <div className="min-w-0">
+                  <div className="text-[13px] font-bold text-white leading-tight">Тактильный отклик</div>
+                  <div className="text-[10px] text-white/40 truncate">Вибрация кнопок в Telegram</div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  try { (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch { /* optional */ }
+                }}
+                className="shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-bold bg-white/[0.08] border border-white/[0.12] text-white active:scale-95 transition-transform cursor-pointer"
               >
-                <X className="w-4 h-4" strokeWidth={2.5} />
+                Тест
               </button>
-              
-              <div className="relative z-10 w-16 h-16 rounded-full bg-gradient-to-br from-[#0098ea] to-[#00b4d8] text-white shadow-[0_0_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] flex items-center justify-center mx-auto mb-4">
-                <Gift className="w-8 h-8 text-white drop-shadow-md" strokeWidth={2} />
-              </div>
-              
-              <h3 className="relative z-10 font-display text-2xl font-bold mb-2 text-white">{t('level_rewards')}</h3>
-              <p className="relative z-10 text-white/70 text-sm leading-relaxed mb-6">
-                {t('level_prizes_soon')}
-              </p>
-              
-              <button 
-                onClick={() => setShowLevelModal(false)}
-                className="relative z-10 w-full py-3.5 rounded-full bg-gradient-to-r from-[#0098ea] to-[#00b4d8] hover:brightness-110 text-white font-bold active:scale-95 transition-all shadow-[0_4px_20px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] cursor-pointer"
-              >
-                {t('got_it')}
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Settings Modal (Fixed Alignment, Clean Header, Flag Cards, Haptic Feedback & Bright Controls) */}
-      <AnimatePresence>
-        {showSettings && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }}
-              onClick={() => setShowSettings(false)}
-              className="fixed inset-0 bg-black/80 backdrop-blur-md cursor-pointer"
-            />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.94, y: 16 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.94, y: 16 }}
-              transition={{ type: 'spring', damping: 26, stiffness: 360 }}
-              className="group relative w-full max-w-sm bg-[#16171b]/98 backdrop-blur-2xl border border-white/[0.14] rounded-[28px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.95),inset_0_1px_0_rgba(255,255,255,0.15)] z-50 overflow-hidden flex flex-col p-5 sm:p-6 text-white"
-            >
-              {/* верхний блик жидкого стекла */}
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.09)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
-              />
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 w-4/5 h-20 rounded-full bg-[#0098ea]/15 blur-2xl pointer-events-none"
-              />
-
-              {/* Header row */}
-              <div className="relative z-10 flex items-center justify-between pb-3.5 mb-4 border-b border-white/[0.08]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0098ea] to-[#00b4d8] text-white flex items-center justify-center shadow-[0_0_14px_rgba(0,152,234,0.45),inset_0_1px_0_rgba(255,255,255,0.4)]">
-                    <Settings className="w-5 h-5" strokeWidth={2.2} />
-                  </div>
-                  <div>
-                    <h3 className="font-display text-lg font-bold text-white tracking-tight leading-tight">{t('settings') || 'Настройки'}</h3>
-                    <p className="text-[11px] text-white/45 font-medium mt-0.5">Язык и параметры приложения</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setShowSettings(false)} 
-                  className="w-9 h-9 rounded-full bg-white/[0.10] hover:bg-white/[0.18] active:scale-90 border border-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] flex items-center justify-center text-white/80 hover:text-white transition-all cursor-pointer"
-                >
-                  <X className="w-4 h-4" strokeWidth={2.5} />
-                </button>
-              </div>
-              
-              <div className="relative z-10 space-y-4">
-                <div>
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-white/50 mb-2.5 flex items-center gap-1.5">
-                    <span>{t('language') || 'Язык интерфейса'}</span>
-                  </div>
-                  <div className="grid grid-cols-1 gap-2">
-                    {[
-                      { code: 'ru', name: 'Русский', flag: '🇷🇺', native: 'Russian' },
-                      { code: 'en', name: 'English', flag: '🇬🇧', native: 'English' },
-                      { code: 'zh', name: '中文', flag: '🇨🇳', native: 'Chinese' },
-                    ].map((item) => {
-                      const isActive = lang === item.code;
-                      return (
-                        <button 
-                          key={item.code}
-                          onClick={() => { 
-                            handleSetLang(item.code as any); 
-                            try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
-                          }} 
-                          className={`w-full p-3.5 rounded-[18px] border flex items-center justify-between transition-all cursor-pointer active:scale-[0.98] ${
-                            isActive 
-                              ? 'bg-gradient-to-r from-[#0098ea]/25 to-[#00b4d8]/15 border-[#0098ea]/70 text-white font-bold shadow-[0_0_18px_rgba(0,152,234,0.35),inset_0_1px_0_rgba(255,255,255,0.2)]' 
-                              : 'bg-white/[0.05] hover:bg-white/[0.10] border-white/[0.08] text-white/80'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-xl leading-none select-none">{item.flag}</span>
-                            <div className="flex flex-col text-left">
-                              <span className="text-[14px] font-bold text-white leading-tight">{item.name}</span>
-                              <span className="text-[11px] text-white/40">{item.native}</span>
-                            </div>
-                          </div>
-                          {isActive ? (
-                            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-[#0098ea] to-[#00b4d8] text-white flex items-center justify-center shadow-md">
-                              <Check className="w-3.5 h-3.5 stroke-[3]" />
-                            </div>
-                          ) : (
-                            <div className="w-6 h-6 rounded-full border-2 border-white/20" />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Haptic Feedback Test row */}
-                <div className="pt-1 border-t border-white/[0.08]">
-                  <div className="flex items-center justify-between p-3.5 rounded-[18px] bg-white/[0.04] border border-white/[0.08]">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/[0.10] flex items-center justify-center text-white/80">
-                        <Sparkles className="w-4 h-4 text-amber-400" />
-                      </div>
-                      <div className="flex flex-col text-left">
-                        <span className="text-[13px] font-bold text-white leading-tight">Тактильный отклик</span>
-                        <span className="text-[10px] text-white/40">Вибрация кнопок в Telegram</span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => {
-                        try { (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch (e) {}
-                      }}
-                      className="px-3.5 py-1.5 rounded-full text-[11px] font-bold bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] text-white active:scale-95 transition-all cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]"
-                    >
-                      Тест
-                    </button>
-                  </div>
-                </div>
-
-                {/* Save / Close button */}
-                <button
-                  onClick={() => setShowSettings(false)}
-                  className="w-full mt-2 py-3.5 rounded-full bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 active:scale-[0.98] transition-all font-display font-bold text-[14px] text-white shadow-[0_4px_18px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] cursor-pointer"
-                >
-                  {t('got_it') || 'Готово'}
-                </button>
-              </div>
-            </motion.div>
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+        </LiquidDialog>
+      )}
     </div>
   );
 }
@@ -1274,11 +1161,16 @@ export default function App() {
   const { t, lang, setLang } = useTranslation();
 
   const [activeTab, setActiveTab] = useState('shop');
-  const navDragging = useRef(false);
-  const selectNavTab = (id: string) => {
-    setActiveTab(id);
-    try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch { /* haptics are optional */ }
-  };
+
+  // Подгружаем соседние вкладки заранее, чтобы первый тап не ждал чанк.
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      import('./components/Leaderboard');
+      import('./components/Tasks');
+      import('./components/Inventory');
+    }, 600);
+    return () => window.clearTimeout(id);
+  }, []);
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const [showBalancePage, setShowBalancePage] = useState(false);
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
@@ -1624,15 +1516,7 @@ export default function App() {
         {/* Scrollable Content Area */}
         <div className="relative flex-1 w-full overflow-hidden flex flex-col">
           <main className="flex-1 overflow-y-auto pt-[78px] pb-[124px] px-4.5 scrollbar-hide relative">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                className="w-full"
-              >
+            <div className="w-full">
                 {activeTab === 'shop' && (
                   <Shop 
                     onPlayUpgrade={() => setActiveGame('upgrade')} 
@@ -1694,8 +1578,7 @@ export default function App() {
         body: JSON.stringify({ gifts: newDb })
       });
     }} /></Suspense>}
-              </motion.div>
-            </AnimatePresence>
+            </div>
           </main>
 
           <AnimatePresence>
@@ -1796,76 +1679,7 @@ export default function App() {
               className="absolute bottom-2.5 left-0 right-0 z-[90] pb-[calc(env(safe-area-inset-bottom,0px)+8px)] px-3 w-full pointer-events-none"
             >
               <div className="pointer-events-auto w-full max-w-sm mx-auto">
-              <nav
-                onPointerDown={() => { navDragging.current = true; }}
-                onPointerUp={() => { navDragging.current = false; }}
-                onPointerCancel={() => { navDragging.current = false; }}
-                className="group relative overflow-hidden flex items-stretch gap-1 p-1.5 rounded-full bg-[#17191d]/90 border border-white/[0.09] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_12px_28px_-12px_rgba(0,0,0,0.8)] touch-pan-y select-none"
-              >
-                {/* верхнее мягкое бликовое свечение жидкого стекла */}
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 rounded-full bg-[linear-gradient(180deg,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0.01)_40%,transparent_62%)]"
-                />
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-14 rounded-full bg-white/[0.06] blur-2xl opacity-60"
-                />
-
-                {navItems.map((item) => {
-                  const isActive = activeTab === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => selectNavTab(item.id)}
-                      onPointerEnter={(event) => {
-                        if (navDragging.current && event.buttons === 1) selectNavTab(item.id);
-                      }}
-                      className="group/item relative flex-1 min-w-0 py-2.5 px-1 outline-none cursor-pointer active:scale-[0.96] transition-transform duration-200"
-                    >
-                      {isActive && (
-                        <motion.div
-                          layoutId="liquid-pill"
-                          className="absolute inset-0 rounded-full bg-[linear-gradient(145deg,rgba(255,255,255,0.13),rgba(255,255,255,0.035)_55%,rgba(255,255,255,0.07))] border border-white/[0.15] shadow-[inset_0_1px_2px_rgba(255,255,255,0.22),inset_0_-2px_5px_rgba(255,255,255,0.035),0_5px_12px_-5px_rgba(0,0,0,0.65)] overflow-hidden z-0"
-                          animate={{ scaleX: 1.035, scaleY: 0.94, borderRadius: '999px' }}
-                          transition={springLiquid}
-                        >
-                          {/* деликатный мягкий водяной блик */}
-                          <span
-                            aria-hidden="true"
-                            className="pointer-events-none absolute inset-x-2 top-0.5 h-[40%] rounded-full bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.14),transparent_70%)]"
-                          />
-                          {/* мягкий тусклый зеленый отсвет снизу */}
-                          <div className="absolute -bottom-3 -left-2 w-10 h-10 rounded-full bg-emerald-500/12 blur-md pointer-events-none" />
-                        </motion.div>
-                      )}
-                      <motion.div
-                        className="relative z-10 flex flex-col items-center justify-center gap-1 will-change-transform"
-                        style={{ WebkitBackfaceVisibility: 'hidden', transform: 'translateZ(0)' }}
-                        animate={{ 
-                          scale: isActive ? 1.02 : 1,
-                        }}
-                        transition={springLiquid}
-                      >
-                        {/* Компактный круглый стеклянный чип (h-7 w-7, 28px) */}
-                        <span className={`relative flex h-7 w-7 shrink-0 aspect-square items-center justify-center rounded-full transition-all duration-200 ${
-                          isActive
-                            ? 'bg-brand/20 border border-brand/40 text-brand shadow-[0_0_10px_rgba(0,152,234,0.3),inset_0_1px_0_rgba(255,255,255,0.15)]'
-                            : 'bg-white/[0.06] border border-white/[0.08] text-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] group-hover/item:text-white group-hover/item:bg-white/[0.09]'
-                        }`}>
-                          <item.icon size={15} strokeWidth={2.4} aria-hidden="true" />
-                        </span>
-                        {/* Чёткий белый текст, полностью помещающийся внутри ползунка */}
-                        <span className={`text-[10.5px] font-semibold tracking-tight leading-none text-center max-w-full truncate px-1 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] transition-opacity duration-200 ${
-                          isActive ? 'opacity-100 font-bold' : 'opacity-70 group-hover/item:opacity-100'
-                        }`}>
-                          {item.label}
-                        </span>
-                      </motion.div>
-                    </button>
-                  );
-                })}
-              </nav>
+                <BottomNav items={navItems} activeId={activeTab} onSelect={setActiveTab} />
               </div>
             </motion.div>
           )}

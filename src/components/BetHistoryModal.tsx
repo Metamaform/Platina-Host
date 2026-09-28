@@ -100,7 +100,7 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
                 {title}
               </h2>
               <p className="text-[12px] text-white/40 font-medium mt-0.5">
-                Последние 50 ставок
+                Последние 20 ставок
               </p>
             </div>
 
@@ -120,7 +120,7 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
                 <span className="text-white/20 text-xs mt-1">Сделайте ставку, чтобы увидеть историю</span>
               </div>
             ) : (
-              history.map((bet) => {
+              history.slice(0, 20).map((bet) => {
                 const isExpanded = expandedId === bet.id;
                 const isWon = !!bet.isWon;
                 const betMult = bet.multiplier || (isWon ? 1.5 : 1.0);

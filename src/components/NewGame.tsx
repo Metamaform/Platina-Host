@@ -12,6 +12,7 @@ import { NftSelectorGrid } from './NftSelectorGrid';
 import { GameLossModal } from './GameLossModal';
 import { BetHistoryModal, BetHistoryRecord } from './BetHistoryModal';
 import { GameRoundInfoModal } from './GameRoundInfoModal';
+import { LiquidSegment } from './ui/LiquidSegment';
 
 interface NewGameProps {
   onBack: () => void;
@@ -130,14 +131,14 @@ export const NewGame: React.FC<NewGameProps> = ({
     multiplier: number;
   } | null>(null);
 
-  // Personal user game history in Rocket (latest 50 games matching IMG_0888)
+  // Personal user game history in Rocket (latest 20 games)
   const rocketUserHistoryKey = `rocket_user_history_${user?.id || 'me'}`;
   const [userRocketGames, setUserRocketGames] = useState<BetHistoryRecord[]>(() => {
     try {
       const saved = localStorage.getItem(rocketUserHistoryKey);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed.slice(0, 50);
+        if (Array.isArray(parsed)) return parsed.slice(0, 20);
       }
     } catch {}
     return [];
@@ -145,7 +146,7 @@ export const NewGame: React.FC<NewGameProps> = ({
 
   const recordRocketUserGame = useCallback((gameItem: any) => {
     setUserRocketGames(prev => {
-      const next = [gameItem, ...prev.slice(0, 49)];
+      const next = [gameItem, ...prev.slice(0, 19)];
       try {
         localStorage.setItem(rocketUserHistoryKey, JSON.stringify(next));
       } catch {}
@@ -1218,23 +1219,16 @@ export const NewGame: React.FC<NewGameProps> = ({
                 </button>
               </div>
 
-              {/* Mode Toggle: Gifts / GRAM in Liquid Glass */}
-              <div className="relative z-10 flex p-1 bg-white/[0.08] backdrop-blur-xl border border-white/[0.12] rounded-full mb-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-                <button
-                  onClick={() => setMode('nft')}
-                  className={`flex-1 py-2 rounded-full font-bold text-[13px] transition-all cursor-pointer ${
-                    mode === 'nft' ? 'bg-white/[0.24] text-white border border-white/[0.30] shadow-[0_2px_10px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.25)]' : 'text-white/70 hover:text-white'
-                  }`}
-                >{t('gifts')}</button>
-                <button
-                  onClick={() => setMode('gram')}
-                  className={`flex-1 py-2 rounded-full font-bold text-[13px] transition-all cursor-pointer ${
-                    mode === 'gram' ? 'bg-white/[0.24] text-white border border-white/[0.30] shadow-[0_2px_10px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.25)]' : 'text-white/70 hover:text-white'
-                  }`}
-                >
-                  GRAM
-                </button>
-              </div>
+              <LiquidSegment
+                className="relative z-10 mb-4"
+                ariaLabel="Режим ставки"
+                value={mode}
+                onChange={setMode}
+                options={[
+                  { value: 'nft', label: t('gifts') },
+                  { value: 'gram', label: 'GRAM' },
+                ]}
+              />
 
               {/* Mode Body: GRAM or NFT Picker in Liquid Glass */}
               <div className="relative z-10 bg-white/[0.04] border border-white/[0.08] rounded-[24px] p-5 mb-5 flex flex-col items-center justify-center min-h-[120px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">

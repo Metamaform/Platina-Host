@@ -5,6 +5,7 @@ import { GramIcon } from './GramIcon';
 import { fetchTasks, completeTask, Task } from '../lib/api';
 import { getTurnover } from '../lib/stats';
 import { motion, AnimatePresence } from 'motion/react';
+import { LiquidSegment } from './ui/LiquidSegment';
 
 export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) => void }) {
   const { t } = useTranslation();
@@ -151,48 +152,19 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
         </div>
       </div>
 
-      <div className="flex relative p-1 bg-white/[0.06] backdrop-blur-xl border border-white/[0.10] rounded-full mb-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-        <button
-          onClick={() => {
-            setActiveTab('daily');
-            try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
-          }}
-          className={`relative z-10 flex-1 py-2.5 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer active:scale-[0.98] ${
-            activeTab === 'daily'
-              ? 'text-white'
-              : 'text-white/50 hover:text-white/80'
-          }`}
-        >
-          {activeTab === 'daily' && (
-            <motion.div
-              layoutId="tasks-tab-pill"
-              className="absolute inset-0 rounded-full bg-white/[0.12] border border-white/[0.15] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_6px_16px_-4px_rgba(0,0,0,0.5)] z-[-1]"
-              transition={{ type: 'spring', damping: 28, stiffness: 380 }}
-            />
-          )}
-          <span className="relative z-10">{t('daily')}</span>
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab('all');
-            try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
-          }}
-          className={`relative z-10 flex-1 py-2.5 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer active:scale-[0.98] ${
-            activeTab === 'all'
-              ? 'text-white'
-              : 'text-white/50 hover:text-white/80'
-          }`}
-        >
-          {activeTab === 'all' && (
-            <motion.div
-              layoutId="tasks-tab-pill"
-              className="absolute inset-0 rounded-full bg-white/[0.12] border border-white/[0.15] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_6px_16px_-4px_rgba(0,0,0,0.5)] z-[-1]"
-              transition={{ type: 'spring', damping: 28, stiffness: 380 }}
-            />
-          )}
-          <span className="relative z-10">{t('main_tasks')}</span>
-        </button>
-      </div>
+      <LiquidSegment
+        className="mb-4"
+        ariaLabel="Задания"
+        value={activeTab}
+        onChange={(id) => {
+          setActiveTab(id);
+          try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch { /* optional */ }
+        }}
+        options={[
+          { value: 'daily', label: t('daily') },
+          { value: 'all', label: t('main_tasks') },
+        ]}
+      />
 
       {loading ? (
         <div className="flex justify-center items-center py-12">

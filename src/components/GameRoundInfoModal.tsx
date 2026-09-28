@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { X, Settings, Clock, Timer, Wallet, Trophy, ShieldCheck, Hash, Copy, Check, Activity, Layers } from 'lucide-react';
+import { Settings, Clock, Timer, Wallet, Trophy, Hash, Copy, Check, Activity, Layers } from 'lucide-react';
 import { GramIcon } from './GramIcon';
+import { LiquidDialog } from './ui/LiquidDialog';
 
 export interface GameRoundInfoModalProps {
   isOpen: boolean;
@@ -71,52 +71,14 @@ export const GameRoundInfoModal: React.FC<GameRoundInfoModalProps> = ({
     : `RK-LIVE`;
 
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-[120] flex items-center justify-center px-4">
-        {/* Backdrop */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="fixed inset-0 bg-black/80 backdrop-blur-md cursor-pointer"
-        />
-
-        {/* Modal Sheet */}
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0, y: 15 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.95, opacity: 0, y: 15 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 320 }}
-          className="relative z-10 w-full max-w-md max-h-[85vh] flex flex-col bg-[#16171d] border border-white/10 rounded-[28px] shadow-2xl overflow-hidden text-white"
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-white/5">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center text-white/90 shadow-inner">
-                <Settings className="w-5 h-5 text-amber-400" />
-              </div>
-              <div>
-                <h3 className="font-display font-bold text-[16px] leading-tight flex items-center gap-1.5">
-                  <span>Параметры раунда</span>
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" />
-                </h3>
-                <span className="text-[11px] text-white/50 font-medium">
-                  {game === 'plinko' ? 'Plinko' : 'Ракетка'} • Live серверная статистика
-                </span>
-              </div>
-            </div>
-
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-colors cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Content Body */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-3.5 custom-scrollbar">
+    <LiquidDialog
+      title="Параметры раунда"
+      subtitle={`${game === 'plinko' ? 'Plinko' : 'Ракетка'} · серверная статистика`}
+      icon={<Settings className="w-4 h-4" />}
+      onClose={onClose}
+      actionLabel="Закрыть"
+    >
+      <div className="space-y-3.5 pb-1">
 
             {/* Quick Status Bar */}
             <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-white/[0.06] to-white/[0.02] border border-white/10">
@@ -238,19 +200,7 @@ export const GameRoundInfoModal: React.FC<GameRoundInfoModalProps> = ({
               </div>
             </div>
 
-          </div>
-
-          {/* Footer Close Button */}
-          <div className="p-4 border-t border-white/5 bg-[#14151a]">
-            <button
-              onClick={onClose}
-              className="w-full py-3 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-bold text-sm active:scale-98 transition-all cursor-pointer border border-white/10"
-            >
-              Закрыть
-            </button>
-          </div>
-        </motion.div>
       </div>
-    </AnimatePresence>
+    </LiquidDialog>
   );
 };

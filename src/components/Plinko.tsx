@@ -9,6 +9,9 @@ import { preparePlinkoRewards, selectPlinkoReward, rewardIdentity } from '../lib
 import { PremiumImage } from './PremiumImage';
 import { BetHistoryModal, BetHistoryRecord } from './BetHistoryModal';
 import { GameRoundInfoModal } from './GameRoundInfoModal';
+import { LiquidSegment } from './ui/LiquidSegment';
+
+const HISTORY_LIMIT = 20;
 
 export interface PlinkoProps {
   onBack: () => void;
@@ -105,6 +108,50 @@ const CONTACT_DY = -R_CONTACT * Math.cos(CONTACT_THETA);
 // Flight speed used to normalize segment durations (~constant speed per drop)
 const FLIGHT_SPEED_PX_PER_MS = 0.19;
 const BUCKET_Y = START_Y + ROWS * ROW_GAP + 14;
+const BUCKET_WIDTH = 36;
+const BUCKET_HEIGHT = 32;
+
+function formatBucketLabel(mult: number) {
+  if (mult >= 10) return `${Math.round(mult)}x`;
+  return `${mult.toFixed(1)}x`;
+}
+
+/** Saturated slot chips — readable on a phone, unlike flat translucent canvas text. */
+function bucketTone(mult: number): { background: string; color: string; glow: string } {
+  if (mult >= 20) {
+    return {
+      background: 'linear-gradient(180deg, #ffe7a3 0%, #f5b942 46%, #c2410c 100%)',
+      color: '#1c1404',
+      glow: '0 8px 16px rgba(245, 185, 66, 0.45)',
+    };
+  }
+  if (mult >= 8) {
+    return {
+      background: 'linear-gradient(180deg, #f5d0fe 0%, #e879f9 46%, #86198f 100%)',
+      color: '#fff',
+      glow: '0 8px 16px rgba(217, 70, 239, 0.4)',
+    };
+  }
+  if (mult >= 3) {
+    return {
+      background: 'linear-gradient(180deg, #a5f3fc 0%, #22d3ee 46%, #0e7490 100%)',
+      color: '#042f2e',
+      glow: '0 8px 14px rgba(34, 211, 238, 0.35)',
+    };
+  }
+  if (mult >= 1) {
+    return {
+      background: 'linear-gradient(180deg, #bbf7d0 0%, #34d399 48%, #047857 100%)',
+      color: '#022c22',
+      glow: '0 8px 14px rgba(16, 185, 129, 0.35)',
+    };
+  }
+  return {
+    background: 'linear-gradient(180deg, #fecdd3 0%, #fb7185 46%, #9f1239 100%)',
+    color: '#fff',
+    glow: '0 8px 14px rgba(244, 63, 94, 0.38)',
+  };
+}
 const TOTAL_PEGS = 52; // 3+4+5+6+7+8+9+10 = 52
 
 // Peg index in flat array: (r * (r + 5)) / 2 + c
@@ -253,7 +300,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
 
   const recordUserMultiplier = (mult: number) => {
     setUserHistory(prev => {
-      const next = [mult, ...prev.slice(0, 49)];
+      const next = [mult, ...prev.slice(0, HISTORY_LIMIT - 1)];
       try {
         localStorage.setItem(userStorageKey, JSON.stringify(next));
       } catch {}
@@ -261,14 +308,14 @@ export const Plinko: React.FC<PlinkoProps> = ({
     });
   };
 
-  // Personal user full games history (last 50 games for transparency)
+  // Personal user full games history (last 20 games for transparency)
   const userGamesKey = `plinko_user_games_${user?.id || 'me'}`;
   const [userGames, setUserGames] = useState<DropHistoryItem[]>(() => {
     try {
       const saved = localStorage.getItem(userGamesKey);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed.slice(0, 50);
+        if (Array.isArray(parsed)) return parsed.slice(0, HISTORY_LIMIT);
       }
     } catch {}
     return [];
@@ -276,7 +323,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
 
   const recordUserGame = (gameItem: DropHistoryItem) => {
     setUserGames(prev => {
-      const next = [gameItem, ...prev.slice(0, 49)];
+      const next = [gameItem, ...prev.slice(0, HISTORY_LIMIT - 1)];
       try {
         localStorage.setItem(userGamesKey, JSON.stringify(next));
       } catch {}
@@ -377,7 +424,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
     return () => { img.onload = null; avatarImgRef.current = null; };
   }, [user?.photoUrl]);
 
-  // Shared/global drop history (live drops feed, max 50)
+  // Shared/global drop history (live drops feed, max 20)
   const [dropHistory, setDropHistory] = useState<DropHistoryItem[]>([
     {
       id: 'PLK-DEMO-1',
@@ -463,23 +510,20 @@ export const Plinko: React.FC<PlinkoProps> = ({
 
   // Helper: X position of bucket index (0 to 8)
   const getBucketX = useCallback((bucketIdx: number) => {
-    const bucketWidth = 36;
-    const totalWidth = 9 * bucketWidth;
+    const totalWidth = 9 * BUCKET_WIDTH;
     const startX = (BOARD_WIDTH - totalWidth) / 2;
-    return startX + bucketIdx * bucketWidth + bucketWidth / 2;
+    return startX + bucketIdx * BUCKET_WIDTH + BUCKET_WIDTH / 2;
   }, []);
 
   // Precomputed Buckets UI metrics
   const buckets = useMemo(() => {
-    const bucketWidth = 36;
-    const bucketHeight = 26;
-    const totalWidth = 9 * bucketWidth;
+    const totalWidth = 9 * BUCKET_WIDTH;
     const startX = (BOARD_WIDTH - totalWidth) / 2;
     const mults = BUCKET_CONFIGS[risk];
 
     return mults.map((mult, idx) => {
-      const x = startX + idx * bucketWidth + bucketWidth / 2;
-      const left = startX + idx * bucketWidth;
+      const x = startX + idx * BUCKET_WIDTH + BUCKET_WIDTH / 2;
+      const left = startX + idx * BUCKET_WIDTH;
 
       let textColor = '#22c55e';
       let bgStyle = 'rgba(34, 197, 94, 0.16)';
@@ -506,12 +550,12 @@ export const Plinko: React.FC<PlinkoProps> = ({
       return {
         idx,
         multiplier: mult,
-        label: mult >= 10 ? `${mult.toFixed(0)}x` : `${mult.toFixed(1)}x`,
+        label: formatBucketLabel(mult),
         x,
         left,
         y: BUCKET_Y,
-        width: bucketWidth,
-        height: bucketHeight,
+        width: BUCKET_WIDTH,
+        height: BUCKET_HEIGHT,
         textColor,
         bgStyle,
         borderStyle
@@ -796,11 +840,11 @@ export const Plinko: React.FC<PlinkoProps> = ({
       clientSeed: `tg:${userRef.current?.id || 'guest'}`
     };
 
-    // Record to personal games history (max 50)
+    // Record to personal games history (max 20)
     recordUserGame(dropItem);
 
-    // Record to shared drop history table (max 50)
-    setDropHistory(prev => [dropItem, ...prev.slice(0, 49)]);
+    // Record to shared drop history table (max 20)
+    setDropHistory(prev => [dropItem, ...prev.slice(0, HISTORY_LIMIT - 1)]);
 
     // Re-enable drop button immediately
     setIsDropping(false);
@@ -817,6 +861,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
   // Flat Float32Arrays for zero garbage collection during flight
   const pegGlowsRef = useRef(new Float32Array(TOTAL_PEGS));
   const bucketBouncesRef = useRef(new Float32Array(9));
+  const bucketElsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   // Ring buffer for trail positions (0 object allocations per frame)
   const trailXRef = useRef(new Float32Array(6));
@@ -892,35 +937,20 @@ export const Plinko: React.FC<PlinkoProps> = ({
         ctx.fill();
       }
 
-      // 4. Draw Buckets
-      const currentBuckets = bucketsRef.current;
-      for (let i = 0; i < currentBuckets.length; i++) {
-        const b = currentBuckets[i];
+      // 4. Bucket chips are HTML (crisp text). Only the hit bounce is pushed to the DOM.
+      const bucketEls = bucketElsRef.current;
+      for (let i = 0; i < 9; i++) {
+        const el = bucketEls[i];
+        if (!el) continue;
         const bounce = bucketBounces[i];
-        const scale = 1 + bounce * 0.12;
-
-        ctx.save();
-        ctx.translate(b.x, b.y + b.height / 2);
-        ctx.scale(scale, scale);
-        ctx.translate(-b.x, -(b.y + b.height / 2));
-
-        const radius = 6;
-        ctx.beginPath();
-        ctx.roundRect(b.left + 1, b.y, b.width - 2, b.height, radius);
-        ctx.fillStyle = bounce > 0.05 ? '#ffffff' : b.bgStyle;
-        ctx.fill();
-
-        ctx.strokeStyle = bounce > 0.05 ? '#ffffff' : b.borderStyle;
-        ctx.lineWidth = 1.2;
-        ctx.stroke();
-
-        ctx.font = 'bold 11px system-ui, -apple-system, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = bounce > 0.05 ? '#000000' : b.textColor;
-        ctx.fillText(b.label, b.x, b.y + b.height / 2);
-
-        ctx.restore();
+        if (bounce > 0.02) {
+          const scale = 1 + bounce * 0.16;
+          el.style.transform = `scale(${scale})`;
+          el.style.filter = bounce > 0.12 ? 'brightness(1.35)' : '';
+        } else if (el.style.transform) {
+          el.style.transform = '';
+          el.style.filter = '';
+        }
       }
 
       // 5. Update Ball Physics (Exact timestamp progression, 0 allocations)
@@ -1259,42 +1289,75 @@ export const Plinko: React.FC<PlinkoProps> = ({
 
           {/* Personal Multipliers Line (Rocket-style: 6 identical rounded-xl pills, personal to user) */}
           <div className="w-full flex items-center gap-1.5 overflow-hidden select-none pointer-events-none py-1 mb-3">
-            {topStripMults.map((hMult, idx) => (
-              <div
-                key={idx}
-                className={`flex-1 text-center py-1.5 px-0.5 rounded-xl text-[12px] font-bold border transition-colors ${
-                  hMult === null
-                    ? 'bg-white/5 text-white/20 border-white/5'
-                    : hMult >= 8.0
-                    ? 'bg-amber-500/15 text-amber-300 border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.1)]'
-                    : hMult >= 3.0
-                    ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
-                    : hMult >= 1.2
-                    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                    : 'bg-red-500/15 text-red-500 border-red-500/30'
-                }`}
-              >
-                {hMult !== null ? `x${hMult.toFixed(2)}` : '—'}
-              </div>
-            ))}
+            {topStripMults.map((hMult, idx) => {
+              const tone = hMult === null ? null : bucketTone(hMult);
+              return (
+                <div
+                  key={idx}
+                  className="flex-1 text-center py-1.5 px-0.5 rounded-[10px] text-[12px] font-black leading-none border border-white/10"
+                  style={tone ? {
+                    background: tone.background,
+                    color: tone.color,
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.45)',
+                  } : {
+                    background: 'rgba(255,255,255,0.05)',
+                    color: 'rgba(255,255,255,0.28)',
+                  }}
+                >
+                  {hMult !== null ? formatBucketLabel(hMult) : '—'}
+                </div>
+              );
+            })}
           </div>
 
           {/* Clean Canvas Plinko Arena with User Avatar Ball */}
-          <div className="w-full relative min-h-[390px] mb-3 rounded-[28px] bg-white/[0.06] backdrop-blur-2xl border border-white/[0.10] overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)] flex items-center justify-center">
-            {/* Ambient Background Sheen */}
+          <div className="w-full relative mb-3 rounded-[28px] bg-white/[0.06] backdrop-blur-2xl border border-white/[0.10] overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)]">
             <span
               aria-hidden="true"
               className="pointer-events-none absolute inset-0 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
             />
-            {/* Ambient Background Grid */}
             <div className="absolute inset-0 opacity-15 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
 
-            {/* High Performance 2D Physics Canvas */}
-            <canvas
-              ref={canvasRef}
-              style={{ width: BOARD_WIDTH, height: BOARD_HEIGHT }}
-              className="select-none pointer-events-none z-10"
-            />
+            <div className="relative w-full" style={{ aspectRatio: `${BOARD_WIDTH} / ${BOARD_HEIGHT}` }}>
+              {/* Multiplier slots sit under the transparent canvas so the ball draws on top. */}
+              <div
+                className="absolute inset-0 z-[1] pointer-events-none"
+                style={{ containerType: 'inline-size' }}
+              >
+                {buckets.map((b) => {
+                  const tone = bucketTone(b.multiplier);
+                  return (
+                    <div
+                      key={b.idx}
+                      ref={(el) => { bucketElsRef.current[b.idx] = el; }}
+                      className="absolute flex items-center justify-center font-black leading-none whitespace-nowrap rounded-[8px] overflow-hidden text-[11px]"
+                      style={{
+                        left: `${((b.left + 1) / BOARD_WIDTH) * 100}%`,
+                        top: `${(b.y / BOARD_HEIGHT) * 100}%`,
+                        width: `${((b.width - 2) / BOARD_WIDTH) * 100}%`,
+                        height: `${(b.height / BOARD_HEIGHT) * 100}%`,
+                        background: tone.background,
+                        color: tone.color,
+                        boxShadow: `${tone.glow}, inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -3px 0 rgba(0,0,0,0.22)`,
+                        fontSize: '3cqw',
+                        textShadow: tone.color === '#fff' ? '0 1px 1px rgba(0,0,0,0.35)' : 'none',
+                        transformOrigin: 'center center',
+                        letterSpacing: '-0.04em',
+                      }}
+                    >
+                      <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-white/25" />
+                      <span className="relative z-10">{b.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <canvas
+                ref={canvasRef}
+                width={BOARD_WIDTH}
+                height={BOARD_HEIGHT}
+                className="absolute inset-0 w-full h-full select-none pointer-events-none z-10"
+              />
+            </div>
           </div>
 
           {/* Inline Result Banner (Только выигрыши, плашка проигрыша убрана) */}
@@ -1323,26 +1386,18 @@ export const Plinko: React.FC<PlinkoProps> = ({
 
           {/* Controls Bar: Risk selector & Stake summary in Liquid Glass */}
           <div className="w-full flex items-center gap-2 mb-3">
-            <div className="flex bg-white/[0.08] backdrop-blur-xl p-1 rounded-full border border-white/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] flex-1">
-              {(['low', 'medium', 'high'] as RiskLevel[]).map(r => (
-                <button
-                  key={r}
-                  disabled={isDropping}
-                  onClick={() => setRisk(r)}
-                  className={`flex-1 py-2 rounded-full text-[12px] font-bold uppercase transition-all cursor-pointer disabled:opacity-50 ${
-                    risk === r
-                      ? r === 'low'
-                        ? 'bg-emerald-500 text-white border border-emerald-400 shadow-[0_0_14px_rgba(16,185,129,0.5)]'
-                        : r === 'medium'
-                        ? 'bg-amber-500 text-white border border-amber-400 shadow-[0_0_14px_rgba(245,158,11,0.5)]'
-                        : 'bg-rose-500 text-white border border-rose-400 shadow-[0_0_14px_rgba(244,63,94,0.5)]'
-                      : 'text-white/70 hover:text-white hover:bg-white/[0.08]'
-                  }`}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
+            <LiquidSegment
+              className="flex-1 min-w-0"
+              ariaLabel="Риск"
+              value={risk}
+              disabled={isDropping}
+              onChange={setRisk}
+              options={[
+                { value: 'low', label: 'Low' },
+                { value: 'medium', label: 'Mid' },
+                { value: 'high', label: 'High' },
+              ]}
+            />
 
             <button
               disabled={isDropping}
@@ -1386,7 +1441,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                {dropHistory.map((item) => {
+                {dropHistory.slice(0, HISTORY_LIMIT).map((item) => {
                   const multStr = item.multiplier.toFixed(2);
 
                   return (
@@ -1500,25 +1555,16 @@ export const Plinko: React.FC<PlinkoProps> = ({
                 </button>
               </div>
 
-              {/* Mode Toggle: Gifts / GRAM in Liquid Glass */}
-              <div className="relative z-10 flex p-1 bg-white/[0.08] backdrop-blur-xl border border-white/[0.12] rounded-full mb-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-                <button
-                  onClick={() => setMode('nft')}
-                  className={`flex-1 py-2 rounded-full font-bold text-[13px] transition-all cursor-pointer ${
-                    mode === 'nft' ? 'bg-white/[0.24] text-white border border-white/[0.30] shadow-[0_2px_10px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.25)]' : 'text-white/70 hover:text-white'
-                  }`}
-                >
-                  {t('gifts')}
-                </button>
-                <button
-                  onClick={() => setMode('gram')}
-                  className={`flex-1 py-2 rounded-full font-bold text-[13px] transition-all cursor-pointer ${
-                    mode === 'gram' ? 'bg-white/[0.24] text-white border border-white/[0.30] shadow-[0_2px_10px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.25)]' : 'text-white/70 hover:text-white'
-                  }`}
-                >
-                  GRAM
-                </button>
-              </div>
+              <LiquidSegment
+                className="relative z-10 mb-4"
+                ariaLabel="Режим ставки"
+                value={mode}
+                onChange={setMode}
+                options={[
+                  { value: 'nft', label: t('gifts') },
+                  { value: 'gram', label: 'GRAM' },
+                ]}
+              />
 
               {/* Mode Body: GRAM or NFT Picker in Liquid Glass */}
               <div className="relative z-10 bg-white/[0.04] border border-white/[0.08] rounded-[24px] p-5 mb-5 flex flex-col items-center justify-center min-h-[120px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">

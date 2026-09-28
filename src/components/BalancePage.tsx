@@ -9,6 +9,7 @@ import { haptics } from '../lib/haptics';
 import { springSnappy } from '../lib/motion';
 import { QuickActions } from '../features/wallet/QuickActions';
 import { PremiumCardCarousel } from '../features/wallet/PremiumCardCarousel';
+import { LiquidSegment } from './ui/LiquidSegment';
 
 /* ---------------------------------------------------------------------------
  * BalancePage — экран кошелька / пополнения:
@@ -131,33 +132,17 @@ export function BalancePage({
             </div>
           </div>
 
-          <div className="relative z-10 w-full flex bg-white/[0.06] backdrop-blur-xl rounded-full p-1 mb-4 border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-            {tabs.map((tab) => {
-              const active = method === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    setMethod(tab.id);
-                    haptics.selection();
-                  }}
-                  className={`relative z-10 flex-1 py-2 rounded-full text-[12px] font-bold flex justify-center items-center gap-1.5 transition-colors duration-200 cursor-pointer active:scale-[0.98] ${
-                    active ? 'text-white' : 'text-white/50 hover:text-white/80'
-                  }`}
-                >
-                  {active && (
-                    <motion.div
-                      layoutId="balance-topup-tab-pill"
-                      className="absolute inset-0 rounded-full bg-white/[0.12] border border-white/[0.15] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_6px_16px_-4px_rgba(0,0,0,0.5)] z-[-1]"
-                      transition={springSnappy}
-                    />
-                  )}
-                  {tab.icon}
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          <LiquidSegment
+            className="relative z-10 mb-4"
+            variant="nav"
+            ariaLabel="Способ пополнения"
+            value={method}
+            onChange={(id) => {
+              setMethod(id);
+              haptics.selection();
+            }}
+            options={tabs.map((tab) => ({ value: tab.id, label: tab.label, icon: tab.icon }))}
+          />
 
           <div className="relative z-10">
             {method === 'nft' ? (
