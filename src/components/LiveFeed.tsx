@@ -110,7 +110,7 @@ export const LiveFeed: React.FC = () => {
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.4, type: 'spring', bounce: 0.4 }}
-                className={`w-12 h-12 rounded-xl overflow-hidden shrink-0 border shadow-lg flex items-center justify-center relative ${
+                className={`w-12 h-12 rounded-xl overflow-hidden shrink-0 border shadow-lg flex items-center justify-center relative gpu-layer ${
                   isBlack
                     ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/10'
                     : isOnyx

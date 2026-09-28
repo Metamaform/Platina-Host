@@ -1618,16 +1618,9 @@ export default function App() {
 
         {/* Scrollable Content Area */}
         <div className="relative flex-1 w-full overflow-hidden flex flex-col">
-          <main className="flex-1 overflow-y-auto pt-[78px] pb-[124px] px-4.5 scrollbar-hide relative">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                className="w-full"
-              >
+          <main className="flex-1 overflow-y-auto pt-[72px] pb-[110px] px-4 scrollbar-hide relative gpu-layer">
+            {/* Page content — simple CSS fade for tab switches (no heavy exit anim to keep interactions snappy) */}
+            <div key={activeTab} className="w-full animate-card-in">
                 {activeTab === 'shop' && (
                   <Shop 
                     onPlayUpgrade={() => setActiveGame('upgrade')} 
@@ -1689,8 +1682,7 @@ export default function App() {
         body: JSON.stringify({ gifts: newDb })
       });
     }} /></Suspense>}
-              </motion.div>
-            </AnimatePresence>
+            </div>
           </main>
 
           <AnimatePresence>
@@ -1780,28 +1772,18 @@ export default function App() {
           </AnimatePresence>
         </div>
 
-        {/* Liquid Glass Bottom Nav */}
+        {/* Liquid Glass Bottom Nav — Telegram water droplet pill */}
         <AnimatePresence>
           {!activeGame && !showBalancePage && (
             <motion.div
-              initial={{ y: 100, opacity: 0 }}
+              initial={{ y: 80, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 100, opacity: 0 }}
+              exit={{ y: 80, opacity: 0 }}
               transition={springSnappy}
               className="absolute bottom-2.5 left-0 right-0 z-[90] pb-[calc(env(safe-area-inset-bottom,0px)+8px)] px-3 w-full pointer-events-none"
             >
               <div className="pointer-events-auto w-full max-w-sm mx-auto">
-              <nav className="group relative overflow-hidden flex items-stretch gap-1 p-1.5 rounded-full bg-white/[0.06] backdrop-blur-2xl border border-white/[0.09] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_20px_45px_-10px_rgba(0,0,0,0.85)]">
-                {/* верхнее мягкое бликовое свечение жидкого стекла */}
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 rounded-full bg-[linear-gradient(180deg,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0.01)_40%,transparent_62%)]"
-                />
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-14 rounded-full bg-white/[0.06] blur-2xl opacity-60"
-                />
-
+              <nav className="group relative overflow-hidden flex items-stretch gap-0.5 p-1 rounded-full bg-[#1a1b20]/80 backdrop-blur-xl border border-white/[0.08] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.8)] gpu-layer">
                 {navItems.map((item) => {
                   const isActive = activeTab === item.id;
                   return (
@@ -1811,46 +1793,32 @@ export default function App() {
                         setActiveTab(item.id);
                         try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
                       }}
-                      className="group/item relative flex-1 min-w-0 py-2.5 px-1 outline-none cursor-pointer active:scale-[0.96] transition-transform duration-200"
+                      className="group/item relative flex-1 min-w-0 py-2 px-0.5 outline-none cursor-pointer active:scale-[0.96] transition-transform duration-150"
                     >
+                      {/* Telegram-style water droplet sliding indicator */}
                       {isActive && (
                         <motion.div
-                          layoutId="liquid-pill"
-                          className="absolute inset-0 rounded-full bg-white/[0.045] backdrop-blur-md border border-white/[0.12] shadow-[inset_0_1px_2px_0_rgba(255,255,255,0.20),inset_0_-1px_1.5px_0_rgba(255,255,255,0.06),0_6px_16px_-3px_rgba(0,0,0,0.55)] overflow-hidden z-0"
-                          transition={springLiquid}
-                        >
-                          {/* деликатный мягкий водяной блик */}
-                          <span
-                            aria-hidden="true"
-                            className="pointer-events-none absolute inset-x-2 top-0.5 h-[40%] rounded-full bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.14),transparent_70%)]"
-                          />
-                          {/* мягкий тусклый зеленый отсвет снизу */}
-                          <div className="absolute -bottom-3 -left-2 w-10 h-10 rounded-full bg-emerald-500/12 blur-md pointer-events-none" />
-                        </motion.div>
+                          layoutId="telegram-drop-pill"
+                          className="liquid-drop-pill"
+                          transition={{ type: 'spring', stiffness: 380, damping: 28, mass: 0.8 }}
+                        />
                       )}
-                      <motion.div
-                        className="relative z-10 flex flex-col items-center justify-center gap-1 will-change-transform"
-                        style={{ WebkitBackfaceVisibility: 'hidden', transform: 'translateZ(0)' }}
-                        animate={{ 
-                          scale: isActive ? 1.02 : 1,
-                        }}
-                        transition={springLiquid}
+                      <div
+                        className="relative z-10 flex flex-col items-center justify-center gap-0.5 gpu-layer"
                       >
-                        {/* Компактный круглый стеклянный чип (h-7 w-7, 28px) */}
                         <span className={`relative flex h-7 w-7 shrink-0 aspect-square items-center justify-center rounded-full transition-all duration-200 ${
                           isActive
-                            ? 'bg-brand/20 border border-brand/40 text-brand shadow-[0_0_10px_rgba(0,152,234,0.3),inset_0_1px_0_rgba(255,255,255,0.15)]'
-                            : 'bg-white/[0.06] border border-white/[0.08] text-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] group-hover/item:text-white group-hover/item:bg-white/[0.09]'
+                            ? 'text-white scale-110'
+                            : 'text-white/60 group-hover/item:text-white/90'
                         }`}>
-                          <item.icon size={15} strokeWidth={2.4} aria-hidden="true" />
+                          <item.icon size={16} strokeWidth={2.2} aria-hidden="true" />
                         </span>
-                        {/* Чёткий белый текст, полностью помещающийся внутри ползунка */}
-                        <span className={`text-[10.5px] font-semibold tracking-tight leading-none text-center max-w-full truncate px-1 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] transition-opacity duration-200 ${
-                          isActive ? 'opacity-100 font-bold' : 'opacity-70 group-hover/item:opacity-100'
+                        <span className={`text-[10px] font-semibold tracking-tight leading-none text-center max-w-full truncate px-0.5 transition-colors duration-200 ${
+                          isActive ? 'text-white font-bold' : 'text-white/60 group-hover/item:text-white/80'
                         }`}>
                           {item.label}
                         </span>
-                      </motion.div>
+                      </div>
                     </button>
                   );
                 })}
