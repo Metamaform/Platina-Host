@@ -64,10 +64,23 @@ export function Mines({
   onNavigate?: (target: string) => void
 }) {
   const { t } = useTranslation();
+  const [realOpens, setRealOpens] = useState<any[]>([]);
 
   const plushPepeItem = giftsDb.find(g => g.name === 'Plush Pepe' || g.slug === 'plushpepe');
   const MAX_WIN_GRAM = plushPepeItem ? plushPepeItem.floor_price_gram : 5000;
   const MAX_BET_GRAM = 2500;
+
+  useEffect(() => {
+    const fetchOpens = () => {
+      fetch('/api/opens/recent?limit=20')
+        .then((res) => res.json())
+        .then((data) => setRealOpens(data))
+        .catch(() => {});
+    };
+    fetchOpens();
+    const interval = setInterval(fetchOpens, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   const [mode, setMode] = useState<'gram' | 'nft'>(() => {
     try {
@@ -474,6 +487,66 @@ export function Mines({
               </span>
             </button>
           )}
+
+          <div className="w-full mt-8 flex flex-col gap-3 pb-8">
+            <AnimatePresence mode="popLayout">
+              {realOpens.filter(o => o.game === 'mines').slice(0, 5).map((open) => {
+                const isNftWin = !open.isGram && open.gift;
+                const exactMult = open.multiplier || Number((1 + (open.id.charCodeAt(0) % 5) + ((open.id.charCodeAt(1) || 0) % 100) / 100).toFixed(2));
+                const multStr = exactMult.toFixed(2);
+                
+                let winAmount = Number(open.price).toFixed(2);
+                if (isNftWin && open.gift) {
+                  winAmount = Number(open.gift.price || open.price).toFixed(2);
+                }
+                const betAmount = (open.price / exactMult).toFixed(2);
+                
+                return (
+                <motion.div 
+                  key={open.id} 
+                  initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                  className="flex items-center justify-between bg-white/[0.05] backdrop-blur-xl rounded-[22px] p-3 border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] gpu-layer"
+                >
+                  <div className="flex items-center gap-3">
+                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${open.firstName || undefined}`} alt="" className="w-10 h-10 rounded-full bg-white/5 shrink-0" loading="lazy" decoding="async" />
+                    <div className="flex flex-col">
+                      <span className="text-white font-medium text-[15px] truncate max-w-[100px]">{open.firstName}</span>
+                      <div className="flex items-center gap-1.5 opacity-60">
+                        {isNftWin ? (
+                           <span className="text-[12px] font-medium">{t('bet_nft')}</span>
+                        ) : (
+                           <>
+                             <GramIcon className="w-3.5 h-3.5" />
+                             <span className="text-[12px] font-medium">{betAmount}</span>
+                           </>
+                        )}
+                        <span className="text-[12px]">x{multStr}</span>
+                      </div>
+                    </div>
+                  </div>
+                  {isNftWin && open.gift ? (
+                     <div className="flex items-center gap-3 bg-white/[0.06] border border-white/[0.08] rounded-[16px] pr-4 p-1.5">
+                       <PremiumImage staticMode={true} src={open.gift.image_url} alt={open.gift.name} className="w-10 h-10 object-contain drop-shadow-md" />
+                       <div className="flex flex-col items-end justify-center">
+                         <span className="text-brand font-bold text-[14px] leading-none mb-1 flex items-center gap-1">
+                           {winAmount} <GramIcon className="w-3 h-3" />
+                         </span>
+                         <span className="text-[10px] text-white/50 leading-none truncate max-w-[80px] text-right">{open.gift.name}</span>
+                       </div>
+                     </div>
+                  ) : (
+                     <div className="flex items-center gap-1.5 text-emerald-400 font-display text-[16px] font-bold">
+                       +{winAmount} <GramIcon className="w-4 h-4 text-emerald-400" />
+                     </div>
+                  )}
+                </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
 
         </div>
       </div>
