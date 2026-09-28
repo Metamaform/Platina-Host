@@ -172,6 +172,15 @@ export function getUser(id: number): StoredUser | null {
   return users()[String(id)] || null;
 }
 
+/** Разбирает реферальный start_param: «ref_<id>» (канон) и «r_<id>» (легаси). */
+export function parseReferralStartParam(startParam?: string | null): number | undefined {
+  if (!startParam) return undefined;
+  const m = /^(?:ref|r)_([0-9]+)$/.exec(startParam.trim());
+  if (!m) return undefined;
+  const id = Number(m[1]);
+  return Number.isFinite(id) && id > 0 ? id : undefined;
+}
+
 export function upsertUserProfile(profile: {
   id: number;
   referredBy?: number;
@@ -197,7 +206,7 @@ export function upsertUserProfile(profile: {
       }
     : {
         id: profile.id,
-        referredBy: startParam && startParam.startsWith('ref_') ? Number(startParam.replace('ref_', '')) : undefined,
+        referredBy: profile.referredBy ?? parseReferralStartParam(startParam),
         firstName: profile.first_name,
         lastName: profile.last_name,
         username: profile.username,
