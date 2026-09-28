@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { PremiumImage } from './PremiumImage';
+import React, { useState, useEffect, useRef } from 'react';
 import { GramIcon } from './GramIcon';
 import { getNftBackdrop } from '../lib/nftUtils';
 
@@ -13,20 +11,25 @@ interface RealDrop {
   isGram?: boolean;
 }
 
-const POLL_MS = 3000;
+const POLL_MS = 4000;
 const CACHE_KEY = 'platina_live_drops';
 
+/**
+ * Lightweight LiveFeed — no framer-motion, no lottie, no backdrop-blur.
+ * Uses CSS animations and plain img tags for 60fps on weak devices.
+ */
 export const LiveFeed: React.FC = () => {
   const [drops, setDrops] = useState<RealDrop[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const mountedRef = useRef(false);
 
   useEffect(() => {
-    // Восстанавливаем из кэша при старте
+    mountedRef.current = true;
     try {
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
         const parsed = JSON.parse(cached) as RealDrop[];
-        setDrops(parsed.filter(d => !d.isGram && d.gift && !d.gift.isGram));
+        setDrops(parsed.filter(d => !d.isGram && d.gift && !d.gift.isGram).slice(0, 14));
       }
     } catch (e) {}
 
@@ -39,102 +42,76 @@ export const LiveFeed: React.FC = () => {
           if (!cancelled) {
             setDrops((prev) => {
               const nftData = data.filter(d => !d.isGram && d.gift && !d.gift.isGram);
-              const prevNft = prev.filter(d => !d.isGram && d.gift && !d.gift.isGram);
-              const all = [...nftData, ...prevNft];
-              // Deduplicate by ID and by player + gift + price within 8-second window
               const seenIds = new Set<string>();
-              const seenSignatures = new Set<string>();
               const unique: RealDrop[] = [];
-
-              for (const item of all) {
+              for (const item of [...nftData, ...prev]) {
                 if (seenIds.has(item.id)) continue;
                 seenIds.add(item.id);
-
-                const timeBucket = Math.floor(new Date(item.ts).getTime() / 8000);
-                const giftName = item.gift?.name || 'unknown';
-                const signature = `${item.firstName}_${giftName}_${Number(item.price || 0).toFixed(2)}_${timeBucket}`;
-
-                if (seenSignatures.has(signature)) continue;
-                seenSignatures.add(signature);
-
                 unique.push(item);
+                if (unique.length >= 14) break;
               }
-
-              // Сортируем по времени (новые первыми)
               unique.sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
-              const final = unique.slice(0, 20);
-              
-              try {
-                localStorage.setItem(CACHE_KEY, JSON.stringify(final));
-              } catch (e) {}
+              const final = unique.slice(0, 14);
+              try { localStorage.setItem(CACHE_KEY, JSON.stringify(final)); } catch (e) {}
               return final;
             });
             setLoaded(true);
           }
         })
-        .catch(() => {
-          if (!cancelled) setLoaded(true);
-        });
+        .catch(() => { if (!cancelled) setLoaded(true); });
     };
 
     poll();
     const interval = setInterval(poll, POLL_MS);
-    
     return () => {
       cancelled = true;
       clearInterval(interval);
     };
   }, []);
 
-  if (loaded && drops.length === 0) {
-    return null;
-  }
+  if (loaded && drops.length === 0) return null;
 
   return (
-    <div className="w-full flex flex-col gap-2 mb-6">
+    <div className="w-full flex flex-col gap-2 mb-4">
       <h3 className="px-2 flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
-        <span className="text-white font-black text-[13px] tracking-wide uppercase drop-shadow-sm">Live drops</span>
+        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        <span className="text-white font-black text-[13px] tracking-wide uppercase">Live drops</span>
       </h3>
-      <div className="flex flex-row gap-2 h-[50px] relative overflow-hidden px-1 w-full items-center">
-        <AnimatePresence>
-          {drops.map((drop, i) => {
-            const backdrop = getNftBackdrop(drop.gift);
-            const isOnyx = backdrop === 'Onyx Black';
-            const isBlack = backdrop === 'Black';
-
-            return (
-              <motion.div
-                key={drop.id}
-                initial={{ opacity: 0, x: -20, scale: 0.5 }}
-                animate={{ opacity: 1, x: 0, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.4, type: 'spring', bounce: 0.4 }}
-                className={`w-12 h-12 rounded-xl overflow-hidden shrink-0 border shadow-lg flex items-center justify-center relative ${
-                  isBlack
-                    ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/10'
-                    : isOnyx
-                      ? 'bg-[radial-gradient(circle,#35393a_0%,#282b2c_100%)] border-white/10'
-                      : 'bg-gradient-to-tr from-white/5 to-white/10 border-white/5'
-                }`}
-                title={`${drop.firstName} — ${drop.isGram ? (drop.price || 0) + ' GRAM' : drop.gift?.name}`}
-              >
-                {drop.isGram ? (
-                  <div className="w-8 h-8 flex items-center justify-center">
-                    <GramIcon className="w-full h-full text-[#0098EA]" />
-                  </div>
-                ) : (
-                  <PremiumImage 
-                    delayMs={i * 800} 
-                    src={drop.gift?.image_url} 
-                    alt={drop.gift?.name || ""} 
-                    className={drop.gift?.isGram ? "w-8 h-8" : "w-full h-full"} 
-                  />
-                )}
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
+      <div className="flex flex-row gap-1.5 h-[46px] relative overflow-hidden px-1 w-full items-center gpu-layer">
+        {drops.map((drop, i) => {
+          const backdrop = getNftBackdrop(drop.gift);
+          const isOnyx = backdrop === 'Onyx Black';
+          const isBlack = backdrop === 'Black';
+          return (
+            <div
+              key={drop.id}
+              className={`w-11 h-11 rounded-xl overflow-hidden shrink-0 border flex items-center justify-center relative animate-card-in ${
+                isBlack
+                  ? 'bg-[#222] border-white/10'
+                  : isOnyx
+                    ? 'bg-[#2a2620] border-amber-900/30'
+                    : 'bg-white/5 border-white/5'
+              }`}
+              title={`${drop.firstName} — ${drop.isGram ? (drop.price || 0) + ' GRAM' : drop.gift?.name}`}
+              style={{ animationDelay: `${Math.min(i * 50, 250)}ms` }}
+            >
+              {drop.isGram ? (
+                <div className="w-7 h-7 flex items-center justify-center">
+                  <GramIcon className="w-full h-full text-[#0098EA]" />
+                </div>
+              ) : drop.gift?.image_url ? (
+                <img
+                  src={drop.gift.image_url}
+                  alt={drop.gift.name || ""}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-contain"
+                  draggable={false}
+                />
+              ) : null}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

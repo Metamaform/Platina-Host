@@ -408,98 +408,114 @@ export function Mines({
         <div className="px-4 py-6 flex flex-col items-center">
           
           <div className="w-full max-w-[400px] aspect-square grid grid-cols-5 gap-2 mb-6">
-            <AnimatePresence mode="popLayout">
-              {grid.map((cell, idx) => (
-                <button
-                  key={idx}
-                  disabled={gameState !== 'playing' || cell.revealed}
-                  onClick={() => handleCellClick(idx)}
-                  className={`
-                    relative rounded-2xl flex items-center justify-center overflow-hidden w-full aspect-square group
-                    ${cell.revealed 
-                      ? cell.isMine 
-                        ? 'bg-danger/20 border-2 border-danger shadow-[0_0_15px_rgba(239,68,68,0.3)]' 
-                        : 'bg-brand/10 border border-brand/50 shadow-[0_0_15px_rgba(255,184,0,0.1)]'
-                      : 'bg-white/[0.09] hover:bg-white/[0.16] active:scale-95 border border-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_4px_12px_rgba(0,0,0,0.25)] transition-all'
-                    }
-                  `}
-                >
-                  <div className="absolute inset-0 border-t border-white/10 rounded-2xl pointer-events-none" />
-                  
-                  {/* Transparent Colorless Heroic Helmet in the middle of closed cells */}
-                  {!cell.revealed && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <img
-                        src="/heroic-helmet.webp"
-                        alt=""
-                        style={{ filter: 'grayscale(100%) brightness(1.75)' }}
-                        className="w-[34%] h-[34%] object-contain opacity-15 group-hover:opacity-25 transition-opacity duration-200 select-none pointer-events-none"
-                        draggable={false}
-                      />
-                    </div>
-                  )}
+            {grid.map((cell, idx) => (
+              <button
+                key={idx}
+                disabled={gameState !== 'playing' || cell.revealed}
+                onClick={() => handleCellClick(idx)}
+                className={`
+                  mine-cell relative rounded-2xl flex items-center justify-center overflow-hidden w-full aspect-square group
+                  ${cell.revealed 
+                    ? cell.isMine 
+                      ? 'bg-danger/20 border-2 border-danger' 
+                      : 'bg-brand/10 border border-brand/50'
+                    : 'bg-white/[0.09] hover:bg-white/[0.16] active:scale-95 border border-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_4px_12px_rgba(0,0,0,0.25)] transition-colors'
+                  }
+                `}
+              >
+                <div className="absolute inset-0 border-t border-white/10 rounded-2xl pointer-events-none" />
+                
+                {/* Transparent Colorless Heroic Helmet in the middle of closed cells */}
+                {!cell.revealed && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <img
+                      src="/heroic-helmet.webp"
+                      alt=""
+                      style={{ filter: 'grayscale(100%) brightness(1.75)' }}
+                      className="w-[34%] h-[34%] object-contain opacity-15 group-hover:opacity-25 transition-opacity duration-200 select-none pointer-events-none"
+                      draggable={false}
+                    />
+                  </div>
+                )}
 
-                  {cell.revealed && (
-                    <motion.div
-                      initial={cell.manualReveal ? { scale: 0, rotate: -45 } : false}
-                      animate={cell.manualReveal ? { scale: 1, rotate: 0 } : false}
-                      transition={{ type: 'spring', damping: 14, stiffness: 280 }}
-                      className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                    >
-                      {cell.isMine ? (
-                        <BombNft className="w-[84%] h-[84%]" animated={true} />
-                      ) : cell.cellNft ? (
-                        <PremiumImage 
-                          staticMode={!cell.manualReveal}
-                          loop={false}
-                          loopWithDelay={false}
-                          src={cell.cellNft.lottie_url || cell.cellNft.image_url} 
-                          alt={cell.cellNft.name || "NFT Drop"} 
-                          className="w-[60%] h-[60%] object-contain drop-shadow-lg select-none pointer-events-none"
-                        />
-                      ) : (
-                        <GramIcon className="w-[60%] h-[60%] text-brand drop-shadow-lg opacity-70" />
-                      )}
-                    </motion.div>
-                  )}
-                </button>
-              ))}
-            </AnimatePresence>
+                {cell.revealed && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    {cell.isMine ? (
+                      <div className={cell.manualReveal ? 'win-drop-in' : ''} style={{ width: '84%', height: '84%' }}>
+                        <BombNft className="w-full h-full" animated={true} />
+                      </div>
+                    ) : cell.manualReveal ? (
+                      <>
+                        {/* Burst ring effect like a real live drop */}
+                        <span className="absolute w-1/2 h-1/2 rounded-full bg-brand/35 win-ring pointer-events-none" />
+                        <span className="absolute w-2/3 h-2/3 rounded-full bg-amber-300/25 win-ring pointer-events-none" style={{ animationDelay: '80ms' }} />
+                        <div className="win-drop-in w-full h-full flex items-center justify-center">
+                          {cell.cellNft ? (
+                            <PremiumImage 
+                              staticMode={false}
+                              loop={false}
+                              loopWithDelay={false}
+                              src={cell.cellNft.lottie_url || cell.cellNft.image_url} 
+                              alt={cell.cellNft.name || "NFT Drop"} 
+                              className="w-[65%] h-[65%] object-contain drop-shadow-[0_0_18px_rgba(255,184,0,0.55)] select-none pointer-events-none"
+                            />
+                          ) : (
+                            <div className="relative w-[62%] h-[62%] flex items-center justify-center">
+                              {/* Mini Artisan-Brick-style gem drop with glow (safe-cell reward) */}
+                              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-amber-500/40 via-yellow-300/20 to-transparent blur-md" />
+                              <GramIcon className="relative w-full h-full text-brand drop-shadow-[0_0_14px_rgba(255,184,0,0.55)]" />
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    ) : cell.cellNft ? (
+                      <PremiumImage 
+                        staticMode={true}
+                        loop={false}
+                        loopWithDelay={false}
+                        src={cell.cellNft.lottie_url || cell.cellNft.image_url} 
+                        alt={cell.cellNft.name || "NFT Drop"} 
+                        className="w-[60%] h-[60%] object-contain drop-shadow-lg select-none pointer-events-none"
+                      />
+                    ) : (
+                      <GramIcon className="w-[60%] h-[60%] text-brand drop-shadow-lg opacity-70" />
+                    )}
+                  </div>
+                )}
+              </button>
+            ))}
           </div>
 
-          {/* Multiplier Track */}
-          <div className="w-full h-[76px] mb-6 relative overflow-hidden pointer-events-none" style={{ maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)' }}>
+          {/* Multiplier Track — optimized with CSS transform (no heavy spring per tick) */}
+          <div className="w-full h-[76px] mb-6 relative overflow-hidden pointer-events-none gpu-layer" style={{ maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)' }}>
             <div className="absolute top-0 bottom-0 left-4 w-full flex items-center justify-start">
-              <motion.div 
-                className="flex items-center gap-2"
-                initial={false}
-                animate={{ x: -(safeOpened * 96) }}
-                transition={{ type: 'spring', damping: 25, stiffness: 250 }}
+              <div 
+                className="flex items-center gap-2 will-change-transform"
+                style={{
+                  transform: `translateX(${-(safeOpened * 96)}px) translateZ(0)`,
+                  transition: 'transform 280ms cubic-bezier(0.22, 1, 0.36, 1)'
+                }}
               >
                 {fullTrack.map((m) => {
                    const isTarget = m.step === safeOpened + 1;
                    const isSecured = m.step <= safeOpened;
                    
                    return (
-                     <div key={m.step} className={`shrink-0 w-[88px] h-[64px] rounded-2xl flex flex-col items-center justify-center border transition-all duration-300 ${
-                       isTarget ? 'bg-brand/20 border-brand scale-110 shadow-[0_0_15px_rgba(255,184,0,0.2)]' : 
-                       isSecured ? 'bg-success/20 border-success/50' : 'bg-[#1c1c20] border-white/5 opacity-40'
+                     <div key={m.step} className={`shrink-0 w-[88px] h-[64px] rounded-2xl flex flex-col items-center justify-center border ${
+                       isTarget ? 'bg-brand/20 border-brand scale-110' : 
+                       isSecured ? 'bg-emerald-500/15 border-emerald-500/40' : 'bg-[#1c1c20] border-white/5 opacity-40'
                      }`}>
                         <div className="flex items-center gap-1.5 mb-1">
-                           {m.nft ? (
-                             <PremiumImage src={m.nft.image_url} alt="" className="w-4 h-4 object-contain drop-shadow-sm" staticMode={true} />
-                           ) : (
-                             <GramIcon className={`w-3.5 h-3.5 ${isSecured ? 'text-success' : 'text-brand'}`} />
-                           )}
-                           <span className={`text-[10px] font-bold ${isSecured ? 'text-success' : 'text-white/70'}`}>{t('step')} {m.step}</span>
+                           <GramIcon className={`w-3.5 h-3.5 ${isSecured ? 'text-emerald-400' : isTarget ? 'text-brand' : 'text-white/50'}`} />
+                           <span className={`text-[10px] font-bold ${isSecured ? 'text-emerald-400' : isTarget ? 'text-brand' : 'text-white/60'}`}>{m.step}</span>
                         </div>
-                        <span className={`font-display font-bold ${isTarget ? 'text-[16px] text-brand' : isSecured ? 'text-[15px] text-success' : 'text-[14px] text-white'}`}>
+                        <span className={`font-display font-bold ${isTarget ? 'text-[16px] text-brand' : isSecured ? 'text-[15px] text-emerald-400' : 'text-[14px] text-white/80'}`}>
                           x{m.mult.toFixed(2)}
                         </span>
                      </div>
                    )
                 })}
-              </motion.div>
+              </div>
             </div>
           </div>
 
@@ -529,9 +545,8 @@ export function Mines({
             </button>
           )}
 
-          <div className="w-full mt-8 flex flex-col gap-3 pb-8">
-            <AnimatePresence mode="popLayout">
-              {realOpens.filter(o => o.game === 'mines').slice(0, 5).map((open) => {
+          <div className="w-full mt-8 flex flex-col gap-2 pb-8">
+            {realOpens.filter(o => o.game === 'mines').slice(0, 4).map((open) => {
                 const isNftWin = !open.isGram && open.gift;
                 const exactMult = open.multiplier || Number((1 + (open.id.charCodeAt(0) % 5) + ((open.id.charCodeAt(1) || 0) % 100) / 100).toFixed(2));
                 const multStr = exactMult.toFixed(2);
@@ -543,50 +558,52 @@ export function Mines({
                 const betAmount = (open.price / exactMult).toFixed(2);
                 
                 return (
-                <motion.div 
-                  key={open.id} 
-                  initial={{ opacity: 0, y: -20, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                  className="flex items-center justify-between bg-white/[0.05] backdrop-blur-xl rounded-[22px] p-3 border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                <div 
+                  key={open.id}
+                  className="flex items-center justify-between bg-white/[0.05] rounded-[20px] p-2.5 border border-white/[0.06] gpu-layer animate-card-in"
                 >
-                  <div className="flex items-center gap-3">
-                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${open.firstName || undefined}`} alt="" className="w-10 h-10 rounded-full bg-white/5 shrink-0" />
-                    <div className="flex flex-col">
-                      <span className="text-white font-medium text-[15px] truncate max-w-[100px]">{open.firstName}</span>
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-white/10 to-white/5 shrink-0 flex items-center justify-center text-white/80 font-bold text-[12px]">
+                      {(open.firstName || '?').charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-white font-medium text-[14px] truncate max-w-[90px]">{open.firstName}</span>
                       <div className="flex items-center gap-1.5 opacity-60">
                         {isNftWin ? (
-                           <span className="text-[12px] font-medium">{t('bet_nft')}</span>
+                           <span className="text-[11px] font-medium">NFT</span>
                         ) : (
                            <>
-                             <GramIcon className="w-3.5 h-3.5" />
-                             <span className="text-[12px] font-medium">{betAmount}</span>
+                             <GramIcon className="w-3 h-3" />
+                             <span className="text-[11px] font-medium">{betAmount}</span>
                            </>
                         )}
-                        <span className="text-[12px]">x{multStr}</span>
+                        <span className="text-[11px]">x{multStr}</span>
                       </div>
                     </div>
                   </div>
                   {isNftWin && open.gift ? (
-                     <div className="flex items-center gap-3 bg-white/[0.06] border border-white/[0.08] rounded-[16px] pr-4 p-1.5">
-                       <PremiumImage staticMode={true} src={open.gift.image_url} alt={open.gift.name} className="w-10 h-10 object-contain drop-shadow-md" />
-                       <div className="flex flex-col items-end justify-center">
-                         <span className="text-brand font-bold text-[14px] leading-none mb-1 flex items-center gap-1">
+                     <div className="flex items-center gap-2 min-w-0">
+                       <img 
+                         src={open.gift.image_url} 
+                         alt={open.gift.name} 
+                         className="w-8 h-8 object-contain shrink-0"
+                         loading="lazy"
+                         draggable={false}
+                       />
+                       <div className="flex flex-col items-end min-w-0">
+                         <span className="text-brand font-bold text-[13px] leading-none flex items-center gap-1">
                            {winAmount} <GramIcon className="w-3 h-3" />
                          </span>
-                         <span className="text-[10px] text-white/50 leading-none truncate max-w-[80px] text-right">{open.gift.name}</span>
                        </div>
                      </div>
                   ) : (
-                     <div className="flex items-center gap-1.5 text-success font-display text-[16px] font-bold">
-                       +{winAmount} <GramIcon className="w-4 h-4 text-success" />
+                     <div className="flex items-center gap-1 text-emerald-400 font-display text-[15px] font-bold">
+                       +{winAmount} <GramIcon className="w-3.5 h-3.5 text-emerald-400" />
                      </div>
                   )}
-                </motion.div>
+                </div>
                 );
               })}
-            </AnimatePresence>
           </div>
 
         </div>
@@ -703,8 +720,32 @@ export function Mines({
                     <span className="text-white font-bold text-[15px]">{t('choose_mines')}</span>
                     <span className="text-white/40 text-[12px]">{t('more_mines')}</span>
                   </div>
-                  <div className="text-white font-display font-bold text-sm px-3.5 py-1.5 rounded-full bg-white/[0.08] border border-white/10 shadow-inner">
-                    {minesCount}
+                  <div className="flex items-center gap-2">
+                    {/* Live mini mine preview — shows bombs count as you drag */}
+                    <div className="flex -space-x-1.5">
+                      {Array.from({ length: Math.min(minesCount, 5) }).map((_, i) => (
+                        <div 
+                          key={i} 
+                          className="w-6 h-6 rounded-full bg-danger/20 border border-danger/40 flex items-center justify-center relative overflow-hidden"
+                          style={{ zIndex: 5 - i }}
+                        >
+                          <img 
+                            src="/bomb-planted.png" 
+                            alt="" 
+                            className="w-[80%] h-[80%] object-contain" 
+                            draggable={false}
+                          />
+                        </div>
+                      ))}
+                      {minesCount > 5 && (
+                        <div className="w-6 h-6 rounded-full bg-danger/15 border border-danger/30 flex items-center justify-center text-[10px] font-bold text-danger">
+                          +{minesCount - 5}
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-white font-display font-bold text-sm px-3.5 py-1.5 rounded-full bg-white/[0.08] border border-white/10 shadow-inner min-w-[48px] text-center">
+                      {minesCount}
+                    </div>
                   </div>
                 </div>
                 
