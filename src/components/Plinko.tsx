@@ -98,7 +98,6 @@ const PIN_RADIUS = 3.5;
 const R_CONTACT = BALL_RADIUS + PIN_RADIUS + 0.3; // strictly outside peg perimeter
 // Collision-normalized minimum: ball center never gets closer than this to any peg
 const R_MIN = BALL_RADIUS + PIN_RADIUS + 0.25;
-const R_MIN_SQ = R_MIN * R_MIN;
 // Contact point on a peg: top rim, rotated toward the side the ball deflects to
 const CONTACT_THETA = 0.45;
 const CONTACT_DX = R_CONTACT * Math.sin(CONTACT_THETA);
@@ -832,7 +831,9 @@ export const Plinko: React.FC<PlinkoProps> = ({
     if (!ctx) return;
 
     // Set canvas dimensions once with high-DPI scaling
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // A 1.5x backing store keeps the canvas crisp on phones while avoiding
+    // the 4x pixel fill cost of a 2x canvas on every animation frame.
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     canvas.width = BOARD_WIDTH * dpr;
     canvas.height = BOARD_HEIGHT * dpr;
 
@@ -937,18 +938,8 @@ export const Plinko: React.FC<PlinkoProps> = ({
           ball.x = seg.x0 + (seg.x1 - seg.x0) * progress + bow * seg.bowX;
           ball.y = seg.y0 + (seg.y1 - seg.y0) * progress - bow * seg.apexHeight;
 
-          // Collision normalization: keep the ball strictly outside every peg
-          for (let pi = 0; pi < TOTAL_PEGS; pi++) {
-            const dx = ball.x - pegs[pi].x;
-            const dy = ball.y - pegs[pi].y;
-            const dSq = dx * dx + dy * dy;
-            if (dSq < R_MIN_SQ && dSq > 1e-6) {
-              const d = Math.sqrt(dSq);
-              const push = (R_MIN - d) / d;
-              ball.x += dx * push;
-              ball.y += dy * push;
-            }
-          }
+          // The trajectory is collision-normalized before animation, so no
+          // per-frame scan/correction against every peg is needed here.
 
           const dir = seg.x1 >= seg.x0 ? 1 : -1;
           ball.rotation += dir * 0.08 * frameScale;

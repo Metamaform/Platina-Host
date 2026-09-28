@@ -1274,6 +1274,11 @@ export default function App() {
   const { t, lang, setLang } = useTranslation();
 
   const [activeTab, setActiveTab] = useState('shop');
+  const navDragging = useRef(false);
+  const selectNavTab = (id: string) => {
+    setActiveTab(id);
+    try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch { /* haptics are optional */ }
+  };
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const [showBalancePage, setShowBalancePage] = useState(false);
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
@@ -1791,7 +1796,12 @@ export default function App() {
               className="absolute bottom-2.5 left-0 right-0 z-[90] pb-[calc(env(safe-area-inset-bottom,0px)+8px)] px-3 w-full pointer-events-none"
             >
               <div className="pointer-events-auto w-full max-w-sm mx-auto">
-              <nav className="group relative overflow-hidden flex items-stretch gap-1 p-1.5 rounded-full bg-white/[0.06] backdrop-blur-2xl border border-white/[0.09] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_20px_45px_-10px_rgba(0,0,0,0.85)]">
+              <nav
+                onPointerDown={() => { navDragging.current = true; }}
+                onPointerUp={() => { navDragging.current = false; }}
+                onPointerCancel={() => { navDragging.current = false; }}
+                className="group relative overflow-hidden flex items-stretch gap-1 p-1.5 rounded-full bg-[#17191d]/90 border border-white/[0.09] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_12px_28px_-12px_rgba(0,0,0,0.8)] touch-pan-y select-none"
+              >
                 {/* верхнее мягкое бликовое свечение жидкого стекла */}
                 <span
                   aria-hidden="true"
@@ -1807,16 +1817,17 @@ export default function App() {
                   return (
                     <button
                       key={item.id}
-                      onClick={() => {
-                        setActiveTab(item.id);
-                        try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
+                      onClick={() => selectNavTab(item.id)}
+                      onPointerEnter={(event) => {
+                        if (navDragging.current && event.buttons === 1) selectNavTab(item.id);
                       }}
                       className="group/item relative flex-1 min-w-0 py-2.5 px-1 outline-none cursor-pointer active:scale-[0.96] transition-transform duration-200"
                     >
                       {isActive && (
                         <motion.div
                           layoutId="liquid-pill"
-                          className="absolute inset-0 rounded-full bg-white/[0.045] backdrop-blur-md border border-white/[0.12] shadow-[inset_0_1px_2px_0_rgba(255,255,255,0.20),inset_0_-1px_1.5px_0_rgba(255,255,255,0.06),0_6px_16px_-3px_rgba(0,0,0,0.55)] overflow-hidden z-0"
+                          className="absolute inset-0 rounded-full bg-[linear-gradient(145deg,rgba(255,255,255,0.13),rgba(255,255,255,0.035)_55%,rgba(255,255,255,0.07))] border border-white/[0.15] shadow-[inset_0_1px_2px_rgba(255,255,255,0.22),inset_0_-2px_5px_rgba(255,255,255,0.035),0_5px_12px_-5px_rgba(0,0,0,0.65)] overflow-hidden z-0"
+                          animate={{ scaleX: 1.035, scaleY: 0.94, borderRadius: '999px' }}
                           transition={springLiquid}
                         >
                           {/* деликатный мягкий водяной блик */}
