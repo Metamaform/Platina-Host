@@ -10,6 +10,7 @@ import { BombNft } from './BombNft';
 import { getNftBackdrop } from '../lib/nftUtils';
 import { NftSelectorGrid } from './NftSelectorGrid';
 import { RangeControl } from './ui/RangeControl';
+import { LiquidSegment } from './ui/LiquidSegment';
 
 function getMultiplier(mines: number, opened: number): number {
   if (opened === 0) return 1;
@@ -627,25 +628,16 @@ export function Mines({
                 </button>
               </div>
 
-              {/* Mode Toggle: Gifts / GRAM in Liquid Glass */}
-              <div className="relative z-10 flex p-1 bg-white/[0.08] backdrop-blur-xl border border-white/[0.12] rounded-full mb-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-                <button 
-                  onClick={() => setMode('nft')}
-                  className={`flex-1 py-2 rounded-full font-bold text-[13px] transition-all cursor-pointer ${
-                    mode === 'nft' ? 'bg-white/[0.24] text-white border border-white/[0.30] shadow-[0_2px_10px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.25)]' : 'text-white/70 hover:text-white'
-                  }`}
-                >
-                  {t('gifts') || 'Gifts'}
-                </button>
-                <button 
-                  onClick={() => setMode('gram')}
-                  className={`flex-1 py-2 rounded-full font-bold text-[13px] transition-all cursor-pointer ${
-                    mode === 'gram' ? 'bg-white/[0.24] text-white border border-white/[0.30] shadow-[0_2px_10px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.25)]' : 'text-white/70 hover:text-white'
-                  }`}
-                >
-                  GRAM
-                </button>
-              </div>
+              <LiquidSegment
+                className="relative z-10 mb-4"
+                ariaLabel="Режим ставки"
+                value={mode}
+                onChange={setMode}
+                options={[
+                  { value: 'nft', label: t('gifts') || 'Gifts' },
+                  { value: 'gram', label: 'GRAM' },
+                ]}
+              />
 
               <div className="relative z-10 bg-white/[0.04] border border-white/[0.08] rounded-[24px] p-5 mb-4 flex flex-col items-center justify-center min-h-[120px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                 {mode === 'gram' ? (

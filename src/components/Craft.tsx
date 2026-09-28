@@ -8,6 +8,7 @@ import { GramIcon } from './GramIcon';
 import { getNftBackdrop } from '../lib/nftUtils';
 import { NftSelectorGrid } from './NftSelectorGrid';
 import { GameLossModal } from './GameLossModal';
+import { LiquidSegment } from './ui/LiquidSegment';
 
 const MULTIPLIERS = [2, 5, 10, 15, 100];
 const MAX_BANK = 2500;
@@ -296,21 +297,12 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
 
           <div className="w-full mb-5 relative z-10">
             <h3 className="text-white/50 text-[10px] font-bold uppercase tracking-widest text-center mb-2">{t('choose_x')}</h3>
-            <div className="flex items-center justify-center gap-2">
-              {MULTIPLIERS.map(m => (
-                <button
-                  key={m}
-                  onClick={() => setMultiplier(m)}
-                  className={`w-12 h-10 rounded-full font-bold flex items-center justify-center transition-all cursor-pointer ${
-                    multiplier === m 
-                      ? 'bg-gradient-to-r from-[#0098ea] to-[#00b4d8] text-white border border-cyan-300/40 shadow-[0_0_14px_rgba(0,152,234,0.45),inset_0_1px_0_rgba(255,255,255,0.3)]' 
-                      : 'bg-white/[0.14] hover:bg-white/[0.22] text-white border border-white/[0.18] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
-                  }`}
-                >
-                  {m}x
-                </button>
-              ))}
-            </div>
+            <LiquidSegment
+              ariaLabel="Множитель крафта"
+              value={String(multiplier)}
+              onChange={(value) => setMultiplier(Number(value))}
+              options={MULTIPLIERS.map((m) => ({ value: String(m), label: `${m}x` }))}
+            />
           </div>
 
           <div className="w-full bg-white/[0.04] border border-white/[0.08] rounded-[20px] p-3.5 text-center z-10 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">

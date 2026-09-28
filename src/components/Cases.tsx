@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from '../lib/i18n';
 import { Box, Lock, ChevronLeft, AlertCircle } from 'lucide-react';
 import { fetchCases, CaseConfig, CaseItemConfig } from '../lib/api';
@@ -7,6 +8,7 @@ import { LiveFeed } from './LiveFeed';
 import { PremiumImage } from './PremiumImage';
 import { GramIcon } from './GramIcon';
 import { motion, AnimatePresence } from 'motion/react';
+import { LiquidSegment } from './ui/LiquidSegment';
 
 interface CasesProps {
   balance: number;
@@ -44,6 +46,13 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
   const [showSellConfirm, setShowSellConfirm] = useState(false);
   const [results, setResults] = useState<any[] | null>(null);
   const [isFastOpen, setIsFastOpen] = useState(false);
+
+  useEffect(() => {
+    if (!selectedCase) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [selectedCase]);
 
   useEffect(() => {
     fetchCases().then(data => {
@@ -228,8 +237,9 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
   };
 
   if (selectedCase) {
-    return (
-      <div className="space-y-4 pt-2 pb-10">
+    const casePage = (
+      <div className="fixed inset-0 z-[210] flex justify-center bg-canvas">
+      <div className="relative w-full max-w-md h-full overflow-y-auto overscroll-contain px-4 pt-4 pb-10 space-y-4">
         <button
           onClick={() => { setSelectedCase(null); }}
           className="w-9 h-9 rounded-full bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer mb-2"
@@ -342,17 +352,17 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
                    <div className="flex items-center justify-center mb-4">
                      <button onClick={() => setIsFastOpen(!isFastOpen)} className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${isFastOpen ? "bg-gradient-to-r from-[#0098ea] to-[#00b4d8] text-white shadow-[0_0_14px_rgba(0,152,234,0.45),inset_0_1px_0_rgba(255,255,255,0.3)] border border-cyan-300/40" : "bg-white/[0.10] hover:bg-white/[0.18] text-white/80 border border-white/[0.14]"}`}>{isFastOpen ? t('fast_open_on') : t('fast_open_off')}</button>
                    </div>
-                   <div className="flex gap-2 mb-6">
-                     {[1, 2, 3].map(amount => (
-                       <button 
-                         key={amount}
-                         onClick={() => setOpenAmount(amount)}
-                         className={`w-12 h-10 rounded-full font-bold flex items-center justify-center transition-all cursor-pointer ${openAmount === amount ? 'bg-gradient-to-r from-[#0098ea] to-[#00b4d8] text-white shadow-[0_0_14px_rgba(0,152,234,0.45),inset_0_1px_0_rgba(255,255,255,0.3)] border border-cyan-300/40' : 'bg-white/[0.10] hover:bg-white/[0.18] text-white/80 border border-white/[0.14]'}`}
-                       >
-                         x{amount}
-                       </button>
-                     ))}
-                   </div>
+                   <LiquidSegment
+                     className="w-full max-w-[240px] mb-6"
+                     ariaLabel="Сколько кейсов открыть"
+                     value={String(openAmount) as '1' | '2' | '3'}
+                     onChange={(value) => setOpenAmount(Number(value))}
+                     options={[
+                       { value: '1', label: 'x1' },
+                       { value: '2', label: 'x2' },
+                       { value: '3', label: 'x3' },
+                     ]}
+                   />
                    <button 
                      onClick={openCases}
                      disabled={balance < selectedCase.price * openAmount}
@@ -368,7 +378,7 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
         
         {/* Sell Confirm Modal */}
         {showSellConfirm && results && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[230] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
             <div className="bg-[#18181b] border border-white/10 rounded-2xl p-6 max-w-sm w-full relative">
               <div className="flex items-center gap-3 text-brand mb-4">
                 <AlertCircle className="w-6 h-6" />
@@ -430,7 +440,9 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
           </div>
         )}
       </div>
+      </div>
     );
+    return typeof document !== 'undefined' ? createPortal(casePage, document.body) : casePage;
   }
   return (
     <div className="space-y-6 pt-2 pb-10">

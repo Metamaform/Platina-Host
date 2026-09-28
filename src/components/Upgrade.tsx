@@ -8,6 +8,7 @@ import { GramIcon } from './GramIcon';
 import { cleanNftName, getNftBackdrop } from '../lib/nftUtils';
 import { UpgradeWheel } from './UpgradeWheel';
 import { GameLossModal } from './GameLossModal';
+import { LiquidSegment } from './ui/LiquidSegment';
 
 export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin, setInventory, onBet, onNavigate }: { inventory: any[], giftsDb: any[], onBack: () => void, balance: number, setBalance: any, onWin?: (item: any, price: number) => void, setInventory: any, onBet?: (amount: number) => void, onNavigate?: (target: string) => void }) {
   const { t } = useTranslation();
@@ -553,24 +554,16 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
           />
 
           {/* Tabs */}
-          <div className="relative z-10 flex bg-white/[0.08] backdrop-blur-xl border border-white/[0.12] rounded-full p-1 mb-4 shrink-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-            <button 
-              onClick={() => setActiveTab('inventory')}
-              className={`flex-1 py-2 rounded-full text-[13px] font-bold transition-all cursor-pointer ${
-                activeTab === 'inventory' ? 'bg-white/[0.22] text-white border border-white/[0.28] shadow-[0_2px_10px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.25)]' : 'text-white/60 hover:text-white'
-              }`}
-            >
-              Мои предметы
-            </button>
-            <button 
-              onClick={() => setActiveTab('targets')}
-              className={`flex-1 py-2 rounded-full text-[13px] font-bold transition-all cursor-pointer ${
-                activeTab === 'targets' ? 'bg-white/[0.22] text-white border border-white/[0.28] shadow-[0_2px_10px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.25)]' : 'text-white/60 hover:text-white'
-              }`}
-            >
-              Желаемые товары
-            </button>
-          </div>
+          <LiquidSegment
+            className="relative z-10 mb-4 shrink-0"
+            ariaLabel="Список апгрейда"
+            value={activeTab}
+            onChange={setActiveTab}
+            options={[
+              { value: 'inventory', label: 'Мои предметы' },
+              { value: 'targets', label: 'Желаемые' },
+            ]}
+          />
 
           {/* Filters */}
           <div className="relative z-10 flex items-center gap-2 mb-4 shrink-0">

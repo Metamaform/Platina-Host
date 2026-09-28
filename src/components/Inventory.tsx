@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { X, ArrowLeft, ArrowUpRight, ExternalLink, Diamond, TrendingUp, Shuffle, HelpCircle, Info, AlertCircle } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, ExternalLink, Diamond, TrendingUp, Shuffle, HelpCircle, Info, AlertCircle } from 'lucide-react';
 import { PremiumImage } from './PremiumImage';
 import { GramIcon } from './GramIcon';
+import { LiquidDialog } from './ui/LiquidDialog';
 import { useTranslation } from '../lib/i18n';
 import { cleanNftName, getNftBackdrop } from '../lib/nftUtils';
 
@@ -124,150 +124,55 @@ export function Inventory({
 
   return (
     <div className="space-y-6 relative h-full flex flex-col">
-      <AnimatePresence>
-        {showHelp && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-md"
-              onClick={() => setShowHelp(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 16 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 16 }}
-              className="group relative z-10 w-full max-w-sm bg-[#16171b]/95 backdrop-blur-2xl border border-white/[0.12] rounded-[28px] p-5 shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
-            >
-              {/* верхний блик жидкого стекла */}
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
-              />
-
-              {/* Заголовок с кнопкой закрытия без наложений */}
-              <div className="relative z-10 flex items-center justify-between pb-3.5 mb-3 border-b border-white/[0.08] shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-brand/20 border border-brand/40 text-brand shadow-[0_0_14px_rgba(0,152,234,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] flex items-center justify-center shrink-0">
-                    <Info className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-white leading-tight">{t('help_title')}</h3>
-                    <p className="text-[11px] text-white/50 mt-0.5">Частые вопросы</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setShowHelp(false)}
-                  className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] flex items-center justify-center text-white/70 hover:text-white hover:bg-white/[0.12] active:scale-95 transition-all cursor-pointer shrink-0"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              
-              <div className="relative z-10 overflow-y-auto space-y-2.5 pr-0.5 custom-scrollbar flex-1">
-                <div className="bg-white/[0.04] rounded-2xl p-3.5 border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                  <p className="text-white text-[13px] font-bold mb-1">{t('help_q1_title')}</p>
-                  <p className="text-white/75 text-[12px] leading-relaxed">
-                    {t('help_q1_text')}
-                  </p>
-                </div>
-                
-                <div className="bg-white/[0.04] rounded-2xl p-3.5 border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                  <p className="text-white text-[13px] font-bold mb-1">{t('help_q2_title')}</p>
-                  <p className="text-white/75 text-[12px] leading-relaxed">
-                    {t('help_q2_text1')}<span className="text-brand font-bold">{t('help_q2_text2')}</span>{t('help_q2_text3')}
-                  </p>
-                </div>
-                
-                <div className="bg-white/[0.04] rounded-2xl p-3.5 border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                  <p className="text-white text-[13px] font-bold mb-1">{t('help_q3_title')}</p>
-                  <p className="text-white/75 text-[12px] leading-relaxed">
-                    {t('help_q3_text')}
-                  </p>
-                </div>
-              </div>
-              
-              <button 
-                onClick={() => setShowHelp(false)}
-                className="relative z-10 w-full mt-4 py-3 bg-brand/20 border border-brand/40 hover:bg-brand/30 text-white font-bold rounded-full active:scale-95 transition-all shadow-[0_0_14px_rgba(0,152,234,0.35),inset_0_1px_0_rgba(255,255,255,0.18)] cursor-pointer text-sm shrink-0"
-              >
-                {t('help_got_it')}
-              </button>
-            </motion.div>
+      {showHelp && (
+        <LiquidDialog
+          title={t('help_title')}
+          subtitle="Частые вопросы"
+          icon={<Info className="w-4 h-4" />}
+          onClose={() => setShowHelp(false)}
+          actionLabel={t('help_got_it')}
+        >
+          <div className="space-y-2.5 pb-1">
+            <div className="rounded-2xl p-3.5 bg-white/[0.04] border border-white/[0.08]">
+              <p className="text-white text-[13px] font-bold mb-1">{t('help_q1_title')}</p>
+              <p className="text-white/75 text-[12px] leading-relaxed">{t('help_q1_text')}</p>
+            </div>
+            <div className="rounded-2xl p-3.5 bg-white/[0.04] border border-white/[0.08]">
+              <p className="text-white text-[13px] font-bold mb-1">{t('help_q2_title')}</p>
+              <p className="text-white/75 text-[12px] leading-relaxed">
+                {t('help_q2_text1')}<span className="text-brand font-bold">{t('help_q2_text2')}</span>{t('help_q2_text3')}
+              </p>
+            </div>
+            <div className="rounded-2xl p-3.5 bg-white/[0.04] border border-white/[0.08]">
+              <p className="text-white text-[13px] font-bold mb-1">{t('help_q3_title')}</p>
+              <p className="text-white/75 text-[12px] leading-relaxed">{t('help_q3_text')}</p>
+            </div>
           </div>
-        )}
+        </LiquidDialog>
+      )}
 
-        {showImportant && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-md"
-              onClick={() => setShowImportant(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 16 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 16 }}
-              className="group relative z-10 w-full max-w-sm bg-[#16171b]/95 backdrop-blur-2xl border border-amber-500/30 rounded-[28px] p-5 shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
-            >
-              {/* верхний блик жидкого стекла */}
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
-              />
-
-              {/* Заголовок с кнопкой закрытия без наложений */}
-              <div className="relative z-10 flex items-center justify-between pb-3.5 mb-3 border-b border-white/[0.08] shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 shadow-[0_0_14px_rgba(245,158,11,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] flex items-center justify-center shrink-0">
-                    <AlertCircle className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-white leading-tight">{t('important_title')}</h3>
-                    <p className="text-[11px] text-amber-400/70 mt-0.5">Правила вывода</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setShowImportant(false)}
-                  className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] flex items-center justify-center text-white/70 hover:text-white hover:bg-white/[0.12] active:scale-95 transition-all cursor-pointer shrink-0"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              
-              <div className="relative z-10 overflow-y-auto space-y-2.5 pr-0.5 custom-scrollbar flex-1">
-                <div className="bg-white/[0.04] rounded-2xl p-3.5 border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                  <p className="text-white/85 text-[12.5px] leading-relaxed">
-                    {t('important_text1')}
-                  </p>
-                </div>
-                
-                <div className="bg-white/[0.04] rounded-2xl p-3.5 border border-amber-500/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                  <p className="text-white/85 text-[12.5px] leading-relaxed">
-                    {t('important_text2')}
-                  </p>
-                </div>
-
-                <div className="bg-white/[0.04] rounded-2xl p-3.5 border border-amber-500/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                  <p className="text-white/85 text-[12.5px] leading-relaxed">
-                    {t('important_text3')}
-                  </p>
-                </div>
-              </div>
-              
-              <button 
-                onClick={() => setShowImportant(false)}
-                className="relative z-10 w-full mt-4 py-3 bg-amber-500/20 border border-amber-500/40 hover:bg-amber-500/30 text-amber-300 font-bold rounded-full active:scale-95 transition-all shadow-[0_0_14px_rgba(245,158,11,0.35),inset_0_1px_0_rgba(255,255,255,0.18)] cursor-pointer text-sm shrink-0"
-              >
-                {t('help_got_it')}
-              </button>
-            </motion.div>
+      {showImportant && (
+        <LiquidDialog
+          title={t('important_title')}
+          subtitle="Правила вывода"
+          tone="amber"
+          icon={<AlertCircle className="w-4 h-4" />}
+          onClose={() => setShowImportant(false)}
+          actionLabel={t('help_got_it')}
+        >
+          <div className="space-y-2.5 pb-1">
+            <p className="text-white/85 text-[13px] leading-relaxed rounded-2xl p-3.5 bg-white/[0.04] border border-white/[0.08]">
+              {t('important_text1')}
+            </p>
+            <p className="text-white/85 text-[13px] leading-relaxed rounded-2xl p-3.5 bg-white/[0.04] border border-amber-500/20">
+              {t('important_text2')}
+            </p>
+            <p className="text-white/85 text-[13px] leading-relaxed rounded-2xl p-3.5 bg-white/[0.04] border border-amber-500/20">
+              {t('important_text3')}
+            </p>
           </div>
-        )}
-      </AnimatePresence>
+        </LiquidDialog>
+      )}
 
       <div className="group relative overflow-hidden bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] rounded-[32px] p-4 sm:p-5 flex-1 min-h-[400px] shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)]">
         {/* верхнее бликовое свечение жидкого стекла */}

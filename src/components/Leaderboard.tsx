@@ -1,9 +1,9 @@
 import { useTranslation } from '../lib/i18n';
 import React, { useState, useEffect } from 'react';
-import { Trophy, Clock, Users, X } from 'lucide-react';
+import { Trophy, Clock, Users } from 'lucide-react';
 import { PremiumImage } from './PremiumImage';
 import { GramIcon } from './GramIcon';
-import { motion, AnimatePresence } from 'motion/react';
+import { LiquidDialog } from './ui/LiquidDialog';
 
 export function Leaderboard() {
   const { t } = useTranslation();
@@ -236,81 +236,31 @@ export function Leaderboard() {
         </div>
       )}
 
-      {/* Rules Modal in Liquid Glass */}
-      <AnimatePresence>
-        {showRules && (
-          <div className="fixed inset-0 z-[120] flex items-center justify-center px-4">
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }}
-              onClick={() => setShowRules(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-md"
-            />
-            
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 16 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 16 }}
-              className="group relative z-10 w-full max-w-md bg-[#16171b]/95 backdrop-blur-2xl border border-white/[0.12] rounded-[28px] p-5 sm:p-6 shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
-            >
-              {/* верхний блик */}
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
-              />
-
-              {/* Заголовок с кнопкой закрытия без наложений */}
-              <div className="relative z-10 flex items-center justify-between pb-3.5 mb-3 border-b border-white/[0.08] shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-brand/20 border border-brand/40 text-brand flex items-center justify-center shadow-[0_0_14px_rgba(0,152,234,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] shrink-0">
-                    <Trophy className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-white leading-tight">{t('how_to_participate')}</h3>
-                    <p className="text-[11px] text-white/50 mt-0.5">Правила турнира</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setShowRules(false)}
-                  className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] flex items-center justify-center text-white/70 hover:text-white hover:bg-white/[0.12] transition-colors cursor-pointer shrink-0"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              
-              <div className="relative z-10 overflow-y-auto space-y-2.5 pr-0.5 custom-scrollbar flex-1">
-                <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                  <p className="text-center text-white/90 text-[13px]">
-                    {t('play_modes')} <GramIcon className="w-3.5 h-3.5 mx-1 inline-block text-brand" /> <b>GRAM</b>.
-                  </p>
-                </div>
-                
-                <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                  <p className="font-semibold text-white text-[13px] mb-1">{t('how_turnover')}</p>
-                  <p className="text-[12px] text-white/70 leading-relaxed">
-                    {t('turnover_desc')}
-                  </p>
-                </div>
-                
-                <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                  <p className="font-semibold text-white text-[13px] mb-1">{t('prizes_to_winners')}</p>
-                  <p className="text-[12px] text-white/70 leading-relaxed">
-                    <span dangerouslySetInnerHTML={{ __html: t('prizes_desc') }} />
-                  </p>
-                </div>
-              </div>
-              
-              <button 
-                onClick={() => setShowRules(false)}
-                className="relative z-10 w-full mt-4 py-3 rounded-full font-bold bg-brand/20 border border-brand/40 hover:bg-brand/30 text-white shadow-[0_0_14px_rgba(0,152,234,0.35),inset_0_1px_0_rgba(255,255,255,0.18)] active:scale-[0.98] transition-transform cursor-pointer text-sm shrink-0"
-              >
-                {t('got_it')}
-              </button>
-            </motion.div>
+      {showRules && (
+        <LiquidDialog
+          title={t('how_to_participate')}
+          subtitle="Правила турнира"
+          icon={<Trophy className="w-4 h-4" />}
+          onClose={() => setShowRules(false)}
+          actionLabel={t('got_it')}
+        >
+          <div className="space-y-2.5 pb-1">
+            <p className="text-center text-white/90 text-[13px] rounded-2xl p-3.5 bg-white/[0.04] border border-white/[0.08]">
+              {t('play_modes')} <GramIcon className="w-3.5 h-3.5 mx-1 inline-block text-brand" /> <b>GRAM</b>.
+            </p>
+            <div className="rounded-2xl p-3.5 bg-white/[0.04] border border-white/[0.08]">
+              <p className="font-semibold text-white text-[13px] mb-1">{t('how_turnover')}</p>
+              <p className="text-[12px] text-white/70 leading-relaxed">{t('turnover_desc')}</p>
+            </div>
+            <div className="rounded-2xl p-3.5 bg-white/[0.04] border border-white/[0.08]">
+              <p className="font-semibold text-white text-[13px] mb-1">{t('prizes_to_winners')}</p>
+              <p className="text-[12px] text-white/70 leading-relaxed">
+                <span dangerouslySetInnerHTML={{ __html: t('prizes_desc') }} />
+              </p>
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+        </LiquidDialog>
+      )}
     </div>
   );
 }
