@@ -8,6 +8,8 @@ import { LiveFeed } from './LiveFeed';
 import { PremiumImage } from './PremiumImage';
 import { GramIcon } from './GramIcon';
 import { motion, AnimatePresence } from 'motion/react';
+import { CASE_REEL_LENGTH, CASE_REEL_START, CASE_REEL_WINNER, CASE_SPIN_MS, caseReelOffset } from '../lib/caseRoulette';
+import { prefersReducedMotion } from '../lib/motion';
 import { LiquidSegment } from './ui/LiquidSegment';
 
 interface CasesProps {
@@ -29,12 +31,20 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
   const [selectedCase, setSelectedCase] = useState<CaseConfig | null>(null);
   const [openAmount, setOpenAmount] = useState(1);
   const [isOpening, setIsOpening] = useState(false);
+  const [spinStarted, setSpinStarted] = useState(false);
+  const openingRef = useRef(false);
+  const frameRef = useRef(0);
+  const completionRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => {
+    cancelAnimationFrame(frameRef.current);
+    clearTimeout(completionRef.current);
+  }, []);
   const [rouletteLines, setRouletteLines] = useState<any[][]>([]);
   const [rouletteOffsets, setRouletteOffsets] = useState<number[]>([]);
   useEffect(() => {
     if (selectedCase) {
       const initialLines = Array.from({ length: 3 }).map(() => 
-        Array.from({ length: 35 }).map(() => selectedCase.items[Math.floor(Math.random() * selectedCase.items.length)])
+        Array.from({ length: CASE_REEL_LENGTH }).map(() => selectedCase.items[Math.floor(Math.random() * selectedCase.items.length)])
       );
       setRouletteLines(initialLines);
       setRouletteOffsets(Array.from({ length: 3 }).map(() => 0));
@@ -100,10 +110,12 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
   };
 
   const openCases = async () => {
-    if (!selectedCase || isOpening) return;
+    if (!selectedCase || openingRef.current || !selectedCase.items.length) return;
     const totalCost = selectedCase.price * openAmount;
     if (balance < totalCost) return;
 
+    openingRef.current = true;
+    setSpinStarted(false);
     setIsOpening(true);
     setResults(null);
     setBalance(balance - totalCost);
@@ -162,8 +174,10 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
 
         
         // Generate line
-        const line = Array.from({ length: 35 }).map((_, idx) => {
-          if (idx === 28) return selectedItemConfig;
+        const line = Array.from({ length: CASE_REEL_LENGTH }).map((_, idx) => {
+          if (idx === CASE_REEL_WINNER) return selectedItemConfig;
+          // Keep the visible starting cards, so clicking Open doesn't flash a new reel.
+          if (Math.abs(idx - CASE_REEL_START) <= 3 && rouletteLines[i]?.[idx]) return rouletteLines[i][idx];
           return selectedCase.items[Math.floor(Math.random() * selectedCase.items.length)];
         });
         newLines.push(line);
@@ -224,15 +238,23 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
 
     // Fake delay for animation
     const completeOpen = () => {
+      openingRef.current = false;
+      setSpinStarted(false);
       setIsOpening(false);
       setResults(pickedItems);
       setInventory(newInventory);
       if (totalGramsWon > 0) setBalance((prev: number) => prev + totalGramsWon);
     };
-    if (isFastOpen) {
+    if (isFastOpen || prefersReducedMotion()) {
       completeOpen();
     } else {
-      setTimeout(completeOpen, 5500);
+      // Paint the populated reel at its middle before starting the transition.
+      frameRef.current = requestAnimationFrame(() => {
+        frameRef.current = requestAnimationFrame(() => {
+          setSpinStarted(true);
+          completionRef.current = setTimeout(completeOpen, CASE_SPIN_MS + 100);
+        });
+      });
     }
   };
 
@@ -241,8 +263,9 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
       <div className="fixed inset-0 z-[210] flex justify-center bg-canvas">
       <div className="relative w-full max-w-md h-full overflow-y-auto overscroll-contain px-4 pt-4 pb-10 space-y-4">
         <button
+          disabled={isOpening}
           onClick={() => { setSelectedCase(null); }}
-          className="w-9 h-9 rounded-full bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer mb-2"
+          className="w-9 h-9 rounded-full bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed mb-2"
           title={t("back")}
         >
           <ChevronLeft className="w-5 h-5 text-white" />
@@ -283,10 +306,10 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
                           Black
                         </span>
                       )}
-                      {r.image_url && <PremiumImage src={r.image_url} alt={r.name || ''} className="w-24 h-24 mb-2 drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]" />}
+                      {r.image_url && <PremiumImage src={r.image_url} alt={r.name || ''} staticMode={true} className={`mb-2 ${r.isGram ? "w-[68.57px] h-[68.57px]" : "w-[73.85px] h-[73.85px]"}`} />}
                       <div className="text-sm font-bold text-center text-white line-clamp-1 mb-1">{r.name}</div>
                       <div className="flex items-center justify-center gap-1 bg-black/40 px-2 py-0.5 rounded text-brand font-bold text-sm">
-                        {Number(r.floor_price_gram || r.price || 0).toFixed(2)} <GramIcon className="w-3 h-3" />
+                        {Number(r.floor_price_gram || r.price || 0).toFixed(2)} <GramIcon className="scale-[0.7143] w-3 h-3" />
                       </div>
                     </motion.div>
                   );
@@ -299,7 +322,7 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
                   if (selectedCase) {
                     setRouletteOffsets(Array.from({ length: 3 }).map(() => 0));
                     setRouletteLines(Array.from({ length: 3 }).map(() => 
-                      Array.from({ length: 35 }).map(() => selectedCase.items[Math.floor(Math.random() * selectedCase.items.length)])
+                      Array.from({ length: CASE_REEL_LENGTH }).map(() => selectedCase.items[Math.floor(Math.random() * selectedCase.items.length)])
                     ));
                   }
                 }} className="flex-1 px-4 py-3 bg-white/[0.14] hover:bg-white/[0.22] border border-white/[0.18] shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] rounded-full font-bold text-white transition-all cursor-pointer">{t("continue")}</button>
@@ -310,12 +333,12 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
              <div className="flex-1 flex flex-col items-center justify-center space-y-4 w-full">
                {Array.from({ length: openAmount }).map((_, lineIdx) => (
                  <div key={lineIdx} className="w-full h-32 sm:h-40 bg-black/40 rounded-2xl relative overflow-hidden flex items-center shadow-[inset_0_0_30px_rgba(0,0,0,0.8)]">
-                   <div className="absolute w-1 h-full bg-brand left-1/2 transform -translate-x-1/2 z-20 shadow-[0_0_15px_#f9c23c]"></div>
+                   <div className="pointer-events-none absolute w-0.5 h-full bg-brand/70 left-1/2 transform -translate-x-1/2 z-20 shadow-[0_0_8px_rgba(0,152,234,0.2)]"></div>
                    <div 
                      className="absolute left-1/2 flex gap-4 will-change-transform"
                      style={{
-                       transform: `translateX(${isOpening ? -(28 * 112 + 48) + (rouletteOffsets[lineIdx] || 0) : -48}px)`,
-                       transition: isOpening ? 'transform 5s cubic-bezier(0.15, 1, 0.3, 1)' : 'none'
+                       transform: `translateX(${caseReelOffset(spinStarted ? CASE_REEL_WINNER : CASE_REEL_START, spinStarted ? rouletteOffsets[lineIdx] || 0 : 0)}px)`,
+                       transition: spinStarted ? `transform ${CASE_SPIN_MS}ms cubic-bezier(0.15, 1, 0.3, 1)` : 'none'
                      }}
                    >
                      {(rouletteLines[lineIdx] || []).map((itemConfig, i) => {
@@ -336,7 +359,7 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
                        return (
                          <div key={i} className="w-24 h-24 sm:w-24 sm:h-24 shrink-0 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center p-2 transform-gpu">
                            {g?.image_url ? (
-                             <PremiumImage src={g.image_url} alt={g.name || ''} className="w-full h-full" staticMode={true} />
+                             <PremiumImage src={g.image_url} alt={g.name || ''} className={g.isGram ? "w-[71.43%] h-[71.43%]" : "w-[76.92%] h-[76.92%]"} staticMode={true} />
                            ) : <Box className="w-8 h-8 text-white/30" />}
                          </div>
                        );
@@ -368,7 +391,7 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
                      disabled={balance < selectedCase.price * openAmount}
                      className="w-full max-w-sm py-4 bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] rounded-full text-white font-display font-bold text-[17px] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
                    >
-                     {t("open_for")} {(selectedCase.price * openAmount).toFixed(2)} <GramIcon className="w-5 h-5" />
+                     {t("open_for")} {(selectedCase.price * openAmount).toFixed(2)} <GramIcon className="scale-[0.7143] w-5 h-5" />
                    </button>
                  </div>
                )}
@@ -427,11 +450,11 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
                 return (
                   <div key={idx} className="bg-white/5 border border-white/10 rounded-xl flex flex-col items-center justify-center p-3 relative h-full">
                     <div className="w-full flex items-center justify-center h-28 mb-3">
-                      <PremiumImage src={g.image_url} alt={g.name || ''} className="w-full h-full drop-shadow-[0_0_15px_rgba(255,255,255,0.15)]" staticMode={true} />
+                      <PremiumImage src={g.image_url} alt={g.name || ''} className={g.isGram ? "w-[71.43%] h-[71.43%]" : "w-[76.92%] h-[76.92%]"} staticMode={true} />
                     </div>
                     <div className="text-sm font-bold text-center text-white line-clamp-1 w-full">{g.name}</div>
                     <div className="flex items-center gap-1 mt-1 bg-black/40 px-2 py-1 rounded-lg text-brand text-xs font-bold">
-                      {Number(g.floor_price_gram || g.price || 0).toFixed(2)} <GramIcon className="w-3 h-3" />
+                      {Number(g.floor_price_gram || g.price || 0).toFixed(2)} <GramIcon className="scale-[0.7143] w-3 h-3" />
                     </div>
                   </div>
                 );
@@ -473,7 +496,7 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
             >
               <div className="flex-1 w-full relative h-[160px] flex items-center justify-center bg-[#121214] p-4">
                 {c.image ? (
-                  <PremiumImage src={c.image} alt={c.name} staticMode={true} className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" />
+                  <PremiumImage src={c.image} alt={c.name} staticMode={true} className="w-[76.92%] h-[76.92%] object-contain group-hover:scale-105 transition-transform duration-300" />
                 ) : (
                   <Box className="w-12 h-12 text-white/20" />
                 )}
@@ -483,7 +506,7 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
                 <div className="font-bold text-white text-[15px] leading-tight text-center whitespace-normal break-words">{c.name}</div>
                 <div className="flex items-center justify-center gap-1.5 bg-[#8b72f8] w-full py-1.5 rounded-xl font-bold text-white shadow-sm shrink-0">
                   <span>{Number(c.price)}</span>
-                  <GramIcon className="w-4 h-4" />
+                  <GramIcon className="scale-[0.7143] w-4 h-4" />
                 </div>
               </div>
             </div>

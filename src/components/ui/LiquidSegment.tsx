@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect, useTransition } from 'react';
 import { prefersReducedMotion } from '../../lib/motion';
 
 export interface LiquidOption<T extends string> {
@@ -36,8 +36,11 @@ export function LiquidSegment<T extends string>({
   dragSelect,
   ariaLabel,
 }: LiquidSegmentProps<T>) {
+  const [visual, setVisual] = useState(value);
+  const [, startTransition] = useTransition();
+  useEffect(() => { setVisual(value); }, [value]);
   const count = Math.max(1, options.length);
-  const found = options.findIndex((opt) => opt.value === value);
+  const found = options.findIndex((opt) => opt.value === visual);
   const hasSelection = found >= 0;
   const index = hasSelection ? found : 0;
   const dragging = useRef(false);
@@ -45,8 +48,9 @@ export function LiquidSegment<T extends string>({
   const reduce = prefersReducedMotion();
 
   const select = (next: T) => {
-    if (disabled || next === value) return;
-    onChange(next);
+    if (disabled || next === visual) return;
+    setVisual(next);
+    startTransition(() => onChange(next));
   };
 
   return (
@@ -72,15 +76,14 @@ export function LiquidSegment<T extends string>({
             left: pad,
             width: `calc((100% - ${pad * 2}px) / ${count})`,
             transform: `translate3d(${index * 100}%, 0, 0)`,
-            transition: reduce ? 'none' : 'transform 160ms cubic-bezier(0.22, 1, 0.36, 1)',
+            transition: reduce ? 'none' : 'transform 280ms cubic-bezier(0.22, 1, 0.36, 1)',
           }}
         >
           <span className="pointer-events-none absolute inset-x-2 top-0.5 h-[42%] rounded-full bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.16),transparent_70%)]" />
-          <span className="pointer-events-none absolute bottom-0 left-2 w-8 h-5 rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.32),transparent_72%)]" />
         </div>
       )}
       {options.map((opt) => {
-        const active = opt.value === value;
+        const active = opt.value === visual;
         return (
           <button
             key={opt.value}
@@ -121,7 +124,7 @@ export function LiquidSegment<T extends string>({
               </span>
             ) : (
               <span
-                className={`flex items-center justify-center gap-1.5 text-[12.5px] font-bold leading-none ${
+                className={`flex items-center justify-center gap-1.5 text-[12.5px] font-bold leading-none transition-colors duration-200 ${
                   active ? 'text-white' : 'text-white/55'
                 }`}
               >

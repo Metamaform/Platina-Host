@@ -1430,10 +1430,10 @@ export default function App() {
               transition={{ type: 'spring', damping: 28, stiffness: 350 }}
               className="absolute inset-x-3 top-2.5 z-50 flex justify-center pointer-events-none"
             >
-                <div className={`group relative overflow-hidden flex items-center gap-2 bg-white/[0.07] backdrop-blur-2xl rounded-full p-2 w-full pointer-events-auto border transition-all duration-300 ${
+                <div className={`group relative overflow-hidden flex items-center gap-2 bg-[#17191d]/92 rounded-full p-1.5 w-full pointer-events-auto border transition-all duration-300 ${
                   topUpGlow 
-                    ? 'border-emerald-500/80 shadow-[0_0_25px_rgba(16,185,129,0.35),inset_0_1px_0_rgba(255,255,255,0.15)]' 
-                    : 'border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_16px_36px_-15px_rgba(0,0,0,0.85)]'
+                    ? 'border-brand/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_24px_-14px_rgba(0,0,0,0.8)]'
+                    : 'border-white/[0.09] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_24px_-14px_rgba(0,0,0,0.8)]'
                 }`}>
                   {/* верхнее бликовое свечение — эффект жидкого стекла как в QuickActions */}
                   <span
@@ -1516,7 +1516,7 @@ export default function App() {
         {/* Scrollable Content Area */}
         <div className="relative flex-1 w-full overflow-hidden flex flex-col">
           <main className="flex-1 overflow-y-auto pt-[78px] pb-[124px] px-4.5 scrollbar-hide relative">
-            <div className="w-full">
+            <div key={activeTab} className="w-full menu-content-enter">
                 {activeTab === 'shop' && (
                   <Shop 
                     onPlayUpgrade={() => setActiveGame('upgrade')} 

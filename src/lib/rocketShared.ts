@@ -104,7 +104,16 @@ export function getRocketReachedGift(
     return { reachedGift: null, nextGift: null, remainder: Number(winAmount.toFixed(2)) };
   }
 
-  const ladder = buildRocketLadder(gifts, baseBetAmount);
+  return getRocketReachedGiftFromLadder(buildRocketLadder(gifts, baseBetAmount), winAmount);
+}
+
+/** Resolve an already-built ladder without sorting/cloning the catalog per frame. */
+export function getRocketReachedGiftFromLadder(
+  ladder: any[], winAmount: number
+): { reachedGift: any | null; nextGift: any | null; remainder: number } {
+  if (winAmount <= 0) {
+    return { reachedGift: null, nextGift: null, remainder: Number(winAmount.toFixed(2)) };
+  }
   if (ladder.length === 0) {
     return { reachedGift: null, nextGift: null, remainder: Number(winAmount.toFixed(2)) };
   }

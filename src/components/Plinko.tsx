@@ -116,41 +116,14 @@ function formatBucketLabel(mult: number) {
   return `${mult.toFixed(1)}x`;
 }
 
-/** Saturated slot chips — readable on a phone, unlike flat translucent canvas text. */
+/** Shared, muted reward tiers for the personal history and landing slots. */
 function bucketTone(mult: number): { background: string; color: string; glow: string } {
-  if (mult >= 20) {
-    return {
-      background: 'linear-gradient(180deg, #ffe7a3 0%, #f5b942 46%, #c2410c 100%)',
-      color: '#1c1404',
-      glow: '0 8px 16px rgba(245, 185, 66, 0.45)',
-    };
-  }
-  if (mult >= 8) {
-    return {
-      background: 'linear-gradient(180deg, #f5d0fe 0%, #e879f9 46%, #86198f 100%)',
-      color: '#fff',
-      glow: '0 8px 16px rgba(217, 70, 239, 0.4)',
-    };
-  }
-  if (mult >= 3) {
-    return {
-      background: 'linear-gradient(180deg, #a5f3fc 0%, #22d3ee 46%, #0e7490 100%)',
-      color: '#042f2e',
-      glow: '0 8px 14px rgba(34, 211, 238, 0.35)',
-    };
-  }
-  if (mult >= 1) {
-    return {
-      background: 'linear-gradient(180deg, #bbf7d0 0%, #34d399 48%, #047857 100%)',
-      color: '#022c22',
-      glow: '0 8px 14px rgba(16, 185, 129, 0.35)',
-    };
-  }
-  return {
-    background: 'linear-gradient(180deg, #fecdd3 0%, #fb7185 46%, #9f1239 100%)',
-    color: '#fff',
-    glow: '0 8px 14px rgba(244, 63, 94, 0.38)',
-  };
+  const [background, color] = mult >= 20 ? ['#493d2d', '#dfc28b']
+    : mult >= 8 ? ['#40364e', '#c7aedb']
+    : mult >= 3 ? ['#2c4052', '#a3c9e4']
+    : mult >= 1 ? ['#2d423e', '#a7cabc']
+    : ['#443338', '#d2a5ae'];
+  return { background, color, glow: 'none' };
 }
 const TOTAL_PEGS = 52; // 3+4+5+6+7+8+9+10 = 52
 
@@ -875,12 +848,16 @@ export const Plinko: React.FC<PlinkoProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Set canvas dimensions once with high-DPI scaling
-    // A 1.5x backing store keeps the canvas crisp on phones while avoiding
-    // the 4x pixel fill cost of a 2x canvas on every animation frame.
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-    canvas.width = BOARD_WIDTH * dpr;
-    canvas.height = BOARD_HEIGHT * dpr;
+    // Match the backing store to the displayed size, including Retina screens.
+    let dpr = 1;
+    const resizeCanvas = () => {
+      dpr = (window.devicePixelRatio || 1) * canvas.getBoundingClientRect().width / BOARD_WIDTH;
+      dpr = Math.max(1, dpr);
+      canvas.width = Math.round(BOARD_WIDTH * dpr);
+      canvas.height = Math.round(BOARD_HEIGHT * dpr);
+      ctx.imageSmoothingQuality = 'high';
+    };
+    resizeCanvas();
 
     let animId = 0;
     let isMounted = true;
@@ -1093,10 +1070,13 @@ export const Plinko: React.FC<PlinkoProps> = ({
       animId = requestAnimationFrame(render);
     };
     wakeCanvasRef.current = wake;
+    const observer = new ResizeObserver(() => { resizeCanvas(); wake(); });
+    observer.observe(canvas);
     wake();
 
     return () => {
       isMounted = false;
+      observer.disconnect();
       cancelAnimationFrame(animId);
       wakeCanvasRef.current = () => {};
     };
@@ -1294,11 +1274,11 @@ export const Plinko: React.FC<PlinkoProps> = ({
               return (
                 <div
                   key={idx}
-                  className="flex-1 text-center py-1.5 px-0.5 rounded-[10px] text-[12px] font-black leading-none border border-white/10"
+                  className="flex-1 text-center py-1.5 px-0.5 rounded-full text-[12px] font-semibold tabular-nums leading-none"
                   style={tone ? {
                     background: tone.background,
                     color: tone.color,
-                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.45)',
+                    boxShadow: 'none',
                   } : {
                     background: 'rgba(255,255,255,0.05)',
                     color: 'rgba(255,255,255,0.28)',
@@ -1311,7 +1291,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
           </div>
 
           {/* Clean Canvas Plinko Arena with User Avatar Ball */}
-          <div className="w-full relative mb-3 rounded-[28px] bg-white/[0.06] backdrop-blur-2xl border border-white/[0.10] overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)]">
+          <div className="w-full relative mb-3 rounded-[28px] bg-white/[0.06] border border-white/[0.10] overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)]">
             <span
               aria-hidden="true"
               className="pointer-events-none absolute inset-0 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
@@ -1338,14 +1318,14 @@ export const Plinko: React.FC<PlinkoProps> = ({
                         height: `${(b.height / BOARD_HEIGHT) * 100}%`,
                         background: tone.background,
                         color: tone.color,
-                        boxShadow: `${tone.glow}, inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -3px 0 rgba(0,0,0,0.22)`,
+                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
                         fontSize: '3cqw',
                         textShadow: tone.color === '#fff' ? '0 1px 1px rgba(0,0,0,0.35)' : 'none',
                         transformOrigin: 'center center',
                         letterSpacing: '-0.04em',
                       }}
                     >
-                      <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-white/25" />
+                      <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-white/[0.03]" />
                       <span className="relative z-10">{b.label}</span>
                     </div>
                   );
