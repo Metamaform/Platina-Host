@@ -718,13 +718,15 @@ export const Plinko: React.FC<PlinkoProps> = ({
         onWinRef.current(wonGrams, 'nft', finalGift, mult);
       }
 
-      setLastBanner({
-        text: mult <= 1.0
-          ? `Выдан ${cleanNftName(finalGift.name)} (x${mult.toFixed(2)})`
-          : `Выигран ${cleanNftName(finalGift.name)}! (x${mult.toFixed(2)})`,
-        subText: remainder > 0 ? `+ остаток ${remainder.toFixed(2)} GRAM на баланс` : 'Остаток: 0.00 GRAM',
-        isWon: mult >= 1.0
-      });
+      if (mult > 1.0) {
+        setLastBanner({
+          text: `Выигран ${cleanNftName(finalGift.name)}! (x${mult.toFixed(2)})`,
+          subText: remainder > 0 ? `+ остаток ${remainder.toFixed(2)} GRAM на баланс` : undefined,
+          isWon: true
+        });
+      } else {
+        setLastBanner(null);
+      }
 
       chosenGift = finalGift;
     } else {
@@ -747,13 +749,14 @@ export const Plinko: React.FC<PlinkoProps> = ({
         onWinRef.current(wonGrams, 'gram', undefined, mult);
       }
 
-      setLastBanner({
-        text: mult >= 1.0
-          ? `Выигрыш: +${wonGrams.toFixed(2)} GRAM (x${mult.toFixed(2)})`
-          : `Результат: +${wonGrams.toFixed(2)} GRAM (x${mult.toFixed(2)})`,
-        subText: mult < 1.0 ? `Ставка: ${ball.betAmount.toFixed(2)} GRAM` : undefined,
-        isWon: mult >= 1.0
-      });
+      if (mult > 1.0) {
+        setLastBanner({
+          text: `Выигрыш: +${wonGrams.toFixed(2)} GRAM (x${mult.toFixed(2)})`,
+          isWon: true
+        });
+      } else {
+        setLastBanner(null);
+      }
     }
 
     // Sync with server if session available
@@ -1233,10 +1236,10 @@ export const Plinko: React.FC<PlinkoProps> = ({
       <button
         id="plinko-back-button"
         onClick={onBack}
-        className="absolute top-4 left-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center active:scale-95 transition-all hover:bg-white/20 border border-white/5 cursor-pointer z-20"
+        className="absolute top-4 left-4 w-9 h-9 rounded-full bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer z-20"
         title={t('back') || 'Back'}
       >
-        <ArrowLeft className="w-5 h-5 text-white" />
+        <ArrowLeft className="w-4 h-4 text-white" />
       </button>
 
       <div className="absolute top-0 left-0 right-0 h-[72px] flex items-center justify-center pointer-events-none z-10">
@@ -1246,16 +1249,16 @@ export const Plinko: React.FC<PlinkoProps> = ({
       </div>
 
       <div className="absolute top-4 right-4 flex items-center gap-2 z-20">
-        <div className="flex items-center gap-1.5 bg-white/5 px-3 h-10 rounded-full border border-white/5">
+        <div className="flex items-center gap-1.5 bg-white/[0.12] border border-white/[0.16] px-3 h-9 rounded-full shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]">
           <span className="text-white font-bold text-[13px]">{balance.toFixed(2)}</span>
           <GramIcon className="w-3.5 h-3.5 text-brand" />
         </div>
         <button
           onClick={() => setShowBetHistory(true)}
-          className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center active:scale-95 transition-all hover:bg-white/20 border border-white/5 cursor-pointer text-white/80 hover:text-white"
+          className="w-9 h-9 rounded-full bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer"
           title="История ваших ставок"
         >
-          <History className="w-5 h-5 text-white/80" />
+          <History className="w-4 h-4 text-white" />
         </button>
       </div>
 
@@ -1286,7 +1289,12 @@ export const Plinko: React.FC<PlinkoProps> = ({
           </div>
 
           {/* Clean Canvas Plinko Arena with User Avatar Ball */}
-          <div className="w-full relative min-h-[390px] mb-3 rounded-[24px] bg-[#15161b] border border-white/10 overflow-hidden shadow-xl flex items-center justify-center">
+          <div className="w-full relative min-h-[390px] mb-3 rounded-[28px] bg-white/[0.06] backdrop-blur-2xl border border-white/[0.10] overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)] flex items-center justify-center">
+            {/* Ambient Background Sheen */}
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+            />
             {/* Ambient Background Grid */}
             <div className="absolute inset-0 opacity-15 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
 
@@ -1298,18 +1306,14 @@ export const Plinko: React.FC<PlinkoProps> = ({
             />
           </div>
 
-          {/* Inline Result Banner (Non-blocking notification) */}
+          {/* Inline Result Banner (Только выигрыши, плашка проигрыша убрана) */}
           <AnimatePresence>
-            {lastBanner && (
+            {lastBanner && lastBanner.isWon && (
               <motion.div
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className={`w-full p-2.5 mb-2.5 text-xs text-center rounded-xl font-bold flex flex-col items-center border transition-all ${
-                  lastBanner.isWon
-                    ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
-                    : 'bg-white/5 border-white/10 text-white/70'
-                }`}
+                className="w-full p-2.5 mb-2.5 text-xs text-center rounded-2xl font-bold flex flex-col items-center border transition-all bg-emerald-500/15 border-emerald-500/30 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.25)]"
               >
                 <span>{lastBanner.text}</span>
                 {lastBanner.subText && (
@@ -1321,23 +1325,27 @@ export const Plinko: React.FC<PlinkoProps> = ({
 
           {/* Action Error notification if any */}
           {actionError && (
-            <div className="w-full p-2.5 mb-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs text-center rounded-xl font-medium">
+            <div className="w-full p-2.5 mb-3 bg-red-500/15 border border-red-500/30 text-red-300 text-xs text-center rounded-2xl font-medium shadow-sm">
               {actionError}
             </div>
           )}
 
-          {/* Controls Bar: Risk selector & Stake summary */}
+          {/* Controls Bar: Risk selector & Stake summary in Liquid Glass */}
           <div className="w-full flex items-center gap-2 mb-3">
-            <div className="flex bg-[#191a20] p-1 rounded-[16px] border border-white/5 flex-1">
+            <div className="flex bg-white/[0.08] backdrop-blur-xl p-1 rounded-full border border-white/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] flex-1">
               {(['low', 'medium', 'high'] as RiskLevel[]).map(r => (
                 <button
                   key={r}
                   disabled={isDropping}
                   onClick={() => setRisk(r)}
-                  className={`flex-1 py-2 rounded-[12px] text-[12px] font-bold uppercase transition-all cursor-pointer disabled:opacity-50 ${
+                  className={`flex-1 py-2 rounded-full text-[12px] font-bold uppercase transition-all cursor-pointer disabled:opacity-50 ${
                     risk === r
-                      ? 'bg-brand text-black shadow-sm'
-                      : 'text-white/40 hover:text-white/80'
+                      ? r === 'low'
+                        ? 'bg-emerald-500 text-white border border-emerald-400 shadow-[0_0_14px_rgba(16,185,129,0.5)]'
+                        : r === 'medium'
+                        ? 'bg-amber-500 text-white border border-amber-400 shadow-[0_0_14px_rgba(245,158,11,0.5)]'
+                        : 'bg-rose-500 text-white border border-rose-400 shadow-[0_0_14px_rgba(244,63,94,0.5)]'
+                      : 'text-white/70 hover:text-white hover:bg-white/[0.08]'
                   }`}
                 >
                   {r}
@@ -1348,19 +1356,19 @@ export const Plinko: React.FC<PlinkoProps> = ({
             <button
               disabled={isDropping}
               onClick={() => setShowBetModal(true)}
-              className="px-4 py-2.5 bg-[#191a20] border border-white/10 rounded-[16px] text-[13px] font-bold text-white/80 hover:text-white flex items-center gap-1.5 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+              className="px-4 py-2.5 bg-white/[0.14] hover:bg-white/[0.22] border border-white/[0.18] rounded-full text-[13px] font-bold text-white flex items-center gap-1.5 active:scale-95 transition-all cursor-pointer disabled:opacity-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]"
             >
               <span>{mode === 'gram' ? `${betGram} G` : (selectedNft?.name ? cleanNftName(selectedNft.name) : 'NFT')}</span>
-              <ChevronRight className="w-3.5 h-3.5 opacity-50" />
+              <ChevronRight className="w-3.5 h-3.5 opacity-80" />
             </button>
           </div>
 
-          {/* Action Button: Strictly 1 ball at a time */}
+          {/* Action Button: Strictly 1 ball at a time in Liquid Glass */}
           <button
             id="plinko-drop-button"
             disabled={isDropping}
             onClick={handleDropBall}
-            className="w-full relative overflow-hidden group rounded-[18px] font-display font-bold text-[17px] tracking-wide active:scale-[0.98] transition-all py-3.5 shadow-[0_0_25px_rgba(255,184,0,0.25)] bg-brand text-black cursor-pointer flex items-center justify-center gap-2 select-none disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full relative overflow-hidden group rounded-full font-display font-bold text-[16px] tracking-wide active:scale-[0.98] transition-all py-3.5 shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white cursor-pointer flex items-center justify-center gap-2 select-none disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isDropping ? (
               <span>Шар в игре...</span>
@@ -1369,7 +1377,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
             )}
           </button>
 
-          {/* Bottom Panel: History of Drops */}
+          {/* Bottom Panel: History of Drops in Liquid Glass */}
           <div className="w-full mt-6 flex flex-col gap-2.5 pb-8">
             <div className="flex items-center justify-between px-1 mb-1">
               <div className="flex items-center gap-2">
@@ -1381,9 +1389,9 @@ export const Plinko: React.FC<PlinkoProps> = ({
             </div>
 
             {dropHistory.length === 0 ? (
-              <div className="w-full py-8 px-4 text-center rounded-[20px] bg-[#16171c] border border-white/5 flex flex-col items-center justify-center">
-                <span className="text-white/40 text-sm font-medium">Пока нет бросков</span>
-                <span className="text-white/20 text-xs mt-1">Сделайте первый бросок в Plinko!</span>
+              <div className="w-full py-8 px-4 text-center rounded-[24px] bg-white/[0.04] border border-white/[0.08] flex flex-col items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                <span className="text-white/50 text-sm font-medium">Пока нет бросков</span>
+                <span className="text-white/30 text-xs mt-1">Сделайте первый бросок в Plinko!</span>
               </div>
             ) : (
               <div className="flex flex-col gap-2">
@@ -1396,7 +1404,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       onClick={() => setShowBetHistory(true)}
-                      className="h-16 w-full flex items-center justify-between rounded-2xl px-3.5 bg-[#15161a] border border-white/5 hover:border-white/10 transition-all cursor-pointer select-none active:scale-[0.99]"
+                      className="h-16 w-full flex items-center justify-between rounded-[22px] px-3.5 bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] hover:border-white/[0.14] transition-all cursor-pointer select-none active:scale-[0.99] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-9 h-9 rounded-full bg-white/5 shrink-0 object-cover border border-white/10 flex items-center justify-center overflow-hidden font-bold text-white/80">
@@ -1480,46 +1488,52 @@ export const Plinko: React.FC<PlinkoProps> = ({
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-[110] bg-[#17181e] rounded-t-[32px] p-5 pb-8 flex flex-col shadow-2xl border-t border-white/10 max-w-md mx-auto"
+              className="group fixed bottom-0 left-0 right-0 z-[110] bg-[#16171b]/95 backdrop-blur-2xl border-t border-white/[0.12] rounded-t-[32px] p-5 pb-8 flex flex-col shadow-2xl max-w-md mx-auto overflow-hidden"
             >
-              <div className="flex items-center justify-between mb-5">
+              {/* верхний блик жидкого стекла */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-t-[32px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+              />
+
+              <div className="relative z-10 flex items-center justify-between mb-4">
                 <div className="w-8" />
-                <h2 className="text-[18px] font-display font-bold text-white text-center">
+                <h2 className="text-[17px] font-display font-bold text-white text-center">
                   Параметры ставки
                 </h2>
                 <button
                   onClick={() => setShowBetModal(false)}
-                  className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:text-white cursor-pointer"
+                  className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] flex items-center justify-center text-white/70 hover:text-white cursor-pointer"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Mode Toggle: Gifts / GRAM */}
-              <div className="flex p-1 bg-black/25 rounded-2xl mb-5">
+              {/* Mode Toggle: Gifts / GRAM in Liquid Glass */}
+              <div className="relative z-10 flex p-1 bg-white/[0.08] backdrop-blur-xl border border-white/[0.12] rounded-full mb-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
                 <button
                   onClick={() => setMode('nft')}
-                  className={`flex-1 py-2.5 rounded-[12px] font-medium text-[14px] transition-all cursor-pointer ${
-                    mode === 'nft' ? 'bg-brand text-black shadow-sm font-bold' : 'text-white/40 hover:text-white/80'
+                  className={`flex-1 py-2 rounded-full font-bold text-[13px] transition-all cursor-pointer ${
+                    mode === 'nft' ? 'bg-white/[0.24] text-white border border-white/[0.30] shadow-[0_2px_10px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.25)]' : 'text-white/70 hover:text-white'
                   }`}
                 >
                   {t('gifts')}
                 </button>
                 <button
                   onClick={() => setMode('gram')}
-                  className={`flex-1 py-2.5 rounded-[12px] font-medium text-[14px] transition-all cursor-pointer ${
-                    mode === 'gram' ? 'bg-brand text-black shadow-sm font-bold' : 'text-white/40 hover:text-white/80'
+                  className={`flex-1 py-2 rounded-full font-bold text-[13px] transition-all cursor-pointer ${
+                    mode === 'gram' ? 'bg-white/[0.24] text-white border border-white/[0.30] shadow-[0_2px_10px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.25)]' : 'text-white/70 hover:text-white'
                   }`}
                 >
                   GRAM
                 </button>
               </div>
 
-              {/* Mode Body: GRAM or NFT Picker */}
-              <div className="bg-[#1f2026] rounded-[20px] p-5 mb-5 flex flex-col items-center justify-center min-h-[120px] border border-white/5 relative">
+              {/* Mode Body: GRAM or NFT Picker in Liquid Glass */}
+              <div className="relative z-10 bg-white/[0.04] border border-white/[0.08] rounded-[24px] p-5 mb-5 flex flex-col items-center justify-center min-h-[120px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                 {mode === 'gram' ? (
                   <>
-                    <div className="absolute top-3.5 left-4 flex items-center gap-1 text-white/50 text-[12px] font-medium">
+                    <div className="absolute top-3.5 left-4 flex items-center gap-1.5 text-white/50 text-[12px] font-medium">
                       <span>Баланс:</span>
                       <span className="text-white font-bold">{balance.toFixed(2)}</span>
                       <GramIcon className="w-3.5 h-3.5 text-brand" />
@@ -1534,19 +1548,19 @@ export const Plinko: React.FC<PlinkoProps> = ({
                         placeholder="5.0"
                       />
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1.5">
                       {[1, 5, 25, 50].map(amt => (
                         <button
                           key={amt}
                           onClick={() => setBetAdd(amt)}
-                          className="px-3 py-1.5 rounded-lg bg-white/5 text-white/70 text-[13px] font-bold hover:bg-white/10 active:scale-95 transition-colors cursor-pointer"
+                          className="px-3 py-1.5 rounded-full bg-white/[0.14] hover:bg-white/[0.22] border border-white/[0.18] text-white text-[12px] font-bold active:scale-95 transition-all cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]"
                         >
                           +{amt}
                         </button>
                       ))}
                       <button
                         onClick={setBetMax}
-                        className="px-3 py-1.5 rounded-lg bg-white/5 text-brand/70 text-[13px] font-bold hover:bg-brand/10 active:scale-95 transition-colors cursor-pointer"
+                        className="px-3 py-1.5 rounded-full bg-gradient-to-r from-[#0098ea] to-[#00b4d8] hover:brightness-110 border border-cyan-300/40 text-white text-[12px] font-bold active:scale-95 transition-all cursor-pointer shadow-[0_0_12px_rgba(0,152,234,0.45),inset_0_1px_0_rgba(255,255,255,0.3)]"
                       >
                         MAX
                       </button>
@@ -1566,7 +1580,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
                 )}
               </div>
 
-              {/* Confirm Button */}
+              {/* Confirm Button in Liquid Glass */}
               <button
                 id="plinko-confirm-bet-button"
                 onClick={() => {
@@ -1577,7 +1591,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
                   (mode === 'gram' && (betGram < MIN_BET_GRAM || betGram > balance || betGram > MAX_BET_GRAM)) ||
                   (mode === 'nft' && (!selectedNft || Number(selectedNft.floor_price_gram || selectedNft.price || 0) > MAX_BET_GRAM))
                 }
-                className="w-full bg-brand text-black font-display font-bold text-[17px] py-3.5 rounded-[18px] active:scale-[0.98] transition-transform disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_25px_rgba(255,184,0,0.2)] cursor-pointer"
+                className="relative z-10 w-full bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white font-display font-bold text-[16px] py-3.5 rounded-full active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] cursor-pointer"
               >
                 Бросить шар
               </button>

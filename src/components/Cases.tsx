@@ -16,9 +16,10 @@ interface CasesProps {
   giftsDb: any[];
   onAddTurnover: (amount: number) => void;
   turnover: number;
+  hideLiveFeed?: boolean;
 }
 
-export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, onAddTurnover, turnover }: CasesProps) {
+export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, onAddTurnover, turnover, hideLiveFeed }: CasesProps) {
   const { t } = useTranslation();
   const [cases, setCases] = useState<CaseConfig[]>([]);
   const [loading, setLoading] = useState(true);
@@ -229,8 +230,12 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
   if (selectedCase) {
     return (
       <div className="space-y-4 pt-2 pb-10">
-        <button onClick={() => { setSelectedCase(null); }} className="flex items-center gap-1 text-white/50 hover:text-white mb-2">
-          <ChevronLeft className="w-5 h-5" /> {t("back")}
+        <button
+          onClick={() => { setSelectedCase(null); }}
+          className="w-9 h-9 rounded-full bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer mb-2"
+          title={t("back")}
+        >
+          <ChevronLeft className="w-5 h-5 text-white" />
         </button>
         
         {/* Roulette Area */}
@@ -287,8 +292,8 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
                       Array.from({ length: 35 }).map(() => selectedCase.items[Math.floor(Math.random() * selectedCase.items.length)])
                     ));
                   }
-                }} className="flex-1 px-4 py-3 bg-white/10 rounded-xl font-bold text-white hover:bg-white/20">{t("continue")}</button>
-                <button onClick={() => setShowSellConfirm(true)} className="flex-1 px-4 py-3 bg-brand/20 text-brand border border-brand/30 rounded-xl font-bold hover:bg-brand/30">{t("sell_all")}</button>
+                }} className="flex-1 px-4 py-3 bg-white/[0.14] hover:bg-white/[0.22] border border-white/[0.18] shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] rounded-full font-bold text-white transition-all cursor-pointer">{t("continue")}</button>
+                <button onClick={() => setShowSellConfirm(true)} className="flex-1 px-4 py-3 bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] text-white shadow-[0_4px_20px_rgba(0,152,234,0.45),inset_0_1px_0_rgba(255,255,255,0.35)] hover:brightness-110 rounded-full font-bold transition-all cursor-pointer">{t("sell_all")}</button>
               </div>
             </div>
           ) : (
@@ -335,14 +340,14 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
                ) : (
                  <div className="w-full mt-4 flex flex-col items-center">
                    <div className="flex items-center justify-center mb-4">
-                     <button onClick={() => setIsFastOpen(!isFastOpen)} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${isFastOpen ? "bg-brand text-white shadow-[0_0_15px_rgba(255,176,24,0.3)]" : "bg-white/5 text-white/50 border border-white/10"}`}>{isFastOpen ? t('fast_open_on') : t('fast_open_off')}</button>
+                     <button onClick={() => setIsFastOpen(!isFastOpen)} className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${isFastOpen ? "bg-gradient-to-r from-[#0098ea] to-[#00b4d8] text-white shadow-[0_0_14px_rgba(0,152,234,0.45),inset_0_1px_0_rgba(255,255,255,0.3)] border border-cyan-300/40" : "bg-white/[0.10] hover:bg-white/[0.18] text-white/80 border border-white/[0.14]"}`}>{isFastOpen ? t('fast_open_on') : t('fast_open_off')}</button>
                    </div>
                    <div className="flex gap-2 mb-6">
                      {[1, 2, 3].map(amount => (
                        <button 
                          key={amount}
                          onClick={() => setOpenAmount(amount)}
-                         className={`w-12 h-10 rounded-lg font-bold flex items-center justify-center transition-all ${openAmount === amount ? 'bg-brand text-white shadow-[0_0_15px_rgba(255,176,24,0.3)]' : 'bg-white/5 text-white/50 border border-white/10'}`}
+                         className={`w-12 h-10 rounded-full font-bold flex items-center justify-center transition-all cursor-pointer ${openAmount === amount ? 'bg-gradient-to-r from-[#0098ea] to-[#00b4d8] text-white shadow-[0_0_14px_rgba(0,152,234,0.45),inset_0_1px_0_rgba(255,255,255,0.3)] border border-cyan-300/40' : 'bg-white/[0.10] hover:bg-white/[0.18] text-white/80 border border-white/[0.14]'}`}
                        >
                          x{amount}
                        </button>
@@ -351,7 +356,7 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
                    <button 
                      onClick={openCases}
                      disabled={balance < selectedCase.price * openAmount}
-                     className="w-full max-w-sm py-4 bg-brand rounded-2xl text-white font-bold text-lg disabled:opacity-50 disabled:grayscale transition-transform active:scale-95 flex items-center justify-center gap-2"
+                     className="w-full max-w-sm py-4 bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] rounded-full text-white font-display font-bold text-[17px] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
                    >
                      {t("open_for")} {(selectedCase.price * openAmount).toFixed(2)} <GramIcon className="w-5 h-5" />
                    </button>
@@ -373,8 +378,8 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
                 {t("sell_all_desc")} {results.length} {t("items_for")} <strong className="text-brand">{Number((results.reduce((sum, r) => sum + (Number(r.floor_price_gram) || Number(r.price) || 0), 0)).toFixed(2))} GRAM</strong>? {t("items_will_be_removed")}
               </p>
               <div className="flex gap-3">
-                <button onClick={() => setShowSellConfirm(false)} className="flex-1 py-3 rounded-xl bg-white/5 font-bold text-white hover:bg-white/10">{t("cancel")}</button>
-                <button onClick={sellAll} className="flex-1 py-3 rounded-xl bg-brand font-bold text-white hover:brightness-110">{t("sell")}</button>
+                <button onClick={() => setShowSellConfirm(false)} className="flex-1 py-3 rounded-full bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] font-bold text-white transition-all cursor-pointer">{t("cancel")}</button>
+                <button onClick={sellAll} className="flex-1 py-3 rounded-full bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] font-bold text-white shadow-[0_4px_18px_rgba(0,152,234,0.45)] hover:brightness-110 transition-all cursor-pointer">{t("sell")}</button>
               </div>
             </div>
           </div>
@@ -436,9 +441,11 @@ export function Cases({ balance, setBalance, inventory, setInventory, giftsDb, o
         </div>
       </div>
 
-      <div className="mb-6 -mx-5 px-5">
-        <LiveFeed />
-      </div>
+      {!hideLiveFeed && (
+        <div className="mb-6 -mx-5 px-5">
+          <LiveFeed />
+        </div>
+      )}
 
       {loading ? (
         <div className="animate-pulse text-white/50 text-center py-10">{t("loading")}</div>

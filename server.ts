@@ -18,42 +18,6 @@ import baseGiftsDb from "./src/gifts_data.json" with { type: "json" };
 const botToken = (process.env.TELEGRAM_BOT_TOKEN || "").trim();
 const bot = botToken ? new TelegramBot(botToken, { polling: true }) : null;
 
-// --- Bot identity -----------------------------------------------------------
-// Каноническая реферальная ссылка ведёт на мини-апп этого бота:
-//   https://t.me/<bot_username>?startapp=ref_<userId>
-// Имя бота НЕ хардкодим: TELEGRAM_BOT_USERNAME -> getMe() -> botAppUrl -> fallback.
-// start_param «ref_<id>» разбирается в upsertUserProfile (см. store.server.ts).
-const FALLBACK_BOT_USERNAME = "GaleaDropBot";
-let cachedBotUsername = (process.env.TELEGRAM_BOT_USERNAME || "").trim().replace(/^@/, "");
-
-async function getBotUsername(): Promise<string> {
-  if (cachedBotUsername) return cachedBotUsername;
-  if (bot) {
-    try {
-      const me = await bot.getMe();
-      if (me?.username) {
-        cachedBotUsername = me.username;
-        return cachedBotUsername;
-      }
-    } catch (e: any) {
-      console.warn("[share] getMe failed:", e?.message || e);
-    }
-  }
-  try {
-    const fromConfig = String(getAdminConfig().botAppUrl || "").match(/^https?:\/\/t\.me\/([A-Za-z0-9_]+)/i);
-    if (fromConfig?.[1] && !/^app_bot$/i.test(fromConfig[1])) {
-      cachedBotUsername = fromConfig[1];
-      return cachedBotUsername;
-    }
-  } catch {}
-  cachedBotUsername = FALLBACK_BOT_USERNAME;
-  return cachedBotUsername;
-}
-
-function buildRefLink(botUsername: string, userId: number): string {
-  return `https://t.me/${botUsername}?startapp=ref_${userId}`;
-}
-
 // Sensible default ≈ TON spot; refreshed from CoinGecko when reachable.
 let cachedGramPriceUsd = 2.6;
 let lastGramPriceFetch = 0;
@@ -138,7 +102,7 @@ if (bot) {
     }
   });
 
-  bot.on('inline_query', async (query) => {
+  bot.on('inline_query', (query) => {
     if (!query.query.startsWith('share_')) return;
     
     const refId = query.query.replace('share_', '');
@@ -163,8 +127,8 @@ if (bot) {
       playText = '🎮 开始游戏';
     }
     
-    // Каноническая реферальная ссылка на мини-апп (start_param «ref_<id>»).
-    const refLink = buildRefLink(await getBotUsername(), Number(refId) || query.from.id);
+    // Fallback bot user link if not provided
+    const refLink = `https://t.me/PlatinaGiftRobot?start=ref_${refId}`;
     
     const results: any[] = [{
       type: 'article',
@@ -457,8 +421,6 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
           botChannelUrl: config.botChannelUrl || 'https://t.me/platina_gift',
           demoMode: config.demoMode || false,
           tonTopupAddress: config.tonTopupAddress || '',
-          // Каноническая реферальная ссылка пользователя (для копирования/шеринга).
-          refLink: buildRefLink(await getBotUsername(), user.id),
         }
       });
     } catch (e: any) {
@@ -1504,32 +1466,21 @@ app.get("/api/admin/gifts", (req, res) => {
   });
 
   // ----------------------------------------------------
-  // Referral invite share (Профиль -> «Пригласить друзей»).
-  // Как в эталоне (скрин 0950): Telegram.WebApp.shareMessage(id) открывает
-  // нативное окно «Отправить сообщение» с превью «с помощью @bot»,
-  // фото-баннером и текстом, и кнопкой «Выбрать получателей…».
-  // Готовим сообщение через savePreparedInlineMessage (type: photo):
-  // photo_url — публичный JPEG (баннер public/platina-invite.jpg),
-  // caption — до 1024 символов, форматирование через parse_mode: HTML.
+  // Referral invite share (Профиль → «Пригласить друзей»).
+  // Prepares a message on the bot side (savePreparedInlineMessage)
+  // with a banner photo + localized text; the client then calls
+  // Telegram.WebApp.shareMessage(preparedMessageId) — Telegram opens
+  // the native «Отправить сообщение» modal with the message preview
+  // («с помощью @bot», фото + текст) and «Выбрать получателей…».
   // ----------------------------------------------------
   const INVITE_BANNER_PATH = '/platina-invite.jpg';
   const INVITE_CAPTIONS: Record<string, (link: string) => string> = {
     ru: (link) =>
-      `\u{1F386} <b>Заходи в Platina Gift и выигрывай NFT-подарки!</b>\n\nКейсы, крафт и еженедельный топ с гарантированными призами.\n\nИграй со мной по моей ссылке:\n${link}\n\n\u{1F4E2} Канал: @Platina_Gift · \u{1F4AC} Поддержка: @Platina_Help`,
+      `🎁 Заходи в Platina Gift и выигрывай свои NFT-подарки!\n\nПопади в еженедельный топ и получай гарантированные призы!\n\nПрисоединяйся ко мне по моей ссылке:\n${link}\n\nНаш канал: @Platina_Gift\nПоддержка: @Platina_Help`,
     en: (link) =>
-      `\u{1F386} <b>Join Platina Gift and win NFT gifts!</b>\n\nCases, crafting and a weekly leaderboard with guaranteed prizes.\n\nPlay with me via my link:\n${link}\n\n\u{1F4E2} Channel: @Platina_Gift · \u{1F4AC} Support: @Platina_Help`,
+      `🎁 Join Platina Gift and win your NFT gifts!\n\nGet into the weekly top and receive guaranteed prizes!\n\nJoin me via my link:\n${link}\n\nOur channel: @Platina_Gift\nSupport: @Platina_Help`,
     zh: (link) =>
-      `\u{1F386} <b>加入 Platina Gift，赢取 NFT 礼物！</b>\n\n开箱、合成，每周排行榜还有保底奖励。\n\n通过我的链接加入：\n${link}\n\n\u{1F4E2} 频道: @Platina_Gift · \u{1F4AC} 支持: @Platina_Help`,
-  };
-  const INVITE_TITLES: Record<string, string> = {
-    ru: '\u{1F386} Приглашение в Platina Gift',
-    en: '\u{1F386} Invitation to Platina Gift',
-    zh: '\u{1F386} Platina Gift 邀请',
-  };
-  const INVITE_DESCS: Record<string, string> = {
-    ru: 'Играй и выигрывай NFT-подарки',
-    en: 'Play and win NFT gifts',
-    zh: '玩游戏赢 NFT 礼物',
+      `🎁 加入 Platina Gift，赢取你的 NFT 礼物！\n\n进入每周排行榜，获得保证奖品！\n\n通过我的链接加入：\n${link}\n\n频道: @Platina_Gift\n技术支持: @Platina_Help`,
   };
 
   app.post('/api/share/invite', requireAuth, async (req, res) => {
@@ -1537,9 +1488,8 @@ app.get("/api/admin/gifts", (req, res) => {
       const userId = (req as any).userId as number;
       const user = getUser(userId);
 
-      // Та же реферальная ссылка, что показывается в профиле:
-      // https://t.me/<bot>?startapp=ref_<userId> -> start_param «ref_<id>».
-      const refLink = buildRefLink(await getBotUsername(), userId);
+      // Та же реферальная ссылка, что показывается в профиле.
+      const refLink = `https://t.me/GaleaDropBot?startapp=r_${userId}`;
 
       const langCode = String(user?.languageCode || 'ru').toLowerCase();
       const lang = langCode.startsWith('en') ? 'en' : langCode.startsWith('zh') ? 'zh' : 'ru';
@@ -1565,10 +1515,9 @@ app.get("/api/admin/gifts", (req, res) => {
                 id: `invite_${Date.now()}_${userId}`,
                 photo_url: photoUrl,
                 thumbnail_url: photoUrl,
-                title: INVITE_TITLES[lang] || INVITE_TITLES.ru,
-                description: INVITE_DESCS[lang] || INVITE_DESCS.ru,
+                title: 'Platina Gift',
+                description: 'Играй и выигрывай NFT-подарки',
                 caption,
-                parse_mode: 'HTML',
               },
               allow_user_chats: true,
               allow_bot_chats: true,

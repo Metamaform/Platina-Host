@@ -667,10 +667,10 @@ export const NewGame: React.FC<NewGameProps> = ({
       <button
         id="rocket-back-button"
         onClick={onBack}
-        className="absolute top-4 left-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center active:scale-95 transition-all hover:bg-white/20 border border-white/5 cursor-pointer z-20"
+        className="absolute top-4 left-4 w-9 h-9 rounded-full bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer z-20"
         title={t('back') || 'Back'}
       >
-        <ArrowLeft className="w-5 h-5 text-white" />
+        <ArrowLeft className="w-4 h-4 text-white" />
       </button>
 
       <div className="absolute top-0 left-0 right-0 h-[72px] flex items-center justify-center pointer-events-none z-10">
@@ -680,16 +680,16 @@ export const NewGame: React.FC<NewGameProps> = ({
       </div>
 
       <div className="absolute top-4 right-4 flex items-center gap-2 z-20">
-        <div className="flex items-center gap-1.5 bg-white/5 px-3 h-10 rounded-full border border-white/5">
+        <div className="flex items-center gap-1.5 bg-white/[0.12] border border-white/[0.16] px-3 h-9 rounded-full shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]">
           <span className="text-white font-bold text-[13px]">{balance.toFixed(2)}</span>
-          <GramIcon className="w-3.5 h-3.5" />
+          <GramIcon className="w-3.5 h-3.5 text-brand" />
         </div>
         <button
           onClick={() => setShowBetHistory(true)}
-          className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center active:scale-95 transition-all hover:bg-white/20 border border-white/5 cursor-pointer text-white/80 hover:text-white"
+          className="w-9 h-9 rounded-full bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer"
           title="История ваших ставок"
         >
-          <History className="w-5 h-5 text-white/80" />
+          <History className="w-4 h-4 text-white" />
         </button>
       </div>
 
@@ -723,11 +723,16 @@ export const NewGame: React.FC<NewGameProps> = ({
 
           {/* Rocket Flight Screen / Visualizer */}
           <div className="w-full relative min-h-[250px] mb-4">
-            {/* Background container with rounded corners and overflow hidden */}
-            <div className="absolute inset-0 rounded-[28px] bg-gradient-to-b from-[#181820] to-[#121216] border border-white/10 overflow-hidden shadow-2xl pointer-events-none">
+            {/* Background container with rounded corners and liquid glass style */}
+            <div className="absolute inset-0 rounded-[28px] bg-white/[0.06] backdrop-blur-2xl border border-white/[0.10] overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)] pointer-events-none">
+              {/* верхний блик жидкого стекла */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+              />
               {/* Ambient Background Glow */}
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent pointer-events-none" />
-              <div className="absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+              <div className="absolute inset-0 opacity-15 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
 
               {/* Center Area: Waiting rocket or flying/crashed rocket */}
               <div className="absolute inset-0 w-full h-full pointer-events-none z-0">
@@ -892,10 +897,6 @@ export const NewGame: React.FC<NewGameProps> = ({
                   </motion.span>
                 )}
               </AnimatePresence>
-              
-              {currentGameState === 'crashed' && (
-                <span className="text-xs text-red-400/90 font-semibold mt-1">{t('rocket_flew_away')}</span>
-              )}
 
               {/* Display Winnable NFT */}
               <AnimatePresence mode="popLayout">
@@ -948,7 +949,7 @@ export const NewGame: React.FC<NewGameProps> = ({
               id="rocket-cashout-button"
               onClick={handleCashout}
               disabled={isCashingOut}
-              className="w-full relative overflow-hidden group rounded-[20px] font-display font-bold text-[17px] tracking-wide active:scale-[0.98] transition-all py-4 bg-brand text-black shadow-[0_0_30px_rgba(255,184,0,0.35)] animate-pulse disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 select-none"
+              className="w-full relative overflow-hidden group rounded-full font-display font-bold text-[17px] tracking-wide active:scale-[0.98] transition-all py-4 shadow-[0_4px_24px_rgba(16,185,129,0.6),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#10b981] via-[#059669] to-[#10b981] hover:brightness-110 text-white disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 select-none"
             >
               {isCashingOut ? (
                 <span>{t('withdrawing') || 'Вывод...'}</span>
@@ -984,7 +985,7 @@ export const NewGame: React.FC<NewGameProps> = ({
               id="rocket-make-bet-button"
               onClick={() => setShowBetModal(true)}
               disabled={isSubmittingBet || !!userBetInQueue}
-              className="w-full relative overflow-hidden group rounded-[20px] font-display font-bold text-[18px] tracking-wide active:scale-[0.98] transition-all py-4 shadow-[0_0_30px_rgba(255,184,0,0.3)] bg-brand text-black disabled:opacity-50 cursor-pointer"
+              className="w-full relative overflow-hidden group rounded-full font-display font-bold text-[17px] tracking-wide active:scale-[0.98] transition-all py-4 shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white disabled:opacity-40 cursor-pointer"
             >
               {userBetInQueue
                 ? t('rocket_next_round_accepted')
@@ -1014,7 +1015,7 @@ export const NewGame: React.FC<NewGameProps> = ({
             </div>
 
             {sortedDisplayList.length === 0 ? (
-              <div className="w-full py-8 px-4 text-center rounded-[24px] bg-[#1c1c20] border border-white/5 flex flex-col items-center justify-center">
+              <div className="w-full py-8 px-4 text-center rounded-[24px] bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] flex flex-col items-center justify-center">
                 <span className="text-white/40 text-sm font-medium">
                   {t('rocket_no_bets')}
                 </span>
@@ -1054,7 +1055,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                           ? 'border border-emerald-500/80 bg-emerald-950/20'
                           : isLost
                           ? 'border border-red-500/80 bg-red-950/20'
-                          : 'border border-white/10 bg-[#1c1c20]'
+                          : 'border border-white/[0.08] bg-white/[0.05] backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]'
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -1196,47 +1197,53 @@ export const NewGame: React.FC<NewGameProps> = ({
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-[110] bg-[#1a1a20] rounded-t-[32px] p-5 pb-8 flex flex-col shadow-[0_-20px_60px_rgba(0,0,0,0.6)] border-t border-white/10 max-w-md mx-auto"
+              className="group fixed bottom-0 left-0 right-0 z-[110] bg-[#16171b]/95 backdrop-blur-2xl rounded-t-[32px] p-5 pb-8 flex flex-col shadow-2xl border-t border-white/[0.12] max-w-md mx-auto overflow-hidden"
             >
-              <div className="flex items-center justify-between mb-6">
+              {/* верхний блик жидкого стекла */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-t-[32px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+              />
+
+              <div className="relative z-10 flex items-center justify-between mb-4">
                 <div className="w-8" />
-                <h2 className="text-[20px] font-display font-bold text-white text-center">
+                <h2 className="text-[17px] font-display font-bold text-white text-center">
                   {currentGameState === 'flying' ? t('rocket_bet_next_round') : (t('make_bet_title') || t('rocket_place_bet'))}
                 </h2>
                 <button
                   onClick={() => setShowBetModal(false)}
-                  className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:text-white cursor-pointer"
+                  className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] flex items-center justify-center text-white/70 hover:text-white cursor-pointer"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Mode Toggle: Gifts / GRAM */}
-              <div className="flex p-1 bg-black/20 rounded-2xl mb-6">
+              {/* Mode Toggle: Gifts / GRAM in Liquid Glass */}
+              <div className="relative z-10 flex p-1 bg-white/[0.08] backdrop-blur-xl border border-white/[0.12] rounded-full mb-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
                 <button
                   onClick={() => setMode('nft')}
-                  className={`flex-1 py-2.5 rounded-[12px] font-medium text-[15px] transition-all cursor-pointer ${
-                    mode === 'nft' ? 'bg-brand text-black shadow-sm' : 'text-white/40 hover:text-white/80'
+                  className={`flex-1 py-2 rounded-full font-bold text-[13px] transition-all cursor-pointer ${
+                    mode === 'nft' ? 'bg-white/[0.24] text-white border border-white/[0.30] shadow-[0_2px_10px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.25)]' : 'text-white/70 hover:text-white'
                   }`}
                 >{t('gifts')}</button>
                 <button
                   onClick={() => setMode('gram')}
-                  className={`flex-1 py-2.5 rounded-[12px] font-medium text-[15px] transition-all cursor-pointer ${
-                    mode === 'gram' ? 'bg-brand text-black shadow-sm' : 'text-white/40 hover:text-white/80'
+                  className={`flex-1 py-2 rounded-full font-bold text-[13px] transition-all cursor-pointer ${
+                    mode === 'gram' ? 'bg-white/[0.24] text-white border border-white/[0.30] shadow-[0_2px_10px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.25)]' : 'text-white/70 hover:text-white'
                   }`}
                 >
                   GRAM
                 </button>
               </div>
 
-              {/* Mode Body: GRAM or NFT Picker */}
-              <div className="bg-[#222228] rounded-[24px] p-6 mb-6 flex flex-col items-center justify-center min-h-[120px] border border-white/5 relative">
+              {/* Mode Body: GRAM or NFT Picker in Liquid Glass */}
+              <div className="relative z-10 bg-white/[0.04] border border-white/[0.08] rounded-[24px] p-5 mb-5 flex flex-col items-center justify-center min-h-[120px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                 {mode === 'gram' ? (
                   <>
-                    <div className="absolute top-4 left-5 flex items-center gap-1 text-white/50 text-[12px] font-medium">
-                      <span>Balance:</span>
+                    <div className="absolute top-3.5 left-4 flex items-center gap-1.5 text-white/50 text-[12px] font-medium">
+                      <span>{t('balance')}:</span>
                       <span className="text-white font-bold">{balance.toFixed(2)}</span>
-                      <GramIcon className="w-3.5 h-3.5" />
+                      <GramIcon className="w-3.5 h-3.5 text-brand" />
                     </div>
                     <div className="relative w-full text-center flex items-center justify-center mb-4 mt-2">
                       <input
@@ -1244,30 +1251,30 @@ export const NewGame: React.FC<NewGameProps> = ({
                         inputMode="decimal"
                         value={betInput}
                         onChange={handleBetChange}
-                        className="bg-transparent text-center text-5xl font-display font-bold text-white outline-none w-full max-w-[200px]"
+                        className="bg-transparent text-center text-4xl font-display font-bold text-white outline-none w-full max-w-[200px]"
                         placeholder="0.1"
                       />
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1.5">
                       {[1, 5, 25, 50].map(amt => (
                         <button
                           key={amt}
                           onClick={() => setBetAdd(amt)}
-                          className="px-3 py-1.5 rounded-lg bg-white/5 text-white/70 text-[13px] font-bold hover:bg-white/10 active:scale-95 transition-colors cursor-pointer"
+                          className="px-3 py-1.5 rounded-full bg-white/[0.14] hover:bg-white/[0.22] border border-white/[0.18] text-white text-[12px] font-bold active:scale-95 transition-all cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]"
                         >
                           +{amt}
                         </button>
                       ))}
                       <button
                         onClick={setBetMax}
-                        className="px-3 py-1.5 rounded-lg bg-white/5 text-brand/70 text-[13px] font-bold hover:bg-brand/10 active:scale-95 transition-colors cursor-pointer"
+                        className="px-3 py-1.5 rounded-full bg-gradient-to-r from-[#0098ea] to-[#00b4d8] hover:brightness-110 border border-cyan-300/40 text-white text-[12px] font-bold active:scale-95 transition-all cursor-pointer shadow-[0_0_12px_rgba(0,152,234,0.45),inset_0_1px_0_rgba(255,255,255,0.3)]"
                       >
                         MAX
                       </button>
                     </div>
 
                     {/* Auto-Cashout Settings */}
-                    <div className="flex items-center gap-3 w-full mt-4 bg-white/5 rounded-xl p-2.5 border border-white/5">
+                    <div className="flex items-center gap-3 w-full mt-4 bg-white/[0.04] border border-white/[0.08] rounded-[18px] p-2.5">
                       <div 
                         className="flex items-center gap-2 cursor-pointer select-none"
                         onClick={() => setAutoCashoutEnabled(!autoCashoutEnabled)}
@@ -1275,20 +1282,19 @@ export const NewGame: React.FC<NewGameProps> = ({
                         <div className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-300 ease-in-out flex items-center ${autoCashoutEnabled ? 'bg-brand' : 'bg-white/20'}`}>
                           <div className={`w-4 h-4 bg-black/80 rounded-full transition-transform duration-300 ease-out shadow-sm ${autoCashoutEnabled ? 'translate-x-4' : 'translate-x-0'}`} />
                         </div>
-                        <span className="text-white/80 text-[13px] font-bold">{t('rocket_auto_withdraw')}</span>
+                        <span className="text-white/80 text-[12px] font-bold">{t('rocket_auto_withdraw')}</span>
                       </div>
                       <div className={`flex-1 flex items-center justify-end transition-opacity ${autoCashoutEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
-                        <span className="text-white/40 text-[12px] font-medium mr-2">multiplier</span>
-                        <div className="bg-black/30 rounded-lg px-2.5 py-1 flex items-center border border-white/5">
+                        <span className="text-white/40 text-[11px] font-medium mr-2">x</span>
+                        <div className="bg-white/[0.06] border border-white/[0.08] rounded-full px-2.5 py-1 flex items-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                           <input 
-                            type="text"
+                            type="text" 
                             inputMode="decimal"
                             value={autoCashoutInput}
                             onChange={(e) => setAutoCashoutInput(e.target.value.replace(/,/g, '.'))}
-                            className="bg-transparent text-right text-[14px] font-bold text-white outline-none w-12"
+                            className="bg-transparent text-right text-[13px] font-bold text-white outline-none w-12"
                             placeholder="2.00"
                           />
-                          <span className="text-white/50 text-[12px] font-bold ml-1">x</span>
                         </div>
                       </div>
                     </div>
@@ -1316,7 +1322,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                   (mode === 'gram' && (betGram < 0.1 || betGram > balance || betGram > MAX_BET_GRAM)) ||
                   (mode === 'nft' && (!selectedNft || Number(selectedNft.floor_price_gram || selectedNft.price || 0) > 2500))
                 }
-                className="w-full bg-brand text-black font-display font-bold text-[18px] py-4 rounded-[20px] active:scale-[0.98] transition-transform disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_30px_rgba(255,184,0,0.2)] cursor-pointer"
+                className="w-full font-display font-bold text-[16px] py-4 rounded-full active:scale-[0.98] transition-all shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isSubmittingBet ? 'Placing...' : t('rocket_place_bet')}
               </button>
@@ -1434,7 +1440,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                 <button 
                   type="button"
                   onClick={() => setWonResult(null)}
-                  className="w-full py-3.5 rounded-[16px] text-[14px] font-bold flex items-center justify-center bg-brand text-black hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer shadow-[0_0_20px_rgba(255,184,0,0.25)]"
+                  className="w-full py-3.5 rounded-[16px] text-[14px] font-bold flex items-center justify-center bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] text-white hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)]"
                 >
                   {t('continue') || 'Отлично'}
                 </button>
@@ -1444,8 +1450,8 @@ export const NewGame: React.FC<NewGameProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Beautiful Defeat Modal for Rocket Crash */}
-      <GameLossModal
+      {/* Defeat modal removed as requested */}
+      {/* <GameLossModal
         isOpen={Boolean(lossResult)}
         onClose={() => setLossResult(null)}
         onRetry={() => {
@@ -1454,7 +1460,7 @@ export const NewGame: React.FC<NewGameProps> = ({
         }}
         game="rocket"
         crashMultiplier={lossResult?.crashMultiplier}
-      />
+      /> */}
 
       {/* Bet History Modal matching IMG_0888 */}
       <BetHistoryModal

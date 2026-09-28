@@ -22,6 +22,9 @@ export const springSnappy = { type: 'spring', bounce: 0.08, duration: 0.32 } as 
 /** Under-damped — momentum-driven moments (flicked sheet, wheel spin landing). */
 export const springBouncy = { type: 'spring', bounce: 0.22, duration: 0.42 } as const;
 
+/** Soft, fluid liquid spring for water droplet pills and flowing transitions */
+export const springLiquid = { type: 'spring', damping: 26, stiffness: 180, mass: 0.9 } as const;
+
 /** Enter curve: fast arrival, gentle settle (never ease-in on entrances). */
 export const easeOut = [0.22, 1, 0.36, 1] as const;
 

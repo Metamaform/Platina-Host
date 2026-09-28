@@ -4337,7 +4337,7 @@
     "floor_price_gram": 55.66,
     "image_url": "https://fragment.com/file/gifts/artisanbrick/model.d3bO-PyNwVVI2AjB4zAYeFs90VREpKKtabXExPk82YTSkxC6tcJjCTvyHB5c-132.webp",
     "animation_url": "",
-    "lottie_url": "",
+    "lottie_url": "/artisanbrick.lottie.json",
     "backdrop": "Default",
     "baseName": "Artisan Brick"
   },
@@ -4352,7 +4352,7 @@
     "floor_price_gram": 306.13,
     "image_url": "https://fragment.com/file/gifts/artisanbrick/model.d3bO-PyNwVVI2AjB4zAYeFs90VREpKKtabXExPk82YTSkxC6tcJjCTvyHB5c-132.webp",
     "animation_url": "",
-    "lottie_url": ""
+    "lottie_url": "/artisanbrick.lottie.json"
   },
   {
     "id": "114_onyx",
@@ -4365,7 +4365,7 @@
     "floor_price_gram": 102.97,
     "image_url": "https://fragment.com/file/gifts/artisanbrick/model.d3bO-PyNwVVI2AjB4zAYeFs90VREpKKtabXExPk82YTSkxC6tcJjCTvyHB5c-132.webp",
     "animation_url": "",
-    "lottie_url": ""
+    "lottie_url": "/artisanbrick.lottie.json"
   },
   {
     "id": "112",

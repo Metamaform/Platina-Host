@@ -87,9 +87,9 @@ export async function generateCleanPreview(url: string, trait: 'Model' | 'Symbol
       
       if (json._proxy_error) return null;
       
-      // Filter layers
+      // Filter layers (for multi-trait Fragment models that separate backdrop, symbol, model)
       if (json.layers && Array.isArray(json.layers) && !url.includes('.tgs')) {
-        json.layers = json.layers.filter((layer: any) => {
+        const filtered = json.layers.filter((layer: any) => {
           const name = (layer.nm || '').toLowerCase();
           if (trait === 'Model') {
             return name.includes('gift') || name === 'model';
@@ -98,6 +98,9 @@ export async function generateCleanPreview(url: string, trait: 'Model' | 'Symbol
           }
           return false;
         });
+        if (filtered.length > 0) {
+          json.layers = filtered;
+        }
       }
       
       memoryCache.set(cacheKey, json);

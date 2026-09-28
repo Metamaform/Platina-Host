@@ -126,51 +126,63 @@ export function Inventory({
     <div className="space-y-6 relative h-full flex flex-col">
       <AnimatePresence>
         {showHelp && (
-          <>
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[999] bg-black/60"
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
               onClick={() => setShowHelp(false)}
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="fixed z-[1000] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-[#1a1c23] border border-white/10 rounded-[28px] p-6 shadow-2xl flex flex-col"
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              className="group relative z-10 w-full max-w-sm bg-[#16171b]/95 backdrop-blur-2xl border border-white/[0.12] rounded-[28px] p-5 shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
             >
-              <button 
-                onClick={() => setShowHelp(false)}
-                className="absolute top-4 right-4 p-2 text-white/40 hover:text-white bg-white/5 rounded-full transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-              
-              <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center mb-4 text-blue-400">
-                <Info className="w-6 h-6" />
+              {/* верхний блик жидкого стекла */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+              />
+
+              {/* Заголовок с кнопкой закрытия без наложений */}
+              <div className="relative z-10 flex items-center justify-between pb-3.5 mb-3 border-b border-white/[0.08] shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-brand/20 border border-brand/40 text-brand shadow-[0_0_14px_rgba(0,152,234,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] flex items-center justify-center shrink-0">
+                    <Info className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white leading-tight">{t('help_title')}</h3>
+                    <p className="text-[11px] text-white/50 mt-0.5">Частые вопросы</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowHelp(false)}
+                  className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] flex items-center justify-center text-white/70 hover:text-white hover:bg-white/[0.12] active:scale-95 transition-all cursor-pointer shrink-0"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
               
-              <h3 className="text-xl font-bold text-white mb-4">{t('help_title')}</h3>
-              
-              <div className="space-y-4">
-                <div className="bg-white/5 rounded-xl p-3 border border-white/5">
-                  <p className="text-white/80 text-[13px] leading-relaxed">
-                    <strong className="text-white">{t('help_q1_title')}</strong><br/>
+              <div className="relative z-10 overflow-y-auto space-y-2.5 pr-0.5 custom-scrollbar flex-1">
+                <div className="bg-white/[0.04] rounded-2xl p-3.5 border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                  <p className="text-white text-[13px] font-bold mb-1">{t('help_q1_title')}</p>
+                  <p className="text-white/75 text-[12px] leading-relaxed">
                     {t('help_q1_text')}
                   </p>
                 </div>
                 
-                <div className="bg-white/5 rounded-xl p-3 border border-white/5">
-                  <p className="text-white/80 text-[13px] leading-relaxed">
-                    <strong className="text-white">{t('help_q2_title')}</strong><br/>
-                    {t('help_q2_text1')}<span className="text-blue-400 font-bold">{t('help_q2_text2')}</span>{t('help_q2_text3')}
+                <div className="bg-white/[0.04] rounded-2xl p-3.5 border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                  <p className="text-white text-[13px] font-bold mb-1">{t('help_q2_title')}</p>
+                  <p className="text-white/75 text-[12px] leading-relaxed">
+                    {t('help_q2_text1')}<span className="text-brand font-bold">{t('help_q2_text2')}</span>{t('help_q2_text3')}
                   </p>
                 </div>
                 
-                <div className="bg-white/5 rounded-xl p-3 border border-white/5">
-                  <p className="text-white/80 text-[13px] leading-relaxed">
-                    <strong className="text-white">{t('help_q3_title')}</strong><br/>
+                <div className="bg-white/[0.04] rounded-2xl p-3.5 border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                  <p className="text-white text-[13px] font-bold mb-1">{t('help_q3_title')}</p>
+                  <p className="text-white/75 text-[12px] leading-relaxed">
                     {t('help_q3_text')}
                   </p>
                 </div>
@@ -178,57 +190,69 @@ export function Inventory({
               
               <button 
                 onClick={() => setShowHelp(false)}
-                className="w-full mt-6 py-3 bg-[#3b82f6] hover:bg-[#2563eb] text-white font-bold rounded-xl active:scale-95 transition-all"
+                className="relative z-10 w-full mt-4 py-3 bg-brand/20 border border-brand/40 hover:bg-brand/30 text-white font-bold rounded-full active:scale-95 transition-all shadow-[0_0_14px_rgba(0,152,234,0.35),inset_0_1px_0_rgba(255,255,255,0.18)] cursor-pointer text-sm shrink-0"
               >
                 {t('help_got_it')}
               </button>
             </motion.div>
-          </>
+          </div>
         )}
 
         {showImportant && (
-          <>
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[999] bg-black/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
               onClick={() => setShowImportant(false)}
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="fixed z-[1000] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-[#1a1c23] border border-amber-500/20 rounded-[28px] p-6 shadow-2xl flex flex-col max-h-[90vh] overflow-y-auto"
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              className="group relative z-10 w-full max-w-sm bg-[#16171b]/95 backdrop-blur-2xl border border-amber-500/30 rounded-[28px] p-5 shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
             >
-              <button 
-                onClick={() => setShowImportant(false)}
-                className="absolute top-4 right-4 p-2 text-white/40 hover:text-white bg-white/5 rounded-full transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-              
-              <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center mb-4 text-amber-400">
-                <AlertCircle className="w-6 h-6" />
+              {/* верхний блик жидкого стекла */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+              />
+
+              {/* Заголовок с кнопкой закрытия без наложений */}
+              <div className="relative z-10 flex items-center justify-between pb-3.5 mb-3 border-b border-white/[0.08] shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 shadow-[0_0_14px_rgba(245,158,11,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] flex items-center justify-center shrink-0">
+                    <AlertCircle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white leading-tight">{t('important_title')}</h3>
+                    <p className="text-[11px] text-amber-400/70 mt-0.5">Правила вывода</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowImportant(false)}
+                  className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] flex items-center justify-center text-white/70 hover:text-white hover:bg-white/[0.12] active:scale-95 transition-all cursor-pointer shrink-0"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
               
-              <h3 className="text-xl font-bold text-white mb-4">{t('important_title')}</h3>
-              
-              <div className="space-y-3">
-                <div className="bg-white/5 rounded-xl p-3.5 border border-white/5">
-                  <p className="text-white/90 text-[13px] leading-relaxed">
+              <div className="relative z-10 overflow-y-auto space-y-2.5 pr-0.5 custom-scrollbar flex-1">
+                <div className="bg-white/[0.04] rounded-2xl p-3.5 border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                  <p className="text-white/85 text-[12.5px] leading-relaxed">
                     {t('important_text1')}
                   </p>
                 </div>
                 
-                <div className="bg-white/5 rounded-xl p-3.5 border border-amber-500/10">
-                  <p className="text-white/80 text-[13px] leading-relaxed">
+                <div className="bg-white/[0.04] rounded-2xl p-3.5 border border-amber-500/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                  <p className="text-white/85 text-[12.5px] leading-relaxed">
                     {t('important_text2')}
                   </p>
                 </div>
 
-                <div className="bg-white/5 rounded-xl p-3.5 border border-amber-500/10">
-                  <p className="text-white/80 text-[13px] leading-relaxed">
+                <div className="bg-white/[0.04] rounded-2xl p-3.5 border border-amber-500/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                  <p className="text-white/85 text-[12.5px] leading-relaxed">
                     {t('important_text3')}
                   </p>
                 </div>
@@ -236,55 +260,70 @@ export function Inventory({
               
               <button 
                 onClick={() => setShowImportant(false)}
-                className="w-full mt-6 py-3 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-xl active:scale-95 transition-all"
+                className="relative z-10 w-full mt-4 py-3 bg-amber-500/20 border border-amber-500/40 hover:bg-amber-500/30 text-amber-300 font-bold rounded-full active:scale-95 transition-all shadow-[0_0_14px_rgba(245,158,11,0.35),inset_0_1px_0_rgba(255,255,255,0.18)] cursor-pointer text-sm shrink-0"
               >
                 {t('help_got_it')}
               </button>
             </motion.div>
-          </>
+          </div>
         )}
       </AnimatePresence>
 
-      <div className="glass-panel rounded-[32px] overflow-hidden p-4 sm:p-5 flex-1 min-h-[400px] border border-white/5">
-        <div className="flex items-center justify-between mb-4 px-2">
+      <div className="group relative overflow-hidden bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] rounded-[32px] p-4 sm:p-5 flex-1 min-h-[400px] shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)]">
+        {/* верхнее бликовое свечение жидкого стекла */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-[32px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+        />
+
+        <div className="relative z-10 flex items-center justify-between mb-4 px-2">
           <div className="flex items-center gap-2.5">
             {onBack && (
               <button 
                 onClick={onBack}
-                className="w-8 h-8 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all active:scale-95 cursor-pointer"
+                className="w-8 h-8 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all active:scale-95 cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.10)]"
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
             )}
-            <h3 className="font-display font-bold text-xl">{t('my_inventory')}</h3>
+            <h3 className="font-display font-bold text-xl text-white tracking-tight">{t('my_inventory')}</h3>
           </div>
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setShowImportant(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-amber-500/25 active:scale-95 transition-all text-[12px] font-bold"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-amber-500/25 active:scale-95 transition-all text-[12px] font-bold shadow-[0_0_8px_rgba(245,158,11,0.2)] cursor-pointer"
             >
               <AlertCircle className="w-3.5 h-3.5 shrink-0" />
               <span>{t('important_btn')}</span>
             </button>
             <button 
               onClick={() => setShowHelp(true)}
-              className="p-1.5 text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-colors active:scale-95"
+              className="w-8 h-8 flex items-center justify-center text-white/60 hover:text-white bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.10] rounded-full transition-all active:scale-95 cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.10)]"
             >
-              <HelpCircle className="w-5 h-5" />
+              <HelpCircle className="w-4 h-4" />
             </button>
           </div>
         </div>
 
         {inventory.length === 0 ? (
-          <div className="bg-[#181a20]/60 rounded-[32px] p-6 text-center flex flex-col items-center border border-white/5 mx-2 mt-4">
-            <div className="w-16 h-16 bg-[#2a2c33] rounded-full flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(42,171,238,0.2)] relative overflow-hidden p-2.5">
-              <div className="absolute inset-0 bg-[#2aabee]/10" />
-              <GramIcon className="w-full h-full relative z-10 text-[#2aabee]" />
+          <div className="relative z-10 group overflow-hidden bg-white/[0.05] backdrop-blur-xl border border-white/[0.10] rounded-[28px] p-6 text-center flex flex-col items-center mx-2 mt-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_15px_35px_-10px_rgba(0,0,0,0.7)]">
+            {/* верхний блик жидкого стекла в карточке пустого инвентаря */}
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.01)_40%,transparent_62%)]"
+            />
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.08] blur-2xl opacity-70"
+            />
+
+            <div className="relative z-10 w-16 h-16 rounded-full bg-brand/20 border border-brand/40 text-brand shadow-[0_0_20px_rgba(0,152,234,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] flex items-center justify-center mb-5 p-3.5">
+              <GramIcon className="w-full h-full text-brand drop-shadow-md" />
             </div>
             
-            <h2 className="text-xl font-bold text-white mb-3">{t('inventory_empty')}</h2>
+            <h2 className="relative z-10 text-xl font-bold text-white mb-2 tracking-tight">{t('inventory_empty')}</h2>
             
-            <p className="text-white/60 text-[13px] mb-6 leading-relaxed px-2">
+            <p className="relative z-10 text-white/70 text-[13px] mb-5 leading-relaxed max-w-xs">
               {t('empty_backpack_desc1')}
             </p>
 
@@ -292,29 +331,29 @@ export function Inventory({
               href="https://t.me/platina_relayer" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="w-full bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 text-blue-400 font-semibold py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-colors mb-4 active:scale-95"
+              className="relative z-10 w-full max-w-xs bg-brand/20 hover:bg-brand/30 border border-brand/40 text-white font-bold py-3.5 rounded-full flex items-center justify-center gap-2 transition-all shadow-[0_0_14px_rgba(0,152,234,0.35),inset_0_1px_0_rgba(255,255,255,0.18)] mb-3 active:scale-95 cursor-pointer"
             >
-              <ExternalLink className="w-4 h-4" />
-              {t('empty_backpack_btn1')}
+              <ExternalLink className="w-4 h-4 text-brand" />
+              <span>{t('empty_backpack_btn1')}</span>
             </a>
 
-            <p className="text-white/40 text-[11px] mb-6 px-4 leading-tight">
+            <p className="relative z-10 text-white/50 text-[11px] mb-5 max-w-xs leading-tight">
               {t('empty_backpack_note')}
             </p>
 
-            <div className="flex items-center w-full mb-6 gap-3 px-4">
+            <div className="relative z-10 flex items-center w-full max-w-xs mb-5 gap-3">
               <div className="flex-1 h-px bg-white/10"></div>
-              <span className="text-white/40 text-[10px] font-bold tracking-widest">{t('empty_backpack_or')}</span>
+              <span className="text-white/40 text-[10px] font-bold tracking-widest uppercase">{t('empty_backpack_or')}</span>
               <div className="flex-1 h-px bg-white/10"></div>
             </div>
 
-            <p className="text-white/60 text-[13px] mb-6 leading-relaxed px-2">
+            <p className="relative z-10 text-white/70 text-[13px] mb-5 leading-relaxed max-w-xs">
               {t('empty_backpack_desc2')}
             </p>
 
             <button 
               onClick={onGoToCases}
-              className="w-full bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 text-blue-400 font-semibold py-3.5 rounded-2xl transition-colors active:scale-95"
+              className="relative z-10 w-full max-w-xs bg-brand/20 hover:bg-brand/30 border border-brand/40 text-white font-bold py-3.5 rounded-full transition-all shadow-[0_0_14px_rgba(0,152,234,0.35),inset_0_1px_0_rgba(255,255,255,0.18)] active:scale-95 cursor-pointer"
             >
               {t('empty_backpack_btn2')}
             </button>

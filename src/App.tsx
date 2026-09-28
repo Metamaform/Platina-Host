@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { springSmooth, springSnappy } from './lib/motion';
+import { springSmooth, springSnappy, springLiquid } from './lib/motion';
 import { setLoggerUserId } from './lib/logger';
 import { ShoppingBag, User, Gem, Gift, Wallet, ChevronRight, Activity, CircleDashed, ArrowUpCircle, Shield, LayoutGrid, Trophy, X, ListTodo, Settings, Bomb, Box, Package, ArrowLeft, ArrowUpRight, Users, History, MessageCircle, ExternalLink, Copy, Check, Rocket, Flame, Sparkles } from 'lucide-react';
 import defaultGiftsDb from './gifts_data.json';
@@ -68,7 +68,35 @@ function CraftAnimatedIcon() {
   );
 }
 
-function Shop({  onPlayUpgrade, onPlayCraft, onPlayMines, onPlayNewGame, onPlayPlinko, giftsDb, pricesLoaded }: { onPlayUpgrade: () => void, onPlayCraft: () => void, onPlayMines: () => void, onPlayNewGame: () => void, onPlayPlinko: () => void, giftsDb: any[], pricesLoaded: boolean }) {
+function Shop({ 
+  onPlayUpgrade, 
+  onPlayCraft, 
+  onPlayMines, 
+  onPlayNewGame, 
+  onPlayPlinko, 
+  giftsDb, 
+  pricesLoaded,
+  balance,
+  setBalance,
+  inventory,
+  setInventory,
+  onAddTurnover,
+  turnover
+}: { 
+  onPlayUpgrade: () => void, 
+  onPlayCraft: () => void, 
+  onPlayMines: () => void, 
+  onPlayNewGame: () => void, 
+  onPlayPlinko: () => void, 
+  giftsDb: any[], 
+  pricesLoaded: boolean,
+  balance: number,
+  setBalance: any,
+  inventory: any[],
+  setInventory: (inv: any[]) => void,
+  onAddTurnover: (amount: number) => void,
+  turnover: number
+}) {
   const { t, lang } = useTranslation();
   const getLocalizedImage = (id: string, base: string) => {
     if (lang === 'zh') {
@@ -134,8 +162,13 @@ function Shop({  onPlayUpgrade, onPlayCraft, onPlayMines, onPlayNewGame, onPlayP
         {/* Rocket Square Card */}
         <div 
           onClick={onPlayNewGame}
-          className="aspect-square rounded-[26px] relative overflow-hidden cursor-pointer group flex flex-col justify-between p-4 bg-gradient-to-b from-[#1c1c24] to-[#121217] border border-amber-500/20 shadow-[0_8px_24px_rgba(0,0,0,0.4)] active:scale-[0.98] transition-all hover:border-amber-500/40"
+          className="aspect-square rounded-[26px] relative overflow-hidden cursor-pointer group flex flex-col justify-between p-4 bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)] active:scale-[0.98] transition-all hover:border-amber-500/40"
         >
+          {/* верхний блик жидкого стекла */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 rounded-[26px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+          />
           {/* Ambient Glow */}
           <div className="absolute top-0 right-0 w-28 h-28 bg-amber-500/15 rounded-full blur-2xl pointer-events-none group-hover:bg-amber-500/25 transition-all" />
 
@@ -144,7 +177,7 @@ function Shop({  onPlayUpgrade, onPlayCraft, onPlayMines, onPlayNewGame, onPlayP
             <span className="px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 font-extrabold text-[10px] tracking-wider uppercase flex items-center gap-1 shadow-sm">
               <Flame className="w-3 h-3 text-amber-400" /> CRASH
             </span>
-            <span className="text-[10px] font-bold text-white/40 bg-white/5 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] font-bold text-white/50 bg-white/[0.08] px-2 py-0.5 rounded-full border border-white/[0.10]">
               x100
             </span>
           </div>
@@ -179,8 +212,13 @@ function Shop({  onPlayUpgrade, onPlayCraft, onPlayMines, onPlayNewGame, onPlayP
         {/* Plinko Square Card */}
         <div 
           onClick={onPlayPlinko}
-          className="aspect-square rounded-[26px] relative overflow-hidden cursor-pointer group flex flex-col justify-between p-4 bg-gradient-to-b from-[#1c1c24] to-[#121217] border border-violet-500/20 shadow-[0_8px_24px_rgba(0,0,0,0.4)] active:scale-[0.98] transition-all hover:border-violet-500/40"
+          className="aspect-square rounded-[26px] relative overflow-hidden cursor-pointer group flex flex-col justify-between p-4 bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)] active:scale-[0.98] transition-all hover:border-violet-500/40"
         >
+          {/* верхний блик жидкого стекла */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 rounded-[26px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+          />
           {/* Ambient Glow */}
           <div className="absolute top-0 right-0 w-28 h-28 bg-violet-500/15 rounded-full blur-2xl pointer-events-none group-hover:bg-violet-500/25 transition-all" />
 
@@ -189,7 +227,7 @@ function Shop({  onPlayUpgrade, onPlayCraft, onPlayMines, onPlayNewGame, onPlayP
             <span className="px-2.5 py-1 rounded-full bg-violet-500/15 border border-violet-500/30 text-violet-300 font-extrabold text-[10px] tracking-wider uppercase flex items-center gap-1 shadow-sm">
               <Sparkles className="w-3 h-3 text-violet-400" /> NEW
             </span>
-            <span className="text-[10px] font-bold text-white/40 bg-white/5 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] font-bold text-white/50 bg-white/[0.08] px-2 py-0.5 rounded-full border border-white/[0.10]">
               x1000
             </span>
           </div>
@@ -291,6 +329,22 @@ function Shop({  onPlayUpgrade, onPlayCraft, onPlayMines, onPlayNewGame, onPlayP
             </div>
           </div>
           )})}
+      </div>
+
+      {/* Секция кейсов внизу всех мини-игр */}
+      <div className="pt-2">
+        <Suspense fallback={<LazyFallback />}>
+          <Cases 
+            balance={balance} 
+            setBalance={setBalance} 
+            inventory={inventory} 
+            setInventory={setInventory} 
+            giftsDb={giftsDb} 
+            onAddTurnover={onAddTurnover} 
+            turnover={turnover}
+            hideLiveFeed={true}
+          />
+        </Suspense>
       </div>
     </div>
   );
@@ -440,13 +494,9 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
 
 
 
-  // Каноническая реферальная ссылка: сервер отдаёт её в config.refLink
-  // (https://t.me/<bot>?startapp=ref_<id>); fallback — собрать такую же.
-  const referralLink: string = config?.refLink || `https://t.me/GaleaDropBot?startapp=ref_${user?.id}`;
-
   // Отправка приглашения — ТОЛЬКО нативным Telegram shareMessage:
   // сервер готовит сообщение (savePreparedInlineMessage: фото-баннер +
-  // HTML-текст со ссылкой), а клиент вызывает tg.shareMessage(id) → Telegram
+  // текст со ссылкой), а клиент вызывает tg.shareMessage(id) → Telegram
   // показывает системное окно «Отправить сообщение» с предпросмотром
   // («с помощью @bot» + фото + текст) и кнопкой «Выбрать получателей…».
   const handleShareInvite = async () => {
@@ -454,11 +504,6 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
     const twa = (window as any).Telegram?.WebApp;
     const token = sessionStorage.getItem('pg_session_token');
     try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch (e) {}
-
-    // Текст для запасного шеринга (t.me/share/url) — тот же призыв, что и в фото-баннере.
-    const fallbackText = `${t('invite_share_text')}\n\n${referralLink}`;
-    let shareText = fallbackText;
-    let shareLink = referralLink;
 
     if (token && twa && typeof twa.shareMessage === 'function') {
       setIsSharingInvite(true);
@@ -476,8 +521,6 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
           });
           return;
         }
-        if (data?.link) shareLink = data.link;
-        if (data?.caption) shareText = String(data.caption).replace(/<[^>]+>/g, '');
         console.warn('[share/invite] no preparedMessageId:', data?.error || res.status);
       } catch (e) {
         console.warn('[share/invite]', e);
@@ -487,8 +530,10 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
     }
 
     // Fallback (вне Telegram или если prepare не удался) — классический шеринг ссылки.
+    const link = `https://t.me/GaleaDropBot?startapp=r_${user?.id}`;
+    const text = t('referrals_desc') || '';
     try {
-      twa?.openTelegramLink?.(`https://t.me/share/url?url=${encodeURIComponent(shareLink)}&text=${encodeURIComponent(shareText)}`);
+      twa?.openTelegramLink?.(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`);
     } catch (e) {}
   };
 
@@ -522,16 +567,16 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
 
   return (
     <div className="space-y-5 relative pb-8">
-      {/* Profile Header — жидкое стекло, как у кнопок «Пополнить/Вывод» */}
+      {/* Profile Header */}
       <div className="flex flex-col items-center justify-center pt-2 pb-2 relative">
         <button 
           onClick={() => {
             setShowSettings(true);
             try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch (e) {}
           }} 
-          className="absolute top-0 right-0 w-11 h-11 rounded-full bg-white/[0.08] border border-white/[0.10] flex items-center justify-center text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_10px_22px_-12px_rgba(0,0,0,0.85)] hover:bg-white/[0.12] hover:border-white/[0.16] transition-all active:scale-95 z-20 cursor-pointer"
+          className="absolute top-0 right-0 w-10 h-10 rounded-full bg-white/[0.14] hover:bg-white/[0.22] border border-white/[0.20] shadow-[0_4px_16px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] flex items-center justify-center text-white transition-all active:scale-95 z-20 cursor-pointer"
         >
-          <Settings className="w-5 h-5" strokeWidth={2.2} />
+          <Settings className="w-5 h-5 text-white" strokeWidth={2.2} />
         </button>
         {onBack && (
           <button 
@@ -539,23 +584,23 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               onBack();
               try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch (e) {}
             }} 
-            className="absolute top-0 left-0 w-11 h-11 rounded-full bg-white/[0.08] border border-white/[0.10] flex items-center justify-center text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_10px_22px_-12px_rgba(0,0,0,0.85)] hover:bg-white/[0.12] hover:border-white/[0.16] transition-all active:scale-95 z-20 cursor-pointer"
+            className="absolute top-0 left-0 w-10 h-10 rounded-full bg-white/[0.14] hover:bg-white/[0.22] border border-white/[0.20] shadow-[0_4px_16px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] flex items-center justify-center text-white transition-all active:scale-95 z-20 cursor-pointer"
           >
-            <ArrowLeft className="w-5 h-5" strokeWidth={2.2} />
+            <ArrowLeft className="w-5 h-5 text-white" strokeWidth={2.2} />
           </button>
         )}
         <div className="relative mb-3 mt-1">
-          <div className="w-24 h-24 rounded-full bg-white/[0.10] border border-white/[0.12] p-[2.5px] shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_16px_32px_-18px_rgba(0,0,0,0.9)]">
-            <div className="w-full h-full rounded-full bg-white/[0.05] flex items-center justify-center overflow-hidden relative">
+          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-brand via-brand/40 to-amber-400 p-[2.5px] shadow-xl shadow-brand/20">
+            <div className="w-full h-full rounded-full bg-[#15161b] flex items-center justify-center overflow-hidden relative">
                <div className="absolute inset-0 bg-white/5" />
                {photoUrl ? (
                  <img src={photoUrl || undefined} alt={firstName} className="w-full h-full object-cover relative z-10" />
                ) : (
-                 <User className="w-10 h-10 text-white/50 relative z-10" />
+                 <User className="w-10 h-10 text-muted relative z-10" />
                )}
             </div>
           </div>
-          <div className="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-emerald-400 border-[3px] border-[#171717] shadow-sm" />
+          <div className="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-emerald-400 border-3 border-[#121316] shadow-sm" />
         </div>
         <h2 className="font-display text-2xl font-bold text-white mb-0.5 tracking-tight">{firstName}</h2>
         {username && (
@@ -563,12 +608,21 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
         )}
       </div>
       
-      {/* Turnover & Level Card — жидкое стекло */}
-      <div className="relative overflow-hidden bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] p-5 rounded-[24px] shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_16px_32px_-20px_rgba(0,0,0,0.85)]">
-        <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[24px] bg-[linear-gradient(180deg,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]" />
-        <div className="relative flex justify-between items-end mb-3">
+      {/* Turnover & Level Card */}
+      <div className="group relative overflow-hidden bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] p-5 rounded-[26px] shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)]">
+        {/* верхнее бликовое свечение жидкого стекла */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-[26px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+        />
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.08] blur-2xl opacity-70"
+        />
+
+        <div className="relative z-10 flex justify-between items-end mb-3">
           <div>
-            <div className="text-white/45 text-[11px] mb-1 font-bold uppercase tracking-wider">{t('turnover')}</div>
+            <div className="text-white/40 text-[11px] mb-1 font-bold uppercase tracking-wider">{t('turnover')}</div>
             <div className="font-display text-2xl font-bold flex items-center gap-1.5 text-white">
               {Math.floor(turnover).toLocaleString('en-US')} <GramIcon className="w-5 h-5 drop-shadow-md" />
             </div>
@@ -579,36 +633,45 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                 setShowLevelModal(true);
                 try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
               }} 
-              className="text-white text-xs font-bold active:scale-95 transition-transform cursor-pointer bg-brand hover:brightness-110 px-3 py-1.5 rounded-full shadow-[0_6px_18px_rgba(0,152,234,0.35)]"
+              className="text-white text-xs font-bold active:scale-95 transition-all cursor-pointer bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] shadow-[0_3px_12px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] hover:brightness-110 px-3.5 py-1.5 rounded-full"
             >
               {t('level')} {currentLevel}
             </button>
-            <div className="text-white/45 text-[10px] flex items-center justify-end gap-1 mt-1 font-medium">
+            <div className="text-white/40 text-[10px] flex items-center justify-end gap-1 mt-1 font-medium">
               {isMax ? t('max_level') : `${t('to_next')} ${(levelThreshold - Math.floor(currentLevelProgress)).toLocaleString('en-US')}`}
               {!isMax && <GramIcon className="w-3 h-3 drop-shadow-sm" />}
             </div>
           </div>
         </div>
-        <div className="relative h-2 w-full bg-white/[0.06] rounded-full overflow-hidden border border-white/[0.08]">
+        <div className="relative z-10 h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
           <motion.div 
             initial={{ width: 0 }} 
             animate={{ width: `${progressPercent}%` }} 
-            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.1 }} 
+            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
             className="absolute top-0 left-0 bottom-0 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 rounded-full shadow-[0_0_12px_rgba(251,191,36,0.6)]" 
           />
         </div>
       </div>
 
-      {/* Promocode Card — жидкое стекло */}
-      <div className="relative overflow-hidden bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] rounded-[24px] p-4.5 flex flex-col gap-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_16px_32px_-20px_rgba(0,0,0,0.85)]">
-        <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[24px] bg-[linear-gradient(180deg,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]" />
-        <h3 className="relative font-display text-sm font-bold text-white tracking-wide">{t('enter_promocode')}</h3>
-        <div className="relative flex gap-2">
+      {/* Promocode Card */}
+      <div className="group relative overflow-hidden bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] rounded-[26px] p-4.5 flex flex-col gap-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)]">
+        {/* верхнее бликовое свечение жидкого стекла */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-[26px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+        />
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.08] blur-2xl opacity-70"
+        />
+
+        <h3 className="relative z-10 font-display text-sm font-bold text-white tracking-wide">{t('enter_promocode')}</h3>
+        <div className="relative z-10 flex gap-2">
           <input 
             value={promoCode} 
             onChange={(e) => setPromoCode(e.target.value.toUpperCase())} 
             placeholder={t('promocode_placeholder')} 
-            className="flex-1 bg-black/25 border border-white/[0.10] focus:border-brand/50 rounded-full px-4 py-3 text-sm font-bold text-white placeholder-white/30 uppercase outline-none transition-colors" 
+            className="flex-1 bg-black/50 border border-white/20 focus:border-[#0098ea] focus:ring-2 focus:ring-[#0098ea]/30 rounded-full px-4 py-3 text-sm font-bold text-white placeholder-white/35 uppercase outline-none transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]" 
           />
           <button 
             onClick={() => {
@@ -616,45 +679,51 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch (e) {}
             }} 
             disabled={isActivating || !promoCode.trim()} 
-            className="px-5 py-3 bg-brand hover:brightness-110 text-white font-bold text-sm rounded-full active:scale-95 transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_6px_18px_rgba(0,152,234,0.3)] cursor-pointer"
+            className="px-6 py-3 bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white font-bold text-sm rounded-full active:scale-95 transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_18px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] cursor-pointer"
           >
             {isActivating ? '...' : t('promo_ok')}
           </button>
         </div>
         {promoStatus && (
           <motion.div 
-            initial={{ opacity: 0, y: -4 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            className={`relative text-xs font-semibold ${promoStatus.type === 'success' ? 'text-emerald-400' : 'text-rose-400'}`}
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`relative z-10 text-xs font-semibold ${promoStatus.type === 'success' ? 'text-emerald-400' : 'text-rose-400'}`}
           >
             {promoStatus.msg}
           </motion.div>
         )}
       </div>
 
-      {/* Menu Action List — плитки «жидкое стекло», как кнопки «Пополнить/Вывод» */}
-      <div className="flex flex-col space-y-3">
+      {/* Menu Action List */}
+      <div className="group relative overflow-hidden bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] p-2.5 rounded-[26px] flex flex-col space-y-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)]">
+        {/* верхнее бликовое свечение жидкого стекла */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-[26px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+        />
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.08] blur-2xl opacity-70"
+        />
         {onGoToInventory && (
           <button 
             onClick={() => {
               onGoToInventory();
               try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
             }} 
-            className="group relative overflow-hidden rounded-[24px] px-4 py-3.5 flex items-center gap-3.5 text-left
-              bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10]
-              shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_16px_32px_-20px_rgba(0,0,0,0.85)]
-              transition-all duration-200 hover:bg-white/[0.10] hover:border-white/[0.16]
-              active:scale-[0.98] active:bg-white/[0.09] cursor-pointer"
+            className="flex items-center justify-between p-3.5 bg-white/[0.04] hover:bg-white/[0.09] active:bg-white/[0.14] border border-white/[0.06] hover:border-white/[0.12] transition-all rounded-[20px] group active:scale-[0.98] cursor-pointer shadow-sm"
           >
-            <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[24px] bg-[linear-gradient(180deg,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]" />
-            <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] text-brand transition-transform duration-150 group-active:scale-95">
-              <Package className="h-4 w-4" strokeWidth={2.5} />
-            </span>
-            <span className="relative flex flex-col min-w-0 flex-1">
-              <span className="text-[15px] font-semibold tracking-tight text-white leading-tight">{t('my_inventory') || 'Мой инвентарь NFT'}</span>
-              <span className="text-[11px] font-medium text-white/50 mt-0.5">{inventory.length} предметов · вывод и продажа</span>
-            </span>
-            <ChevronRight className="relative w-4 h-4 text-white/25 group-hover:text-white/60 transition-colors shrink-0" />
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-[0_4px_14px_rgba(139,92,246,0.5)] border border-violet-400/40 flex items-center justify-center shrink-0">
+                <Package className="w-5 h-5" strokeWidth={2.2} />
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="font-semibold text-[14px] text-white leading-tight">{t('my_inventory') || 'Мой инвентарь NFT'}</span>
+                <span className="text-[11px] text-white/40 mt-0.5">{inventory.length} предметов · вывод и продажа</span>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
           </button>
         )}
 
@@ -664,21 +733,18 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               onGoToLeaderboard();
               try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
             }} 
-            className="group relative overflow-hidden rounded-[24px] px-4 py-3.5 flex items-center gap-3.5 text-left
-              bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10]
-              shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_16px_32px_-20px_rgba(0,0,0,0.85)]
-              transition-all duration-200 hover:bg-white/[0.10] hover:border-white/[0.16]
-              active:scale-[0.98] active:bg-white/[0.09] cursor-pointer"
+            className="flex items-center justify-between p-3.5 bg-white/[0.04] hover:bg-white/[0.09] active:bg-white/[0.14] border border-white/[0.06] hover:border-white/[0.12] transition-all rounded-[20px] group active:scale-[0.98] cursor-pointer shadow-sm"
           >
-            <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[24px] bg-[linear-gradient(180deg,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]" />
-            <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] text-brand transition-transform duration-150 group-active:scale-95">
-              <Trophy className="h-4 w-4" strokeWidth={2.5} />
-            </span>
-            <span className="relative flex flex-col min-w-0 flex-1">
-              <span className="text-[15px] font-semibold tracking-tight text-white leading-tight">{t('nav_leaderboard') || 'Таблица лидеров'}</span>
-              <span className="text-[11px] font-medium text-white/50 mt-0.5">Топ игроков по обороту</span>
-            </span>
-            <ChevronRight className="relative w-4 h-4 text-white/25 group-hover:text-white/60 transition-colors shrink-0" />
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-yellow-600 text-white shadow-[0_4px_14px_rgba(245,158,11,0.5)] border border-amber-400/40 flex items-center justify-center shrink-0">
+                <Trophy className="w-5 h-5" strokeWidth={2.2} />
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="font-semibold text-[14px] text-white leading-tight">{t('nav_leaderboard') || 'Таблица лидеров'}</span>
+                <span className="text-[11px] text-white/40 mt-0.5">Топ игроков по обороту</span>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
           </button>
         )}
 
@@ -687,21 +753,18 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
             setShowReferrals(true);
             try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
           }} 
-          className="group relative overflow-hidden rounded-[24px] px-4 py-3.5 flex items-center gap-3.5 text-left
-            bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10]
-            shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_16px_32px_-20px_rgba(0,0,0,0.85)]
-            transition-all duration-200 hover:bg-white/[0.10] hover:border-white/[0.16]
-            active:scale-[0.98] active:bg-white/[0.09] cursor-pointer"
+          className="flex items-center justify-between p-3.5 bg-white/[0.04] hover:bg-white/[0.09] active:bg-white/[0.14] border border-white/[0.06] hover:border-white/[0.12] transition-all rounded-[20px] group active:scale-[0.98] cursor-pointer shadow-sm"
         >
-          <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[24px] bg-[linear-gradient(180deg,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]" />
-          <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] text-brand transition-transform duration-150 group-active:scale-95">
-            <Users className="h-4 w-4" strokeWidth={2.5} />
-          </span>
-          <span className="relative flex flex-col min-w-0 flex-1">
-            <span className="text-[15px] font-semibold tracking-tight text-white leading-tight">{t('referrals') || 'Реферальная система'}</span>
-            <span className="text-[11px] font-medium text-white/50 mt-0.5">Приглашай друзей и получай процент</span>
-          </span>
-          <ChevronRight className="relative w-4 h-4 text-white/25 group-hover:text-white/60 transition-colors shrink-0" />
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0098ea] to-[#00b4d8] text-white shadow-[0_4px_14px_rgba(0,152,234,0.5)] border border-sky-400/40 flex items-center justify-center shrink-0">
+              <Users className="w-5 h-5" strokeWidth={2.2} />
+            </div>
+            <div className="flex flex-col text-left">
+              <span className="font-semibold text-[14px] text-white leading-tight">{t('referrals') || 'Реферальная система'}</span>
+              <span className="text-[11px] text-white/40 mt-0.5">Приглашай друзей и получай процент</span>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
         </button>
         
         <button 
@@ -709,46 +772,40 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
             setShowHistory(true);
             try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
           }} 
-          className="group relative overflow-hidden rounded-[24px] px-4 py-3.5 flex items-center gap-3.5 text-left
-            bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10]
-            shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_16px_32px_-20px_rgba(0,0,0,0.85)]
-            transition-all duration-200 hover:bg-white/[0.10] hover:border-white/[0.16]
-            active:scale-[0.98] active:bg-white/[0.09] cursor-pointer"
+          className="flex items-center justify-between p-3.5 bg-white/[0.04] hover:bg-white/[0.09] active:bg-white/[0.14] border border-white/[0.06] hover:border-white/[0.12] transition-all rounded-[20px] group active:scale-[0.98] cursor-pointer shadow-sm"
         >
-          <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[24px] bg-[linear-gradient(180deg,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]" />
-          <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] text-brand transition-transform duration-150 group-active:scale-95">
-            <History className="h-4 w-4" strokeWidth={2.5} />
-          </span>
-          <span className="relative flex flex-col min-w-0 flex-1">
-            <span className="text-[15px] font-semibold tracking-tight text-white leading-tight">{t('deposit_history') || 'История пополнений'}</span>
-            <span className="text-[11px] font-medium text-white/50 mt-0.5">Все транзакции вашего счета</span>
-          </span>
-          <ChevronRight className="relative w-4 h-4 text-white/25 group-hover:text-white/60 transition-colors shrink-0" />
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 text-white shadow-[0_4px_14px_rgba(37,99,235,0.5)] border border-blue-400/40 flex items-center justify-center shrink-0">
+              <History className="w-5 h-5" strokeWidth={2.2} />
+            </div>
+            <div className="flex flex-col text-left">
+              <span className="font-semibold text-[14px] text-white leading-tight">{t('deposit_history') || 'История пополнений'}</span>
+              <span className="text-[11px] text-white/40 mt-0.5">Все транзакции вашего счета</span>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
         </button>
 
         <a 
           href={config?.supportUrl || 'https://t.me/platina_help'} 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="group relative overflow-hidden rounded-[24px] px-4 py-3.5 flex items-center gap-3.5 text-left
-            bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10]
-            shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_16px_32px_-20px_rgba(0,0,0,0.85)]
-            transition-all duration-200 hover:bg-white/[0.10] hover:border-white/[0.16]
-            active:scale-[0.98] active:bg-white/[0.09] cursor-pointer"
+          className="flex items-center justify-between p-3.5 bg-white/[0.04] hover:bg-white/[0.09] active:bg-white/[0.14] border border-white/[0.06] hover:border-white/[0.12] transition-all rounded-[20px] group active:scale-[0.98] cursor-pointer shadow-sm"
         >
-          <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[24px] bg-[linear-gradient(180deg,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]" />
-          <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] text-brand transition-transform duration-150 group-active:scale-95">
-            <MessageCircle className="h-4 w-4" strokeWidth={2.5} />
-          </span>
-          <span className="relative flex flex-col min-w-0 flex-1">
-            <span className="text-[15px] font-semibold tracking-tight text-white leading-tight">{t('support') || 'Поддержка'}</span>
-            <span className="text-[11px] font-medium text-white/50 mt-0.5">Оперативная помощь @platina_help</span>
-          </span>
-          <ExternalLink className="relative w-4 h-4 text-white/25 group-hover:text-white/60 transition-colors shrink-0" />
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-fuchsia-600 to-pink-600 text-white shadow-[0_4px_14px_rgba(217,70,239,0.5)] border border-fuchsia-400/40 flex items-center justify-center shrink-0">
+              <MessageCircle className="w-5 h-5" strokeWidth={2.2} />
+            </div>
+            <div className="flex flex-col text-left">
+              <span className="font-semibold text-[14px] text-white leading-tight">{t('support') || 'Поддержка'}</span>
+              <span className="text-[11px] text-white/40 mt-0.5">Оперативная помощь @platina_help</span>
+            </div>
+          </div>
+          <ExternalLink className="w-4 h-4 text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
         </a>
       </div>
 
-      {/* Referrals Modal (Bottom Sheet style) */}
+      {/* Referrals Modal (Liquid Glass Bottom Sheet style) */}
       <AnimatePresence>
         {showReferrals && (
           <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -760,52 +817,62 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               className="fixed inset-0 bg-black/80 backdrop-blur-md cursor-pointer"
             />
             <motion.div 
-              initial={{ y: '100%', opacity: 0 }} 
-              animate={{ y: 0, opacity: 1 }} 
-              exit={{ y: '100%', opacity: 0 }} 
-              transition={{ type: 'spring', damping: 28, stiffness: 350 }} 
-              className="relative z-10 w-full max-w-md bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] rounded-t-[32px] sm:rounded-[28px] shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_24px_55px_-12px_rgba(0,0,0,0.75)] overflow-hidden flex flex-col max-h-[85vh] text-white"
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+              className="group relative z-10 w-full max-w-md bg-[#16171b]/95 backdrop-blur-2xl border border-white/[0.12] rounded-t-[32px] sm:rounded-[28px] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_25px_50px_-12px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[85vh] text-white"
             >
-              {/* Grab Handle */}
-              <div className="w-12 h-1 bg-white/25 rounded-full mx-auto mt-3 mb-1 sm:hidden" />
+              {/* верхнее бликовое свечение жидкого стекла */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-t-[32px] sm:rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+              />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.08] blur-2xl opacity-70"
+              />
 
-              <div className="p-5 pb-3 border-b border-white/[0.08] flex items-center justify-between shrink-0">
+              {/* Grab Handle */}
+              <div className="relative z-10 w-12 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-1 sm:hidden" />
+
+              <div className="relative z-10 p-5 pb-3 border-b border-white/[0.08] flex items-center justify-between shrink-0">
                  <div>
-                   <h3 className="font-display text-lg font-bold tracking-tight">{t('referrals')}</h3>
-                   <p className="text-white/45 text-xs mt-0.5">Приглашайте друзей и получайте вознаграждение</p>
+                   <h3 className="font-display text-lg font-bold tracking-tight text-white">{t('referrals')}</h3>
+                   <p className="text-white/40 text-xs mt-0.5">Приглашайте друзей и получайте вознаграждение</p>
                  </div>
                  <button 
                    onClick={() => setShowReferrals(false)} 
-                   className="w-9 h-9 rounded-full bg-white/[0.08] border border-white/[0.10] flex items-center justify-center text-white/85 hover:bg-white/[0.12] active:scale-95 transition-all cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
+                   className="w-9 h-9 rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] flex items-center justify-center text-white/70 hover:text-white hover:bg-white/[0.12] active:scale-95 transition-all cursor-pointer"
                  >
                    <X className="w-4 h-4" strokeWidth={2.5} />
                  </button>
               </div>
               
-              <div className="overflow-y-auto custom-scrollbar p-5 pt-4 flex-1 space-y-5">
-                <div className="bg-white/[0.05] border border-white/[0.08] p-4 rounded-[18px]">
-                  <p className="text-white/70 text-xs leading-relaxed">{t('referrals_desc')}</p>
+              <div className="relative z-10 overflow-y-auto custom-scrollbar p-5 pt-4 flex-1 space-y-5">
+                <div className="bg-white/[0.04] border border-white/[0.08] p-4 rounded-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                  <p className="text-white/80 text-xs leading-relaxed">{t('referrals_desc')}</p>
                 </div>
                 
                 <div>
-                  <span className="block text-[11px] font-bold text-white/45 uppercase tracking-wider mb-2">
+                  <span className="block text-[11px] font-bold text-white/40 uppercase tracking-wider mb-2">
                     {t('referrals_link')}
                   </span>
                   <div className="flex gap-2">
-                    <div className="flex-1 bg-black/25 border border-white/[0.10] rounded-2xl px-3.5 py-3.5 text-xs font-mono font-medium text-white/80 overflow-hidden text-ellipsis whitespace-nowrap">
-                      {referralLink}
+                    <div className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-3.5 py-3.5 text-xs font-mono font-medium text-white/80 overflow-hidden text-ellipsis whitespace-nowrap">
+                      {`https://t.me/GaleaDropBot?startapp=r_${user?.id}`}
                     </div>
                     <button 
                       onClick={() => {
-                        navigator.clipboard.writeText(referralLink);
+                        navigator.clipboard.writeText(`https://t.me/GaleaDropBot?startapp=r_${user?.id}`);
                         setIsCopied(true);
                         try { (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch (e) {}
                         setTimeout(() => setIsCopied(false), 2000);
-                      }}
-                      className="px-3.5 bg-white/[0.08] border border-white/[0.10] hover:bg-white/[0.12] active:scale-95 rounded-2xl flex items-center justify-center transition-all text-white/85 cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
+                      }} 
+                      className="px-4 bg-white/[0.14] hover:bg-white/[0.22] border border-white/[0.20] shadow-[0_2px_12px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] active:scale-95 rounded-2xl flex items-center justify-center transition-all text-white cursor-pointer"
                     >
                       {isCopied ? (
-                        <div className="flex items-center gap-1.5 text-emerald-600 text-xs font-bold">
+                        <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold">
                           <Check className="w-4 h-4" strokeWidth={2.5} />
                           <span>Скопировано</span>
                         </div>
@@ -817,7 +884,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                   <button 
                     onClick={() => { void handleShareInvite(); }}
                     disabled={isSharingInvite}
-                    className="w-full mt-3 py-3.5 rounded-full bg-brand hover:brightness-110 text-white font-bold text-sm active:scale-[0.98] transition-all shadow-lg shadow-brand/25 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-wait"
+                    className="w-full mt-3 py-3.5 rounded-full bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white font-bold text-sm active:scale-[0.98] transition-all shadow-[0_4px_22px_rgba(0,152,234,0.55),inset_0_1px_0_rgba(255,255,255,0.4)] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-wait"
                   >
                     {isSharingInvite ? (
                       <Activity className="w-4 h-4 animate-spin" />
@@ -833,7 +900,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                     <h4 className="font-display font-bold text-sm tracking-wide text-white">
                       {t('my_referrals')}
                     </h4>
-                    <span className="text-white/40 text-xs font-semibold bg-white/5 px-2 py-0.5 rounded-full">
+                    <span className="text-white/60 text-xs font-semibold bg-white/[0.08] border border-white/[0.10] px-2 py-0.5 rounded-full shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
                       {referrals.length}
                     </span>
                   </div>
@@ -843,15 +910,15 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                         <Activity className="w-6 h-6 text-brand animate-spin" />
                      </div>
                   ) : referrals.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-8 opacity-70 bg-white/[0.04] rounded-[18px] border border-white/[0.08]">
+                    <div className="flex flex-col items-center justify-center py-8 opacity-70 bg-white/[0.03] rounded-2xl border border-white/[0.08]">
                       <Users className="w-8 h-8 text-white/30 mb-2" />
                       <p className="text-xs text-center text-white/50 px-4">{t('no_referrals_yet')}</p>
                     </div>
                   ) : (
                     <div className="flex flex-col gap-2">
                       {referrals.map((r) => (
-                        <div key={r.id} className="bg-white/[0.05] border border-white/[0.08] rounded-[18px] p-3 flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-brand/20 overflow-hidden shrink-0 flex items-center justify-center border border-brand/30">
+                        <div key={r.id} className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-3 flex items-center gap-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                          <div className="w-9 h-9 rounded-full bg-brand/20 overflow-hidden shrink-0 flex items-center justify-center border border-brand/30 shadow-[0_0_8px_rgba(0,152,234,0.25)]">
                             {r.photoUrl ? (
                               <img src={r.photoUrl} alt="avatar" className="w-full h-full object-cover" />
                             ) : (
@@ -881,7 +948,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
         )}
       </AnimatePresence>
 
-      {/* Deposit History Modal (Bottom Sheet style) */}
+      {/* Deposit History Modal (Liquid Glass Bottom Sheet style) */}
       <AnimatePresence>
         {showHistory && (
           <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -893,38 +960,48 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               className="fixed inset-0 bg-black/80 backdrop-blur-md cursor-pointer"
             />
             <motion.div 
-              initial={{ y: '100%', opacity: 0 }} 
-              animate={{ y: 0, opacity: 1 }} 
-              exit={{ y: '100%', opacity: 0 }} 
-              transition={{ type: 'spring', damping: 28, stiffness: 350 }} 
-              className="relative z-10 w-full max-w-sm bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] rounded-t-[32px] sm:rounded-[28px] shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_24px_55px_-12px_rgba(0,0,0,0.75)] overflow-hidden flex flex-col max-h-[80vh] text-white"
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+              className="group relative z-10 w-full max-w-sm bg-[#16171b]/95 backdrop-blur-2xl border border-white/[0.12] rounded-t-[32px] sm:rounded-[28px] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_25px_50px_-12px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[80vh] text-white"
             >
-              {/* Grab Handle */}
-              <div className="w-12 h-1 bg-white/25 rounded-full mx-auto mt-3 mb-1 sm:hidden" />
+              {/* верхнее бликовое свечение жидкого стекла */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-t-[32px] sm:rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+              />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.08] blur-2xl opacity-70"
+              />
 
-              <div className="p-5 pb-3 border-b border-white/[0.08] flex items-center justify-between shrink-0">
+              {/* Grab Handle */}
+              <div className="relative z-10 w-12 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-1 sm:hidden" />
+
+              <div className="relative z-10 p-5 pb-3 border-b border-white/[0.08] flex items-center justify-between shrink-0">
                  <div>
-                   <h3 className="font-display text-lg font-bold tracking-tight">{t('deposit_history')}</h3>
-                   <p className="text-white/45 text-xs mt-0.5">История входящих платежей</p>
+                   <h3 className="font-display text-lg font-bold tracking-tight text-white">{t('deposit_history')}</h3>
+                   <p className="text-white/40 text-xs mt-0.5">История входящих платежей</p>
                  </div>
                  <button 
                    onClick={() => setShowHistory(false)} 
-                   className="w-9 h-9 rounded-full bg-white/[0.08] border border-white/[0.10] flex items-center justify-center text-white/85 hover:bg-white/[0.12] active:scale-95 transition-all cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
+                   className="w-9 h-9 rounded-full bg-white/[0.10] hover:bg-white/[0.18] border border-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] flex items-center justify-center text-white/80 hover:text-white active:scale-95 transition-all cursor-pointer"
                  >
                    <X className="w-4 h-4" strokeWidth={2.5} />
                  </button>
               </div>
               
-              <div className="overflow-y-auto custom-scrollbar p-5 pt-4 flex-1">
+              <div className="relative z-10 overflow-y-auto custom-scrollbar p-5 pt-4 flex-1">
                 {(!topups || topups.length === 0) ? (
-                  <div className="flex flex-col items-center justify-center py-10 opacity-60">
+                  <div className="flex flex-col items-center justify-center py-10 opacity-70">
                     <Wallet className="w-10 h-10 text-white/30 mb-2" />
                     <p className="text-xs text-white/50 text-center">{t('no_deposits_yet')}</p>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-2.5">
                     {topups.slice().reverse().map((tx: any) => (
-                      <div key={tx.id} className="bg-white/[0.05] border border-white/[0.08] rounded-[18px] p-3.5 flex justify-between items-center">
+                      <div key={tx.id} className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-3.5 flex justify-between items-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                         <div className="flex flex-col">
                           <span className="text-[11px] text-white/40 mb-0.5 font-medium">{new Date(tx.ts).toLocaleString('ru-RU')}</span>
                           <span className="text-[13px] font-semibold text-white flex items-center gap-1">{t('deposit')}</span>
@@ -950,40 +1027,53 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               <motion.div 
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 onClick={() => setSelectedNft(null)}
-                className="absolute inset-0 bg-black/80 backdrop-blur-[8px]"
+                className="absolute inset-0 bg-black/80 backdrop-blur-md"
               />
               <motion.div 
-                initial={{ opacity: 0, scale: 0.9, y: 20 }} 
-                animate={{ opacity: 1, scale: 1, y: 0 }} 
-                exit={{ opacity: 0, scale: 0.9, y: 20 }} 
-                className="relative w-full max-w-sm bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] rounded-[26px] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_24px_55px_-12px_rgba(0,0,0,0.75)] flex flex-col items-center z-50"
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="group relative w-full max-w-sm bg-[#16171b]/95 backdrop-blur-2xl border border-white/[0.12] rounded-[28px] p-6 shadow-2xl flex flex-col items-center z-50 overflow-hidden"
               >
-                <div className="w-32 h-32 rounded-2xl mb-4 relative overflow-hidden">
-                  <PremiumImage staticMode src={selectedNft.image_url || `/nft/${selectedNft.name}.png`} alt={selectedNft.name} className="w-full h-full relative z-10 " />
+                {/* верхний блик жидкого стекла */}
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+                />
+
+                <div className="relative z-10 w-32 h-32 rounded-2xl mb-4 overflow-hidden">
+                  <PremiumImage staticMode src={selectedNft.image_url || `/nft/${selectedNft.name}.png`} alt={selectedNft.name} className="w-full h-full relative z-10 drop-shadow-[0_4px_16px_rgba(0,0,0,0.5)]" />
                 </div>
                 {selectedNft.backdrop === 'Onyx Black' ? (
-                  <span className="text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full bg-gradient-to-r from-neutral-900 to-black text-amber-300 border border-amber-500/40 mb-2">
+                  <span className="relative z-10 text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full bg-gradient-to-r from-neutral-900 to-black text-amber-300 border border-amber-500/40 mb-2 shadow-sm">
                     Onyx Black
                   </span>
                 ) : selectedNft.backdrop === 'Black' ? (
-                  <span className="text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full bg-zinc-950 text-zinc-200 border border-zinc-700/80 mb-2">
+                  <span className="relative z-10 text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full bg-zinc-950 text-zinc-200 border border-zinc-700/80 mb-2 shadow-sm">
                     Black
                   </span>
                 ) : null}
-                <h3 className="font-display text-2xl font-semibold text-center mb-1">{selectedNft.name}</h3>
-                <p className="text-gold font-medium mb-6 flex items-center justify-center gap-1">{t('value')} {currentPrice.toFixed(2)} <GramIcon className="w-4 h-4 drop-shadow-md" /></p>
+                <h3 className="relative z-10 font-display text-2xl font-bold text-center mb-1 text-white">{selectedNft.name}</h3>
+                <p className="relative z-10 text-white/80 font-medium mb-6 flex items-center justify-center gap-1.5">
+                  {t('value')} <span className="font-bold text-white">{currentPrice.toFixed(2)}</span> <GramIcon className="w-4 h-4 text-brand drop-shadow-md" />
+                </p>
                 
-                <div className="w-full space-y-3">
+                <div className="relative z-10 w-full space-y-3">
                   <button 
                     onClick={() => handleSell({ ...selectedNft, price: currentPrice })}
                     disabled={selectedNft.isWithdrawing}
-                    className="w-full py-3.5 rounded-full bg-brand hover:bg-brand-dim disabled:bg-white/10 disabled:text-muted text-white font-semibold transition-colors shadow-[0_6px_18px_rgba(0,152,234,0.3)] active:scale-95 flex items-center justify-center gap-1 cursor-pointer"
+                    className="w-full py-3.5 rounded-full bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 disabled:opacity-40 disabled:pointer-events-none text-white font-bold transition-all shadow-[0_4px_20px_rgba(0,152,234,0.55),inset_0_1px_0_rgba(255,255,255,0.4)] active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    {t('sell_for')} {currentPrice.toFixed(2)} <GramIcon className="w-4 h-4 drop-shadow-md" />
+                    <span>{t('sell_for')} {currentPrice.toFixed(2)}</span>
+                    <GramIcon className="w-4 h-4 text-white drop-shadow-md" />
                   </button>
                   <button 
                     onClick={() => handleToggleWithdraw(selectedNft)}
-                    className={`w-full py-3.5 rounded-full font-semibold transition-colors border active:scale-95 cursor-pointer ${selectedNft.isWithdrawing ? 'bg-danger/10 border-danger/30 text-danger' : 'bg-white/5 border-white/10 hover:bg-white/10 text-white'}`}
+                    className={`w-full py-3.5 rounded-full font-bold transition-all border active:scale-95 cursor-pointer shadow-md ${
+                      selectedNft.isWithdrawing 
+                        ? 'bg-rose-500/25 border-rose-500/50 text-rose-300 hover:bg-rose-500/35' 
+                        : 'bg-white/[0.12] hover:bg-white/[0.20] border-white/[0.18] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                    }`}
                   >
                     {selectedNft.isWithdrawing ? t('cancel_withdraw') : t('withdraw_nft')}
                   </button>
@@ -1000,7 +1090,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/80 backdrop-blur-[8px]"
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md"
             onClick={() => setShowLevelModal(false)}
           >
             <motion.div
@@ -1008,27 +1098,37 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative overflow-hidden bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] p-8 rounded-[26px] w-full max-w-sm text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_24px_55px_-12px_rgba(0,0,0,0.75)]"
+              className="group relative bg-[#16171b]/95 backdrop-blur-2xl border border-white/[0.12] p-8 rounded-[28px] w-full max-w-sm text-center shadow-2xl overflow-hidden"
             >
+              {/* верхний блик жидкого стекла */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+              />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.08] blur-2xl opacity-70"
+              />
+
               <button 
-                onClick={() => setShowLevelModal(false)} 
-                className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/[0.08] border border-white/[0.10] flex items-center justify-center text-white/85 hover:bg-white/[0.12] active:scale-95 transition-all cursor-pointer z-10"
+                onClick={() => setShowLevelModal(false)}
+                className="relative z-10 absolute top-4 right-4 w-8 h-8 rounded-full bg-white/[0.10] hover:bg-white/[0.18] border border-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] flex items-center justify-center text-white/80 hover:text-white active:scale-95 transition-all cursor-pointer"
               >
                 <X className="w-4 h-4" strokeWidth={2.5} />
               </button>
               
-              <div className="relative w-16 h-16 rounded-full bg-white/[0.08] border border-white/[0.10] text-brand flex items-center justify-center mx-auto mb-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_10px_24px_-12px_rgba(0,0,0,0.85)]">
-                <Gift className="w-8 h-8" strokeWidth={2} />
+              <div className="relative z-10 w-16 h-16 rounded-full bg-gradient-to-br from-[#0098ea] to-[#00b4d8] text-white shadow-[0_0_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] flex items-center justify-center mx-auto mb-4">
+                <Gift className="w-8 h-8 text-white drop-shadow-md" strokeWidth={2} />
               </div>
               
-              <h3 className="font-display text-2xl font-semibold mb-3">{t('level_rewards')}</h3>
-              <p className="text-white/60 text-sm leading-relaxed mb-6">
+              <h3 className="relative z-10 font-display text-2xl font-bold mb-2 text-white">{t('level_rewards')}</h3>
+              <p className="relative z-10 text-white/70 text-sm leading-relaxed mb-6">
                 {t('level_prizes_soon')}
               </p>
               
               <button 
                 onClick={() => setShowLevelModal(false)}
-                className="w-full py-3.5 rounded-full bg-brand text-white font-semibold active:scale-95 transition-transform shadow-[0_6px_18px_rgba(0,152,234,0.3)] cursor-pointer"
+                className="relative z-10 w-full py-3.5 rounded-full bg-gradient-to-r from-[#0098ea] to-[#00b4d8] hover:brightness-110 text-white font-bold active:scale-95 transition-all shadow-[0_4px_20px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] cursor-pointer"
               >
                 {t('got_it')}
               </button>
@@ -1037,40 +1137,128 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
         )}
       </AnimatePresence>
 
-
-
+      {/* Settings Modal (Fixed Alignment, Clean Header, Flag Cards, Haptic Feedback & Bright Controls) */}
       <AnimatePresence>
         {showSettings && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
             <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
               onClick={() => setShowSettings(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-[8px]"
+              className="fixed inset-0 bg-black/80 backdrop-blur-md cursor-pointer"
             />
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }} 
-              animate={{ opacity: 1, scale: 1, y: 0 }} 
-              exit={{ opacity: 0, scale: 0.9, y: 20 }} 
-              className="relative w-full max-w-sm bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] rounded-[26px] shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_24px_55px_-12px_rgba(0,0,0,0.75)] z-50 overflow-hidden flex flex-col p-6"
+              initial={{ opacity: 0, scale: 0.94, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94, y: 16 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 360 }}
+              className="group relative w-full max-w-sm bg-[#16171b]/98 backdrop-blur-2xl border border-white/[0.14] rounded-[28px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.95),inset_0_1px_0_rgba(255,255,255,0.15)] z-50 overflow-hidden flex flex-col p-5 sm:p-6 text-white"
             >
-              <h3 className="font-display text-xl font-bold mb-4">{t('settings') || 'Settings'}</h3>
-              <button onClick={() => setShowSettings(false)} className="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/[0.08] border border-white/[0.10] flex items-center justify-center text-white/85 hover:bg-white/[0.12] active:scale-95 transition-all cursor-pointer z-20">
-                <X className="w-4 h-4" strokeWidth={2.5} />
-              </button>
-              
-              <div className="space-y-4">
-                <div className="text-sm font-medium text-white/70 mb-2">{t('language') || 'Language'}</div>
-                <div className="grid grid-cols-1 gap-2">
-                  <button onClick={() => { handleSetLang('en'); setShowSettings(false); }} className={`p-3.5 rounded-full border flex items-center justify-between transition-colors cursor-pointer ${lang === 'en' ? 'bg-brand border-transparent text-white font-bold shadow-[0_6px_18px_rgba(0,152,234,0.3)]' : 'bg-white/[0.05] border-white/[0.10] text-white hover:bg-white/[0.09]'}`}>
-                    English {lang === 'en' && <Gem className="w-4 h-4" />}
-                  </button>
-                  <button onClick={() => { handleSetLang('ru'); setShowSettings(false); }} className={`p-3.5 rounded-full border flex items-center justify-between transition-colors cursor-pointer ${lang === 'ru' ? 'bg-brand border-transparent text-white font-bold shadow-[0_6px_18px_rgba(0,152,234,0.3)]' : 'bg-white/[0.05] border-white/[0.10] text-white hover:bg-white/[0.09]'}`}>
-                    Русский {lang === 'ru' && <Gem className="w-4 h-4" />}
-                  </button>
-                  <button onClick={() => { handleSetLang('zh'); setShowSettings(false); }} className={`p-3.5 rounded-full border flex items-center justify-between transition-colors cursor-pointer ${lang === 'zh' ? 'bg-brand border-transparent text-white font-bold shadow-[0_6px_18px_rgba(0,152,234,0.3)]' : 'bg-white/[0.05] border-white/[0.10] text-white hover:bg-white/[0.09]'}`}>
-                    中文 {lang === 'zh' && <Gem className="w-4 h-4" />}
-                  </button>
+              {/* верхний блик жидкого стекла */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.09)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+              />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 w-4/5 h-20 rounded-full bg-[#0098ea]/15 blur-2xl pointer-events-none"
+              />
+
+              {/* Header row */}
+              <div className="relative z-10 flex items-center justify-between pb-3.5 mb-4 border-b border-white/[0.08]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0098ea] to-[#00b4d8] text-white flex items-center justify-center shadow-[0_0_14px_rgba(0,152,234,0.45),inset_0_1px_0_rgba(255,255,255,0.4)]">
+                    <Settings className="w-5 h-5" strokeWidth={2.2} />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-lg font-bold text-white tracking-tight leading-tight">{t('settings') || 'Настройки'}</h3>
+                    <p className="text-[11px] text-white/45 font-medium mt-0.5">Язык и параметры приложения</p>
+                  </div>
                 </div>
+                <button 
+                  onClick={() => setShowSettings(false)} 
+                  className="w-9 h-9 rounded-full bg-white/[0.10] hover:bg-white/[0.18] active:scale-90 border border-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] flex items-center justify-center text-white/80 hover:text-white transition-all cursor-pointer"
+                >
+                  <X className="w-4 h-4" strokeWidth={2.5} />
+                </button>
+              </div>
+              
+              <div className="relative z-10 space-y-4">
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-white/50 mb-2.5 flex items-center gap-1.5">
+                    <span>{t('language') || 'Язык интерфейса'}</span>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2">
+                    {[
+                      { code: 'ru', name: 'Русский', flag: '🇷🇺', native: 'Russian' },
+                      { code: 'en', name: 'English', flag: '🇬🇧', native: 'English' },
+                      { code: 'zh', name: '中文', flag: '🇨🇳', native: 'Chinese' },
+                    ].map((item) => {
+                      const isActive = lang === item.code;
+                      return (
+                        <button 
+                          key={item.code}
+                          onClick={() => { 
+                            handleSetLang(item.code as any); 
+                            try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
+                          }} 
+                          className={`w-full p-3.5 rounded-[18px] border flex items-center justify-between transition-all cursor-pointer active:scale-[0.98] ${
+                            isActive 
+                              ? 'bg-gradient-to-r from-[#0098ea]/25 to-[#00b4d8]/15 border-[#0098ea]/70 text-white font-bold shadow-[0_0_18px_rgba(0,152,234,0.35),inset_0_1px_0_rgba(255,255,255,0.2)]' 
+                              : 'bg-white/[0.05] hover:bg-white/[0.10] border-white/[0.08] text-white/80'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-xl leading-none select-none">{item.flag}</span>
+                            <div className="flex flex-col text-left">
+                              <span className="text-[14px] font-bold text-white leading-tight">{item.name}</span>
+                              <span className="text-[11px] text-white/40">{item.native}</span>
+                            </div>
+                          </div>
+                          {isActive ? (
+                            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-[#0098ea] to-[#00b4d8] text-white flex items-center justify-center shadow-md">
+                              <Check className="w-3.5 h-3.5 stroke-[3]" />
+                            </div>
+                          ) : (
+                            <div className="w-6 h-6 rounded-full border-2 border-white/20" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Haptic Feedback Test row */}
+                <div className="pt-1 border-t border-white/[0.08]">
+                  <div className="flex items-center justify-between p-3.5 rounded-[18px] bg-white/[0.04] border border-white/[0.08]">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/[0.10] flex items-center justify-center text-white/80">
+                        <Sparkles className="w-4 h-4 text-amber-400" />
+                      </div>
+                      <div className="flex flex-col text-left">
+                        <span className="text-[13px] font-bold text-white leading-tight">Тактильный отклик</span>
+                        <span className="text-[10px] text-white/40">Вибрация кнопок в Telegram</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        try { (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch (e) {}
+                      }}
+                      className="px-3.5 py-1.5 rounded-full text-[11px] font-bold bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] text-white active:scale-95 transition-all cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]"
+                    >
+                      Тест
+                    </button>
+                  </div>
+                </div>
+
+                {/* Save / Close button */}
+                <button
+                  onClick={() => setShowSettings(false)}
+                  className="w-full mt-2 py-3.5 rounded-full bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 active:scale-[0.98] transition-all font-display font-bold text-[14px] text-white shadow-[0_4px_18px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] cursor-pointer"
+                >
+                  {t('got_it') || 'Готово'}
+                </button>
               </div>
             </motion.div>
           </div>
@@ -1258,9 +1446,8 @@ export default function App() {
   const navItems = [
     { id: 'inventory', icon: Package, label: t('inventory') },
     { id: 'shop', icon: Flame, label: t('nav_shop') || 'Игры' },
-    { id: 'cases', icon: Box, label: t('nav_cases') || 'Кейсы' },
+    { id: 'leaderboard', icon: Trophy, label: t('nav_leaderboard') || 'Топ' },
     { id: 'tasks', icon: ListTodo, label: t('nav_tasks') || 'Задания' },
-    { id: 'profile', icon: User, label: 'Профиль' },
     ...(auth.isAdmin ? [{ id: 'admin', icon: Shield, label: t('nav_admin') }] : [])
   ];
 
@@ -1346,38 +1533,48 @@ export default function App() {
               transition={{ type: 'spring', damping: 28, stiffness: 350 }}
               className="absolute inset-x-3 top-2.5 z-50 flex justify-center pointer-events-none"
             >
-                <div className={`relative flex items-center gap-2 bg-white/[0.07] backdrop-blur-2xl rounded-full p-2 w-full shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_12px_36px_rgba(0,0,0,0.6)] pointer-events-auto border transition-all duration-300 ${
-                  topUpGlow ? 'border-emerald-500/80 shadow-[0_0_25px_rgba(16,185,129,0.35)]' : 'border-white/[0.10]'
+                <div className={`group relative overflow-hidden flex items-center gap-2 bg-white/[0.07] backdrop-blur-2xl rounded-full p-2 w-full pointer-events-auto border transition-all duration-300 ${
+                  topUpGlow 
+                    ? 'border-emerald-500/80 shadow-[0_0_25px_rgba(16,185,129,0.35),inset_0_1px_0_rgba(255,255,255,0.15)]' 
+                    : 'border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_16px_36px_-15px_rgba(0,0,0,0.85)]'
                 }`}>
-                  {/* верхнее бликовое свечение — жидкое стекло */}
+                  {/* верхнее бликовое свечение — эффект жидкого стекла как в QuickActions */}
                   <span
                     aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 rounded-full bg-[linear-gradient(180deg,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0.02)_45%,transparent_65%)]"
+                    className="pointer-events-none absolute inset-0 rounded-full bg-[linear-gradient(180deg,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
                   />
-                  {/* Avatar -> Profile */}
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.10] blur-2xl opacity-70"
+                  />
+
+                  {/* Avatar -> Profile (в стеклянном чипе QuickActions) */}
                   <button 
                     onClick={() => {
                       setActiveTab('profile');
                       try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
                     }} 
-                    className="relative shrink-0 rounded-full transition-transform active:scale-[0.95] cursor-pointer outline-none"
+                    aria-label="Профиль"
+                    className="relative shrink-0 transition-transform active:scale-95 cursor-pointer outline-none z-10"
                   >
-                    <span className={`block w-11 h-11 rounded-full overflow-hidden bg-white/[0.08] flex items-center justify-center relative transition-all ${
+                    <span className={`relative flex h-9 w-9 shrink-0 aspect-square items-center justify-center rounded-full bg-white/[0.08] border shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] overflow-hidden transition-all ${
                       activeTab === 'profile'
-                        ? 'ring-2 ring-brand shadow-[0_0_16px_rgba(0,152,234,0.5)]'
-                        : 'ring-2 ring-white/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+                        ? 'border-brand/60 shadow-[0_0_14px_rgba(0,152,234,0.35),inset_0_1px_0_rgba(255,255,255,0.2)]'
+                        : 'border-white/[0.10] hover:border-white/[0.16]'
                     }`}>
                       {user?.photoUrl ? (
-                        <img src={user.photoUrl} alt="Avatar" className="absolute w-full h-full object-cover" />
+                        <img src={user.photoUrl} alt="Avatar" className="w-full h-full object-cover" />
                       ) : (
-                        <User className="w-5 h-5 text-white/60 relative z-10" />
+                        <User className="w-4 h-4 text-white/80" strokeWidth={2.2} />
                       )}
                     </span>
                   </button>
 
-                  {/* Level chip — стеклянный, как иконки-чипы */}
-                  <span className="relative text-[11px] font-bold text-white/85 bg-white/[0.08] border border-white/[0.10] px-2.5 py-1.5 rounded-full whitespace-nowrap shrink-0 leading-none shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
-                    LVL {currentLevel}
+                  {/* Level chip (в стеклянном чипе QuickActions, белые буквы) */}
+                  <span className="relative z-10 flex items-center justify-center px-2.5 py-1 rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] whitespace-nowrap shrink-0 leading-none">
+                    <span className="text-[11px] font-bold text-white tracking-tight leading-none">
+                      LVL {currentLevel}
+                    </span>
                   </span>
 
                   {/* Center NFT Heroic Helmet (Model: Galea Alba) */}
@@ -1388,22 +1585,30 @@ export default function App() {
                       loopDelayMs={0} 
                       src="https://nft.fragment.com/gift/heroichelmet-127.lottie.json" 
                       alt="Heroic Helmet - Galea Alba" 
-                      className="w-[52px] h-[52px] object-contain drop-shadow-[0_6px_16px_rgba(0,0,0,0.6)]" 
+                      className="w-[50px] h-[50px] object-contain drop-shadow-[0_6px_16px_rgba(0,0,0,0.6)]" 
                     />
                   </div>
 
-                  {/* Balance -> Balance page — стеклянная пилюля с брендовым акцентом */}
+                  {/* Balance -> Balance page (жидкое стекло, белые цифры) */}
                   <button 
                     onClick={() => {
                       setShowBalancePage(true);
                       try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch (e) {}
                     }} 
-                    className="ml-auto relative z-10 flex items-center gap-1.5 bg-white/[0.08] border border-white/[0.12] text-white pl-3.5 pr-1.5 py-1.5 rounded-full hover:bg-white/[0.12] active:scale-[0.96] transition-all duration-150 cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_10px_24px_-12px_rgba(0,0,0,0.8)]"
+                    aria-label="Кошелёк и пополнение"
+                    className="ml-auto relative z-10 flex items-center gap-1.5 pl-3 pr-1 py-1 rounded-full
+                      bg-white/[0.08] hover:bg-white/[0.12] active:bg-white/[0.10]
+                      border border-white/[0.10] hover:border-white/[0.18]
+                      shadow-[inset_0_1px_0_rgba(255,255,255,0.12),inset_0_-1px_0_rgba(255,255,255,0.03),0_6px_18px_-4px_rgba(0,0,0,0.6)]
+                      active:scale-[0.97] transition-all duration-150 cursor-pointer group/btn"
                   >
-                    <span className="font-display text-[14px] font-bold tracking-tight text-white whitespace-nowrap">{balance.toFixed(2)}</span>
-                    <GramIcon className="w-4 h-4 text-brand" />
-                    <span className="w-5 h-5 rounded-full bg-brand text-white text-[12px] font-bold flex items-center justify-center leading-none shadow-[0_4px_12px_rgba(0,152,234,0.45)]">
-                      +
+                    <span className="font-display text-[14px] font-bold tracking-tight text-white whitespace-nowrap leading-none">
+                      {balance.toFixed(2)}
+                    </span>
+                    <GramIcon className="w-3.5 h-3.5 text-brand drop-shadow-sm shrink-0" />
+                    {/* стеклянный чип плюсика с подсветкой бренда */}
+                    <span className="relative flex h-6 w-6 shrink-0 aspect-square items-center justify-center rounded-full bg-brand/20 border border-brand/40 text-brand shadow-[0_0_10px_rgba(0,152,234,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] transition-transform duration-150 group-active/btn:scale-95">
+                      <span className="text-[12px] font-bold leading-none">+</span>
                     </span>
                   </button>
                 </div>
@@ -1432,10 +1637,15 @@ export default function App() {
                     onPlayPlinko={() => setActiveGame('plinko')}
                     giftsDb={giftsDb} 
                     pricesLoaded={pricesLoaded} 
+                    balance={balance}
+                    setBalance={setBalance}
+                    inventory={inventory}
+                    setInventory={setInventory}
+                    onAddTurnover={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }}
+                    turnover={turnover}
                   />
                 )}
                 {activeTab === 'leaderboard' && <Suspense fallback={<LazyFallback />}><Leaderboard /></Suspense>}
-                {activeTab === 'cases' && <Suspense fallback={<LazyFallback />}><Cases balance={balance} setBalance={setBalance} inventory={inventory} setInventory={setInventory} giftsDb={giftsDb} onAddTurnover={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} turnover={turnover} /></Suspense>}
                 {activeTab === 'tasks' && <Suspense fallback={<LazyFallback />}><Tasks onBalanceUpdate={setBalance} /></Suspense>}
                 {activeTab === 'profile' && (
                   <Profile 
@@ -1463,7 +1673,7 @@ export default function App() {
                       setBalance={setBalance} 
                       turnover={turnover} 
                       giftsDb={giftsDb} 
-                      onGoToCases={() => setActiveTab('cases')} 
+                      onGoToCases={() => setActiveTab('shop')} 
                       onPlayUpgrade={() => setActiveGame('upgrade')} 
                       onPlayCraft={() => setActiveGame('craft')} 
                       onBack={() => setActiveTab('shop')}
@@ -1570,7 +1780,7 @@ export default function App() {
           </AnimatePresence>
         </div>
 
-        {/* Liquid Glass Bottom Nav — стиль кнопок «Пополнить/Вывод» */}
+        {/* Liquid Glass Bottom Nav */}
         <AnimatePresence>
           {!activeGame && !showBalancePage && (
             <motion.div
@@ -1578,15 +1788,20 @@ export default function App() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 100, opacity: 0 }}
               transition={springSnappy}
-              className="absolute bottom-2.5 left-0 right-0 z-[90] pb-[calc(env(safe-area-inset-bottom,0px)+10px)] px-3 w-full pointer-events-none"
+              className="absolute bottom-2.5 left-0 right-0 z-[90] pb-[calc(env(safe-area-inset-bottom,0px)+8px)] px-3 w-full pointer-events-none"
             >
               <div className="pointer-events-auto w-full max-w-sm mx-auto">
-              <nav className="relative flex items-stretch gap-1 p-2 rounded-full bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_24px_55px_-12px_rgba(0,0,0,0.75)]">
-                {/* верхнее бликовое свечение — жидкое стекло */}
+              <nav className="group relative overflow-hidden flex items-stretch gap-1 p-1.5 rounded-full bg-white/[0.06] backdrop-blur-2xl border border-white/[0.09] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_20px_45px_-10px_rgba(0,0,0,0.85)]">
+                {/* верхнее мягкое бликовое свечение жидкого стекла */}
                 <span
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 rounded-full bg-[linear-gradient(180deg,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0.02)_45%,transparent_65%)]"
+                  className="pointer-events-none absolute inset-0 rounded-full bg-[linear-gradient(180deg,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0.01)_40%,transparent_62%)]"
                 />
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-14 rounded-full bg-white/[0.06] blur-2xl opacity-60"
+                />
+
                 {navItems.map((item) => {
                   const isActive = activeTab === item.id;
                   return (
@@ -1596,37 +1811,45 @@ export default function App() {
                         setActiveTab(item.id);
                         try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
                       }}
-                      className="relative flex-1 min-w-0 py-1 outline-none cursor-pointer active:scale-[0.95] transition-transform duration-200"
+                      className="group/item relative flex-1 min-w-0 py-2.5 px-1 outline-none cursor-pointer active:scale-[0.96] transition-transform duration-200"
                     >
                       {isActive && (
                         <motion.div
                           layoutId="liquid-pill"
-                          className="absolute inset-x-0.5 inset-y-0 rounded-full bg-white/[0.08] border border-white/[0.12] shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)] overflow-hidden z-0"
-                          transition={springSnappy}
+                          className="absolute inset-0 rounded-full bg-white/[0.045] backdrop-blur-md border border-white/[0.12] shadow-[inset_0_1px_2px_0_rgba(255,255,255,0.20),inset_0_-1px_1.5px_0_rgba(255,255,255,0.06),0_6px_16px_-3px_rgba(0,0,0,0.55)] overflow-hidden z-0"
+                          transition={springLiquid}
                         >
-                          {/* мягкий синий отсвет активной плитки */}
-                          <div className="absolute -bottom-5 -left-3 w-20 h-20 rounded-full bg-[#0098ea]/20 blur-2xl pointer-events-none" />
-                          <div className="absolute -top-4 right-0 w-16 h-16 rounded-full bg-white/[0.08] blur-2xl pointer-events-none" />
+                          {/* деликатный мягкий водяной блик */}
+                          <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute inset-x-2 top-0.5 h-[40%] rounded-full bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.14),transparent_70%)]"
+                          />
+                          {/* мягкий тусклый зеленый отсвет снизу */}
+                          <div className="absolute -bottom-3 -left-2 w-10 h-10 rounded-full bg-emerald-500/12 blur-md pointer-events-none" />
                         </motion.div>
                       )}
                       <motion.div
-                        className="relative z-10 flex flex-col items-center justify-center gap-1.5 will-change-transform"
+                        className="relative z-10 flex flex-col items-center justify-center gap-1 will-change-transform"
                         style={{ WebkitBackfaceVisibility: 'hidden', transform: 'translateZ(0)' }}
                         animate={{ 
-                          scale: isActive ? 1.04 : 1,
-                          y: isActive ? -0.5 : 0 
+                          scale: isActive ? 1.02 : 1,
                         }}
-                        transition={springSnappy}
+                        transition={springLiquid}
                       >
-                        {/* Иконка в стеклянном чипе: брендовая — активная, приглушённая — нет */}
-                        <span className={`w-9 h-9 rounded-full flex items-center justify-center border transition-colors duration-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] ${
+                        {/* Компактный круглый стеклянный чип (h-7 w-7, 28px) */}
+                        <span className={`relative flex h-7 w-7 shrink-0 aspect-square items-center justify-center rounded-full transition-all duration-200 ${
                           isActive
-                            ? 'bg-white/[0.13] border-white/[0.18]'
-                            : 'bg-white/[0.06] border-white/[0.08]'
+                            ? 'bg-brand/20 border border-brand/40 text-brand shadow-[0_0_10px_rgba(0,152,234,0.3),inset_0_1px_0_rgba(255,255,255,0.15)]'
+                            : 'bg-white/[0.06] border border-white/[0.08] text-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] group-hover/item:text-white group-hover/item:bg-white/[0.09]'
                         }`}>
-                          <item.icon size={18} strokeWidth={2.4} className={isActive ? 'text-brand' : 'text-white/70'} />
+                          <item.icon size={15} strokeWidth={2.4} aria-hidden="true" />
                         </span>
-                        <span className={`text-[10px] font-semibold tracking-tight leading-none max-w-full truncate px-1 ${isActive ? 'text-white' : 'text-white/55'}`}>{item.label}</span>
+                        {/* Чёткий белый текст, полностью помещающийся внутри ползунка */}
+                        <span className={`text-[10.5px] font-semibold tracking-tight leading-none text-center max-w-full truncate px-1 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] transition-opacity duration-200 ${
+                          isActive ? 'opacity-100 font-bold' : 'opacity-70 group-hover/item:opacity-100'
+                        }`}>
+                          {item.label}
+                        </span>
                       </motion.div>
                     </button>
                   );

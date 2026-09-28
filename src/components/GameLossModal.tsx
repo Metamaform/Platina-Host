@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { X, RotateCcw, Flame, Trash2, ShieldAlert } from 'lucide-react';
 import { useTranslation } from '../lib/i18n';
+import { BombNft } from './BombNft';
 
 export interface LossStat {
   label: string;
@@ -103,12 +104,7 @@ export const GameLossModal: React.FC<GameLossModalProps> = ({
             {/* Main Badge Container */}
             <div className="w-[88px] h-[88px] rounded-[24px] bg-gradient-to-b from-[#2e1014] via-[#1d0a0d] to-[#120608] border border-red-500/40 flex items-center justify-center relative shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_8px_20px_rgba(239,68,68,0.25)]">
               {game === 'mines' && (
-                <img
-                  src="/bomb-planted.png"
-                  alt="Bomb Planted"
-                  className="w-[68%] h-[68%] object-contain drop-shadow-[0_0_14px_rgba(239,68,68,0.7)] select-none"
-                  draggable={false}
-                />
+                <BombNft className="w-[84%] h-[84%]" animated={true} />
               )}
 
               {game === 'rocket' && (
@@ -184,13 +180,13 @@ export const GameLossModal: React.FC<GameLossModalProps> = ({
                   onClose();
                   onNavigate('inventory');
                 }}
-                className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold text-white/60 hover:text-white bg-white/5 hover:bg-white/10 border border-white/5 transition-colors text-center cursor-pointer"
+                className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold text-white bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] transition-all text-center cursor-pointer active:scale-95"
               >
                 {t('my_inventory')}
               </button>
               <button
                 onClick={onClose}
-                className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold text-white/60 hover:text-white bg-white/5 hover:bg-white/10 border border-white/5 transition-colors text-center cursor-pointer"
+                className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold text-white bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] transition-all text-center cursor-pointer active:scale-95"
               >
                 {closeLabel || t('close')}
               </button>
@@ -198,7 +194,7 @@ export const GameLossModal: React.FC<GameLossModalProps> = ({
           ) : (
             <button
               onClick={onClose}
-              className="w-full py-2.5 rounded-[12px] text-[12px] font-bold text-white/50 hover:text-white bg-white/5 hover:bg-white/10 border border-white/5 transition-colors cursor-pointer"
+              className="w-full py-2.5 rounded-[12px] text-[12px] font-bold text-white bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] transition-all cursor-pointer active:scale-95"
             >
               {closeLabel || t('close')}
             </button>

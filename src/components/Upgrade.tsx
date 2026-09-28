@@ -371,32 +371,32 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
             }
             onBack();
           }} 
-          className="absolute top-4 left-4 z-20 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center active:scale-95 transition-colors hover:bg-white/20 border border-white/5"
+          className="absolute top-4 left-4 z-20 w-9 h-9 rounded-full bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer"
         >
-          <ArrowLeft className="w-5 h-5 text-white" />
+          <ArrowLeft className="w-4 h-4 text-white" />
         </button>
 
         <div className="absolute top-0 left-0 right-0 h-[72px] flex items-center justify-center pointer-events-none z-10">
-          <h1 className="font-display text-lg font-bold text-white">Апгрейд</h1>
+          <h1 className="font-display text-lg font-bold text-white drop-shadow-md">Апгрейд</h1>
         </div>
 
-        <button onClick={() => setShowSettings(true)} className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center active:scale-95 transition-colors hover:bg-white/20 border border-white/5">
-          <Settings className="w-5 h-5 text-white" />
+        <button onClick={() => setShowSettings(true)} className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer">
+          <Settings className="w-4 h-4 text-white" />
         </button>
 
       <div className="flex-1 overflow-y-auto pb-[20px] pt-[72px] flex flex-col">
-        {/* Top: Assembled Upgrade Wheel from Manifest (+35% size) */}
-        <div className="relative w-full max-w-[405px] px-2 aspect-square flex items-center justify-center shrink-0 mx-auto">
+        {/* Top: Assembled Upgrade Wheel from Manifest */}
+        <div className="relative w-full max-w-[370px] px-2 aspect-square flex items-center justify-center shrink-0 mx-auto">
           <UpgradeWheel 
             winChance={chance} 
             controls={controls} 
             isSpinning={spinning} 
-            size={405} 
+            size={370} 
           />
         </div>
 
         {/* Middle: Selection Cards */}
-        <div className="w-full px-4 grid grid-cols-2 gap-3 mb-4 mt-6">
+        <div className="w-full px-4 grid grid-cols-2 gap-3 mb-4 mt-2">
           {/* Left Card: Input */}
           {(() => {
             const singleSrc = selectedSources.length === 1 ? selectedSources[0] : null;
@@ -405,12 +405,12 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
             const isSingleBlack = singleSrcBackdrop === 'Black';
 
             return (
-              <div className={`rounded-[16px] overflow-hidden relative min-h-[160px] flex flex-col border transition-all duration-300 p-3 ${
+              <div className={`rounded-[22px] overflow-hidden relative min-h-[160px] flex flex-col border transition-all duration-300 p-3.5 ${
                 isSingleBlack
                   ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/10'
                   : isSingleOnyx
                     ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/10'
-                    : 'bg-[#151619] border-white/5'
+                    : 'bg-white/[0.06] backdrop-blur-xl border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
               }`}>
                  <div className="text-center z-10 shrink-0 mb-1">
                    <h3 className="text-white font-bold text-[11px] leading-tight text-white/50 uppercase tracking-widest">Отдаваемые предметы</h3>
@@ -434,19 +434,19 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                           e.stopPropagation(); 
                           setSourceIds([]);
                           saveModelsToLocal([]);
-                        }} className="absolute top-0 right-0 bg-red-500/80 hover:bg-red-500 rounded-full p-1"><X className="w-3 h-3 text-white" /></button>
+                        }} className="absolute top-0 right-0 bg-red-500/80 hover:bg-red-500 rounded-full p-1 cursor-pointer"><X className="w-3 h-3 text-white" /></button>
                       </>
                     ) : selectedSources.length > 1 ? (
                       <div className="flex flex-wrap items-center justify-center gap-1 mb-2">
                         {selectedSources.slice(0, 3).map((src, idx) => {
                           const srcB = getNftBackdrop(src);
                           return (
-                            <div key={idx} className={`relative w-14 h-14 rounded-[10px] border flex items-center justify-center ${
+                            <div key={idx} className={`relative w-14 h-14 rounded-[12px] border flex items-center justify-center ${
                               srcB === 'Black'
                                 ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/10'
                                 : srcB === 'Onyx Black'
                                   ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/10'
-                                  : 'bg-[#1c1d21] border-white/10'
+                                  : 'bg-white/[0.08] border-white/[0.10]'
                             }`}>
                               <PremiumImage staticMode src={src.image_url} alt={src.name} className="w-[54%] h-[54%] object-contain" />
                               <button onClick={(e) => { 
@@ -456,7 +456,7 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                                   saveModelsToLocal(next);
                                   return next;
                                 }); 
-                              }} className="absolute -top-1 -right-1 bg-red-500 rounded-full p-0.5"><X className="w-2.5 h-2.5 text-white" /></button>
+                              }} className="absolute -top-1 -right-1 bg-red-500 rounded-full p-0.5 cursor-pointer"><X className="w-2.5 h-2.5 text-white" /></button>
                             </div>
                           );
                         })}
@@ -471,12 +471,12 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
           })()}
 
            {/* Right Card: Target */}
-          <div className={`rounded-[16px] overflow-hidden relative min-h-[160px] flex flex-col border transition-all duration-300 p-3 ${
+          <div className={`rounded-[22px] overflow-hidden relative min-h-[160px] flex flex-col border transition-all duration-300 p-3.5 ${
             isTargetBlack 
               ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/10' 
               : isTargetOnyx 
                 ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/10' 
-                : 'bg-[#151619] border-white/5'
+                : 'bg-white/[0.06] backdrop-blur-xl border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
           }`}>
              <div className="text-center z-10 shrink-0 mb-1">
                <h3 className="text-white font-bold text-[11px] leading-tight text-white/50 uppercase tracking-widest">Желаемый предмет</h3>
@@ -505,11 +505,11 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
         </div>
 
 
-        {/* GRAM Bet block */}
+        {/* GRAM Bet block in Liquid Glass */}
         <div className="w-full px-4 mb-4 space-y-2">
-          <div className="bg-[#151619] rounded-[16px] p-3 flex items-center justify-between border border-white/5">
+          <div className="bg-white/[0.05] backdrop-blur-xl rounded-[22px] p-3 flex items-center justify-between border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
              <span className="text-white/50 text-[12px] font-bold uppercase tracking-wider ml-1">Ставка балансом</span>
-             <div className="flex items-center gap-2 bg-[#0a0a0c] px-3 py-2 rounded-[10px] border border-white/10">
+             <div className="flex items-center gap-2 bg-white/[0.06] px-3.5 py-1.5 rounded-full border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
                <input
                  type="text"
                  inputMode="decimal"
@@ -538,71 +538,81 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
           <button 
             onClick={handleUpgrade}
             disabled={!canUpgrade}
-            className="w-full py-4 rounded-[20px] font-display font-bold text-[18px] flex items-center justify-center gap-2 tracking-wide transition-all bg-brand text-black hover:bg-brand/90 disabled:opacity-30 disabled:shadow-none shadow-[0_0_30px_rgba(255,184,0,0.3)] uppercase"
+            className="w-full py-4 rounded-full font-display font-bold text-[17px] tracking-wide shadow-[0_4px_24px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer uppercase"
           >
             Апгрейд
           </button>
         </div>
 
-        {/* Bottom Section: Inventory & Targets */}
-        <div className="flex-1 bg-[#121316] rounded-t-[32px] pt-4 px-4 border-t border-white/5 flex flex-col min-h-[400px]">
+        {/* Bottom Section: Inventory & Targets in Liquid Glass */}
+        <div className="flex-1 bg-[#16171b]/95 backdrop-blur-2xl rounded-t-[32px] pt-5 px-4 border-t border-white/[0.12] flex flex-col min-h-[400px] shadow-2xl relative overflow-hidden">
+          {/* верхний блик жидкого стекла */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 rounded-t-[32px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+          />
+
           {/* Tabs */}
-          <div className="flex bg-[#1a1b1f] rounded-[14px] p-1 mb-4 shrink-0">
+          <div className="relative z-10 flex bg-white/[0.08] backdrop-blur-xl border border-white/[0.12] rounded-full p-1 mb-4 shrink-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
             <button 
               onClick={() => setActiveTab('inventory')}
-              className={`flex-1 py-2 rounded-[10px] text-[13px] font-bold transition-all ${activeTab === 'inventory' ? 'bg-[#2a2c33] text-white shadow-sm' : 'text-white/40'}`}
+              className={`flex-1 py-2 rounded-full text-[13px] font-bold transition-all cursor-pointer ${
+                activeTab === 'inventory' ? 'bg-white/[0.22] text-white border border-white/[0.28] shadow-[0_2px_10px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.25)]' : 'text-white/60 hover:text-white'
+              }`}
             >
               Мои предметы
             </button>
             <button 
               onClick={() => setActiveTab('targets')}
-              className={`flex-1 py-2 rounded-[10px] text-[13px] font-bold transition-all ${activeTab === 'targets' ? 'bg-[#2a2c33] text-white shadow-sm' : 'text-white/40'}`}
+              className={`flex-1 py-2 rounded-full text-[13px] font-bold transition-all cursor-pointer ${
+                activeTab === 'targets' ? 'bg-white/[0.22] text-white border border-white/[0.28] shadow-[0_2px_10px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.25)]' : 'text-white/60 hover:text-white'
+              }`}
             >
               Желаемые товары
             </button>
           </div>
 
           {/* Filters */}
-          <div className="flex items-center gap-2 mb-4 shrink-0">
+          <div className="relative z-10 flex items-center gap-2 mb-4 shrink-0">
             <div className="flex-1 relative min-w-0">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
               <input 
                 type="text" 
                 placeholder="Поиск предмета..." 
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full bg-[#1a1b1f] border border-white/5 rounded-[12px] py-2 pl-9 pr-3 text-[13px] text-white outline-none placeholder:text-white/30"
+                className="w-full bg-white/[0.08] border border-white/[0.12] rounded-full py-2 pl-9 pr-3 text-[13px] text-white outline-none placeholder:text-white/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
               />
             </div>
             <button
               type="button"
               onClick={() => setTargetBackdropFilter(prev => prev === 'black' ? null : 'black')}
-              className={`py-2 px-2.5 rounded-[12px] text-[11px] font-bold border transition-all shrink-0 flex items-center gap-1.5 ${
+              className={`py-2 px-3 rounded-full text-[11px] font-bold border transition-all shrink-0 flex items-center gap-1.5 cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ${
                 targetBackdropFilter === 'black'
-                  ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/40 text-white shadow-md ring-1 ring-white/20'
-                  : 'bg-[#1a1b1f] border-white/5 text-white/60 hover:text-white hover:bg-white/5'
+                  ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/50 text-white shadow-md ring-1 ring-white/30'
+                  : 'bg-white/[0.12] hover:bg-white/[0.18] border-white/[0.16] text-white'
               }`}
               title="Фильтр Black"
             >
-              <span className="w-2 h-2 rounded-full bg-black border border-white/30 inline-block shrink-0" />
+              <span className="w-2 h-2 rounded-full bg-black border border-white/40 inline-block shrink-0" />
               <span>Black</span>
             </button>
             <button
               type="button"
               onClick={() => setTargetBackdropFilter(prev => prev === 'onyx' ? null : 'onyx')}
-              className={`py-2 px-2.5 rounded-[12px] text-[11px] font-bold border transition-all shrink-0 flex items-center gap-1.5 ${
+              className={`py-2 px-2.5 rounded-full text-[11px] font-bold border transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
                 targetBackdropFilter === 'onyx'
-                  ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/40 text-white shadow-md ring-1 ring-white/20'
-                  : 'bg-[#1a1b1f] border-white/5 text-white/60 hover:text-white hover:bg-white/5'
+                  ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/50 text-white shadow-md ring-1 ring-white/30'
+                  : 'bg-white/[0.12] hover:bg-white/[0.18] border-white/[0.16] text-white'
               }`}
               title="Фильтр Onyx Black"
             >
-              <span className="w-2 h-2 rounded-full bg-[#393d3f] border border-white/30 inline-block shrink-0" />
+              <span className="w-2 h-2 rounded-full bg-[#393d3f] border border-white/40 inline-block shrink-0" />
               <span>Onyx Black</span>
             </button>
             <button 
               onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
-              className="bg-[#1a1b1f] border border-white/5 rounded-[12px] px-3 py-2 text-[13px] font-medium text-white flex items-center gap-1 shrink-0"
+              className="bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] rounded-full px-3 py-2 text-[12px] font-bold text-white flex items-center gap-1 shrink-0 cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
             >
               Цена {sortOrder === 'desc' ? '↓' : '↑'}
             </button>
@@ -758,9 +768,9 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                   <span className="text-[13px] text-white/50 font-bold uppercase tracking-wider">Шанс успеха</span>
                   <div className="flex flex-wrap items-center gap-2">
                     {[20, 35, 50, 70, 80].map(c => (
-                      <button key={c} onClick={() => setChanceTarget(c)} className="flex-1 min-w-[60px] py-3 rounded-[12px] bg-[#1a1b1f] border border-white/5 text-[15px] font-bold text-white hover:bg-white/10 transition-colors">{c}%</button>
+                      <button key={c} onClick={() => setChanceTarget(c)} className="flex-1 min-w-[60px] py-3 rounded-xl bg-white/[0.10] hover:bg-white/[0.18] border border-white/[0.14] text-[15px] font-bold text-white transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] cursor-pointer active:scale-95">{c}%</button>
                     ))}
-                    <button onClick={() => setTargetId(null)} className="w-[50px] h-[50px] shrink-0 rounded-[12px] bg-white/5 flex items-center justify-center text-white/50 hover:bg-white/10 transition-colors">
+                    <button onClick={() => setTargetId(null)} className="w-[50px] h-[50px] shrink-0 rounded-xl bg-white/[0.10] hover:bg-white/[0.18] border border-white/[0.14] flex items-center justify-center text-white/90 hover:text-white transition-all cursor-pointer active:scale-95">
                       <RefreshCw className="w-5 h-5" />
                     </button>
                   </div>
@@ -771,7 +781,7 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                         placeholder="Свой % (от 0.1 до 95)"
                         value={customChanceStr}
                         onChange={(e) => setCustomChanceStr(e.target.value)}
-                        className="w-full bg-[#1a1b1f] border border-white/5 rounded-[12px] py-3 px-4 text-[15px] font-bold text-white placeholder:text-white/30 focus:outline-none focus:border-brand/50 transition-colors"
+                        className="w-full bg-[#1a1b1f] border border-white/10 rounded-xl py-3 px-4 text-[15px] font-bold text-white placeholder:text-white/30 focus:outline-none focus:border-brand/50 transition-colors"
                         min="0.1"
                         max="95"
                         step="0.1"
@@ -786,7 +796,7 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                           setChanceTarget(val);
                         }
                       }}
-                      className="py-3 px-5 rounded-[12px] bg-brand text-white font-bold hover:bg-brand-dim transition-colors shadow-lg active:scale-95 shrink-0"
+                      className="py-3 px-5 rounded-xl bg-gradient-to-r from-[#0098ea] to-[#00b4d8] text-white font-bold hover:brightness-110 transition-all shadow-[0_0_14px_rgba(0,152,234,0.45)] active:scale-95 shrink-0 cursor-pointer"
                     >
                       Выбрать
                     </button>
@@ -798,7 +808,7 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                   <span className="text-[13px] text-white/50 font-bold uppercase tracking-wider">Быстрый множитель</span>
                   <div className="flex items-center gap-2">
                     {[2, 4, 8].map(m => (
-                      <button key={m} onClick={() => setMultiplierTarget(m)} className="flex-1 py-3 rounded-[12px] bg-[#1a1b1f] border border-white/5 text-[15px] font-bold text-white hover:bg-white/10 transition-colors">x{m}</button>
+                      <button key={m} onClick={() => setMultiplierTarget(m)} className="flex-1 py-3 rounded-xl bg-white/[0.10] hover:bg-white/[0.18] border border-white/[0.14] text-[15px] font-bold text-white transition-all cursor-pointer active:scale-95">x{m}</button>
                     ))}
                   </div>
                 </div>
@@ -806,24 +816,24 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                 {/* Speed */}
                 <div className="space-y-3">
                   <span className="text-[13px] text-white/50 font-bold uppercase tracking-wider">Скорость анимации</span>
-                  <div className="flex bg-[#1a1b1f] rounded-[14px] p-1">
-                    <button onClick={() => setAnimSpeed('normal')} className={`flex-1 py-3 rounded-[10px] text-[14px] font-bold transition-all ${animSpeed === 'normal' ? 'bg-[#2a2c33] text-white shadow-sm' : 'text-white/40'}`}>Нормальная</button>
-                    <button onClick={() => setAnimSpeed('fast')} className={`flex-1 py-3 rounded-[10px] text-[14px] font-bold transition-all ${animSpeed === 'fast' ? 'bg-[#2a2c33] text-white shadow-sm' : 'text-white/40'}`}>Быстрая</button>
+                  <div className="flex bg-white/[0.06] border border-white/[0.10] rounded-[16px] p-1">
+                    <button onClick={() => setAnimSpeed('normal')} className={`flex-1 py-3 rounded-[12px] text-[14px] font-bold transition-all cursor-pointer ${animSpeed === 'normal' ? 'bg-gradient-to-r from-[#0098ea] to-[#00b4d8] text-white shadow-[0_0_12px_rgba(0,152,234,0.4)]' : 'text-white/60 hover:text-white'}`}>Нормальная</button>
+                    <button onClick={() => setAnimSpeed('fast')} className={`flex-1 py-3 rounded-[12px] text-[14px] font-bold transition-all cursor-pointer ${animSpeed === 'fast' ? 'bg-gradient-to-r from-[#0098ea] to-[#00b4d8] text-white shadow-[0_0_12px_rgba(0,152,234,0.4)]' : 'text-white/60 hover:text-white'}`}>Быстрая</button>
                   </div>
                 </div>
 
                 {/* Sound */}
                 <div className="space-y-3">
                   <span className="text-[13px] text-white/50 font-bold uppercase tracking-wider">Звук в апгрейде</span>
-                  <div className="flex bg-[#1a1b1f] rounded-[14px] p-1">
-                    <button onClick={() => setSoundEnabled(true)} className={`flex-1 py-3 rounded-[10px] text-[14px] font-bold transition-all flex items-center justify-center gap-2 ${soundEnabled ? 'bg-[#2a2c33] text-white shadow-sm' : 'text-white/40'}`}><Volume2 className="w-4 h-4" /> Включено</button>
-                    <button onClick={() => setSoundEnabled(false)} className={`flex-1 py-3 rounded-[10px] text-[14px] font-bold transition-all flex items-center justify-center gap-2 ${!soundEnabled ? 'bg-[#2a2c33] text-white shadow-sm' : 'text-white/40'}`}><VolumeX className="w-4 h-4" /> Выключено</button>
+                  <div className="flex bg-white/[0.06] border border-white/[0.10] rounded-[16px] p-1">
+                    <button onClick={() => setSoundEnabled(true)} className={`flex-1 py-3 rounded-[12px] text-[14px] font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${soundEnabled ? 'bg-gradient-to-r from-[#0098ea] to-[#00b4d8] text-white shadow-[0_0_12px_rgba(0,152,234,0.4)]' : 'text-white/60 hover:text-white'}`}><Volume2 className="w-4 h-4" /> Включено</button>
+                    <button onClick={() => setSoundEnabled(false)} className={`flex-1 py-3 rounded-[12px] text-[14px] font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${!soundEnabled ? 'bg-gradient-to-r from-[#0098ea] to-[#00b4d8] text-white shadow-[0_0_12px_rgba(0,152,234,0.4)]' : 'text-white/60 hover:text-white'}`}><VolumeX className="w-4 h-4" /> Выключено</button>
                   </div>
                 </div>
 
               </div>
 
-              <button onClick={() => setShowSettings(false)} className="mt-8 w-full py-4 rounded-[16px] font-bold text-[15px] bg-[#fbc740] text-black transition-all shadow-[0_0_20px_rgba(251,199,64,0.2)]">
+              <button onClick={() => setShowSettings(false)} className="mt-8 w-full py-4 rounded-full font-bold text-[15px] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white transition-all shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] cursor-pointer active:scale-[0.98]">
                 Сохранить и закрыть
               </button>
             </motion.div>
@@ -889,7 +899,7 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                <div className="flex flex-col gap-1.5 w-full mt-1">
                  <button 
                    onClick={() => { setResult(null); }}
-                   className="w-full py-3 rounded-[12px] text-[13px] font-bold flex items-center justify-center bg-white/10 text-white hover:bg-white/20 transition-colors"
+                   className="w-full py-3.5 rounded-[16px] text-[14px] font-bold flex items-center justify-center bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] text-white shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
                  >
                    Отлично
                  </button>

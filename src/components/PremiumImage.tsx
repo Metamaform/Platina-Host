@@ -38,7 +38,9 @@ export const PremiumImage: React.FC<PremiumImageProps> = ({
   // Only convert to animated lottie/tgs if NOT in staticMode
   // In staticMode, keep the ultra-lightweight WebP image which loads with native hardware acceleration
   if (!staticMode) {
-    if (effectiveSrc?.includes('nft.fragment.com') && effectiveSrc?.endsWith('.webp')) {
+    if (effectiveSrc?.includes('artisanbrick')) {
+      effectiveSrc = '/artisanbrick.lottie.json';
+    } else if (effectiveSrc?.includes('nft.fragment.com') && effectiveSrc?.endsWith('.webp')) {
       effectiveSrc = effectiveSrc.replace('.webp', '.lottie.json');
     } else if (effectiveSrc?.includes('fragment.com/file/') && effectiveSrc?.endsWith('.webp')) {
       effectiveSrc = effectiveSrc.replace('.webp', '.tgs');

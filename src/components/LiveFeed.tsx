@@ -92,9 +92,9 @@ export const LiveFeed: React.FC = () => {
 
   return (
     <div className="w-full flex flex-col gap-2 mb-6">
-      <h3 className="text-white/50 text-[10px] font-bold uppercase tracking-widest px-2 flex items-center gap-1.5">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-        Live Drops
+      <h3 className="px-2 flex items-center gap-2">
+        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
+        <span className="text-white font-black text-[13px] tracking-wide uppercase drop-shadow-sm">Live drops</span>
       </h3>
       <div className="flex flex-row gap-2 h-[50px] relative overflow-hidden px-1 w-full items-center">
         <AnimatePresence>

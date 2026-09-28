@@ -131,32 +131,42 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
         )}
       </AnimatePresence>
 
-      <div className="flex items-center gap-2.5 mb-5 px-1">
-        <div className="w-9 h-9 rounded-xl bg-brand/10 border border-brand/20 text-brand flex items-center justify-center">
+      <div className="group relative overflow-hidden bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] p-4.5 rounded-[26px] shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)] flex items-center gap-3.5 mb-4">
+        {/* верхнее бликовое свечение жидкого стекла */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-[26px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+        />
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.08] blur-2xl opacity-70"
+        />
+
+        <div className="relative z-10 w-11 h-11 rounded-full bg-brand/20 border border-brand/40 text-brand flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(0,152,234,0.35),inset_0_1px_0_rgba(255,255,255,0.18)]">
           <CheckSquare className="w-5 h-5" />
         </div>
-        <div>
-          <h2 className="font-display text-2xl font-bold text-white tracking-tight">{t('tasks_title')}</h2>
-          <p className="text-white/40 text-xs mt-0.5">Выполняйте задания и получайте GRAM</p>
+        <div className="relative z-10">
+          <h2 className="font-display text-xl font-bold text-white tracking-tight leading-tight">{t('tasks_title')}</h2>
+          <p className="text-white/60 text-xs mt-0.5">Выполняйте задания и получайте GRAM</p>
         </div>
       </div>
 
-      <div className="flex relative p-1 bg-[#15161b] border border-white/[0.08] rounded-2xl mb-4">
+      <div className="flex relative p-1 bg-white/[0.06] backdrop-blur-xl border border-white/[0.10] rounded-full mb-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
         <button
           onClick={() => {
             setActiveTab('daily');
             try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
           }}
-          className={`relative z-10 flex-1 py-2.5 rounded-xl text-xs font-bold transition-colors duration-200 cursor-pointer active:scale-[0.98] ${
+          className={`relative z-10 flex-1 py-2.5 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer active:scale-[0.98] ${
             activeTab === 'daily'
               ? 'text-white'
-              : 'text-white/40 hover:text-white/70'
+              : 'text-white/50 hover:text-white/80'
           }`}
         >
           {activeTab === 'daily' && (
             <motion.div
               layoutId="tasks-tab-pill"
-              className="absolute inset-0 rounded-xl bg-white/10 border border-white/10 shadow-sm z-[-1]"
+              className="absolute inset-0 rounded-full bg-white/[0.12] border border-white/[0.15] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_6px_16px_-4px_rgba(0,0,0,0.5)] z-[-1]"
               transition={{ type: 'spring', damping: 28, stiffness: 380 }}
             />
           )}
@@ -167,16 +177,16 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
             setActiveTab('all');
             try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
           }}
-          className={`relative z-10 flex-1 py-2.5 rounded-xl text-xs font-bold transition-colors duration-200 cursor-pointer active:scale-[0.98] ${
+          className={`relative z-10 flex-1 py-2.5 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer active:scale-[0.98] ${
             activeTab === 'all'
               ? 'text-white'
-              : 'text-white/40 hover:text-white/70'
+              : 'text-white/50 hover:text-white/80'
           }`}
         >
           {activeTab === 'all' && (
             <motion.div
               layoutId="tasks-tab-pill"
-              className="absolute inset-0 rounded-xl bg-white/10 border border-white/10 shadow-sm z-[-1]"
+              className="absolute inset-0 rounded-full bg-white/[0.12] border border-white/[0.15] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_6px_16px_-4px_rgba(0,0,0,0.5)] z-[-1]"
               transition={{ type: 'spring', damping: 28, stiffness: 380 }}
             />
           )}
@@ -195,22 +205,22 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
       ) : (
         <div className="space-y-2.5">
           {filteredTasks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 bg-white/[0.02] border border-white/5 rounded-2xl">
+            <div className="flex flex-col items-center justify-center py-12 bg-white/[0.04] border border-white/[0.08] rounded-[24px]">
               <Calendar className="w-10 h-10 text-white/20 mb-2" />
-              <p className="text-xs text-white/40 font-medium text-center">{t('no_tasks')}</p>
+              <p className="text-xs text-white/50 font-medium text-center">{t('no_tasks')}</p>
             </div>
           ) : (
             filteredTasks.map(task => (
               <div 
                 key={task.id}
-                className={`bg-[#15161b] border border-white/[0.08] hover:border-white/15 rounded-2xl p-3.5 flex items-center gap-3.5 cursor-pointer active:scale-[0.98] transition-all duration-150 select-none shadow-sm ${
+                className={`group relative overflow-hidden bg-white/[0.06] backdrop-blur-xl border border-white/[0.10] hover:border-white/[0.18] rounded-[24px] p-3.5 flex items-center gap-3.5 cursor-pointer active:scale-[0.98] transition-all duration-150 select-none shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_25px_-10px_rgba(0,0,0,0.6)] ${
                   task.completed ? 'opacity-65 pointer-events-none' : ''
                 }`}
                 onClick={() => handleComplete(task)}
               >
-                <div className="w-11 h-11 rounded-xl bg-white/[0.04] border border-white/5 flex items-center justify-center shrink-0 overflow-hidden">
+                <div className="w-11 h-11 rounded-full bg-white/[0.08] border border-white/[0.10] flex items-center justify-center shrink-0 overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
                   {task.icon === 'telegram' ? (
-                    <img src="/telegram.png" className="w-8 h-8 object-contain" alt="Telegram" />
+                    <img src="/telegram.png" className="w-7 h-7 object-contain" alt="Telegram" />
                   ) : (
                     <Gift className={`w-5 h-5 ${task.completed ? 'text-emerald-400' : 'text-amber-400'}`} />
                   )}
@@ -218,11 +228,11 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
                 
                 <div className="flex-1 min-w-0">
                   <h3 className="font-display text-[14px] font-bold truncate text-white leading-tight">{task.title}</h3>
-                  <p className="text-[11px] text-white/45 leading-tight mt-0.5 line-clamp-2">
+                  <p className="text-[11px] text-white/60 leading-tight mt-0.5 line-clamp-2">
                     {task.description}
                   </p>
                   <div className="flex items-center gap-2 mt-2">
-                    <div className="flex items-center gap-1 bg-amber-400/10 px-2 py-0.5 rounded-lg text-[11px] font-bold text-amber-400 border border-amber-400/20">
+                    <div className="flex items-center gap-1 bg-amber-400/15 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-amber-400 border border-amber-400/30 shadow-[0_0_8px_rgba(251,191,36,0.2)]">
                       +{task.reward} <GramIcon className="w-3 h-3 text-amber-400" />
                     </div>
                   </div>
@@ -230,9 +240,11 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
                 
                 <div className="shrink-0 flex items-center justify-center">
                   {task.completed ? (
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 drop-shadow-md" />
                   ) : (
-                    <ChevronRight className="w-4 h-4 text-white/30" />
+                    <div className="w-7 h-7 rounded-full bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-white/50 group-hover:text-white">
+                      <ChevronRight className="w-4 h-4" />
+                    </div>
                   )}
                 </div>
               </div>

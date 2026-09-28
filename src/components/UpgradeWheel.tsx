@@ -109,7 +109,7 @@ export const UpgradeWheel: React.FC<UpgradeWheelProps> = ({
     >
       {/* SVG Canvas for Wheel Assembly */}
       <svg
-        viewBox={`0 0 ${viewBoxSize} ${viewBoxSize}`}
+        viewBox={`${cx - 480} ${cy - 480} 960 960`}
         className="w-full h-full overflow-visible"
       >
         <defs>

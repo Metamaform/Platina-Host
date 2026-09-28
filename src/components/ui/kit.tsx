@@ -50,10 +50,10 @@ export const Button: React.FC<ButtonProps> = ({
     lg: 'px-6 py-3.5 text-base',
   };
   const variants = {
-    primary: 'bg-brand hover:brightness-110 text-white shadow-lg shadow-brand/25',
-    secondary: 'bg-surface-2 border border-hairline hover:bg-surface-3 text-[color:var(--color-text)]',
-    ghost: 'bg-white/[0.05] hover:bg-white/[0.1] text-[color:var(--color-text)]',
-    danger: 'bg-negative/15 border border-negative/30 text-negative hover:bg-negative/25',
+    primary: 'bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)]',
+    secondary: 'bg-white/[0.12] border border-white/[0.16] hover:bg-white/[0.20] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]',
+    ghost: 'bg-white/[0.08] hover:bg-white/[0.15] text-white border border-white/[0.10]',
+    danger: 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:brightness-110 text-white shadow-[0_4px_20px_rgba(239,68,68,0.4)]',
   };
   return (
     <button

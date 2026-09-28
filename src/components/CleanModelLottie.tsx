@@ -146,7 +146,14 @@ export const CleanModelLottie: React.FC<Props> = ({ lottieUrl, className, static
 
   if (failed) {
     const fallbackUrl = (lottieUrl || '').replace('.lottie.json', '.webp').replace('.tgs', '.webp');
-    return <img src={fallbackUrl || undefined} className={`${className || ''} object-contain`} alt="fallback" />;
+    return (
+      <img 
+        src={fallbackUrl || undefined} 
+        className={`${className || ''} object-contain`} 
+        alt="" 
+        onError={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0'; }}
+      />
+    );
   }
 
   if (!cleanDataUrl) {
@@ -156,6 +163,7 @@ export const CleanModelLottie: React.FC<Props> = ({ lottieUrl, className, static
         src={fallbackUrl || undefined} 
         className={`${className || ''} object-contain select-none pointer-events-none`} 
         alt="" 
+        onError={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0'; }}
       />
     );
   }
