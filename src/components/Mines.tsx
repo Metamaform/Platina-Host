@@ -64,23 +64,10 @@ export function Mines({
   onNavigate?: (target: string) => void
 }) {
   const { t } = useTranslation();
-  const [realOpens, setRealOpens] = useState<any[]>([]);
 
   const plushPepeItem = giftsDb.find(g => g.name === 'Plush Pepe' || g.slug === 'plushpepe');
   const MAX_WIN_GRAM = plushPepeItem ? plushPepeItem.floor_price_gram : 5000;
   const MAX_BET_GRAM = 2500;
-
-  useEffect(() => {
-    const fetchOpens = () => {
-      fetch('/api/opens/recent?limit=20')
-        .then((res) => res.json())
-        .then((data) => setRealOpens(data))
-        .catch(() => {});
-    };
-    fetchOpens();
-    const interval = setInterval(fetchOpens, 3000);
-    return () => clearInterval(interval);
-  }, []);
 
   const [mode, setMode] = useState<'gram' | 'nft'>(() => {
     try {
@@ -368,30 +355,6 @@ export function Mines({
     }
   };
 
-  const fullTrack = useMemo(() => {
-    const steps = [];
-    const maxPossibleSteps = 25 - minesCount;
-    
-    for (let i = 1; i <= maxPossibleSteps; i++) {
-       let stepMult = getMultiplier(minesCount, i);
-       let winAmount = activeBetValue * stepMult;
-       let isMaxHit = false;
-       
-       if (activeBetValue > 0 && winAmount >= MAX_WIN_GRAM) {
-          stepMult = MAX_WIN_GRAM / activeBetValue;
-          winAmount = MAX_WIN_GRAM;
-          isMaxHit = true;
-       }
-       
-       const stepNft = classicGiftsDb.filter(g => g.floor_price_gram <= winAmount).sort((a,b) => b.floor_price_gram - a.floor_price_gram)[0];
-       
-       steps.push({ step: i, mult: stepMult, winAmount, nft: stepNft });
-       
-       if (isMaxHit) break;
-    }
-    return steps;
-  }, [minesCount, activeBetValue, classicGiftsDb]);
-
   return (
     <div className="h-full w-full flex flex-col bg-canvas text-white relative">
       <button 
@@ -486,39 +449,6 @@ export function Mines({
             ))}
           </div>
 
-          {/* Multiplier Track — optimized with CSS transform (no heavy spring per tick) */}
-          <div className="w-full h-[76px] mb-6 relative overflow-hidden pointer-events-none gpu-layer" style={{ maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)' }}>
-            <div className="absolute top-0 bottom-0 left-4 w-full flex items-center justify-start">
-              <div 
-                className="flex items-center gap-2 will-change-transform"
-                style={{
-                  transform: `translateX(${-(safeOpened * 96)}px) translateZ(0)`,
-                  transition: 'transform 280ms cubic-bezier(0.22, 1, 0.36, 1)'
-                }}
-              >
-                {fullTrack.map((m) => {
-                   const isTarget = m.step === safeOpened + 1;
-                   const isSecured = m.step <= safeOpened;
-                   
-                   return (
-                     <div key={m.step} className={`shrink-0 w-[88px] h-[64px] rounded-2xl flex flex-col items-center justify-center border ${
-                       isTarget ? 'bg-brand/20 border-brand scale-110' : 
-                       isSecured ? 'bg-emerald-500/15 border-emerald-500/40' : 'bg-[#1c1c20] border-white/5 opacity-40'
-                     }`}>
-                        <div className="flex items-center gap-1.5 mb-1">
-                           <GramIcon className={`w-3.5 h-3.5 ${isSecured ? 'text-emerald-400' : isTarget ? 'text-brand' : 'text-white/50'}`} />
-                           <span className={`text-[10px] font-bold ${isSecured ? 'text-emerald-400' : isTarget ? 'text-brand' : 'text-white/60'}`}>{m.step}</span>
-                        </div>
-                        <span className={`font-display font-bold ${isTarget ? 'text-[16px] text-brand' : isSecured ? 'text-[15px] text-emerald-400' : 'text-[14px] text-white/80'}`}>
-                          x{m.mult.toFixed(2)}
-                        </span>
-                     </div>
-                   )
-                })}
-              </div>
-            </div>
-          </div>
-
           {gameState === 'idle' ? (
             <button
               onClick={() => setShowBetModal(true)}
@@ -544,67 +474,6 @@ export function Mines({
               </span>
             </button>
           )}
-
-          <div className="w-full mt-8 flex flex-col gap-2 pb-8">
-            {realOpens.filter(o => o.game === 'mines').slice(0, 4).map((open) => {
-                const isNftWin = !open.isGram && open.gift;
-                const exactMult = open.multiplier || Number((1 + (open.id.charCodeAt(0) % 5) + ((open.id.charCodeAt(1) || 0) % 100) / 100).toFixed(2));
-                const multStr = exactMult.toFixed(2);
-                
-                let winAmount = Number(open.price).toFixed(2);
-                if (isNftWin && open.gift) {
-                  winAmount = Number(open.gift.price || open.price).toFixed(2);
-                }
-                const betAmount = (open.price / exactMult).toFixed(2);
-                
-                return (
-                <div 
-                  key={open.id}
-                  className="flex items-center justify-between bg-white/[0.05] rounded-[20px] p-2.5 border border-white/[0.06] gpu-layer animate-card-in"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-white/10 to-white/5 shrink-0 flex items-center justify-center text-white/80 font-bold text-[12px]">
-                      {(open.firstName || '?').charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-white font-medium text-[14px] truncate max-w-[90px]">{open.firstName}</span>
-                      <div className="flex items-center gap-1.5 opacity-60">
-                        {isNftWin ? (
-                           <span className="text-[11px] font-medium">NFT</span>
-                        ) : (
-                           <>
-                             <GramIcon className="w-3 h-3" />
-                             <span className="text-[11px] font-medium">{betAmount}</span>
-                           </>
-                        )}
-                        <span className="text-[11px]">x{multStr}</span>
-                      </div>
-                    </div>
-                  </div>
-                  {isNftWin && open.gift ? (
-                     <div className="flex items-center gap-2 min-w-0">
-                       <img 
-                         src={open.gift.image_url} 
-                         alt={open.gift.name} 
-                         className="w-8 h-8 object-contain shrink-0"
-                         loading="lazy"
-                         draggable={false}
-                       />
-                       <div className="flex flex-col items-end min-w-0">
-                         <span className="text-brand font-bold text-[13px] leading-none flex items-center gap-1">
-                           {winAmount} <GramIcon className="w-3 h-3" />
-                         </span>
-                       </div>
-                     </div>
-                  ) : (
-                     <div className="flex items-center gap-1 text-emerald-400 font-display text-[15px] font-bold">
-                       +{winAmount} <GramIcon className="w-3.5 h-3.5 text-emerald-400" />
-                     </div>
-                  )}
-                </div>
-                );
-              })}
-          </div>
 
         </div>
       </div>
