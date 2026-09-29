@@ -5,26 +5,8 @@
 */
 
 import React from 'react';
-import { Crown } from 'lucide-react';
 import { PremiumImage } from '../PremiumImage';
 import type { ArenaParticipant, ArenaStatus } from '../../lib/arenaShared';
-
-// ---------------------------------------------------------------------------
-// Карточка (тёмная, скруглённая, тонкая светлая граница + блик сверху)
-// ---------------------------------------------------------------------------
-
-export const ARENA_CARD =
-  'relative bg-white/[0.05] border border-white/[0.10] rounded-[24px] ' +
-  'shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_14px_34px_-18px_rgba(0,0,0,0.9)]';
-
-export function CardSheen() {
-  return (
-    <span
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[linear-gradient(180deg,rgba(255,255,255,0.07)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
-    />
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Аватар: фото или инициалы на градиентном круге
@@ -87,21 +69,5 @@ export const STATUS_CHIP: Record<ArenaStatus, string> = {
 export const ArenaStatusChip: React.FC<{ status: ArenaStatus; label: string }> = ({ status, label }) => (
   <span className={`px-2.5 py-1 rounded-full border text-[10px] font-extrabold tracking-wider uppercase ${STATUS_CHIP[status]}`}>
     {label}
-  </span>
-);
-
-// ---------------------------------------------------------------------------
-// Номер позиции / корона победителя
-// ---------------------------------------------------------------------------
-
-export const PositionBadge: React.FC<{ index: number }> = ({ index }) => (
-  <span className="absolute top-2.5 left-2.5 z-10 min-w-[22px] h-[22px] px-1.5 flex items-center justify-center rounded-full bg-black/50 border border-white/[0.14] text-[10px] font-bold text-white/70 backdrop-blur-sm">
-    #{index + 1}
-  </span>
-);
-
-export const WinnerCrown: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <span className={`absolute -top-2.5 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 border border-amber-200/60 shadow-[0_0_18px_rgba(251,191,36,0.6)] ${className}`}>
-    <Crown className="w-3.5 h-3.5 text-black/80" strokeWidth={2.6} />
   </span>
 );

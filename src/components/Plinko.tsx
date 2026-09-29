@@ -116,14 +116,14 @@ function formatBucketLabel(mult: number) {
   return `${mult.toFixed(1)}x`;
 }
 
-/** Shared, muted reward tiers for the personal history and landing slots. */
+/** Shared reward tiers for the personal history and landing slots. */
 function bucketTone(mult: number): { background: string; color: string; glow: string } {
-  const [background, color] = mult >= 20 ? ['#493d2d', '#dfc28b']
-    : mult >= 8 ? ['#40364e', '#c7aedb']
-    : mult >= 3 ? ['#2c4052', '#a3c9e4']
-    : mult >= 1 ? ['#2d423e', '#a7cabc']
-    : ['#443338', '#d2a5ae'];
-  return { background, color, glow: 'none' };
+  const [background, color, glow] = mult >= 20 ? ['#5e4c29', '#f3d294', '0 0 14px rgba(245,158,11,0.35)']
+    : mult >= 8 ? ['#52416f', '#d7bef1', '0 0 12px rgba(168,85,247,0.35)']
+    : mult >= 3 ? ['#2f516b', '#aed9f5', '0 0 10px rgba(6,182,212,0.30)']
+    : mult >= 1 ? ['#31564b', '#b1e0cc', 'none']
+    : ['#5a4047', '#e6b7c1', 'none'];
+  return { background, color, glow };
 }
 const TOTAL_PEGS = 52; // 3+4+5+6+7+8+9+10 = 52
 
@@ -494,31 +494,10 @@ export const Plinko: React.FC<PlinkoProps> = ({
     const startX = (BOARD_WIDTH - totalWidth) / 2;
     const mults = BUCKET_CONFIGS[risk];
 
+    // Цвета ячеек — единый источник bucketTone() (рендер ниже), здесь только геометрия.
     return mults.map((mult, idx) => {
       const x = startX + idx * BUCKET_WIDTH + BUCKET_WIDTH / 2;
       const left = startX + idx * BUCKET_WIDTH;
-
-      let textColor = '#22c55e';
-      let bgStyle = 'rgba(34, 197, 94, 0.16)';
-      let borderStyle = 'rgba(34, 197, 94, 0.4)';
-
-      if (mult >= 20) {
-        textColor = '#f59e0b';
-        bgStyle = 'rgba(245, 158, 11, 0.22)';
-        borderStyle = 'rgba(245, 158, 11, 0.6)';
-      } else if (mult >= 10) {
-        textColor = '#d946ef';
-        bgStyle = 'rgba(217, 70, 239, 0.2)';
-        borderStyle = 'rgba(217, 70, 239, 0.5)';
-      } else if (mult >= 3.0) {
-        textColor = '#06b6d4';
-        bgStyle = 'rgba(6, 182, 212, 0.18)';
-        borderStyle = 'rgba(6, 182, 212, 0.45)';
-      } else if (mult < 1.0) {
-        textColor = '#ef4444';
-        bgStyle = 'rgba(239, 68, 68, 0.14)';
-        borderStyle = 'rgba(239, 68, 68, 0.35)';
-      }
 
       return {
         idx,
@@ -528,10 +507,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
         left,
         y: BUCKET_Y,
         width: BUCKET_WIDTH,
-        height: BUCKET_HEIGHT,
-        textColor,
-        bgStyle,
-        borderStyle
+        height: BUCKET_HEIGHT
       };
     });
   }, [risk]);
@@ -1318,7 +1294,9 @@ export const Plinko: React.FC<PlinkoProps> = ({
                         height: `${(b.height / BOARD_HEIGHT) * 100}%`,
                         background: tone.background,
                         color: tone.color,
-                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
+                        boxShadow: tone.glow === 'none'
+                          ? 'inset 0 1px 0 rgba(255,255,255,0.10)'
+                          : `inset 0 1px 0 rgba(255,255,255,0.12), ${tone.glow}`,
                         fontSize: '3cqw',
                         textShadow: tone.color === '#fff' ? '0 1px 1px rgba(0,0,0,0.35)' : 'none',
                         transformOrigin: 'center center',

@@ -80,8 +80,8 @@ const navItems = [
 
 ## Механика
 
-- игроки делают ставки (GRAM и/или NFT из инвентаря) в общий пул;
-- поле автоматически делится на области по числу игроков (1/2/3/4/адаптив);
+- игроки делают ставки (GRAM или NFT из инвентаря) в общий пул;
+- поле делится пропорционально долям: ширина сегмента игрока = % его вклада;
 - таймер приёма ставок 25s → LOCKED → DRAWING → COMPLETED;
 - победитель определяется **только на сервере** (provably fair), забирает весь банк в GRAM.
 
@@ -92,7 +92,8 @@ const navItems = [
 | `src/lib/arenaShared.ts` | общие типы/константы (клиент + сервер) |
 | `src/lib/arena.server.ts` | движок: машина состояний, ставки, выплаты, provably fair, история (`data/arena_history.json`), SSE-рассылка, демо-бот |
 | `src/components/arena/Arena.tsx` | страница Arena (ArenaPage) |
-| `src/components/arena/Arena*.tsx` | Header / PoolInfo / Board+Player / Actions / MyBet / Participants / Result / History / FairPlay / модалки |
+| `src/components/arena/ArenaField.tsx` | поле-визуализатор в стиле Rocket: банк, таймер, пропорциональные доли игроков, метка билета |
+| `src/components/arena/Arena*.tsx` | Header / Actions (одна CTA) / Participants (карточки Rocket) / Result / History / FairPlay / модалка ставки |
 | `src/components/arena/useArenaLive.ts` | realtime-хук: SSE `/api/arena/stream` + фолбэк-поллинг |
 | `src/components/arena/useArenaCountdown.ts` | таймер по серверным часам |
 

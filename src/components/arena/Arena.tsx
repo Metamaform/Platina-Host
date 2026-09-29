@@ -1,17 +1,20 @@
 /*
   AICE ARENA — главная страница игры (ArenaPage).
 
+  Интерфейс — как в Rocket, режим игры — джекпот-арена:
+  полоса недавних банков, стеклянное поле-визуализатор (банк, таймер,
+  участники с долями), одна CTA-кнопка и список игроков в стиле Rocket.
+
   Композиция:
   ArenaPage
   ├── ArenaHeader
   ├── ArenaTabs (ТЕКУЩАЯ ИГРА / ИСТОРИЯ, без перезагрузки)
-  ├── ArenaPoolInfo
-  ├── ArenaBoard ── ArenaPlayer
-  ├── ArenaActions (BetButton + NFTButton)
-  ├── ArenaMyBet
-  ├── ArenaParticipants ── ParticipantRow
-  ├── FairPlay
+  ├── RecentPools (полоса банков, как мультипликаторы в Rocket)
+  ├── ArenaField (банк + таймер + пропорциональное поле долей)
+  ├── ArenaActions (одна CTA в стиле Rocket)
   ├── ArenaResult
+  ├── ArenaParticipants ── ParticipantRow (карточки Rocket)
+  ├── FairPlay
   └── ArenaHistory (+ детали игры)
 
   Realtime: серверный SSE-поток (state/balance/history) + точный таймер
@@ -23,15 +26,13 @@ import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'motion/react';
 import { ShieldCheck, AlertTriangle, UserPlus } from 'lucide-react';
 import { ArenaHeader } from './ArenaHeader';
-import { ArenaPoolInfo } from './ArenaPoolInfo';
-import { ArenaBoard } from './ArenaBoard';
+import { ArenaField } from './ArenaField';
 import { ArenaActions } from './ArenaActions';
-import { ArenaMyBet } from './ArenaMyBet';
 import { ArenaParticipants } from './ArenaParticipants';
 import { ArenaResult } from './ArenaResult';
 import { ArenaHistoryList, RoundDetailsModal, ArenaHistorySummaryPublic } from './ArenaHistory';
 import { FairPlayModal } from './ArenaFairPlay';
-import { BetModal, NftModal } from './ArenaBetModals';
+import { BetModal } from './ArenaBetModals';
 import { useArenaLive } from './useArenaLive';
 import { useArenaCountdown } from './useArenaCountdown';
 import { useTranslation } from '../../lib/i18n';
@@ -50,6 +51,34 @@ interface ArenaProps {
 }
 
 type Toast = { id: number; text: string; kind: 'error' | 'success' | 'info' };
+
+/** Полоса недавних банков — аналог мультипликаторов в Rocket. */
+const RecentPools: React.FC<{ pools: number[] }> = React.memo(({ pools }) => {
+  if (!pools.length) return null;
+  return (
+    <div className="w-full flex items-center gap-1.5 overflow-hidden select-none pointer-events-none py-1">
+      {pools.slice(0, 6).map((pool, idx) => (
+        <div
+          key={idx}
+          title={`${pool.toFixed(2)} GRAM`}
+          className={`flex-1 text-center py-1.5 px-0.5 rounded-xl text-[12px] font-bold border transition-colors tabular-nums ${
+            pool >= 50
+              ? 'bg-amber-500/15 text-amber-300 border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.1)]'
+              : pool >= 10
+              ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
+              : pool >= 2
+              ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+              : 'bg-white/5 text-white/50 border-white/10'
+          }`}
+        >
+          {pool >= 100 ? pool.toFixed(0) : pool.toFixed(1)}
+        </div>
+      ))}
+    </div>
+  );
+});
+
+RecentPools.displayName = 'RecentPools';
 
 export const Arena: React.FC<ArenaProps> = ({
   onBack,
@@ -113,6 +142,7 @@ export const Arena: React.FC<ArenaProps> = ({
       }
     }
     setPrevStatus(round.status);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [round?.status, round?.id]);
 
   // --- мои данные в раунде ---
@@ -127,15 +157,8 @@ export const Arena: React.FC<ArenaProps> = ({
 
   // --- модальные окна ---
   const [betModal, setBetModal] = useState(false);
-  const [nftModal, setNftModal] = useState(false);
   const [fairModal, setFairModal] = useState(false);
   const [detailsId, setDetailsId] = useState<number | null>(null);
-
-  const [selectedGift, setSelectedGift] = useState<any | null>(null);
-  // NFT действителен, только пока он реально есть в инвентаре
-  useEffect(() => {
-    setSelectedGift((prev: any) => (prev && inventory.some((i) => i.uniqueId === prev.uniqueId && !i.isWithdrawing) ? prev : null));
-  }, [inventory]);
 
   const [submitting, setSubmitting] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -143,24 +166,23 @@ export const Arena: React.FC<ArenaProps> = ({
 
   // --- действия ---
 
-  const handleConfirmBet = useCallback(async (amount: number) => {
+  const handleConfirmBet = useCallback(async (amount: number, gift: any | null) => {
     if (!round) return;
     setSubmitting(true);
     setActionError(null);
-    const res = await placeBet(amount, selectedGift || undefined);
+    const res = await placeBet(amount, gift || undefined);
     setSubmitting(false);
     if (!res.ok) {
       setActionError(res.error || t('arena_error_title'));
       haptics.notify('error');
       return;
     }
-    const total = Number((amount + (selectedGift ? Number(selectedGift.floor_price_gram || selectedGift.price || 0) : 0)).toFixed(2));
+    const total = Number((amount + (gift ? Number(gift.floor_price_gram || gift.price || 0) : 0)).toFixed(2));
     onTurnover?.(total);
     haptics.impact('medium');
     pushToast(t('arena_bet_placed'), 'success');
-    setSelectedGift(null);
     setBetModal(false);
-  }, [round, placeBet, selectedGift, onTurnover, pushToast, t]);
+  }, [round, placeBet, onTurnover, pushToast, t]);
 
   // ТЕМПОРАРНО: рандомный бот-участник для одиночного тестирования
   const handleAddDevBot = useCallback(async () => {
@@ -185,6 +207,7 @@ export const Arena: React.FC<ArenaProps> = ({
     if (round.participants.length >= round.maxPlayers) return t('arena_arena_full');
     switch (round.status) {
       case 'WAITING': return t('arena_status_waiting');
+      case 'ACCEPTING_BETS': return null;
       case 'LOCKED': return t('arena_bets_closed');
       case 'DRAWING': return t('arena_drawing');
       case 'COMPLETED':
@@ -206,6 +229,11 @@ export const Arena: React.FC<ArenaProps> = ({
       status: h.status,
     })),
     [history]
+  );
+
+  const recentPools = useMemo(
+    () => historyItems.filter((h) => h.status === 'COMPLETED').map((h) => h.totalPool),
+    [historyItems]
   );
 
   return (
@@ -253,38 +281,38 @@ export const Arena: React.FC<ArenaProps> = ({
           ) : !roundAlive ? (
             /* Скелетон до первого пакета состояния */
             <div className="flex flex-col gap-3.5">
-              <div className="h-[120px] rounded-[24px] bg-white/[0.04] border border-white/[0.06] animate-pulse" />
-              <div className="grid grid-cols-2 gap-2.5">
-                <div className="h-[150px] rounded-[22px] bg-white/[0.03] border border-white/[0.05] animate-pulse" />
-                <div className="h-[150px] rounded-[22px] bg-white/[0.03] border border-white/[0.05] animate-pulse" />
-              </div>
+              <div className="h-[280px] rounded-[28px] bg-white/[0.04] border border-white/[0.06] animate-pulse" />
+              <div className="h-[56px] rounded-full bg-white/[0.03] border border-white/[0.05] animate-pulse" />
+              <div className="h-[68px] rounded-[22px] bg-white/[0.03] border border-white/[0.05] animate-pulse" />
             </div>
           ) : (
             <>
-              <ArenaPoolInfo round={round!} countdown={countdown} t={t} lang={lang || 'ru'} />
+              {/* Недавние банки — как мультипликаторы в Rocket */}
+              <RecentPools pools={recentPools} />
 
-              {/* Игровое поле */}
-              <ArenaBoard round={round!} myUserId={user?.id} onJoin={() => { if (canBet) setBetModal(true); }} t={t} />
+              {/* Игровое поле: банк, таймер, доли участников */}
+              <ArenaField
+                round={round!}
+                countdown={countdown}
+                myUserId={user?.id}
+                lang={lang || 'ru'}
+                onJoin={() => { if (canBet) { setBetModal(true); setActionError(null); } }}
+                t={t}
+              />
 
               {/* Результат */}
               {(round!.status === 'COMPLETED' || round!.status === 'CANCELLED' || round!.status === 'ERROR') && (
                 <ArenaResult round={round!} myBet={myBet} winner={winner} t={t} />
               )}
 
-              {/* Действия / Моя ставка */}
-              {myBet ? (
-                <ArenaMyBet myBet={myBet} round={round!} t={t} />
-              ) : (
-                <ArenaActions
-                  canBet={canBet}
-                  disabledReason={disabledReason}
-                  onBet={() => { haptics.impact('light'); setBetModal(true); setActionError(null); }}
-                  onAddNft={() => { haptics.impact('light'); setNftModal(true); }}
-                  hasNftSelection={!!selectedGift}
-                  nftLabel={selectedGift?.name || 'NFT'}
-                  t={t}
-                />
-              )}
+              {/* Одна CTA-кнопка в стиле Rocket */}
+              <ArenaActions
+                canBet={canBet}
+                myBet={myBet}
+                disabledReason={disabledReason}
+                onBet={() => { haptics.impact('light'); setBetModal(true); setActionError(null); }}
+                t={t}
+              />
 
               {/* ТЕМПОРАРНО (для одиночного тестирования): добавить рандомного бота.
                   Кнопка удаляется перед релизом вместе с /api/arena/dev-bot. */}
@@ -299,8 +327,10 @@ export const Arena: React.FC<ArenaProps> = ({
                 </button>
               )}
 
-              {/* Список игроков */}
-              <ArenaParticipants round={round!} myUserId={user?.id} t={t} />
+              {/* Список игроков в стиле Rocket */}
+              <div className="mt-2">
+                <ArenaParticipants round={round!} myUserId={user?.id} t={t} />
+              </div>
 
               {/* Честная игра */}
               <button
@@ -332,21 +362,8 @@ export const Arena: React.FC<ArenaProps> = ({
               minBet={round!.minBet}
               maxBet={round!.maxBet}
               submitting={submitting}
-              gift={selectedGift}
-              onRemoveGift={() => setSelectedGift(null)}
-              error={actionError}
-              t={t}
-            />
-          </motion.div>
-        )}
-        {nftModal && (
-          <motion.div key="nft" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
-            <NftModal
-              onClose={() => setNftModal(false)}
               inventory={inventory}
-              selectedGift={selectedGift}
-              onSelect={(item) => { setSelectedGift(item); if (!betModal) setBetModal(true); }}
-              maxBetGram={roundAlive ? round!.maxBet : 2500}
+              error={actionError}
               t={t}
             />
           </motion.div>
