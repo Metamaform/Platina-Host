@@ -25,6 +25,7 @@ const Upgrade = lazy(() => import('./components/Upgrade').then((m) => ({ default
 const Mines = lazy(() => import('./components/Mines').then((m) => ({ default: m.Mines })));
 const NewGame = lazy(() => import('./components/NewGame').then((m) => ({ default: m.NewGame })));
 const Plinko = lazy(() => import('./components/Plinko').then((m) => ({ default: m.Plinko })));
+const Arena = lazy(() => import('./components/arena/Arena').then((m) => ({ default: m.Arena })));
 const Cases = lazy(() => import('./components/Cases').then((m) => ({ default: m.Cases })));
 const AdminPanel = lazy(() => import('./components/AdminPanel').then((m) => ({ default: m.AdminPanel })));
 const Leaderboard = lazy(() => import('./components/Leaderboard').then((m) => ({ default: m.Leaderboard })));
@@ -71,13 +72,14 @@ function CraftAnimatedIcon() {
   );
 }
 
-function Shop({ 
-  onPlayUpgrade, 
-  onPlayCraft, 
-  onPlayMines, 
-  onPlayNewGame, 
-  onPlayPlinko, 
-  giftsDb, 
+function Shop({
+  onPlayUpgrade,
+  onPlayCraft,
+  onPlayMines,
+  onPlayNewGame,
+  onPlayPlinko,
+  onPlayArena,
+  giftsDb,
   pricesLoaded,
   balance,
   setBalance,
@@ -85,13 +87,14 @@ function Shop({
   setInventory,
   onAddTurnover,
   turnover
-}: { 
-  onPlayUpgrade: () => void, 
-  onPlayCraft: () => void, 
-  onPlayMines: () => void, 
-  onPlayNewGame: () => void, 
-  onPlayPlinko: () => void, 
-  giftsDb: any[], 
+}: {
+  onPlayUpgrade: () => void,
+  onPlayCraft: () => void,
+  onPlayMines: () => void,
+  onPlayNewGame: () => void,
+  onPlayPlinko: () => void,
+  onPlayArena: () => void,
+  giftsDb: any[],
   pricesLoaded: boolean,
   balance: number,
   setBalance: any,
@@ -273,6 +276,35 @@ function Shop({
               {t('plinko_card_desc')}
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* AICE ARENA — PVP jackpot arena (полноширинная карточка) */}
+      <div
+        onClick={onPlayArena}
+        className="glass-panel-interactive rounded-[26px] p-5 mb-4 flex flex-col cursor-pointer group relative overflow-hidden active:scale-[0.985] transition-transform"
+      >
+        {/* cyan/blue ambient glow */}
+        <div className="absolute top-0 right-0 w-36 h-36 bg-[#0098ea]/20 rounded-full blur-3xl pointer-events-none group-hover:bg-[#0098ea]/30 transition-all" />
+        <span aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.06)_0%,transparent_55%)]" />
+
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="w-16 h-16 rounded-[20px] bg-gradient-to-br from-[#0098ea]/40 via-cyan-500/25 to-[#00b4d8]/40 p-[1px] shrink-0 shadow-[0_0_24px_rgba(0,152,234,0.30)] group-hover:scale-105 transition-transform duration-300">
+            <div className="w-full h-full rounded-[20px] bg-black/85 flex items-center justify-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(0,152,234,0.25),transparent_60%)]" />
+              <Users className="w-7 h-7 text-[#4fc3ff] relative z-10 drop-shadow-[0_0_10px_rgba(0,152,234,0.7)]" />
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-display text-xl font-semibold tracking-wide">ARENA</h3>
+              <span className="px-2 py-0.5 rounded-md bg-[#0098ea]/15 text-[#4fc3ff] text-[10px] font-bold uppercase tracking-wider border border-[#0098ea]/30">
+                PVP
+              </span>
+            </div>
+            <p className="text-sm text-muted leading-tight">{t('arena_card_desc')}</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-white/25 shrink-0 group-hover:text-[#4fc3ff] transition-colors" />
         </div>
       </div>
 
@@ -1506,6 +1538,7 @@ export default function App() {
                     onPlayMines={() => setActiveGame('mines')} 
                     onPlayNewGame={() => setActiveGame('new_game')} 
                     onPlayPlinko={() => setActiveGame('plinko')}
+                    onPlayArena={() => setActiveGame('arena')}
                     giftsDb={giftsDb} 
                     pricesLoaded={pricesLoaded} 
                     balance={balance}
@@ -1644,6 +1677,28 @@ export default function App() {
                   user={user}
                   token={auth.token}
                 />
+                </Suspense>
+              </motion.div>
+            )}
+            {activeGame === 'arena' && (
+              <motion.div
+                initial={{ opacity: 0, y: '100%' }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: '100%' }}
+                transition={springSmooth}
+                className="absolute inset-0 z-[100] bg-canvas"
+              >
+                <Suspense fallback={<LazyFallback />}>
+                  <Arena
+                    onBack={() => setActiveGame(null)}
+                    balance={balance}
+                    setBalance={setBalance}
+                    inventory={inventory}
+                    setInventory={setInventory}
+                    user={user}
+                    token={auth.token}
+                    onTurnover={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }}
+                  />
                 </Suspense>
               </motion.div>
             )}
