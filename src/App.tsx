@@ -204,10 +204,10 @@ function Shop({
           {/* Bottom Texts */}
           <div className="z-10 flex flex-col">
             <h3 className="font-display text-[16px] font-bold text-white tracking-wide leading-tight group-hover:text-amber-300 transition-colors">
-              РАКЕТА
+              {t('rocket_card_title')}
             </h3>
             <p className="text-[11px] text-white/50 font-medium truncate mt-0.5">
-              Успей забрать
+              {t('rocket_card_desc')}
             </p>
           </div>
         </div>
@@ -270,7 +270,7 @@ function Shop({
               PLINKO
             </h3>
             <p className="text-[11px] text-white/50 font-medium truncate mt-0.5">
-              Падающие шары
+              {t('plinko_card_desc')}
             </p>
           </div>
         </div>
@@ -534,7 +534,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
 
     // Fallback (вне Telegram или если prepare не удался) — классический шеринг ссылки.
     const link = `https://t.me/GaleaDropBot?startapp=r_${user?.id}`;
-    const text = t('referrals_desc') || '';
+    const text = t('referrals_desc');
     try {
       twa?.openTelegramLink?.(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`);
     } catch (e) {}
@@ -577,7 +577,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
             setShowSettings(true);
             try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch (e) {}
           }} 
-          className="absolute top-0 right-0 w-9 h-9 rounded-full bg-white/[0.06] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] flex items-center justify-center text-white/80 hover:text-white transition-transform active:scale-95 z-20 cursor-pointer"
+          className="absolute top-0 right-0 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/80 hover:text-white transition-transform active:scale-95 z-20 cursor-pointer"
         >
           <Settings className="w-5 h-5 text-white" strokeWidth={2.2} />
         </button>
@@ -587,7 +587,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               onBack();
               try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch (e) {}
             }} 
-            className="absolute top-0 left-0 w-9 h-9 rounded-full bg-white/[0.06] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] flex items-center justify-center text-white/80 hover:text-white transition-transform active:scale-95 z-20 cursor-pointer"
+            className="absolute top-0 left-0 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/80 hover:text-white transition-transform active:scale-95 z-20 cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5 text-white" strokeWidth={2.2} />
           </button>
@@ -718,12 +718,12 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
             className="flex items-center justify-between px-2.5 py-2.5 rounded-2xl hover:bg-white/[0.05] active:bg-white/[0.08] transition-colors group cursor-pointer"
           >
             <div className="flex items-center gap-3.5">
-              <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] border border-white/[0.10] text-violet-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+              <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full lg-glass text-violet-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
                 <Package size={16} strokeWidth={2.4} />
               </span>
               <div className="flex flex-col text-left">
-                <span className="font-semibold text-[14px] text-white leading-tight">{t('my_inventory') || 'Мой инвентарь NFT'}</span>
-                <span className="text-[11px] text-white/40 mt-0.5">{inventory.length} предметов · вывод и продажа</span>
+                <span className="font-semibold text-[14px] text-white leading-tight">{t('my_inventory')}</span>
+                <span className="text-[11px] text-white/40 mt-0.5">{inventory.length} {t('inventory_row_desc')}</span>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
@@ -739,12 +739,12 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
             className="flex items-center justify-between px-2.5 py-2.5 rounded-2xl hover:bg-white/[0.05] active:bg-white/[0.08] transition-colors group cursor-pointer"
           >
             <div className="flex items-center gap-3.5">
-              <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] border border-white/[0.10] text-amber-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+              <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full lg-glass text-amber-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
                 <Trophy size={16} strokeWidth={2.4} />
               </span>
               <div className="flex flex-col text-left">
-                <span className="font-semibold text-[14px] text-white leading-tight">{t('nav_leaderboard') || 'Таблица лидеров'}</span>
-                <span className="text-[11px] text-white/40 mt-0.5">Топ игроков по обороту</span>
+                <span className="font-semibold text-[14px] text-white leading-tight">{t('nav_leaderboard')}</span>
+                <span className="text-[11px] text-white/40 mt-0.5">{t('leaderboard_row_desc')}</span>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
@@ -759,12 +759,12 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
           className="flex items-center justify-between px-2.5 py-2.5 rounded-2xl hover:bg-white/[0.05] active:bg-white/[0.08] transition-colors group cursor-pointer"
         >
           <div className="flex items-center gap-3.5">
-            <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] border border-white/[0.10] text-brand shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+            <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full lg-glass text-brand shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
               <Users size={16} strokeWidth={2.4} />
             </span>
             <div className="flex flex-col text-left">
-              <span className="font-semibold text-[14px] text-white leading-tight">{t('referrals') || 'Реферальная система'}</span>
-              <span className="text-[11px] text-white/40 mt-0.5">Приглашай друзей и получай процент</span>
+              <span className="font-semibold text-[14px] text-white leading-tight">{t('referrals')}</span>
+              <span className="text-[11px] text-white/40 mt-0.5">{t('referrals_row_desc')}</span>
             </div>
           </div>
           <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
@@ -778,12 +778,12 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
           className="flex items-center justify-between px-2.5 py-2.5 rounded-2xl hover:bg-white/[0.05] active:bg-white/[0.08] transition-colors group cursor-pointer"
         >
           <div className="flex items-center gap-3.5">
-            <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] border border-white/[0.10] text-sky-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+            <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full lg-glass text-sky-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
               <History size={16} strokeWidth={2.4} />
             </span>
             <div className="flex flex-col text-left">
-              <span className="font-semibold text-[14px] text-white leading-tight">{t('deposit_history') || 'История пополнений'}</span>
-              <span className="text-[11px] text-white/40 mt-0.5">Все транзакции вашего счета</span>
+              <span className="font-semibold text-[14px] text-white leading-tight">{t('deposit_history')}</span>
+              <span className="text-[11px] text-white/40 mt-0.5">{t('history_row_desc')}</span>
             </div>
           </div>
           <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
@@ -796,12 +796,12 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
           className="flex items-center justify-between px-2.5 py-2.5 rounded-2xl hover:bg-white/[0.05] active:bg-white/[0.08] transition-colors group cursor-pointer"
         >
           <div className="flex items-center gap-3.5">
-            <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] border border-white/[0.10] text-fuchsia-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+            <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full lg-glass text-fuchsia-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
               <MessageCircle size={16} strokeWidth={2.4} />
             </span>
             <div className="flex flex-col text-left">
-              <span className="font-semibold text-[14px] text-white leading-tight">{t('support') || 'Поддержка'}</span>
-              <span className="text-[11px] text-white/40 mt-0.5">Оперативная помощь @platina_help</span>
+              <span className="font-semibold text-[14px] text-white leading-tight">{t('support')}</span>
+              <span className="text-[11px] text-white/40 mt-0.5">{t('support_row_desc')}</span>
             </div>
           </div>
           <ExternalLink className="w-4 h-4 text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
@@ -842,11 +842,11 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               <div className="relative z-10 p-5 pb-3 border-b border-white/[0.08] flex items-center justify-between shrink-0">
                  <div>
                    <h3 className="font-display text-lg font-bold tracking-tight text-white">{t('referrals')}</h3>
-                   <p className="text-white/40 text-xs mt-0.5">Приглашайте друзей и получайте вознаграждение</p>
+                   <p className="text-white/40 text-xs mt-0.5">{t('referrals_modal_desc')}</p>
                  </div>
                  <button 
                    onClick={() => setShowReferrals(false)} 
-                   className="w-9 h-9 rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] flex items-center justify-center text-white/70 hover:text-white hover:bg-white/[0.12] active:scale-95 transition-all cursor-pointer"
+                   className="w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white active:scale-95 transition-all cursor-pointer"
                  >
                    <X className="w-4 h-4" strokeWidth={2.5} />
                  </button>
@@ -872,12 +872,12 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                         try { (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch (e) {}
                         setTimeout(() => setIsCopied(false), 2000);
                       }} 
-                      className="px-4 bg-white/[0.14] hover:bg-white/[0.22] border border-white/[0.20] shadow-[0_2px_12px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] active:scale-95 rounded-2xl flex items-center justify-center transition-all text-white cursor-pointer"
+                      className="px-4 lg-glass active:scale-95 rounded-2xl flex items-center justify-center transition-all text-white cursor-pointer"
                     >
                       {isCopied ? (
                         <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold">
                           <Check className="w-4 h-4" strokeWidth={2.5} />
-                          <span>Скопировано</span>
+                          <span>{t('copied')}</span>
                         </div>
                       ) : (
                         <Copy className="w-4 h-4" strokeWidth={2.2} />
@@ -985,11 +985,11 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               <div className="relative z-10 p-5 pb-3 border-b border-white/[0.08] flex items-center justify-between shrink-0">
                  <div>
                    <h3 className="font-display text-lg font-bold tracking-tight text-white">{t('deposit_history')}</h3>
-                   <p className="text-white/40 text-xs mt-0.5">История входящих платежей</p>
+                   <p className="text-white/40 text-xs mt-0.5">{t('deposit_history_desc')}</p>
                  </div>
                  <button 
                    onClick={() => setShowHistory(false)} 
-                   className="w-9 h-9 rounded-full bg-white/[0.10] hover:bg-white/[0.18] border border-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] flex items-center justify-center text-white/80 hover:text-white active:scale-95 transition-all cursor-pointer"
+                   className="w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/80 hover:text-white active:scale-95 transition-all cursor-pointer"
                  >
                    <X className="w-4 h-4" strokeWidth={2.5} />
                  </button>
@@ -1075,7 +1075,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                     className={`w-full py-3.5 rounded-full font-bold transition-all border active:scale-95 cursor-pointer shadow-md ${
                       selectedNft.isWithdrawing 
                         ? 'bg-rose-500/25 border-rose-500/50 text-rose-300 hover:bg-rose-500/35' 
-                        : 'bg-white/[0.12] hover:bg-white/[0.20] border-white/[0.18] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                        : 'lg-glass text-white'
                     }`}
                   >
                     {selectedNft.isWithdrawing ? t('cancel_withdraw') : t('withdraw_nft')}
@@ -1090,7 +1090,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
       {showLevelModal && (
         <LiquidDialog
           title={t('level_rewards')}
-          subtitle="Награды за уровень"
+          subtitle={t('level_rewards_desc')}
           icon={<Gift className="w-4 h-4" />}
           onClose={() => setShowLevelModal(false)}
           actionLabel={t('got_it')}
@@ -1103,19 +1103,19 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
 
       {showSettings && (
         <LiquidDialog
-          title={t('settings') || 'Настройки'}
-          subtitle="Язык и параметры приложения"
+          title={t('settings')}
+          subtitle={t('settings_desc')}
           icon={<Settings className="w-4 h-4" />}
           onClose={() => setShowSettings(false)}
-          actionLabel={t('got_it') || 'Готово'}
+          actionLabel={t('got_it')}
         >
           <div className="space-y-4 pb-1">
             <div>
               <div className="text-[11px] font-bold uppercase tracking-wider text-white/50 mb-2">
-                {t('language') || 'Язык интерфейса'}
+                {t('language')}
               </div>
               <LiquidSegment<'ru' | 'en' | 'zh'>
-                ariaLabel="Язык"
+                ariaLabel={t('language')}
                 value={lang === 'en' || lang === 'zh' ? lang : 'ru'}
                 onChange={(code) => {
                   handleSetLang(code);
@@ -1127,26 +1127,6 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                   { value: 'zh', label: '中文', icon: <span className="text-[14px] leading-none">🇨🇳</span> },
                 ]}
               />
-            </div>
-            <div className="flex items-center justify-between gap-3 px-1 py-1">
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/[0.06] border border-white/[0.10] text-amber-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
-                  <Sparkles className="w-3.5 h-3.5" />
-                </span>
-                <div className="min-w-0">
-                  <div className="text-[13px] font-bold text-white leading-tight">Тактильный отклик</div>
-                  <div className="text-[10px] text-white/40 truncate">Вибрация кнопок в Telegram</div>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  try { (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch { /* optional */ }
-                }}
-                className="shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-bold bg-white/[0.08] border border-white/[0.12] text-white active:scale-95 transition-transform cursor-pointer"
-              >
-                Тест
-              </button>
             </div>
           </div>
         </LiquidDialog>
@@ -1344,9 +1324,9 @@ export default function App() {
   // (id: inventory / shop / leaderboard / tasks), для админки — щит из lucide.
   const navItems = [
     { id: 'inventory', label: t('inventory') },
-    { id: 'shop', label: t('nav_shop') || 'Игры' },
-    { id: 'leaderboard', label: t('nav_leaderboard') || 'Топ' },
-    { id: 'tasks', label: t('nav_tasks') || 'Задания' },
+    { id: 'shop', label: t('nav_shop') },
+    { id: 'leaderboard', label: t('nav_leaderboard') },
+    { id: 'tasks', label: t('nav_tasks') },
     ...(auth.isAdmin
       ? [{ id: 'admin', label: t('nav_admin'), icon: <Shield size={23} strokeWidth={1.8} aria-hidden /> }]
       : [])
@@ -1455,13 +1435,11 @@ export default function App() {
                       setActiveTab('profile');
                       try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
                     }} 
-                    aria-label="Профиль"
+                    aria-label={t('profile')}
                     className="relative shrink-0 transition-transform active:scale-95 cursor-pointer outline-none z-10"
                   >
-                    <span className={`relative flex h-9 w-9 shrink-0 aspect-square items-center justify-center rounded-full bg-white/[0.08] border shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] overflow-hidden transition-all ${
-                      activeTab === 'profile'
-                        ? 'border-brand/60 shadow-[0_0_14px_rgba(0,152,234,0.35),inset_0_1px_0_rgba(255,255,255,0.2)]'
-                        : 'border-white/[0.10] hover:border-white/[0.16]'
+                    <span className={`relative flex h-9 w-9 shrink-0 aspect-square items-center justify-center rounded-full lg-glass overflow-hidden transition-all ${
+                      activeTab === 'profile' ? 'lg-glass--brand' : ''
                     }`}>
                       {user?.photoUrl ? (
                         <img src={user.photoUrl} alt="Avatar" className="w-full h-full object-cover" />
@@ -1496,7 +1474,7 @@ export default function App() {
                       setShowBalancePage(true);
                       try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch (e) {}
                     }} 
-                    aria-label="Кошелёк и пополнение"
+                    aria-label={t('wallet')}
                     className="ml-auto relative z-10 flex items-center gap-1.5 pl-3 pr-1 py-1 rounded-full
                       bg-white/[0.08] hover:bg-white/[0.12] active:bg-white/[0.10]
                       border border-white/[0.10] hover:border-white/[0.18]
@@ -1682,7 +1660,7 @@ export default function App() {
               transition={springSnappy}
               className="absolute inset-x-0 bottom-0 z-[90] pointer-events-none"
             >
-              <LiquidGlassNav items={navItems} activeId={activeTab} onSelect={setActiveTab} />
+              <LiquidGlassNav items={navItems} activeId={activeTab} onSelect={setActiveTab} ariaLabel={t('main_navigation')} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -1756,7 +1734,7 @@ export default function App() {
               </div>
               <div className="flex flex-col flex-1 min-w-0">
                 <span className="text-white font-bold text-[13px] leading-tight">
-                  {toastMessage.type === 'withdraw' ? (toastMessage.title || 'Перевод отправлен') : t('topup_success')}
+                  {toastMessage.type === 'withdraw' ? (toastMessage.title || t('sent_title')) : t('topup_success')}
                 </span>
                 <span className="text-white/70 text-[12px] font-medium flex items-center gap-1 mt-0.5">
                   {toastMessage.type === 'withdraw' ? '-' : '+'}{Number(toastMessage.amount).toFixed(2)} 

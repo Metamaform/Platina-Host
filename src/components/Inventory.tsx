@@ -127,7 +127,7 @@ export function Inventory({
       {showHelp && (
         <LiquidDialog
           title={t('help_title')}
-          subtitle="Частые вопросы"
+          subtitle={t('faq')}
           icon={<Info className="w-4 h-4" />}
           onClose={() => setShowHelp(false)}
           actionLabel={t('help_got_it')}
@@ -154,7 +154,7 @@ export function Inventory({
       {showImportant && (
         <LiquidDialog
           title={t('important_title')}
-          subtitle="Правила вывода"
+          subtitle={t('withdraw_rules')}
           tone="amber"
           icon={<AlertCircle className="w-4 h-4" />}
           onClose={() => setShowImportant(false)}
@@ -186,7 +186,7 @@ export function Inventory({
             {onBack && (
               <button 
                 onClick={onBack}
-                className="w-8 h-8 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all active:scale-95 cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.10)]"
+                className="w-8 h-8 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white transition-all active:scale-95 cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
@@ -203,7 +203,7 @@ export function Inventory({
             </button>
             <button 
               onClick={() => setShowHelp(true)}
-              className="w-8 h-8 flex items-center justify-center text-white/60 hover:text-white bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.10] rounded-full transition-all active:scale-95 cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.10)]"
+              className="w-8 h-8 flex items-center justify-center text-white/60 hover:text-white lg-glass rounded-full transition-all active:scale-95 cursor-pointer"
             >
               <HelpCircle className="w-4 h-4" />
             </button>
@@ -343,7 +343,7 @@ export function Inventory({
                     
                     {item.isWithdrawing && (
                       <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
-                         <span className="text-white text-xs font-bold bg-black/40 px-3 py-1 rounded-full">{t('withdraw_pending') || 'Pending'}</span>
+                         <span className="text-white text-xs font-bold bg-black/40 px-3 py-1 rounded-full">{t('withdraw_pending')}</span>
                       </div>
                     )}
                   </div>

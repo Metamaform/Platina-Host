@@ -3,6 +3,7 @@ import { QrCode, Loader2 } from 'lucide-react';
 import { toJpeg } from 'html-to-image';
 import { GramIcon } from '../../components/GramIcon';
 import { haptics } from '../../lib/haptics';
+import { useTranslation } from '../../lib/i18n';
 
 interface PremiumCardCarouselProps {
   /** Баланс в граммах, отображаемый на карте BLACK */
@@ -63,6 +64,7 @@ function GlowBlack() {
  * шеринг или ботом в чат пользователя (никогда не ссылкой).
  */
 export function PremiumCardCarousel({ balance = 0, username, onHint }: PremiumCardCarouselProps) {
+  const { t } = useTranslation();
   const cardRef = useRef<HTMLDivElement>(null);
   const [sharing, setSharing] = useState(false);
 
@@ -98,7 +100,7 @@ export function PremiumCardCarousel({ balance = 0, username, onHint }: PremiumCa
         if (result === 'shared') {
           haptics.notify('success');
         } else if (result !== 'cancelled') {
-          onHint?.('Sharing is available inside Telegram');
+          onHint?.(t('share_inside_telegram'));
         }
         return;
       }
@@ -110,7 +112,7 @@ export function PremiumCardCarousel({ balance = 0, username, onHint }: PremiumCa
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok && !data?.photoUrl) {
-        throw new Error(data?.error || 'Share failed');
+        throw new Error(data?.error || t('share_failed'));
       }
 
       // 1. Нативный шеринг Telegram: фото + подпись, выбор чата
@@ -137,7 +139,7 @@ export function PremiumCardCarousel({ balance = 0, username, onHint }: PremiumCa
           body: JSON.stringify({ image }),
         });
         if (sendRes.ok) {
-          onHint?.('Card sent to your chat with the bot — forward it anywhere');
+          onHint?.(t('card_sent_to_bot'));
           haptics.notify('success');
           return;
         }
@@ -148,15 +150,15 @@ export function PremiumCardCarousel({ balance = 0, username, onHint }: PremiumCa
       // 4. Совсем последний вариант — ссылка на фото
       if (data?.photoUrl && navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(data.photoUrl);
-        onHint?.('Link copied');
+        onHint?.(t('copied'));
         haptics.notify('success');
       } else {
-        onHint?.('Sharing is available inside Telegram');
+        onHint?.(t('share_inside_telegram'));
       }
     } catch (e: any) {
       console.warn('[share-card]', e);
       haptics.notify('error');
-      onHint?.(e?.message || 'Не удалось поделиться картой');
+      onHint?.(e?.message || t('share_failed'));
     } finally {
       setSharing(false);
     }
@@ -176,7 +178,7 @@ export function PremiumCardCarousel({ balance = 0, username, onHint }: PremiumCa
           {/* Header */}
           <div className="flex items-start justify-between mb-6">
             <span className="font-display text-white/90 text-[20px] font-bold tracking-tight">Platina</span>
-            <span className="px-2.5 py-1 rounded-full border text-[11px] font-bold tracking-wider bg-white/[0.06] border-white/15 text-white/60">
+            <span className="px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wider lg-glass text-white/60">
               BLACK
             </span>
           </div>
@@ -186,7 +188,7 @@ export function PremiumCardCarousel({ balance = 0, username, onHint }: PremiumCa
             <div
               className="flex items-center justify-center gap-[0.14em] font-display font-bold text-white leading-none tracking-tight drop-shadow-sm"
               style={{ fontWeight: 800, fontSize: 'clamp(40px, 9.5vw, 58px)', letterSpacing: '-0.03em' }}
-              aria-label={`Баланс: ${displayBalance} грамм`}
+              aria-label={`${t('balance')} ${displayBalance} GRAM`}
             >
               <span className="whitespace-nowrap">{displayBalance}</span>
               <GramIcon className="h-[0.4em] w-[0.4em] mb-[0.07em] drop-shadow-md" />
@@ -203,8 +205,8 @@ export function PremiumCardCarousel({ balance = 0, username, onHint }: PremiumCa
               data-share-exclude="1"
               onClick={handleShare}
               disabled={sharing}
-              aria-label="Поделиться картой"
-              className="shrink-0 w-9 h-9 rounded-full bg-white/[0.06] border border-white/15 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-all active:scale-95 disabled:opacity-60 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1683FF]"
+              aria-label={t('share')}
+              className="shrink-0 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/80 hover:text-white transition-all active:scale-95 disabled:opacity-60 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1683FF]"
             >
               {sharing ? (
                 <Loader2 className="w-[18px] h-[18px] animate-spin" />

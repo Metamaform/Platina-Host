@@ -89,7 +89,7 @@ export const GameLossModal: React.FC<GameLossModalProps> = ({
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 active:scale-90 text-white/50 hover:text-white flex items-center justify-center transition-all border border-white/5 z-20 cursor-pointer"
+          className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full lg-glass active:scale-90 text-white/50 hover:text-white flex items-center justify-center transition-all z-20 cursor-pointer"
           title={t('close')}
         >
           <X className="w-4 h-4" />
@@ -180,13 +180,13 @@ export const GameLossModal: React.FC<GameLossModalProps> = ({
                   onClose();
                   onNavigate('inventory');
                 }}
-                className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold text-white bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] transition-all text-center cursor-pointer active:scale-95"
+                className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold text-white lg-glass transition-all text-center cursor-pointer active:scale-95"
               >
                 {t('my_inventory')}
               </button>
               <button
                 onClick={onClose}
-                className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold text-white bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] transition-all text-center cursor-pointer active:scale-95"
+                className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold text-white lg-glass transition-all text-center cursor-pointer active:scale-95"
               >
                 {closeLabel || t('close')}
               </button>
@@ -194,7 +194,7 @@ export const GameLossModal: React.FC<GameLossModalProps> = ({
           ) : (
             <button
               onClick={onClose}
-              className="w-full py-2.5 rounded-[12px] text-[12px] font-bold text-white bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] transition-all cursor-pointer active:scale-95"
+              className="w-full py-2.5 rounded-[12px] text-[12px] font-bold text-white lg-glass transition-all cursor-pointer active:scale-95"
             >
               {closeLabel || t('close')}
             </button>

@@ -51,8 +51,8 @@ export const Button: React.FC<ButtonProps> = ({
   };
   const variants = {
     primary: 'bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)]',
-    secondary: 'bg-white/[0.12] border border-white/[0.16] hover:bg-white/[0.20] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]',
-    ghost: 'bg-white/[0.08] hover:bg-white/[0.15] text-white border border-white/[0.10]',
+    secondary: 'lg-glass text-white',
+    ghost: 'lg-glass text-white',
     danger: 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:brightness-110 text-white shadow-[0_4px_20px_rgba(239,68,68,0.4)]',
   };
   return (
@@ -81,7 +81,7 @@ export const CircleAction: React.FC<{
       className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${
         tone === 'brand'
           ? 'bg-brand text-white shadow-lg shadow-brand/30 group-hover:brightness-110'
-          : 'bg-surface-2 border border-hairline text-[color:var(--color-text)] group-hover:bg-surface-3'
+          : 'lg-glass text-[color:var(--color-text)]'
       }`}
     >
       {icon}

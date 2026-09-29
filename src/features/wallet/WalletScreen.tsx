@@ -5,6 +5,7 @@ import { QuickActions } from './QuickActions';
 import { PremiumCardCarousel } from './PremiumCardCarousel';
 import { WithdrawDialog } from './WithdrawDialog/WithdrawDialog';
 import { getWalletSummary } from './withdrawalApi';
+import { useTranslation } from '../../lib/i18n';
 import type { WalletSummary } from './types';
 
 interface WalletScreenProps {
@@ -15,6 +16,7 @@ interface WalletScreenProps {
 }
 
 export function WalletScreen({ balance, onClose, onDeposit, onGoToInventory }: WalletScreenProps) {
+  const { t } = useTranslation();
   const [, setSummary] = useState<WalletSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +36,7 @@ export function WalletScreen({ balance, onClose, onDeposit, onGoToInventory }: W
       })
       .catch((e) => {
         if (mounted) {
-          setError(e.message || 'Ошибка загрузки');
+          setError(e.message || t('loading_error'));
           setLoading(false);
         }
       });
@@ -54,7 +56,7 @@ export function WalletScreen({ balance, onClose, onDeposit, onGoToInventory }: W
 
   return (
     <main
-      aria-label="Кошелёк"
+      aria-label={t('wallet')}
       className="relative min-h-full bg-canvas text-white flex flex-col items-center overflow-hidden"
       style={{
         animation: 'walletFadeIn 220ms ease-out',
@@ -70,7 +72,7 @@ export function WalletScreen({ balance, onClose, onDeposit, onGoToInventory }: W
           to { opacity: 1; transform: translateY(0); }
         }
         @media (prefers-reduced-motion: reduce) {
-          main[aria-label="Кошелёк"] { animation: none !important; }
+          main[aria-label={t('wallet')}] { animation: none !important; }
           .motion-reduce-none { transition: none !important; animation: none !important; }
         }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -114,13 +116,13 @@ export function WalletScreen({ balance, onClose, onDeposit, onGoToInventory }: W
         {/* Additional info / inventory shortcut */}
         {onGoToInventory && (
           <div className="rounded-[24px] bg-white/[0.04] border border-white/[0.06] p-4 mt-2">
-            <h3 className="font-display font-bold text-white text-[15px] mb-2">NFT вывод</h3>
-            <p className="text-white/50 text-[13px] leading-relaxed mb-3">Вывод NFT осуществляется через инвентарь. Выберите подарок для вывода на свой аккаунт.</p>
+            <h3 className="font-display font-bold text-white text-[15px] mb-2">{t('nft_withdraw')}</h3>
+            <p className="text-white/50 text-[13px] leading-relaxed mb-3">{t('withdraw_nft_description')}</p>
             <button
               onClick={onGoToInventory}
-              className="w-full py-3 rounded-2xl bg-white/[0.06] hover:bg-white/10 border border-white/10 text-white font-semibold text-[14px] transition-colors active:scale-[0.98] cursor-pointer"
+              className="w-full py-3 rounded-2xl lg-glass text-white font-semibold text-[14px] transition-colors active:scale-[0.98] cursor-pointer"
             >
-              Перейти в инвентарь
+              {t('go_to_inventory')}
             </button>
           </div>
         )}
@@ -128,7 +130,7 @@ export function WalletScreen({ balance, onClose, onDeposit, onGoToInventory }: W
         {/* Error state */}
         {error && !loading && (
           <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-300 text-[13px] flex flex-col gap-3">
-            <span>Ошибка загрузки кошелька: {error}</span>
+            <span>{t('wallet_load_error')}: {error}</span>
             <button
               onClick={() => {
                 setLoading(true);
@@ -143,9 +145,9 @@ export function WalletScreen({ balance, onClose, onDeposit, onGoToInventory }: W
                     setLoading(false);
                   });
               }}
-              className="self-start px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-[12px] font-semibold cursor-pointer"
+              className="self-start px-4 py-2 rounded-xl lg-glass text-white text-[12px] font-semibold cursor-pointer"
             >
-              Повторить
+              {t('welcome_retry')}
             </button>
           </div>
         )}
@@ -158,7 +160,7 @@ export function WalletScreen({ balance, onClose, onDeposit, onGoToInventory }: W
             open={showWithdraw}
             onClose={() => setShowWithdraw(false)}
             onSuccess={() => {
-              showHint('Вывод создан');
+              showHint(t('withdrawal_created'));
             }}
           />
         )}
@@ -183,17 +185,17 @@ export function WalletScreen({ balance, onClose, onDeposit, onGoToInventory }: W
             >
               <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-4 md:hidden" />
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-white text-[18px]">Пополнение</h2>
+                <h2 className="font-bold text-white text-[18px]">{t('topup')}</h2>
                 <button
                   onClick={() => setShowDepositSheet(false)}
-                  className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-white cursor-pointer"
-                  aria-label="Закрыть"
+                  className="w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/60 hover:text-white cursor-pointer"
+                  aria-label={t('close')}
                 >
                   ✕
                 </button>
               </div>
               <p className="text-white/60 text-[13px] leading-relaxed mb-4">
-                Пополнение баланса доступно через Telegram Stars или TON. Выберите способ в основном экране пополнения или перейдите в инвентарь для обмена NFT.
+                {t('deposit_sheet_desc')}
               </p>
               <button
                 onClick={() => {
@@ -202,7 +204,7 @@ export function WalletScreen({ balance, onClose, onDeposit, onGoToInventory }: W
                 }}
                 className="w-full py-3.5 rounded-2xl bg-[#1683FF] text-white font-bold hover:bg-[#1478eb] transition-colors active:scale-[0.98] cursor-pointer"
               >
-                Открыть пополнение
+                {t('open_topup')}
               </button>
             </motion.div>
           </motion.div>

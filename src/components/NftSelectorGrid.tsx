@@ -3,6 +3,7 @@ import { Search } from 'lucide-react';
 import { PremiumImage } from './PremiumImage';
 import { GramIcon } from './GramIcon';
 import { cleanNftName, getNftBackdrop } from '../lib/nftUtils';
+import { useTranslation } from '../lib/i18n';
 
 interface NftSelectorGridProps {
   inventory: any[];
@@ -23,8 +24,9 @@ export function NftSelectorGrid({
   maxSelections,
   maxContainerHeight = 'max-h-[340px]',
   disabled = false,
-  emptyText = 'Нет доступных предметов'
+  emptyText
 }: NftSelectorGridProps) {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [backdropFilter, setBackdropFilter] = useState<'black' | 'onyx' | null>(null);
@@ -59,7 +61,7 @@ export function NftSelectorGrid({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
           <input 
             type="text" 
-            placeholder="Поиск предмета..." 
+            placeholder={t('search_item')} 
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             disabled={disabled}
@@ -75,7 +77,7 @@ export function NftSelectorGrid({
               ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/40 text-white shadow-md ring-1 ring-white/20'
               : 'bg-[#1a1b1f] border-white/5 text-white/60 hover:text-white hover:bg-white/5'
           }`}
-          title="Фильтр Black"
+          title={t('filter_black')}
         >
           <span className="w-2 h-2 rounded-full bg-black border border-white/30 inline-block shrink-0" />
           <span>Black</span>
@@ -89,7 +91,7 @@ export function NftSelectorGrid({
               ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/40 text-white shadow-md ring-1 ring-white/20'
               : 'bg-[#1a1b1f] border-white/5 text-white/60 hover:text-white hover:bg-white/5'
           }`}
-          title="Фильтр Onyx Black"
+          title={t('filter_onyx')}
         >
           <span className="w-2 h-2 rounded-full bg-[#393d3f] border border-white/30 inline-block shrink-0" />
           <span>Onyx</span>
@@ -100,7 +102,7 @@ export function NftSelectorGrid({
           disabled={disabled}
           className="bg-[#1a1b1f] border border-white/5 rounded-[12px] px-3 py-2 text-[12px] font-medium text-white flex items-center gap-1 shrink-0 cursor-pointer hover:bg-white/5 transition-colors"
         >
-          Цена {sortOrder === 'desc' ? '↓' : '↑'}
+          {t('price')} {sortOrder === 'desc' ? '↓' : '↑'}
         </button>
       </div>
 
@@ -108,7 +110,7 @@ export function NftSelectorGrid({
       <div className={`overflow-y-auto no-scrollbar pr-0.5 ${maxContainerHeight}`}>
         {filteredInventory.length === 0 ? (
           <div className="py-8 text-center text-white/40 text-[13px] font-medium">
-            {emptyText}
+            {emptyText || t('no_available_items')}
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-2.5 pb-2">

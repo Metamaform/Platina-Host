@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { atomicToDecimalString, decimalStringToAtomic, parseAndValidateAmountInput } from '../formatting';
 import { validateAmount } from '../validation';
 import type { WithdrawalQuote } from '../types';
+import { useTranslation } from '../../../lib/i18n';
 
 interface AmountStepProps {
   assetSymbol: string;
@@ -30,6 +31,7 @@ export function AmountStep({
   quoteError,
   onRequestQuote,
 }: AmountStepProps) {
+  const { t } = useTranslation();
   const availableDisplay = useMemo(() => atomicToDecimalString(availableAtomic, decimals), [availableAtomic, decimals]);
 
   const feeDisplay = useMemo(() => {
@@ -82,7 +84,7 @@ export function AmountStep({
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-white font-bold text-[16px] mb-3">Сумма</h3>
+        <h3 className="text-white font-bold text-[16px] mb-3">{t('amount')}</h3>
 
         <div className="relative bg-white/[0.06] border border-white/10 rounded-2xl p-4 focus-within:border-[#1683FF]/50 transition-colors">
           <div className="flex items-center justify-between gap-3">
@@ -101,13 +103,13 @@ export function AmountStep({
                 onClick={handleMax}
                 className="px-3 py-1.5 rounded-full bg-[#1683FF] hover:bg-[#1683FF]/90 text-white text-[12px] font-bold transition-colors active:scale-95 cursor-pointer"
               >
-                Макс.
+                {t('max_short')}
               </button>
             </div>
           </div>
 
           <div className="mt-3 flex items-center justify-between text-[12px]">
-            <span className="text-white/40">Доступно: {availableDisplay} {assetSymbol}</span>
+            <span className="text-white/40">{t('available')}: {availableDisplay} {assetSymbol}</span>
             {amountValidation && !amountValidation.valid && (
               <span className="text-red-400 font-medium">{amountValidation.error}</span>
             )}
@@ -116,17 +118,17 @@ export function AmountStep({
 
         <div className="mt-4 space-y-2 p-3 rounded-2xl bg-white/[0.03] border border-white/5">
           <div className="flex justify-between text-[13px]">
-            <span className="text-white/50">Комиссия сети</span>
-            <span className="text-white font-medium">{quoteLoading ? 'Расчёт...' : `${feeDisplay} ${assetSymbol}`}</span>
+            <span className="text-white/50">{t('network_fee')}</span>
+            <span className="text-white font-medium">{quoteLoading ? t('calculating') : `${feeDisplay} ${assetSymbol}`}</span>
           </div>
           <div className="h-px bg-white/5" />
           <div className="flex justify-between text-[13px]">
-            <span className="text-white/50">Итого спишется</span>
+            <span className="text-white/50">{t('total_debit')}</span>
             <span className="text-white font-bold">{quoteLoading ? '—' : `${totalDisplay} ${assetSymbol}`}</span>
           </div>
           {quote && (
             <div className="text-[11px] text-white/40">
-              Котировка истекает: {new Date(quote.expiresAt).toLocaleTimeString()} • Комиссия фиксируется на момент создания
+              {t('quote_expires')}: {new Date(quote.expiresAt).toLocaleTimeString()} • {t('quote_fee_fixed')}
             </div>
           )}
         </div>
@@ -141,9 +143,9 @@ export function AmountStep({
           type="button"
           onClick={onRequestQuote}
           disabled={!amountAtomic || amountAtomic === '0' || !!amountValidation && !amountValidation.valid || quoteLoading}
-          className="mt-4 w-full py-3 rounded-2xl bg-white/[0.08] hover:bg-white/[0.12] disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-[14px] border border-white/10 transition-all active:scale-[0.98] cursor-pointer"
+          className="mt-4 w-full py-3 rounded-2xl lg-glass disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-[14px] transition-all active:scale-[0.98] cursor-pointer"
         >
-          {quoteLoading ? 'Получаем котировку...' : quote ? 'Обновить котировку' : 'Рассчитать комиссию'}
+          {quoteLoading ? t('quote_loading') : quote ? t('quote_refresh') : t('quote_calculate')}
         </button>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { motion } from 'motion/react';
 import manifest from '../../wheel_parts/manifest.json';
+import { useTranslation } from '../lib/i18n';
 
 interface UpgradeWheelProps {
   winChance: number;               // 0 to 95 (%)
@@ -15,6 +16,7 @@ export const UpgradeWheel: React.FC<UpgradeWheelProps> = ({
   isSpinning = false,
   size = 405,
 }) => {
+  const { t } = useTranslation();
   const { wheel_center, radii } = manifest;
   const [cx, cy] = wheel_center; // 617, 583
   const viewBoxSize = 1254;
@@ -323,7 +325,7 @@ export const UpgradeWheel: React.FC<UpgradeWheelProps> = ({
             letterSpacing="3"
             className="font-display select-none"
           >
-            ШАНС
+            {t('chance')}
           </text>
           <text
             x={cx}

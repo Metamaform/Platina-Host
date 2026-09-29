@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Settings, Clock, Timer, Wallet, Trophy, Hash, Copy, Check, Activity, Layers } from 'lucide-react';
 import { GramIcon } from './GramIcon';
 import { LiquidDialog } from './ui/LiquidDialog';
+import { useTranslation } from '../lib/i18n';
 
 export interface GameRoundInfoModalProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ export const GameRoundInfoModal: React.FC<GameRoundInfoModalProps> = ({
   minBet = 0.1,
   maxBet = 7000
 }) => {
+  const { t } = useTranslation();
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
@@ -72,11 +74,11 @@ export const GameRoundInfoModal: React.FC<GameRoundInfoModalProps> = ({
 
   return (
     <LiquidDialog
-      title="Параметры раунда"
-      subtitle={`${game === 'plinko' ? 'Plinko' : 'Ракетка'} · серверная статистика`}
+      title={t('round_settings')}
+      subtitle={`${game === 'plinko' ? 'Plinko' : 'ROCKET'} · ${t('server_stats')}`}
       icon={<Settings className="w-4 h-4" />}
       onClose={onClose}
-      actionLabel="Закрыть"
+      actionLabel={t('close')}
     >
       <div className="space-y-3.5 pb-1">
 
@@ -84,11 +86,11 @@ export const GameRoundInfoModal: React.FC<GameRoundInfoModalProps> = ({
             <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-white/[0.06] to-white/[0.02] border border-white/10">
               <div className="flex items-center gap-2">
                 <Activity className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs text-white/70 font-medium">Состояние сервера:</span>
+                <span className="text-xs text-white/70 font-medium">{t('server_status')}:</span>
               </div>
               <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                {statusText || 'Активен (Синхронизирован)'}
+                {statusText || t('server_active')}
               </span>
             </div>
 
@@ -105,7 +107,7 @@ export const GameRoundInfoModal: React.FC<GameRoundInfoModalProps> = ({
                   <button
                     onClick={() => handleCopy(displayRoundId, 'round')}
                     className="p-1 hover:text-white transition-colors text-white/30"
-                    title="Копировать ID раунда"
+                    title={t('copy_round_id')}
                   >
                     {copiedKey === 'round' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                   </button>
@@ -113,7 +115,7 @@ export const GameRoundInfoModal: React.FC<GameRoundInfoModalProps> = ({
                 <div className="font-mono font-bold text-[13px] text-white truncate">
                   #{displayRoundId}
                 </div>
-                <span className="text-[10px] text-white/40 mt-0.5">Текущий раунд</span>
+                <span className="text-[10px] text-white/40 mt-0.5">{t('current_round')}</span>
               </div>
 
               {/* 2. Balance */}
@@ -128,7 +130,7 @@ export const GameRoundInfoModal: React.FC<GameRoundInfoModalProps> = ({
                   <span>{balance.toFixed(2)}</span>
                   <GramIcon className="w-3.5 h-3.5 text-brand" />
                 </div>
-                <span className="text-[10px] text-emerald-400/90 font-medium mt-0.5">Доступно для игры</span>
+                <span className="text-[10px] text-emerald-400/90 font-medium mt-0.5">{t('available_to_play')}</span>
               </div>
 
               {/* 3. Server Time */}
@@ -154,9 +156,9 @@ export const GameRoundInfoModal: React.FC<GameRoundInfoModalProps> = ({
                   </span>
                 </div>
                 <div className="font-mono font-bold text-[13px] text-purple-300">
-                  {timeoutSec > 0 ? `${timeoutSec.toFixed(1)} сек` : '0.0 сек'}
+                  {timeoutSec > 0 ? `${timeoutSec.toFixed(1)} ${t('sec_short')}` : `0.0 ${t('sec_short')}`}
                 </div>
-                <span className="text-[10px] text-white/40 mt-0.5">Интервал раунда</span>
+                <span className="text-[10px] text-white/40 mt-0.5">{t('round_interval')}</span>
               </div>
 
               {/* 5. Max Prize / Prize */}
@@ -164,7 +166,7 @@ export const GameRoundInfoModal: React.FC<GameRoundInfoModalProps> = ({
                 <div className="flex flex-col">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-white/40 flex items-center gap-1">
                     <Trophy className="w-3 h-3 text-amber-400" />
-                    Prize (Макс. выигрыш)
+                    {t('prize_max')}
                   </span>
                   <div className="flex items-center gap-1 font-display font-black text-lg text-amber-300 mt-0.5">
                     <span>{maxPrize.toLocaleString('ru-RU')}</span>
@@ -173,7 +175,7 @@ export const GameRoundInfoModal: React.FC<GameRoundInfoModalProps> = ({
                 </div>
                 {currentPrize !== undefined && currentPrize > 0 && (
                   <div className="flex flex-col items-end">
-                    <span className="text-[10px] text-white/40 uppercase">Текущий приз</span>
+                    <span className="text-[10px] text-white/40 uppercase">{t('current_prize')}</span>
                     <span className="font-display font-bold text-emerald-400 text-sm">
                       +{currentPrize.toFixed(2)} GRAM
                     </span>
@@ -186,15 +188,15 @@ export const GameRoundInfoModal: React.FC<GameRoundInfoModalProps> = ({
             <div className="bg-[#1b1c24] rounded-2xl p-3.5 border border-white/5 space-y-2">
               <div className="flex items-center gap-1.5 text-xs font-bold text-white/80 uppercase tracking-wider">
                 <Layers className="w-3.5 h-3.5 text-brand" />
-                <span>Лимиты ставок</span>
+                <span>{t('bet_limits')}</span>
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="bg-black/25 p-2 rounded-xl border border-white/5 flex flex-col">
-                  <span className="text-white/40 text-[10px]">Минимальная ставка</span>
+                  <span className="text-white/40 text-[10px]">{t('min_bet')}</span>
                   <span className="font-bold text-white mt-0.5">{minBet.toFixed(1)} GRAM</span>
                 </div>
                 <div className="bg-black/25 p-2 rounded-xl border border-white/5 flex flex-col">
-                  <span className="text-white/40 text-[10px]">Максимальная ставка</span>
+                  <span className="text-white/40 text-[10px]">{t('max_bet')}</span>
                   <span className="font-bold text-white mt-0.5">{maxBet.toLocaleString('ru-RU')} GRAM</span>
                 </div>
               </div>

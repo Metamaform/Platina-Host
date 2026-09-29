@@ -38,7 +38,7 @@ export default function LiquidGlassNav<T extends string>({
   items,
   activeId,
   onSelect,
-  ariaLabel = "Основная навигация",
+  ariaLabel = "Main navigation",
 }: LiquidGlassNavProps<T>) {
   const activeIndex = items.findIndex((item) => item.id === activeId);
   const hasSelection = activeIndex >= 0;

@@ -397,7 +397,7 @@ export function Mines({
     <div className="h-full w-full flex flex-col bg-canvas text-white relative">
       <button 
         onClick={onBack}
-        className="absolute top-4 left-4 w-9 h-9 rounded-full bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer z-20"
+        className="absolute top-4 left-4 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer z-20"
       >
         <ArrowLeft className="w-4 h-4 text-white" />
       </button>
@@ -421,7 +421,7 @@ export function Mines({
                       ? cell.isMine 
                         ? 'bg-danger/20 border-2 border-danger shadow-[0_0_15px_rgba(239,68,68,0.3)]' 
                         : 'bg-brand/10 border border-brand/50 shadow-[0_0_15px_rgba(255,184,0,0.1)]'
-                      : 'bg-white/[0.09] hover:bg-white/[0.16] active:scale-95 border border-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_4px_12px_rgba(0,0,0,0.25)] transition-all'
+                      : 'lg-glass active:scale-95 transition-all'
                     }
                   `}
                 >
@@ -509,7 +509,7 @@ export function Mines({
               onClick={() => setShowBetModal(true)}
               className="w-full relative overflow-hidden group rounded-full font-display font-bold text-[17px] tracking-wide active:scale-[0.98] transition-all py-4 shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white cursor-pointer"
             >
-              <span className="relative z-10 drop-shadow-sm">{t('mines_make_bet') || t('make_bet_btn') || 'Сделать ставку'}</span>
+              <span className="relative z-10 drop-shadow-sm">{t('mines_make_bet') || t('make_bet_btn')}</span>
             </button>
           ) : (
             <button
@@ -518,13 +518,13 @@ export function Mines({
               className={`w-full relative overflow-hidden group rounded-full font-display font-bold text-[17px] tracking-wide active:scale-[0.98] transition-all py-4 cursor-pointer
                 ${safeOpened > 0 
                   ? 'bg-gradient-to-r from-[#10b981] via-[#059669] to-[#10b981] text-white shadow-[0_4px_24px_rgba(16,185,129,0.55),inset_0_1px_0_rgba(255,255,255,0.4)] hover:brightness-110' 
-                  : 'bg-white/[0.06] border border-white/[0.08] text-white/30 shadow-none cursor-not-allowed'}
+                  : 'lg-glass text-white/30 cursor-not-allowed'}
               `}
             >
               <span className="relative z-10 drop-shadow-sm">
                 {safeOpened > 0 
-                  ? `${t('take') || 'Забрать'} ${currentEligibleNft ? currentEligibleNft.name : `${currentWinAmount.toFixed(2)} GRAM`}`
-                  : (t('mines_open_cell') || 'Откройте ячейку')
+                  ? `${t('take')} ${currentEligibleNft ? currentEligibleNft.name : `${currentWinAmount.toFixed(2)} GRAM`}`
+                  : (t('mines_open_cell'))
                 }
               </span>
             </button>
@@ -570,7 +570,7 @@ export function Mines({
                     </div>
                   </div>
                   {isNftWin && open.gift ? (
-                     <div className="flex items-center gap-3 bg-white/[0.06] border border-white/[0.08] rounded-[16px] pr-4 p-1.5">
+                     <div className="flex items-center gap-3 lg-glass rounded-[16px] pr-4 p-1.5">
                        <PremiumImage staticMode={true} src={open.gift.image_url} alt={open.gift.name} className="w-10 h-10 object-contain drop-shadow-md" />
                        <div className="flex flex-col items-end justify-center">
                          <span className="text-brand font-bold text-[14px] leading-none mb-1 flex items-center gap-1">
@@ -622,7 +622,7 @@ export function Mines({
                 <h2 className="text-[17px] font-display font-bold text-white text-center">{t('make_bet_title')}</h2>
                 <button 
                   onClick={() => setShowBetModal(false)}
-                  className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] flex items-center justify-center text-white/70 hover:text-white cursor-pointer"
+                  className="w-8 h-8 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -630,11 +630,11 @@ export function Mines({
 
               <LiquidSegment
                 className="relative z-10 mb-4"
-                ariaLabel="Режим ставки"
+                ariaLabel={t('bet_mode')}
                 value={mode}
                 onChange={setMode}
                 options={[
-                  { value: 'nft', label: t('gifts') || 'Gifts' },
+                  { value: 'nft', label: t('gifts') },
                   { value: 'gram', label: 'GRAM' },
                 ]}
               />
@@ -662,7 +662,7 @@ export function Mines({
                         <button 
                           key={amt}
                           onClick={() => setBetAdd(amt)}
-                          className="px-3 py-1.5 rounded-full bg-white/[0.14] hover:bg-white/[0.22] border border-white/[0.18] text-white text-[12px] font-bold active:scale-95 transition-all cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]"
+                          className="px-3 py-1.5 rounded-full lg-glass text-white text-[12px] font-bold active:scale-95 transition-all cursor-pointer"
                         >
                           +{amt}
                         </button>
@@ -683,7 +683,7 @@ export function Mines({
                       onSelect={(item) => setSelectedNft(item)}
                       maxBetGram={2500}
                       maxContainerHeight="max-h-[280px]"
-                      emptyText={t('inventory_empty_upgrade') || 'Инвентарь пуст'}
+                      emptyText={t('inventory_empty_upgrade')}
                     />
                   </div>
                 )}
@@ -695,7 +695,7 @@ export function Mines({
                     <span className="text-white font-bold text-[15px]">{t('choose_mines')}</span>
                     <span className="text-white/40 text-[12px]">{t('more_mines')}</span>
                   </div>
-                  <div className="text-white font-display font-bold text-sm px-3.5 py-1.5 rounded-full bg-white/[0.08] border border-white/10 shadow-inner">
+                  <div className="text-white font-display font-bold text-sm px-3.5 py-1.5 rounded-full lg-glass">
                     {minesCount}
                   </div>
                 </div>
@@ -717,7 +717,7 @@ export function Mines({
                 }
                 className="relative z-10 w-full font-display font-bold text-[16px] py-4 rounded-full active:scale-[0.98] transition-all shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
-                <span className="relative z-10 drop-shadow-sm">{t('mines_start') || 'Начать игру'}</span>
+                <span className="relative z-10 drop-shadow-sm">{t('mines_start')}</span>
               </button>
             </motion.div>
           </>
@@ -770,7 +770,7 @@ export function Mines({
                     onClick={resetGame}
                     className="w-full py-3.5 rounded-[16px] text-[14px] font-bold flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] text-white hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] cursor-pointer"
                   >
-                    {t('continue') || 'Продолжить'}
+                    {t('continue')}
                   </button>
                 ) : (
                   <>
@@ -794,7 +794,7 @@ export function Mines({
                         className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#a855f7] text-white hover:bg-[#9333ea] shadow-[0_2px_10px_rgba(168,85,247,0.35)] active:scale-95 transition-all cursor-pointer"
                       >
                         <Bomb className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">{t('mines_title') || 'Мины'}</span>
+                        <span className="truncate">{t('mines_title')}</span>
                       </button>
                     </div>
                     <button 
@@ -814,7 +814,7 @@ export function Mines({
                         });
                         resetGame();
                       }}
-                      className="w-full py-3 flex items-center justify-center gap-1.5 rounded-[12px] text-[12px] font-bold bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.15] text-white active:scale-[0.98] transition-all cursor-pointer"
+                      className="w-full py-3 flex items-center justify-center gap-1.5 rounded-[12px] text-[12px] font-bold lg-glass text-white active:scale-[0.98] transition-all cursor-pointer"
                     >
                       {t('sell')} {Number(showResult.item?.price || 0).toFixed(2)} <GramIcon className="w-4 h-4 opacity-80" />
                     </button>

@@ -9,6 +9,7 @@ import { RecipientStep } from './RecipientStep';
 import { AmountStep } from './AmountStep';
 import { ReviewStep } from './ReviewStep';
 import { atomicToDecimalString } from '../formatting';
+import { useTranslation } from '../../../lib/i18n';
 
 type Step = 'asset' | 'recipient' | 'amount' | 'review' | 'result';
 
@@ -20,6 +21,7 @@ interface WithdrawDialogProps {
 }
 
 export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: WithdrawDialogProps) {
+  const { t } = useTranslation();
   const [step, setStep] = useState<Step>('asset');
   const [assets] = useState<AssetConfig[]>(() => getMockAssets());
   const [selectedAsset, setSelectedAsset] = useState<string>(initialAsset || 'TON');
@@ -86,7 +88,7 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
   // Reset quote when amount or destination changes
   useEffect(() => {
     if (quote && isQuoteExpired(quote.expiresAt)) {
-      setQuoteError('Котировка истекла, обновите');
+      setQuoteError(t('quote_expired'));
     }
   }, [quote]);
 
@@ -97,20 +99,20 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
 
     // Validate
     if (!selectedAsset) {
-      setFieldErrors((p) => ({ ...p, asset: 'Выберите актив' }));
+      setFieldErrors((p) => ({ ...p, asset: t('select_asset') }));
       return;
     }
     if (!selectedNetwork) {
-      setFieldErrors((p) => ({ ...p, network: 'Выберите сеть' }));
+      setFieldErrors((p) => ({ ...p, network: t('select_network') }));
       return;
     }
     const addrRes = validateAddressForNetwork(destination, selectedNetwork);
     if (!addrRes.valid) {
-      setFieldErrors((p) => ({ ...p, destination: addrRes.error || 'Неверный адрес' }));
+      setFieldErrors((p) => ({ ...p, destination: addrRes.error || t('invalid_address') }));
       return;
     }
     if (!amountAtomic || amountAtomic === '0') {
-      setFieldErrors((p) => ({ ...p, amount: 'Введите сумму' }));
+      setFieldErrors((p) => ({ ...p, amount: t('enter_amount') }));
       return;
     }
 
@@ -129,7 +131,7 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
     } catch (err: any) {
       const code = err.code;
       const field = err.field;
-      const msg = err.message || 'Не удалось получить котировку';
+      const msg = err.message || t('quote_failed');
       if (field) {
         setFieldErrors((p) => ({ ...p, [field]: msg }));
       } else {
@@ -138,7 +140,7 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
       setQuoteError(msg);
       if (code === 'BELOW_MINIMUM' && err.minAtomic && currentAssetCfg) {
         const minDisplay = atomicToDecimalString(err.minAtomic, currentAssetCfg.decimals);
-        setQuoteError(`Минимальная сумма: ${minDisplay} ${selectedAsset}`);
+        setQuoteError(`${t('min_amount')}: ${minDisplay} ${selectedAsset}`);
       }
     } finally {
       setQuoteLoading(false);
@@ -147,11 +149,11 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
 
   const handleSubmit = useCallback(async () => {
     if (!quote) {
-      setGlobalError('Нет актуальной котировки');
+      setGlobalError(t('no_actual_quote'));
       return;
     }
     if (isQuoteExpired(quote.expiresAt)) {
-      setGlobalError('Котировка истекла, обновите');
+      setGlobalError(t('quote_expired'));
       return;
     }
     const draft: WithdrawDraft = {
@@ -186,7 +188,7 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
         setPolling(false);
       }, 20000);
     } catch (err: any) {
-      setGlobalError(err.message || 'Ошибка создания вывода');
+      setGlobalError(err.message || t('withdraw_create_failed'));
     } finally {
       setSubmitting(false);
     }
@@ -260,7 +262,7 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
-        aria-label="Вывод средств"
+        aria-label={t('withdraw_funds')}
         initial={{ y: '100%', opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: '100%', opacity: 0 }}
@@ -276,14 +278,14 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
             {step !== 'asset' && step !== 'result' && (
               <button
                 onClick={prevStep}
-                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center text-white/70 hover:text-white transition-colors active:scale-95 cursor-pointer"
-                aria-label="Назад"
+                className="w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white transition-colors active:scale-95 cursor-pointer"
+                aria-label={t('back')}
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
             )}
             <div>
-              <h2 className="font-display text-[18px] font-bold text-white tracking-tight">Вывод средств</h2>
+              <h2 className="font-display text-[18px] font-bold text-white tracking-tight">{t('withdraw_funds')}</h2>
               <div className="flex items-center gap-1.5 mt-1">
                 {(['asset', 'recipient', 'amount', 'review'] as Step[]).map((s, i) => (
                   <div key={s} className={`h-1 rounded-full transition-all ${step === s ? 'w-6 bg-[#1683FF]' : i < (['asset', 'recipient', 'amount', 'review'].indexOf(step)) ? 'w-4 bg-white/40' : 'w-4 bg-white/10'}`} />
@@ -293,8 +295,8 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
           </div>
           <button
             onClick={handleClose}
-            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center text-white/60 hover:text-white transition-colors active:scale-95 cursor-pointer"
-            aria-label="Закрыть"
+            className="w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/60 hover:text-white transition-colors active:scale-95 cursor-pointer"
+            aria-label={t('close')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -361,8 +363,8 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
                       <div className="w-16 h-16 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mx-auto">
                         <Clock className="w-8 h-8 text-amber-400 animate-pulse" />
                       </div>
-                      <h3 className="text-white font-bold text-[18px]">Обработка...</h3>
-                      <p className="text-white/60 text-[13px] leading-relaxed">Ваш вывод принят и обрабатывается. Обычно это занимает 1–3 минуты.</p>
+                      <h3 className="text-white font-bold text-[18px]">{t('processing')}</h3>
+                      <p className="text-white/60 text-[13px] leading-relaxed">{t('withdraw_processing_desc')}</p>
                     </>
                   )}
                   {withdrawal.status === 'success' && (
@@ -370,8 +372,8 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
                       <div className="w-16 h-16 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mx-auto">
                         <CheckCircle className="w-8 h-8 text-emerald-400" />
                       </div>
-                      <h3 className="text-white font-bold text-[18px]">Успешно отправлено</h3>
-                      <p className="text-white/60 text-[13px]">Средства отправлены на внешний адрес.</p>
+                      <h3 className="text-white font-bold text-[18px]">{t('sent_title')}</h3>
+                      <p className="text-white/60 text-[13px]">{t('withdraw_sent_desc')}</p>
                     </>
                   )}
                   {(withdrawal.status === 'failed' || withdrawal.status === 'requires_review') && (
@@ -379,18 +381,18 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
                       <div className="w-16 h-16 rounded-full bg-red-500/15 border border-red-500/30 flex items-center justify-center mx-auto">
                         <AlertCircle className="w-8 h-8 text-red-400" />
                       </div>
-                      <h3 className="text-white font-bold text-[18px]">{withdrawal.status === 'failed' ? 'Ошибка вывода' : 'Требуется проверка'}</h3>
-                      <p className="text-white/60 text-[13px]">{withdrawal.errorMessage || 'Операция требует ручной проверки, мы уведомим вас.'}</p>
+                      <h3 className="text-white font-bold text-[18px]">{withdrawal.status === 'failed' ? t('withdraw_failed') : t('requires_review')}</h3>
+                      <p className="text-white/60 text-[13px]">{withdrawal.errorMessage || t('requires_review_desc')}</p>
                     </>
                   )}
 
                   <div className="text-left p-4 rounded-2xl bg-white/[0.04] border border-white/10 space-y-2">
                     <div className="flex justify-between text-[12px]">
-                      <span className="text-white/50">ID операции</span>
+                      <span className="text-white/50">{t('operation_id')}</span>
                       <span className="text-white font-mono text-[12px]">{withdrawal.id}</span>
                     </div>
                     <div className="flex justify-between text-[12px]">
-                      <span className="text-white/50">Статус</span>
+                      <span className="text-white/50">{t('status')}</span>
                       <span className={`font-semibold capitalize ${withdrawal.status === 'success' ? 'text-emerald-400' : withdrawal.status === 'pending' ? 'text-amber-400' : 'text-red-400'}`}>{withdrawal.status}</span>
                     </div>
                     {withdrawal.transactionHash && (
@@ -408,9 +410,9 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
                         setGlobalError(null);
                         idempotencyKeyRef.current = `idem_${Math.random().toString(36).slice(2)}_${Date.now()}`;
                       }}
-                      className="w-full py-3.5 rounded-2xl bg-white/[0.08] hover:bg-white/[0.12] text-white font-semibold border border-white/10 transition-colors active:scale-[0.98] cursor-pointer"
+                      className="w-full py-3.5 rounded-2xl lg-glass text-white font-semibold transition-colors active:scale-[0.98] cursor-pointer"
                     >
-                      Повторить
+                      {t('welcome_retry')}
                     </button>
                   )}
                 </div>
@@ -425,7 +427,7 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
           )}
 
           <div aria-live="polite" className="sr-only">
-            {step === 'result' && withdrawal ? `Статус вывода: ${withdrawal.status}` : ''}
+            {step === 'result' && withdrawal ? `${t('withdraw_status')}: ${withdrawal.status}` : ''}
           </div>
         </div>
 
@@ -436,9 +438,9 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
               {step !== 'asset' && (
                 <button
                   onClick={prevStep}
-                  className="flex-1 py-3.5 rounded-2xl bg-white/[0.06] hover:bg-white/10 border border-white/10 text-white font-semibold transition-colors active:scale-[0.98] cursor-pointer"
+                  className="flex-1 py-3.5 rounded-2xl lg-glass text-white font-semibold transition-colors active:scale-[0.98] cursor-pointer"
                 >
-                  Назад
+                  {t('back')}
                 </button>
               )}
               {step === 'review' ? (
@@ -450,10 +452,10 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
                   {submitting ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Отправка...
+                      {t('sending')}
                     </>
                   ) : (
-                    'Подтвердить вывод'
+                    t('confirm_withdraw')
                   )}
                 </button>
               ) : (
@@ -462,12 +464,12 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
                   disabled={!canGoNext() || quoteLoading}
                   className="flex-[2] py-3.5 rounded-2xl bg-white text-black hover:bg-white/90 disabled:opacity-40 disabled:cursor-not-allowed font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
                 >
-                  {step === 'amount' && !quote ? 'Рассчитать' : 'Далее'}
+                  {step === 'amount' && !quote ? t('quote_calculate') : t('next')}
                 </button>
               )}
             </div>
             <div className="mt-3 text-[11px] text-white/30 text-center leading-relaxed">
-              Нажимая «Подтвердить вывод», вы соглашаетесь с необратимостью операции.
+              {t('withdraw_agree_notice')}
             </div>
           </div>
         )}
@@ -485,7 +487,7 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
               }}
               className="w-full py-3.5 rounded-2xl bg-white text-black font-bold hover:bg-white/90 transition-colors active:scale-[0.98] cursor-pointer"
             >
-              {withdrawal?.status === 'success' ? 'Готово' : 'Новый вывод'}
+              {withdrawal?.status === 'success' ? t('done') : t('new_withdraw')}
             </button>
           </div>
         )}

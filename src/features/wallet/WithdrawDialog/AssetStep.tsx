@@ -1,5 +1,6 @@
 import React from 'react';
 import type { AssetConfig, NetworkInfo } from '../types';
+import { useTranslation } from '../../../lib/i18n';
 
 interface AssetStepProps {
   assets: AssetConfig[];
@@ -13,6 +14,7 @@ interface AssetStepProps {
 }
 
 export function AssetStep({ assets, selectedAsset, selectedNetwork, onSelectAsset, onSelectNetwork, networks, availableAtomic, decimals }: AssetStepProps) {
+  const { t } = useTranslation();
   const formatAvailable = () => {
     try {
       const big = BigInt(availableAtomic);
@@ -29,7 +31,7 @@ export function AssetStep({ assets, selectedAsset, selectedNetwork, onSelectAsse
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-white font-bold text-[16px] mb-3">Актив</h3>
+        <h3 className="text-white font-bold text-[16px] mb-3">{t('asset')}</h3>
         <div className="grid grid-cols-2 gap-2.5">
           {assets.map((asset) => {
             const active = selectedAsset === asset.symbol;
@@ -39,12 +41,12 @@ export function AssetStep({ assets, selectedAsset, selectedNetwork, onSelectAsse
                 type="button"
                 onClick={() => onSelectAsset(asset.symbol)}
                 className={`relative p-3.5 rounded-2xl border text-left transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1683FF] cursor-pointer ${
-                  active ? 'bg-white/[0.08] border-white/20 text-white' : 'bg-white/[0.03] border-white/10 text-white/70 hover:bg-white/[0.05] hover:border-white/15'
+                  active ? 'lg-glass text-white' : 'bg-white/[0.03] border-white/10 text-white/70 hover:bg-white/[0.05] hover:border-white/15'
                 }`}
               >
                 <div className="font-bold text-[15px]">{asset.symbol}</div>
                 <div className="text-[11px] opacity-60 mt-0.5">{asset.name}</div>
-                <div className="text-[11px] mt-2 font-medium opacity-80">Доступно: {active ? formatAvailable() : asset.availableAtomic ? (() => { try { const b = BigInt(asset.availableAtomic); const d = BigInt(10)**BigInt(asset.decimals); return (b/d).toString(); } catch { return '0'; } })() : '0'} {asset.symbol}</div>
+                <div className="text-[11px] mt-2 font-medium opacity-80">{t('available')}: {active ? formatAvailable() : asset.availableAtomic ? (() => { try { const b = BigInt(asset.availableAtomic); const d = BigInt(10)**BigInt(asset.decimals); return (b/d).toString(); } catch { return '0'; } })() : '0'} {asset.symbol}</div>
                 {active && <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#1683FF]" />}
               </button>
             );
@@ -53,10 +55,10 @@ export function AssetStep({ assets, selectedAsset, selectedNetwork, onSelectAsse
       </div>
 
       <div>
-        <h3 className="text-white font-bold text-[16px] mb-3">Сеть</h3>
+        <h3 className="text-white font-bold text-[16px] mb-3">{t('network')}</h3>
         {networks.length === 0 ? (
           <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-200 text-[13px]">
-            Для выбранного актива нет доступных сетей
+            {t('no_networks_for_asset')}
           </div>
         ) : (
           <div className="flex flex-col gap-2">
@@ -68,7 +70,7 @@ export function AssetStep({ assets, selectedAsset, selectedNetwork, onSelectAsse
                   type="button"
                   onClick={() => onSelectNetwork(net.id)}
                   className={`p-3.5 rounded-2xl border flex items-center justify-between text-left transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1683FF] cursor-pointer ${
-                    active ? 'bg-white/[0.08] border-white/20 text-white' : 'bg-white/[0.03] border-white/10 text-white/70 hover:bg-white/[0.05]'
+                    active ? 'lg-glass text-white' : 'bg-white/[0.03] border-white/10 text-white/70 hover:bg-white/[0.05]'
                   }`}
                 >
                   <div>
@@ -85,7 +87,7 @@ export function AssetStep({ assets, selectedAsset, selectedNetwork, onSelectAsse
         )}
         {networks.length > 1 && selectedNetwork && (
           <p className="mt-3 text-amber-300/80 text-[12px] leading-relaxed bg-amber-500/10 border border-amber-500/15 rounded-xl p-2.5">
-            ⚠️ Убедитесь, что выбранная сеть поддерживается получателем. Отправка в неподдерживаемой сети приведёт к потере средств.
+            ⚠️ {t('network_warning')}
           </p>
         )}
       </div>

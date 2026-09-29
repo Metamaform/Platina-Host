@@ -249,7 +249,7 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
           }
           onBack();
         }} 
-        className="absolute top-4 left-4 w-9 h-9 rounded-full bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer z-20"
+        className="absolute top-4 left-4 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer z-20"
       >
         <ArrowLeft className="w-4 h-4 text-white" />
       </button>
@@ -298,7 +298,7 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
           <div className="w-full mb-5 relative z-10">
             <h3 className="text-white/50 text-[10px] font-bold uppercase tracking-widest text-center mb-2">{t('choose_x')}</h3>
             <LiquidSegment
-              ariaLabel="Множитель крафта"
+              ariaLabel={t('craft_multiplier')}
               value={String(multiplier)}
               onChange={(value) => setMultiplier(Number(value))}
               options={MULTIPLIERS.map((m) => ({ value: String(m), label: `${m}x` }))}
@@ -418,7 +418,7 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
                      className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#a855f7] text-white hover:bg-[#9333ea] shadow-[0_2px_10px_rgba(168,85,247,0.35)] active:scale-95 transition-all cursor-pointer"
                    >
                      <Bomb className="w-3.5 h-3.5 shrink-0" />
-                     <span className="truncate">{t('mines_title') || 'Мины'}</span>
+                     <span className="truncate">{t('mines_title')}</span>
                    </button>
                  </div>
                  <button 
@@ -441,7 +441,7 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
                      });
                      setResult(null);
                    }}
-                   className="w-full py-3 flex items-center justify-center gap-1.5 rounded-[12px] text-[12px] font-bold bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.15] text-white active:scale-[0.98] transition-all cursor-pointer"
+                   className="w-full py-3 flex items-center justify-center gap-1.5 rounded-[12px] text-[12px] font-bold lg-glass text-white active:scale-[0.98] transition-all cursor-pointer"
                  >
                    {t('sell')} {Number(result.item?.price || 0).toFixed(2)} <GramIcon className="w-4 h-4 opacity-80" />
                  </button>

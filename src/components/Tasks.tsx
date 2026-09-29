@@ -7,8 +7,25 @@ import { getTurnover } from '../lib/stats';
 import { motion, AnimatePresence } from 'motion/react';
 import { LiquidSegment } from './ui/LiquidSegment';
 
+/**
+ * Шаблонные задания приходят с сервера с русскими заголовками.
+ * Для полного мультиязыка известные шаблоны переводим на клиенте;
+ * кастомные задания админа показываются как есть.
+ */
+const TASK_TITLE_KEYS: Record<string, string> = {
+  'Выиграй в Апгрейде': 'task_upgrade_wins',
+  'Награда за оборот': 'task_turnover',
+  'Победа в Сапере': 'task_mines_win',
+  'Открытие Кейсов': 'task_cases_open',
+  'Удачный Крафт': 'task_craft_win',
+};
+
 export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) => void }) {
   const { t } = useTranslation();
+  const taskTitle = (title: string) => {
+    const key = TASK_TITLE_KEYS[title];
+    return key ? t(key) : title;
+  };
   const [activeTab, setActiveTab] = useState<'daily' | 'all'>('daily');
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -148,13 +165,13 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
         </div>
         <div className="relative z-10">
           <h2 className="font-display text-xl font-bold text-white tracking-tight leading-tight">{t('tasks_title')}</h2>
-          <p className="text-white/60 text-xs mt-0.5">Выполняйте задания и получайте GRAM</p>
+          <p className="text-white/60 text-xs mt-0.5">{t('tasks_desc')}</p>
         </div>
       </div>
 
       <LiquidSegment
         className="mb-4"
-        ariaLabel="Задания"
+        ariaLabel={t('tasks_title')}
         value={activeTab}
         onChange={(id) => {
           setActiveTab(id);
@@ -172,7 +189,7 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
         </div>
       ) : error ? (
         <div className="text-center py-10 text-rose-400 text-xs font-semibold">
-          Loading error: {error}
+          {t('loading_error')}: {error}
         </div>
       ) : (
         <div className="space-y-2.5">
@@ -190,7 +207,7 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
                 }`}
                 onClick={() => handleComplete(task)}
               >
-                <div className="w-11 h-11 rounded-full bg-white/[0.08] border border-white/[0.10] flex items-center justify-center shrink-0 overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+                <div className="w-11 h-11 rounded-full lg-glass flex items-center justify-center shrink-0 overflow-hidden">
                   {task.icon === 'telegram' ? (
                     <img src="/telegram.png" className="w-7 h-7 object-contain" alt="Telegram" />
                   ) : (
@@ -199,7 +216,7 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-display text-[14px] font-bold truncate text-white leading-tight">{task.title}</h3>
+                  <h3 className="font-display text-[14px] font-bold truncate text-white leading-tight">{taskTitle(task.title)}</h3>
                   <p className="text-[11px] text-white/60 leading-tight mt-0.5 line-clamp-2">
                     {task.description}
                   </p>
@@ -214,7 +231,7 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
                   {task.completed ? (
                     <CheckCircle2 className="w-5 h-5 text-emerald-400 drop-shadow-md" />
                   ) : (
-                    <div className="w-7 h-7 rounded-full bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-white/50 group-hover:text-white">
+                    <div className="w-7 h-7 rounded-full lg-glass flex items-center justify-center text-white/50 group-hover:text-white">
                       <ChevronRight className="w-4 h-4" />
                     </div>
                   )}

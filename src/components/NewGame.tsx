@@ -475,7 +475,7 @@ export const NewGame: React.FC<NewGameProps> = ({
       if (!selectedNft) return;
       betValue = Number(selectedNft.floor_price_gram || selectedNft.price || 0);
       if (betValue > MAX_BET_GRAM) {
-        setActionError('Максимальная ставка в NFT — 2500 GRAM');
+        setActionError(`${t('max_bet_nft')} — ${MAX_BET_GRAM} GRAM`);
         return;
       }
       betGift = selectedNft;
@@ -578,7 +578,7 @@ export const NewGame: React.FC<NewGameProps> = ({
         isWon: true,
         payoutGram: userBetInRound.isGram ? data.winAmount : (data.remainder || 0),
         payoutItem: data.gift?.name || (userBetInRound.isGram ? '-' : 'NFT'),
-        cashoutType: 'Ручной',
+        cashoutType: t('cashout_manual'),
         cashoutMult: data.multiplier,
         acceptedAt: data.multiplier,
         crashMult: serverState?.crashMultiplier || Number((data.multiplier + 0.8).toFixed(2)),
@@ -696,27 +696,27 @@ export const NewGame: React.FC<NewGameProps> = ({
       <button
         id="rocket-back-button"
         onClick={onBack}
-        className="absolute top-4 left-4 w-9 h-9 rounded-full bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer z-20"
-        title={t('back') || 'Back'}
+        className="absolute top-4 left-4 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer z-20"
+        title={t('back')}
       >
         <ArrowLeft className="w-4 h-4 text-white" />
       </button>
 
       <div className="absolute top-0 left-0 right-0 h-[72px] flex items-center justify-center pointer-events-none z-10">
         <h1 className="font-display text-lg font-bold text-white drop-shadow-md">
-          {t('new_game') || 'Rocket'}
+          {t('new_game')}
         </h1>
       </div>
 
       <div className="absolute top-4 right-4 flex items-center gap-2 z-20">
-        <div className="flex items-center gap-1.5 bg-white/[0.12] border border-white/[0.16] px-3 h-9 rounded-full shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]">
+        <div className="flex items-center gap-1.5 lg-glass px-3 h-9 rounded-full">
           <span className="text-white font-bold text-[13px]">{balance.toFixed(2)}</span>
           <GramIcon className="w-3.5 h-3.5 text-brand" />
         </div>
         <button
           onClick={() => setShowBetHistory(true)}
-          className="w-9 h-9 rounded-full bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer"
-          title="История ваших ставок"
+          className="w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer"
+          title={t('bet_history_title')}
         >
           <History className="w-4 h-4 text-white" />
         </button>
@@ -980,10 +980,10 @@ export const NewGame: React.FC<NewGameProps> = ({
               className="w-full relative overflow-hidden group rounded-full font-display font-bold text-[17px] tracking-wide active:scale-[0.98] transition-all py-4 shadow-[0_4px_24px_rgba(16,185,129,0.6),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#10b981] via-[#059669] to-[#10b981] hover:brightness-110 text-white disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 select-none"
             >
               {isCashingOut ? (
-                <span>{t('withdrawing') || 'Вывод...'}</span>
+                <span>{t('withdrawing')}</span>
               ) : reachedGift ? (
                 <div className="flex items-center justify-center gap-2 pointer-events-none">
-                  <span>{t('take') || 'Забрать'}</span>
+                  <span>{t('take')}</span>
                   <div className="relative h-6 overflow-hidden flex items-center pointer-events-none">
                     <AnimatePresence mode="popLayout" initial={false}>
                       <motion.span
@@ -1005,7 +1005,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                   )}
                 </div>
               ) : (
-                <span className="pointer-events-none">{t('take') || 'Забрать'} {liveWinAmount} GRAM</span>
+                <span className="pointer-events-none">{t('take')} {liveWinAmount} GRAM</span>
               )}
             </button>
           ) : (
@@ -1241,7 +1241,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                 </h2>
                 <button
                   onClick={() => setShowBetModal(false)}
-                  className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] flex items-center justify-center text-white/70 hover:text-white cursor-pointer"
+                  className="w-8 h-8 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1249,7 +1249,7 @@ export const NewGame: React.FC<NewGameProps> = ({
 
               <LiquidSegment
                 className="relative z-10 mb-4"
-                ariaLabel="Режим ставки"
+                ariaLabel={t('bet_mode')}
                 value={mode}
                 onChange={setMode}
                 options={[
@@ -1282,7 +1282,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                         <button
                           key={amt}
                           onClick={() => setBetAdd(amt)}
-                          className="px-3 py-1.5 rounded-full bg-white/[0.14] hover:bg-white/[0.22] border border-white/[0.18] text-white text-[12px] font-bold active:scale-95 transition-all cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]"
+                          className="px-3 py-1.5 rounded-full lg-glass text-white text-[12px] font-bold active:scale-95 transition-all cursor-pointer"
                         >
                           +{amt}
                         </button>
@@ -1308,7 +1308,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                       </div>
                       <div className={`flex-1 flex items-center justify-end transition-opacity ${autoCashoutEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
                         <span className="text-white/40 text-[11px] font-medium mr-2">x</span>
-                        <div className="bg-white/[0.06] border border-white/[0.08] rounded-full px-2.5 py-1 flex items-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                        <div className="lg-glass rounded-full px-2.5 py-1 flex items-center">
                           <input 
                             type="text" 
                             inputMode="decimal"
@@ -1329,7 +1329,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                       onSelect={(item) => setSelectedNft(item)}
                       maxBetGram={2500}
                       maxContainerHeight="max-h-[300px]"
-                      emptyText={t('inventory_empty') || 'Инвентарь пуст'}
+                      emptyText={t('inventory_empty')}
                     />
                   </div>
                 )}
@@ -1380,13 +1380,13 @@ export const NewGame: React.FC<NewGameProps> = ({
             >
               <div className="w-full flex justify-between items-center relative mb-1">
                 <span className="text-[14px] font-black text-[#22c55e] uppercase tracking-wider">
-                  Успешный вывод!
+                  {t('rocket_cashout_success')}
                 </span>
                 <button 
                   type="button"
                   onClick={() => setWonResult(null)} 
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-90 flex items-center justify-center text-white/60 hover:text-white transition-all cursor-pointer z-30"
-                  title="Закрыть"
+                  className="w-8 h-8 rounded-full lg-glass active:scale-90 flex items-center justify-center text-white/60 hover:text-white transition-all cursor-pointer z-30"
+                  title={t('close')}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1436,7 +1436,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                     <GramIcon className="w-10 h-10 text-brand" />
                   </div>
                   <div className="relative z-20 w-full flex flex-col items-center justify-end shrink-0 pb-1.5 px-1">
-                    <span className="text-[14px] text-white/60 w-full text-center font-medium leading-tight line-clamp-2">Выигрыш (x{wonResult.multiplier.toFixed(2)})</span>
+                    <span className="text-[14px] text-white/60 w-full text-center font-medium leading-tight line-clamp-2">{t('win_amount')} (x{wonResult.multiplier.toFixed(2)})</span>
                     <span className="text-[24px] font-bold text-brand flex items-center justify-center gap-1 mt-1">+{wonResult.winAmount.toFixed(2)} <GramIcon className="w-5 h-5 text-brand" /></span>
                   </div>
                 </div>
@@ -1446,14 +1446,14 @@ export const NewGame: React.FC<NewGameProps> = ({
                 <div className="flex flex-col gap-1 px-2 py-1.5 mb-1 text-[12px] font-medium border-t border-white/5 pt-2">
                   {wonResult.remainder && wonResult.remainder > 0 ? (
                     <div className="flex justify-between items-center text-[#22c55e]">
-                      <span>Остаток с выигрыша:</span>
+                      <span>{t('win_remainder')}:</span>
                       <span className="flex items-center gap-1 font-bold">
                         +{wonResult.remainder.toFixed(2)} <GramIcon className="w-3 h-3" />
                       </span>
                     </div>
                   ) : null}
                   <div className="flex justify-between items-center text-white/60">
-                    <span>Текущий баланс:</span>
+                    <span>{t('current_balance')}:</span>
                     <span className="text-white flex items-center gap-1 font-bold">
                       {balance.toFixed(2)} <GramIcon className="w-3 h-3 text-brand" />
                     </span>
@@ -1464,7 +1464,7 @@ export const NewGame: React.FC<NewGameProps> = ({
                   onClick={() => setWonResult(null)}
                   className="w-full py-3.5 rounded-[16px] text-[14px] font-bold flex items-center justify-center bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] text-white hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)]"
                 >
-                  {t('continue') || 'Отлично'}
+                  {t('great')}
                 </button>
               </div>
             </motion.div>
@@ -1488,7 +1488,7 @@ export const NewGame: React.FC<NewGameProps> = ({
       <BetHistoryModal
         isOpen={showBetHistory}
         onClose={() => setShowBetHistory(false)}
-        title="История ваших ставок"
+        title={t('bet_history_title')}
         history={userRocketGames}
       />
 
@@ -1505,10 +1505,10 @@ export const NewGame: React.FC<NewGameProps> = ({
         maxBet={7000}
         statusText={
           serverState?.state === 'flying'
-            ? 'Ракета в полёте 🚀'
+            ? `${t('rocket_flying_status')} 🚀`
             : serverState?.state === 'crashed'
-            ? `Краш на x${(serverState?.crashMultiplier || 1.0).toFixed(2)}`
-            : 'Ожидание игроков'
+            ? `${t('crashed_at_multiplier')} x${(serverState?.crashMultiplier || 1.0).toFixed(2)}`
+            : t('waiting_players')
         }
       />
     </div>
