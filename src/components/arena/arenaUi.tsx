@@ -1,7 +1,8 @@
 /*
   Мелкие переиспользуемые элементы UI AICE ARENA.
-  Визуальный язык Rocket: тёмные карточки, тонкие светлые границы,
-  большие скругления, cyan/blue акцент, мягкое свечение.
+  Визуальный язык Rocket/Crash: тёмные карточки, тонкие светлые границы,
+  большие скругления, фото-аватары (dicebear фолбэк), цвета исхода —
+  emerald (победа) / red (проигрыш).
 */
 
 import React from 'react';
@@ -9,30 +10,18 @@ import { PremiumImage } from '../PremiumImage';
 import type { ArenaParticipant, ArenaStatus } from '../../lib/arenaShared';
 
 // ---------------------------------------------------------------------------
-// Аватар: фото или инициалы на градиентном круге
+// Аватар игрока — один в один как в Crash: фото или dicebear-аватар,
+// нейтральный фон и тонкая светлая рамка (без цветных градиентов).
 // ---------------------------------------------------------------------------
 
-const AVATAR_HUES = [
-  'from-cyan-500/70 to-blue-600/70',
-  'from-violet-500/70 to-fuchsia-600/70',
-  'from-emerald-500/70 to-teal-600/70',
-  'from-amber-500/70 to-orange-600/70',
-  'from-rose-500/70 to-pink-600/70',
-];
-
-export const ArenaAvatar: React.FC<{ participant: ArenaParticipant; className?: string }> = ({ participant, className = 'w-12 h-12' }) => {
-  const name = participant.username || participant.firstName || '?';
-  const hueIdx = Math.abs(name.split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % AVATAR_HUES.length;
-  const initials = (participant.firstName || participant.username || '?').slice(0, 1).toUpperCase();
-
+export const PlayerAvatar: React.FC<{ participant: ArenaParticipant; className?: string }> = ({ participant, className = 'w-10 h-10' }) => {
+  const name = participant.username || participant.firstName || 'Player';
   return (
-    <span className={`relative inline-flex shrink-0 items-center justify-center rounded-full overflow-hidden border border-white/15 bg-gradient-to-br ${AVATAR_HUES[hueIdx]} ${className}`}>
-      {participant.avatar ? (
-        <img src={participant.avatar} alt={name} className="w-full h-full object-cover" loading="lazy" />
-      ) : (
-        <span className="font-display font-bold text-white/90" style={{ fontSize: '40%' }}>{initials}</span>
-      )}
-    </span>
+    <img
+      src={participant.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participant.firstName || name}`}
+      alt=""
+      className={`${className} rounded-full bg-white/5 shrink-0 object-cover border border-white/10`}
+    />
   );
 };
 

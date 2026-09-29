@@ -1367,8 +1367,14 @@ export default function App() {
   if (showLoading) {
     return (
       <div className="min-h-screen bg-canvas flex flex-col items-center justify-center relative overflow-hidden">
-        <div className="w-56 h-56 mb-8 flex items-center justify-center relative z-10">
-           <CleanModelLottie lottieUrl="https://nft.fragment.com/gift/stellarrocket-1.lottie.json" className="w-full h-full scale-[1.3] drop-shadow-[0_4px_15px_rgba(255,255,255,0.1)]" />
+        {/* Статичный логотип: анимация снежинки при запуске убрана */}
+        <div className="mb-8 flex flex-col items-center relative z-10">
+          <div className="w-24 h-24 rounded-[28px] bg-white/[0.05] border border-white/[0.10] backdrop-blur-xl flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_18px_45px_-16px_rgba(0,0,0,0.85)]">
+            <GramIcon className="w-12 h-12 text-brand drop-shadow-[0_0_12px_rgba(0,152,234,0.55)]" />
+          </div>
+          <div className="mt-4 font-display text-lg font-bold tracking-wide text-white/80">
+            Platina Gift
+          </div>
         </div>
         
         <div className="w-48 h-1 bg-white/5 rounded-full overflow-hidden mb-2 relative z-10">

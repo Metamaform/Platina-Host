@@ -281,7 +281,7 @@ export const Arena: React.FC<ArenaProps> = ({
           ) : !roundAlive ? (
             /* Скелетон до первого пакета состояния */
             <div className="flex flex-col gap-3.5">
-              <div className="h-[280px] rounded-[28px] bg-white/[0.04] border border-white/[0.06] animate-pulse" />
+              <div className="h-[350px] rounded-[28px] bg-white/[0.04] border border-white/[0.06] animate-pulse" />
               <div className="h-[56px] rounded-full bg-white/[0.03] border border-white/[0.05] animate-pulse" />
               <div className="h-[68px] rounded-[22px] bg-white/[0.03] border border-white/[0.05] animate-pulse" />
             </div>

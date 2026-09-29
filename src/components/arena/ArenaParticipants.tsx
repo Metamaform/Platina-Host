@@ -11,7 +11,7 @@ import React, { useMemo } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Users } from 'lucide-react';
 import type { ArenaParticipant, ArenaRoundState } from '../../lib/arenaShared';
-import { ArenaAvatar, ArenaGiftChip } from './arenaUi';
+import { PlayerAvatar, ArenaGiftChip } from './arenaUi';
 import { GramIcon } from '../GramIcon';
 
 interface ArenaParticipantsProps {
@@ -46,7 +46,7 @@ const ParticipantRow: React.FC<{
       }`}
     >
       <div className="flex items-center gap-3 min-w-0">
-        <ArenaAvatar participant={p} className="w-10 h-10" />
+        <PlayerAvatar participant={p} className="w-10 h-10" />
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-1.5">
             <span className="text-white font-medium text-[15px] truncate max-w-[120px]">
@@ -144,8 +144,8 @@ export const ArenaParticipants: React.FC<ArenaParticipantsProps> = ({ round, myU
   if (!sorted.length) return null;
 
   return (
-    <div className="w-full flex flex-col gap-2.5">
-      <div className="flex items-center gap-2 px-1">
+    <div className="w-full flex flex-col gap-3">
+      <div className="flex items-center gap-2 px-1 mb-1">
         <Users className="w-4 h-4 text-white/50" />
         <span className="text-white font-bold text-xs">
           {t('arena_players_list')} ({round.participants.length})
