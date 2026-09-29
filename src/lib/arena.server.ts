@@ -238,7 +238,9 @@ function spawnBotBet(round: ArenaRound) {
   if (giftsDb.length && Math.random() < 0.18) {
     const g = giftsDb[Math.floor(Math.random() * giftsDb.length)];
     const value = Number(g.floor_price_gram || g.price || 0);
-    if (value > 0 && round.totalPool + value < round.maxBet * 4) {
+    // Бот подчиняется тем же лимитам, что и игрок: стоимость NFT и суммарный
+    // вклад не должны превышать максимальную ставку.
+    if (value > 0 && value <= round.maxBet && amount + value <= round.maxBet) {
       gift = {
         id: g.id,
         name: g.name,
@@ -284,9 +286,10 @@ function pickWinner(round: ArenaRound): { participant: ArenaParticipant; roll: n
     acc += p.contribution;
     if (ticket < acc) return { participant: p, roll, ticket };
   }
-  // страховка от погрешности float — последний участник
+  // страховка от погрешности float — последний участник.
+  // Билет при этом остаётся честным (roll × банк), чтобы проверка совпадала.
   const last = round.participants[round.participants.length - 1];
-  return { participant: last, roll, ticket: round.totalPool };
+  return { participant: last, roll, ticket };
 }
 
 function refundRound(round: ArenaRound, status: ArenaStatus) {
@@ -424,6 +427,12 @@ export function tickArenaEngine() {
       rounds.delete(pub.id);
       publicRoundId = null;
       currentPublicRound();
+    } else if (pub.participants.length < ARENA_LIMITS.MIN_PLAYERS) {
+      // один игрок не может «выиграть сам у себя» — отмена с возвратом ставок
+      refundRound(pub, 'CANCELLED');
+      pub.completedAt = Date.now();
+      pushHistory(snapshotHistory(pub));
+      broadcastRound(pub);
     } else {
       completeRound(pub);
       broadcastRound(pub);
@@ -589,11 +598,8 @@ export function placeArenaBet(
 
   const amount = Number((Math.max(0, Number(opts.amount) || 0)).toFixed(2));
   const hasGift = !!opts.gift;
-  if (!hasGift && amount < round.minBet) {
-    return { error: `Минимальная ставка ${round.minBet.toFixed(2)} GRAM`, errorCode: 'bet_too_small' };
-  }
-  if (amount > round.maxBet) {
-    return { error: `Максимальная ставка ${round.maxBet.toFixed(0)} GRAM`, errorCode: 'bet_too_big' };
+  if (!hasGift && amount <= 0) {
+    return { error: 'Укажите сумму ставки', errorCode: 'bet_empty' };
   }
 
   let validatedGift: ArenaParticipant['gift'];
@@ -608,13 +614,17 @@ export function placeArenaBet(
     const normalized: ArenaParticipant['gift'] = normalizeGift(invItem);
     const value = Number(normalized?.floor_price_gram || 0);
     if (value <= 0) return { error: 'Не удалось определить стоимость предмета', errorCode: 'nft_no_price' };
-    if (value > round.maxBet) return { error: `Максимальная стоимость NFT ${round.maxBet.toFixed(0)} GRAM`, errorCode: 'bet_too_big' };
     contribution = Number((amount + value).toFixed(2));
     validatedGift = normalized;
   }
 
-  if (contribution <= 0) {
-    return { error: 'Укажите сумму ставки', errorCode: 'bet_empty' };
+  // Лимиты проверяются по полному вкладу в банк (GRAM + стоимость NFT),
+  // а не по частям отдельно — иначе можно было обойти максимум и минимум.
+  if (contribution < round.minBet) {
+    return { error: `Минимальная ставка ${round.minBet.toFixed(2)} GRAM`, errorCode: 'bet_too_small' };
+  }
+  if (contribution > round.maxBet) {
+    return { error: `Максимальная ставка ${round.maxBet.toFixed(0)} GRAM`, errorCode: 'bet_too_big' };
   }
 
   // списание средств
@@ -627,9 +637,16 @@ export function placeArenaBet(
     balance = Number((user.balance - amount).toFixed(2));
   }
   if (hasGift) {
-    inventory = inventory.filter((i: any) =>
-      !(validatedGift!.uniqueId && i.uniqueId === validatedGift!.uniqueId)
+    // Убираем из инвентаря именно тот предмет, что прошёл проверку выше:
+    // сначала по uniqueId, иначе по id — и только ОДИН экземпляр, чтобы не
+    // стереть все копии той же модели, если у предмета нет uniqueId.
+    const invArr = [...inventory];
+    const idx = invArr.findIndex((i: any) =>
+      (validatedGift!.uniqueId && i.uniqueId === validatedGift!.uniqueId) ||
+      (validatedGift!.id && i.id === validatedGift!.id)
     );
+    if (idx >= 0) invArr.splice(idx, 1);
+    inventory = invArr;
   }
   const turnover = (user.turnover || 0) + contribution;
   saveUserState(userId, balance, inventory, turnover, user.topups);

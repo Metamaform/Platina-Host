@@ -1,196 +1,216 @@
 /*
-  Модальные окна AICE ARENA:
-  · BetModal — выбор суммы ставки: ручной ввод, быстрые значения, MAX,
-    проверка баланса перед подтверждением («Недостаточно средств»);
-  · NftModal — инвентарь пользователя для добавления NFT к ставке.
-
-  Все окна — нижние шторки в стиле Rocket, без glassmorphism-перебора.
+  BetModal AICE ARENA — единая нижняя шторка в стиле Rocket:
+  переключатель GRAM / NFT, крупный ввод суммы с быстрыми кнопками
+  (+1/+5/+25/+50/MAX) или сетка инвентаря для ставки предметом.
+  Одна ставка — либо GRAM, либо один NFT (как в Rocket).
 */
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
 import { GramIcon } from '../GramIcon';
 import { NftSelectorGrid } from '../NftSelectorGrid';
-import { ArenaGiftChip } from './arenaUi';
-
-// ---------------------------------------------------------------------------
-// Общая шторка
-// ---------------------------------------------------------------------------
-
-const Sheet: React.FC<{ onClose: () => void; children: React.ReactNode; title: string }> = ({ onClose, children, title }) => (
-  <div className="fixed inset-0 z-[120] flex items-end justify-center" role="dialog" aria-modal="true">
-    <div className="absolute inset-0 bg-black/70" onClick={onClose} />
-    <div className="relative w-full max-w-md bg-[#16171b]/95 backdrop-blur-2xl rounded-t-[32px] p-5 pb-8 border-t border-white/[0.12] shadow-2xl max-h-[88vh] overflow-y-auto custom-scrollbar">
-      <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-16 rounded-t-[32px] bg-[linear-gradient(180deg,rgba(255,255,255,0.07)_0%,transparent_100%)]" />
-      <div className="relative z-10 flex items-center justify-between mb-4">
-        <h2 className="font-display text-[16px] font-bold text-white tracking-wide">{title}</h2>
-        <button
-          onClick={onClose}
-          aria-label="Закрыть"
-          className="w-8 h-8 rounded-full bg-white/[0.06] border border-white/[0.10] flex items-center justify-center active:scale-95 transition-transform cursor-pointer"
-        >
-          <X className="w-4 h-4 text-white/80" />
-        </button>
-      </div>
-      <div className="relative z-10">{children}</div>
-    </div>
-  </div>
-);
-
-// ---------------------------------------------------------------------------
-// BetModal
-// ---------------------------------------------------------------------------
+import { LiquidSegment } from '../ui/LiquidSegment';
 
 interface BetModalProps {
   onClose: () => void;
-  onConfirm: (amount: number) => void;
+  /** amount — сумма GRAM (в NFT-режиме всегда 0), gift — предмет или null */
+  onConfirm: (amount: number, gift: any | null) => void;
   balance: number;
   minBet: number;
   maxBet: number;
   submitting: boolean;
-  gift: any | null;
-  onRemoveGift: () => void;
+  inventory: any[];
   error: string | null;
   t: (k: string) => string;
 }
 
-const QUICK_VALUES = [0.10, 0.50, 1.00];
+type BetMode = 'gram' | 'nft';
 
 export const BetModal: React.FC<BetModalProps> = ({
-  onClose, onConfirm, balance, minBet, maxBet, submitting, gift, onRemoveGift, error, t,
+  onClose, onConfirm, balance, minBet, maxBet, submitting, inventory, error, t,
 }) => {
-  const [input, setInput] = useState<string>(() => (minBet.toFixed(2)));
-  const amount = parseFloat(input.replace(',', '.')) || 0;
-  const maxAvailable = Math.min(balance, maxBet);
-  const total = Number((amount + (gift ? Number(gift.floor_price_gram || gift.price || 0) : 0)).toFixed(2));
+  const [mode, setMode] = useState<BetMode>(() => {
+    try {
+      return (localStorage.getItem('arena_mode') as BetMode) || 'gram';
+    } catch {
+      return 'gram';
+    }
+  });
+  const [betInput, setBetInput] = useState<string>(() => {
+    try {
+      return localStorage.getItem('arena_bet') || '10';
+    } catch {
+      return '10';
+    }
+  });
+  const [selectedNft, setSelectedNft] = useState<any>(null);
 
-  const insufficient = amount > 0 && amount > balance;
-  const belowMin = amount > 0 && !gift && amount < minBet;
-  const aboveMax = amount > maxBet;
-  const zeroTotal = total <= 0;
-  const canConfirm = !zeroTotal && !insufficient && !belowMin && !aboveMax && !submitting;
+  useEffect(() => {
+    try { localStorage.setItem('arena_mode', mode); } catch {}
+  }, [mode]);
+  useEffect(() => {
+    try { localStorage.setItem('arena_bet', betInput); } catch {}
+  }, [betInput]);
 
-  const setQuick = (v: number) => setInput(v.toFixed(2));
-  const setMax = () => setInput(Math.max(0, Math.floor(maxAvailable * 100) / 100).toFixed(2));
+  // NFT жив, только пока он реально есть в инвентаре.
+  useEffect(() => {
+    setSelectedNft((prev: any) =>
+      prev && inventory.some((i) => (i.uniqueId || i.id) === (prev.uniqueId || prev.id) && !i.isWithdrawing)
+        ? prev
+        : null
+    );
+  }, [inventory]);
+
+  const betGram = parseFloat(betInput.replace(',', '.')) || 0;
+  const nftValue = selectedNft ? Number(selectedNft.floor_price_gram || selectedNft.price || 0) : 0;
+
+  const validationError: string | null = useMemo(() => {
+    if (mode === 'gram') {
+      if (betGram <= 0) return null;
+      if (betGram < minBet) return `${t('arena_min_bet')} ${minBet.toFixed(2)} GRAM`;
+      if (betGram > maxBet) return `${t('arena_max_bet')} ${maxBet.toFixed(0)} GRAM`;
+      if (betGram > balance) return t('arena_insufficient');
+      return null;
+    }
+    if (!selectedNft) return null;
+    if (nftValue < minBet) return `${t('arena_min_bet')} ${minBet.toFixed(2)} GRAM`;
+    if (nftValue > maxBet) return `${t('arena_max_bet')} ${maxBet.toFixed(0)} GRAM`;
+    return null;
+  }, [mode, betGram, selectedNft, nftValue, minBet, maxBet, balance, t]);
+
+  const canConfirm = !submitting && !validationError && (
+    mode === 'gram' ? betGram >= minBet && betGram <= balance && betGram <= maxBet : !!selectedNft
+  );
+
+  const handleBetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/,/g, '.');
+    if (val === '' || /^[0-9]*\.?[0-9]*$/.test(val)) {
+      if (val !== '' && parseFloat(val) > maxBet) {
+        setBetInput(maxBet.toString());
+      } else {
+        setBetInput(val);
+      }
+    }
+  };
+
+  const setBetAdd = (amt: number) => {
+    const cur = parseFloat(betInput) || 0;
+    const next = Math.min(cur + amt, balance, maxBet);
+    setBetInput(next.toString());
+  };
+
+  const setBetMax = () => {
+    const max = Math.min(balance, maxBet);
+    setBetInput(max.toString());
+  };
+
+  const shownError = error || validationError;
 
   return (
-    <Sheet onClose={onClose} title={t('arena_make_bet')}>
-      {/* Сумма */}
-      <div className="bg-white/[0.04] border border-white/[0.08] rounded-[24px] p-5 flex flex-col items-center mb-4">
-        <div className="flex items-center justify-center gap-2">
-          <input
-            type="text"
-            inputMode="decimal"
-            value={input}
-            onChange={(e) => {
-              const v = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
-              if (v === '' || /^\d*\.?\d{0,2}$/.test(v)) setInput(v);
-            }}
-            className="w-[150px] bg-transparent outline-none text-center font-display text-[38px] font-black text-white display-xl focus:underline focus:decoration-white/20"
-            placeholder="0.00"
-          />
-          <GramIcon className="w-7 h-7 text-brand drop-shadow-[0_0_8px_rgba(0,152,234,0.6)]" />
-        </div>
+    <div className="fixed inset-0 z-[120] flex items-end justify-center" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="group relative w-full max-w-md bg-[#16171b]/95 backdrop-blur-2xl rounded-t-[32px] p-5 pb-8 flex flex-col shadow-2xl border-t border-white/[0.12] overflow-hidden max-h-[88vh] overflow-y-auto custom-scrollbar">
+        {/* верхний блик жидкого стекла */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-t-[32px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+        />
 
-        {/* Быстрые значения + MAX */}
-        <div className="mt-4 flex items-center gap-2">
-          {QUICK_VALUES.map((v) => (
-            <button
-              key={v}
-              onClick={() => setQuick(v)}
-              className="px-3.5 py-1.5 rounded-full bg-white/[0.06] border border-white/[0.10] text-[12px] font-bold text-white/80 active:scale-95 transition-transform cursor-pointer hover:bg-white/[0.10]"
-            >
-              {v.toFixed(2)}
-            </button>
-          ))}
+        <div className="relative z-10 flex items-center justify-between mb-4">
+          <div className="w-8" />
+          <h2 className="text-[17px] font-display font-bold text-white text-center">
+            {t('arena_make_bet')}
+          </h2>
           <button
-            onClick={setMax}
-            className="px-3.5 py-1.5 rounded-full bg-[#0098ea]/15 border border-[#0098ea]/40 text-[12px] font-extrabold text-[#4fc3ff] active:scale-95 transition-transform cursor-pointer shadow-[0_0_12px_rgba(0,152,234,0.25)]"
+            onClick={onClose}
+            className="w-8 h-8 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white cursor-pointer"
           >
-            {t('arena_max')}
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {gift && (
-          <div className="mt-4 flex items-center gap-2">
-            <span className="text-[11px] text-white/40 font-semibold">{t('arena_with_nft')}:</span>
-            <ArenaGiftChip gift={{ name: gift.name, image_url: gift.image_url || gift.lottie_url, floor_price_gram: Number(gift.floor_price_gram || gift.price || 0) }} size="sm" />
-            <button
-              onClick={onRemoveGift}
-              aria-label={t('arena_remove_nft')}
-              className="w-6 h-6 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center active:scale-90 transition-transform cursor-pointer"
-            >
-              <X className="w-3 h-3 text-red-400" />
-            </button>
+        <LiquidSegment
+          className="relative z-10 mb-4"
+          ariaLabel={t('bet_mode')}
+          value={mode}
+          onChange={setMode}
+          options={[
+            { value: 'nft', label: t('gifts') },
+            { value: 'gram', label: 'GRAM' },
+          ]}
+        />
+
+        {/* Тело: GRAM-ввод или выбор NFT */}
+        <div className="relative z-10 bg-white/[0.04] border border-white/[0.08] rounded-[24px] p-5 mb-4 flex flex-col items-center justify-center min-h-[120px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+          {mode === 'gram' ? (
+            <>
+              <div className="absolute top-3.5 left-4 flex items-center gap-1.5 text-white/50 text-[12px] font-medium">
+                <span>{t('balance')}:</span>
+                <span className="text-white font-bold">{balance.toFixed(2)}</span>
+                <GramIcon className="w-3.5 h-3.5 text-brand" />
+              </div>
+              <div className="relative w-full text-center flex items-center justify-center mb-4 mt-2">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={betInput}
+                  onChange={handleBetChange}
+                  className="bg-transparent text-center text-4xl font-display font-bold text-white outline-none w-full max-w-[200px]"
+                  placeholder={minBet.toFixed(2)}
+                />
+              </div>
+              <div className="flex gap-1.5">
+                {[1, 5, 25, 50].map((amt) => (
+                  <button
+                    key={amt}
+                    onClick={() => setBetAdd(amt)}
+                    className="px-3 py-1.5 rounded-full lg-glass text-white text-[12px] font-bold active:scale-95 transition-all cursor-pointer"
+                  >
+                    +{amt}
+                  </button>
+                ))}
+                <button
+                  onClick={setBetMax}
+                  className="px-3 py-1.5 rounded-full bg-gradient-to-r from-[#0098ea] to-[#00b4d8] hover:brightness-110 border border-cyan-300/40 text-white text-[12px] font-bold active:scale-95 transition-all cursor-pointer shadow-[0_0_12px_rgba(0,152,234,0.45),inset_0_1px_0_rgba(255,255,255,0.3)]"
+                >
+                  MAX
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="w-full">
+              <NftSelectorGrid
+                inventory={inventory}
+                selectedIds={selectedNft ? [selectedNft.uniqueId || selectedNft.id] : []}
+                onSelect={(item) => setSelectedNft(item)}
+                maxBetGram={maxBet}
+                maxContainerHeight="max-h-[300px]"
+                emptyText={t('arena_inventory_empty')}
+              />
+              {selectedNft && (
+                <div className="mt-2 text-center text-[12px] font-semibold text-white/45">
+                  {t('arena_total')}: <span className="text-white/85 font-bold">{nftValue.toFixed(2)} GRAM</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {shownError && (
+          <div className="relative z-10 flex items-center gap-2 rounded-[16px] border border-red-500/40 bg-red-500/[0.08] px-3.5 py-2.5 mb-3">
+            <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+            <span className="text-[12px] font-semibold text-red-400">{shownError}</span>
           </div>
         )}
 
-        <div className="mt-3 text-[12px] font-semibold text-white/45">
-          {t('arena_total')}: <span className="text-white/80 font-bold">{total.toFixed(2)} GRAM</span>
-        </div>
+        <button
+          onClick={() => canConfirm && onConfirm(mode === 'gram' ? betGram : 0, mode === 'nft' ? selectedNft : null)}
+          disabled={!canConfirm}
+          className="relative z-10 w-full font-display font-bold text-[16px] py-4 rounded-full active:scale-[0.98] transition-all shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+        >
+          {submitting ? t('arena_sending') : t('arena_confirm')}
+        </button>
       </div>
-
-      {/* Баланс и ошибки */}
-      <div className="flex items-center justify-between px-1 mb-2">
-        <span className="text-[12px] text-white/45 font-medium">{t('your_balance')}:</span>
-        <span className="flex items-center gap-1 text-[13px] font-bold text-white/85">
-          {balance.toFixed(2)} <GramIcon className="w-3.5 h-3.5 text-brand" />
-        </span>
-      </div>
-
-      {(insufficient || belowMin || aboveMax || error) && (
-        <div className={`flex items-center gap-2 rounded-[16px] border px-3.5 py-2.5 mb-2 ${error ? 'border-red-500/40 bg-red-500/[0.08]' : 'border-red-500/40 bg-red-500/[0.08]'}`}>
-          <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
-          <span className="text-[12px] font-semibold text-red-400">
-            {error || (insufficient ? t('arena_insufficient') : belowMin ? `${t('arena_min_bet')} ${minBet.toFixed(2)} GRAM` : `${t('arena_max_bet')} ${maxBet.toFixed(0)} GRAM`)}
-          </span>
-        </div>
-      )}
-
-      <button
-        onClick={() => canConfirm && onConfirm(amount)}
-        disabled={!canConfirm}
-        className={`w-full h-[52px] rounded-full font-display font-bold text-[16px] tracking-wide transition-all select-none ${
-          canConfirm
-            ? 'bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] text-white shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] hover:brightness-110 active:scale-[0.98] cursor-pointer'
-            : 'bg-white/[0.05] border border-white/[0.08] text-white/35 cursor-not-allowed'
-        }`}
-      >
-        {submitting ? t('arena_sending') : t('arena_confirm')}
-      </button>
-      <button
-        onClick={onClose}
-        className="w-full h-[44px] mt-2 rounded-full text-[13px] font-bold text-white/50 active:scale-[0.99] transition-transform cursor-pointer"
-      >
-        {t('arena_cancel')}
-      </button>
-    </Sheet>
+    </div>
   );
 };
-
-// ---------------------------------------------------------------------------
-// NftModal
-// ---------------------------------------------------------------------------
-
-interface NftModalProps {
-  onClose: () => void;
-  inventory: any[];
-  selectedGift: any | null;
-  onSelect: (item: any | null) => void;
-  maxBetGram: number;
-  t: (k: string) => string;
-}
-
-export const NftModal: React.FC<NftModalProps> = ({ onClose, inventory, selectedGift, onSelect, maxBetGram, t }) => (
-  <Sheet onClose={onClose} title={t('arena_add_nft')}>
-    <p className="text-[12px] text-white/45 font-medium mb-3 px-1">{t('arena_nft_hint')}</p>
-    <NftSelectorGrid
-      inventory={inventory}
-      selectedIds={selectedGift ? [selectedGift.uniqueId || selectedGift.id] : []}
-      onSelect={(item) => { onSelect(item); onClose(); }}
-      maxBetGram={maxBetGram}
-      maxSelections={1}
-      emptyText={t('arena_inventory_empty')}
-    />
-  </Sheet>
-);

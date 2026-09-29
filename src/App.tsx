@@ -1446,20 +1446,12 @@ export default function App() {
               transition={{ type: 'spring', damping: 28, stiffness: 350 }}
               className="absolute inset-x-3 top-2.5 z-50 flex justify-center pointer-events-none"
             >
-                <div className={`group relative overflow-hidden flex items-center gap-2 bg-[#17191d]/92 rounded-full p-1.5 w-full pointer-events-auto border transition-all duration-300 ${
-                  topUpGlow 
-                    ? 'border-brand/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_24px_-14px_rgba(0,0,0,0.8)]'
-                    : 'border-white/[0.09] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_24px_-14px_rgba(0,0,0,0.8)]'
+                <div className={`group relative overflow-hidden flex items-center gap-2 lg-glass rounded-full p-1.5 w-full pointer-events-auto transition-all duration-300 ${
+                  topUpGlow ? 'lg-glass--brand' : ''
                 }`}>
-                  {/* верхнее бликовое свечение — эффект жидкого стекла как в QuickActions */}
-                  <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 rounded-full bg-[linear-gradient(180deg,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
-                  />
-                  <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.10] blur-2xl opacity-70"
-                  />
+                  {/* Тот же материал, что у нижнего меню (.lg-nav__inner): полупрозрачная
+                      основа + backdrop-blur, без тёмной подложки. Блик уже встроен
+                      в .lg-glass, отдельные спэны-свечения не нужны. */}
 
                   {/* Avatar -> Profile (в стеклянном чипе QuickActions) */}
                   <button 

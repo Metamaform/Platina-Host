@@ -6,6 +6,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { ArenaRoundState } from '../../lib/arenaShared';
+import { ARENA_TIMINGS } from '../../lib/arenaShared';
 
 export interface ArenaCountdown {
   /** секунд до закрытия ставок (0 — уже закрыты) */
@@ -27,7 +28,9 @@ export function useArenaCountdown(round: ArenaRoundState | null, serverOffset: n
       return;
     }
 
-    const bettingMs = 25_000;
+    // Окно ставок берём из общих констант, а не хардкодим — иначе полоса
+    // таймера рассинхронизируется с сервером при смене таймингов.
+    const bettingMs = ARENA_TIMINGS.BETTING_MS;
     let raf = 0;
     let lastFrame = 0;
 

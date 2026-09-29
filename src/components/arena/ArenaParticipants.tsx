@@ -1,10 +1,15 @@
 /*
-  ArenaParticipants — «СПИСОК ИГРОКОВ (N)» под игровым полем.
-  Каждый игрок — отдельная строка: аватар, username, сумма, NFT, процент, статус.
-  Строки memoized — при добавлении игрока перерисовывается список минимально.
+  ArenaParticipants — «СПИСОК ИГРОКОВ (N)» в стиле Rocket:
+  те же карточки, сортировка и цвета исхода (зелёный — победа,
+  красный — проигрыш). Слева: аватар, имя, бейдж YOU, ставка и доля.
+  Справа: выигрыш / проигрыш / текущая доля.
+  Сортировка как в Rocket: при завершении — победитель первый,
+  в живой игре — своя ставка первая, дальше по убыванию вклада.
 */
 
-import React from 'react';
+import React, { useMemo } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { Users } from 'lucide-react';
 import type { ArenaParticipant, ArenaRoundState } from '../../lib/arenaShared';
 import { ArenaAvatar, ArenaGiftChip } from './arenaUi';
 import { GramIcon } from '../GramIcon';
@@ -15,84 +20,150 @@ interface ArenaParticipantsProps {
   t: (k: string) => string;
 }
 
-const ParticipantRow: React.FC<{ p: ArenaParticipant; isMe: boolean; isWinner: boolean; roundFinished: boolean }> = React.memo(({ p, isMe, isWinner, roundFinished }) => {
-  const lost = roundFinished && !isWinner && p.status === 'LOST';
+const ParticipantRow: React.FC<{
+  p: ArenaParticipant;
+  isMe: boolean;
+  isWon: boolean;
+  isLost: boolean;
+  winAmount: number;
+  youLabel: string;
+}> = React.memo(({ p, isMe, isWon, isLost, winAmount, youLabel }) => {
+  const name = p.username || p.firstName || 'Player';
+
   return (
-    <div
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-[18px] border transition-colors duration-300 ${
-        isWinner
-          ? 'border-emerald-400/40 bg-emerald-500/[0.07]'
-          : isMe
-          ? 'border-[#0098ea]/40 bg-[#0098ea]/[0.05]'
-          : 'border-white/[0.07] bg-white/[0.03]'
-      } ${lost ? 'opacity-60' : ''}`}
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: -20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+      className={`flex items-center justify-between rounded-[22px] p-3 transition-colors duration-300 ${
+        isWon
+          ? 'border border-emerald-500/80 bg-emerald-950/20'
+          : isLost
+          ? 'border border-red-500/80 bg-red-950/20'
+          : 'border border-white/[0.08] bg-white/[0.05] backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]'
+      }`}
     >
-      <ArenaAvatar participant={p} className="w-9 h-9" />
+      <div className="flex items-center gap-3 min-w-0">
+        <ArenaAvatar participant={p} className="w-10 h-10" />
+        <div className="flex flex-col min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className="text-white font-medium text-[15px] truncate max-w-[120px]">
+              {name}
+            </span>
+            {isMe && (
+              <span className="text-[10px] bg-white/10 text-white/90 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                {youLabel}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-white/50 mt-0.5">
+            <span className="flex items-center gap-1">
+              <GramIcon className="w-3 h-3 text-white/40" />
+              {p.contribution.toFixed(2)}
+            </span>
+            <span>•</span>
+            <span className={isWon ? 'text-emerald-400 font-semibold' : isLost ? 'text-red-400 font-semibold' : 'text-white/60'}>
+              {p.percentage.toFixed(1)}%
+            </span>
+          </div>
+          {p.gift && (
+            <div className="mt-1">
+              <ArenaGiftChip gift={p.gift} size="sm" />
+            </div>
+          )}
+        </div>
+      </div>
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
-          <span className={`truncate text-[13px] font-bold ${lost ? 'text-white/50' : 'text-white/90'}`}>
-            {p.username || p.firstName || 'Player'}
+      {/* Правая сторона: исход ставки */}
+      {isWon ? (
+        <div className="flex flex-col items-end justify-center px-2 py-1">
+          <div className="flex items-center gap-1 text-emerald-400 font-display font-bold text-[15px] leading-tight">
+            <span>+{winAmount.toFixed(2)}</span>
+            <GramIcon className="w-3.5 h-3.5 text-emerald-400" />
+          </div>
+          <span className="text-[10px] text-emerald-400/80 font-medium mt-0.5">
+            {p.percentage.toFixed(1)}%
           </span>
-          {isMe && (
-            <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-[#0098ea]/15 border border-[#0098ea]/35 text-[8px] font-extrabold tracking-wider text-[#4fc3ff]">
-              ME
-            </span>
-          )}
-          {isWinner && (
-            <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-400/40 text-[8px] font-extrabold tracking-wider text-emerald-300">
-              {p.status === 'WON' ? 'WON' : p.status}
-            </span>
-          )}
-          {!isWinner && p.status === 'LOST' && (
-            <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-red-500/10 border border-red-500/30 text-[8px] font-extrabold tracking-wider text-red-400">
-              LOST
-            </span>
-          )}
-          {p.status === 'REFUNDED' && (
-            <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-white/[0.07] border border-white/[0.14] text-[8px] font-extrabold tracking-wider text-white/50">
-              REFUNDED
-            </span>
-          )}
         </div>
-        <div className="mt-0.5 min-w-0">
-          {p.gift ? <ArenaGiftChip gift={p.gift} size="sm" /> : (
-            <span className="text-[11px] text-white/30 font-medium">{p.isBot ? 'GRAM' : '—'}</span>
-          )}
+      ) : isLost ? (
+        <div className="flex flex-col items-end justify-center px-2 py-1">
+          <div className="flex items-center gap-1 text-red-400 font-display font-bold text-[15px] leading-tight">
+            <span>-{p.contribution.toFixed(2)}</span>
+            <GramIcon className="w-3.5 h-3.5 text-red-400" />
+          </div>
+          <span className="text-[10px] text-red-400/70 font-medium mt-0.5">
+            {p.percentage.toFixed(1)}%
+          </span>
         </div>
-      </div>
-
-      <div className="text-right shrink-0">
-        <div className={`flex items-center justify-end gap-1 font-display text-[14px] font-black ${lost ? 'text-red-400' : isWinner ? 'text-emerald-300' : 'text-white'}`}>
-          {p.contribution.toFixed(2)}
-          <GramIcon className="w-3 h-3 text-brand" />
+      ) : (
+        <div className="flex flex-col items-end justify-center px-2 py-1">
+          <div className="flex items-center gap-1 text-white/80 font-display font-bold text-[14px] leading-tight">
+            <span>{p.contribution.toFixed(2)}</span>
+            <GramIcon className="w-3.5 h-3.5 text-white/50" />
+          </div>
+          <span className="text-[10px] text-white/40 mt-0.5">
+            {p.percentage.toFixed(1)}%
+          </span>
         </div>
-        <div className="text-[10px] font-bold text-white/40 mt-0.5">{p.percentage.toFixed(1)}%</div>
-      </div>
-    </div>
+      )}
+    </motion.div>
   );
 });
 
 ParticipantRow.displayName = 'ParticipantRow';
 
 export const ArenaParticipants: React.FC<ArenaParticipantsProps> = ({ round, myUserId, t }) => {
-  const roundFinished = round.status === 'COMPLETED' || round.status === 'CANCELLED' || round.status === 'ERROR';
+  const isCompleted = round.status === 'COMPLETED';
+
+  const sorted = useMemo(() => {
+    const all = [...round.participants];
+    if (isCompleted) {
+      // Завершён: победитель первый, проигравшие — по убыванию вклада.
+      const winners = all
+        .filter((p) => p.id === round.winnerId)
+        .sort((a, b) => b.contribution - a.contribution);
+      const losers = all
+        .filter((p) => p.id !== round.winnerId)
+        .sort((a, b) => {
+          if (myUserId != null && a.userId === myUserId) return -1;
+          if (myUserId != null && b.userId === myUserId) return 1;
+          return b.contribution - a.contribution;
+        });
+      return [...winners, ...losers];
+    }
+    // Живая игра: своя ставка первая, дальше по убыванию вклада.
+    return all.sort((a, b) => {
+      if (myUserId != null && a.userId === myUserId) return -1;
+      if (myUserId != null && b.userId === myUserId) return 1;
+      return b.contribution - a.contribution;
+    });
+  }, [round.participants, round.winnerId, isCompleted, myUserId]);
+
+  if (!sorted.length) return null;
+
   return (
-    <div className="w-full flex flex-col gap-2">
-      <h3 className="px-1 font-display text-[13px] font-bold text-white/60 uppercase tracking-[0.12em]">
-        {t('arena_players_list')} ({round.participants.length})
-      </h3>
-      <div className="flex flex-col gap-2">
-        {round.participants.map((p) => (
+    <div className="w-full flex flex-col gap-2.5">
+      <div className="flex items-center gap-2 px-1">
+        <Users className="w-4 h-4 text-white/50" />
+        <span className="text-white font-bold text-xs">
+          {t('arena_players_list')} ({round.participants.length})
+        </span>
+      </div>
+      <AnimatePresence mode="popLayout">
+        {sorted.map((p) => (
           <ParticipantRow
             key={p.id}
             p={p}
             isMe={myUserId != null && p.userId === myUserId}
-            isWinner={round.winnerId === p.id}
-            roundFinished={roundFinished}
+            isWon={isCompleted && p.id === round.winnerId}
+            isLost={isCompleted && p.id !== round.winnerId}
+            winAmount={round.winAmount || round.totalPool}
+            youLabel={t('you')}
           />
         ))}
-      </div>
+      </AnimatePresence>
     </div>
   );
 };
