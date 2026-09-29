@@ -11,6 +11,7 @@ import { issueToken, verifyToken } from "./src/lib/session.server.ts";
 import { getUser, upsertUserProfile, setUserLanguage, saveUserState, recordOpen, getRecentOpens, getLeaderboardConfig, getLeaderboardData, saveLeaderboardConfig, getAdminConfig, saveAdminConfig, getReferrals, getTasksConfig, saveTasksConfig, completeUserTask, getCasesConfig, saveCasesConfig, getPromocodes, savePromocodes, getPromoRedemptions, savePromoRedemptions, getGiftsConfig, saveGiftsConfig, setWelcomeSeen, resetWelcomeSeen, syncUserFromSupabase, isSameUtcDay } from "./src/lib/store.server.ts";
 import { getFragmentGiftPrices, getFragmentBackdropPrices, syncAllNftPrices, lastSyncStats, lastSyncTime, isSyncing, TTL_MS } from "./src/lib/fragmentPrices.server.ts";
 import { getRocketState, placeRocketBet, cashoutRocketBet } from "./src/lib/rocket.server.ts";
+import { getArenaState, placeArenaBet, addArenaDevBot, getArenaHistory, getArenaRoundEntry, getArenaFair, addArenaClient, removeArenaClient } from "./src/lib/arena.server.ts";
 import { supabaseServer } from "./src/lib/supabase.server.ts";
 import { cleanNftName, getNftBackdrop } from "./src/lib/nftUtils.ts";
 import baseGiftsDb from "./src/gifts_data.json" with { type: "json" };
@@ -818,6 +819,96 @@ app.post("/api/state", requireAuth, (req, res) => {
       return res.status(400).json(result);
     }
     res.json(result);
+  });
+
+  // ---------------------------------------------------------------------
+  // AICE ARENA — джекпот-арена: пул ставок (GRAM + NFT), таймер,
+  // provably fair победитель, история, SSE realtime.
+  // Frontend только отображает: весь результат считается здесь.
+  // ---------------------------------------------------------------------
+
+  // Состояние раунда (+ история). Fallback для polling, когда SSE недоступен.
+  app.get("/api/arena/state", (req, res) => {
+    const round = getArenaState();
+    res.json({
+      round,
+      serverTime: Date.now(),
+      history: getArenaHistory(20).map((h) => ({
+        id: h.id, totalPool: h.totalPool, participantsCount: h.participantsCount,
+        winner: h.winner ? { username: h.winner.username, firstName: h.winner.firstName, avatar: h.winner.avatar } : null,
+        completedAt: h.completedAt, status: h.status,
+      })),
+    });
+  });
+
+  // SSE-поток реального времени: state / balance / history события.
+  app.get("/api/arena/stream", (req, res) => {
+    const authHeader = req.headers.authorization || "";
+    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : ((req.query.token as string) || "");
+    const userId = token ? verifyToken(token) : null;
+    const scope = "public";
+
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      "Connection": "keep-alive",
+      "X-Accel-Buffering": "no",
+    });
+    try { (res as any).flushHeaders?.(); } catch (e) {}
+
+    const write = (payload: object) => {
+      try {
+        res.write(`data: ${JSON.stringify(payload)}\n\n`);
+        (res as any).flush?.();
+      } catch (e) { /* соединение уже закрыто */ }
+    };
+
+    write({ type: "hello", serverTime: Date.now(), scope });
+    write({ type: "state", scope, round: getArenaState() });
+
+    const client = addArenaClient(res, userId, scope);
+    req.on("close", () => removeArenaClient(client));
+  });
+
+  // Сделать ставку: GRAM и/или NFT из инвентаря.
+  app.post("/api/arena/bet", requireAuth, (req, res) => {
+    const userId = (req as any).userId as number;
+    const { amount, gift } = req.body || {};
+    const result = placeArenaBet(userId, { amount, gift });
+    if (result.error) {
+      return res.status(400).json({ error: result.error, errorCode: result.errorCode });
+    }
+    res.json(result);
+  });
+
+  // ТЕМПОРАРНО (для одиночного тестирования): добавить рандомного
+  // бота-участника в текущий раунд. Удаляется вместе с кнопкой на фронтенде.
+  app.post("/api/arena/dev-bot", (req, res) => {
+    const result = addArenaDevBot();
+    if (result.error) {
+      return res.status(400).json({ error: result.error, errorCode: result.errorCode });
+    }
+    res.json(result);
+  });
+
+  // История завершённых игр.
+  app.get("/api/arena/history", (req, res) => {
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 30));
+    res.json({ history: getArenaHistory(limit) });
+  });
+
+  // Детали конкретной игры.
+  app.get("/api/arena/round/:id", (req, res) => {
+    const entry = getArenaRoundEntry(Number(req.params.id));
+    if (!entry) return res.status(404).json({ error: "Игра не найдена", errorCode: "round_not_found" });
+    res.json(entry);
+  });
+
+  // Provably fair: хэш секрета + (после завершения) сам секрет и билет.
+  app.get("/api/arena/fair/:id", (req, res) => {
+    const fair = getArenaFair(Number(req.params.id));
+    if (!fair) return res.status(404).json({ error: "Раунд не найден", errorCode: "round_not_found" });
+    res.json(fair);
   });
 
   // ---------------------------------------------------------------------
