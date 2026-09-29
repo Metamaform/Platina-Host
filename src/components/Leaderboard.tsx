@@ -59,7 +59,7 @@ export function Leaderboard() {
     if (rank === 1) return 'bg-gradient-to-b from-[#FDE047] to-[#EAB308] text-yellow-950 shadow-[0_0_15px_rgba(234,179,8,0.4)] border border-yellow-300 font-extrabold';
     if (rank === 2) return 'bg-gradient-to-b from-[#E2E8F0] to-[#94A3B8] text-slate-900 shadow-[0_0_15px_rgba(148,163,184,0.35)] border border-slate-300 font-extrabold';
     if (rank === 3) return 'bg-gradient-to-b from-[#FDBA74] to-[#EA580C] text-orange-950 shadow-[0_0_15px_rgba(234,88,12,0.35)] border border-orange-300 font-extrabold';
-    return 'bg-white/[0.08] text-white border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] font-bold';
+    return 'lg-glass text-white font-bold';
   };
 
   const getRowStyle = (rank: number) => {
@@ -103,17 +103,17 @@ export function Leaderboard() {
         </p>
 
         <div className="relative z-10 flex items-center justify-center gap-2 mt-4 flex-wrap">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full lg-glass">
              <Clock className="w-3.5 h-3.5 text-white/60" />
              <span className="text-[11px] font-semibold text-white">{timeLeft || '...'}</span>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full lg-glass">
              <Users className="w-3.5 h-3.5 text-white/60" />
              <span className="text-[11px] font-semibold text-white">{config.places} {t('places')}</span>
           </div>
           <button 
             onClick={() => setShowRules(true)} 
-            className="flex items-center justify-center w-8 h-8 rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] hover:bg-white/[0.14] text-white font-bold text-xs transition-transform active:scale-95 cursor-pointer"
+            className="flex items-center justify-center w-8 h-8 rounded-full lg-glass text-white font-bold text-xs transition-transform active:scale-95 cursor-pointer"
           >
              <span>?</span>
           </button>
@@ -175,7 +175,7 @@ export function Leaderboard() {
               })()}
 
               <div className="text-right shrink-0">
-                <div className="bg-white/[0.08] border border-white/[0.10] px-2.5 py-1 rounded-full flex items-center justify-center min-w-[60px] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                <div className="lg-glass px-2.5 py-1 rounded-full flex items-center justify-center min-w-[60px]">
                   <span className="font-bold text-white text-[13px] block">{formatTurnover(user.turnover)}</span>
                 </div>
               </div>
@@ -227,7 +227,7 @@ export function Leaderboard() {
               })()}
 
               <div className="relative z-10 text-right shrink-0">
-                <div className="bg-white/[0.08] border border-white/[0.10] px-2.5 py-1 rounded-full flex items-center justify-center min-w-[56px] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                <div className="lg-glass px-2.5 py-1 rounded-full flex items-center justify-center min-w-[56px]">
                   <span className="font-bold text-white text-[12px] block">{formatTurnover(currentUser.turnover)}</span>
                 </div>
               </div>
@@ -239,7 +239,7 @@ export function Leaderboard() {
       {showRules && (
         <LiquidDialog
           title={t('how_to_participate')}
-          subtitle="Правила турнира"
+          subtitle={t('tournament_rules')}
           icon={<Trophy className="w-4 h-4" />}
           onClose={() => setShowRules(false)}
           actionLabel={t('got_it')}

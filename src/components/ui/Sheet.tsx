@@ -9,6 +9,7 @@ import {
 import { X } from 'lucide-react';
 import { springSmooth, easeIn, projectMomentum, rubberband } from '../../lib/motion';
 import { haptics } from '../../lib/haptics';
+import { useTranslation } from '../../lib/i18n';
 
 interface SheetProps {
   open: boolean;
@@ -73,6 +74,7 @@ const SheetInner: React.FC<InnerProps> = ({
   maxHeight,
   z,
 }) => {
+  const { t } = useTranslation();
   const y = useMotionValue(0);
   const sheetRef = useRef<HTMLDivElement>(null);
   const heightRef = useRef(0);
@@ -228,8 +230,8 @@ const SheetInner: React.FC<InnerProps> = ({
             </div>
             <button
               onClick={onClose}
-              aria-label="Close"
-              className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12] active:scale-95 flex items-center justify-center text-white/50 hover:text-white transition-all cursor-pointer shrink-0"
+              aria-label={t("close")}
+              className="w-8 h-8 rounded-full lg-glass flex items-center justify-center text-white/50 hover:text-white active:scale-95 transition-all cursor-pointer shrink-0"
             >
               <X className="w-4 h-4" />
             </button>

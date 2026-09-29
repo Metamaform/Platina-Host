@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ClipboardPaste, QrCode } from 'lucide-react';
 import { validateAddressForNetwork } from '../validation';
+import { useTranslation } from '../../../lib/i18n';
 
 interface RecipientStepProps {
   networkId: string;
@@ -10,6 +11,7 @@ interface RecipientStepProps {
 }
 
 export function RecipientStep({ networkId, destination, onChange, error }: RecipientStepProps) {
+  const { t } = useTranslation();
   const [localError, setLocalError] = useState<string | null>(null);
 
   const handlePaste = async () => {
@@ -22,7 +24,7 @@ export function RecipientStep({ networkId, destination, onChange, error }: Recip
       }
     } catch {
       // fallback
-      setLocalError('Не удалось вставить из буфера');
+      setLocalError(t('paste_failed'));
     }
   };
 
@@ -41,9 +43,9 @@ export function RecipientStep({ networkId, destination, onChange, error }: Recip
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-white font-bold text-[16px] mb-3">Получатель</h3>
+        <h3 className="text-white font-bold text-[16px] mb-3">{t('recipient')}</h3>
         <p className="text-white/50 text-[13px] mb-3 leading-relaxed">
-          Введите внешний адрес в сети <span className="text-white font-semibold">{networkId}</span>. Средства будут отправлены за пределы кошелька.
+          {t('recipient_external_hint')} <span className="text-white font-semibold">{networkId}</span>. {t('recipient_external_hint2')}
         </p>
 
         <div className="relative">
@@ -51,7 +53,7 @@ export function RecipientStep({ networkId, destination, onChange, error }: Recip
             type="text"
             value={destination}
             onChange={(e) => handleChange(e.target.value)}
-            placeholder={networkId === 'TON' ? 'EQ... или UQ...' : networkId === 'BTC' ? 'bc1...' : '0x...'}
+            placeholder={networkId === 'TON' ? 'EQ... / UQ...' : networkId === 'BTC' ? 'bc1...' : '0x...'}
             className={`w-full bg-white/[0.06] border rounded-2xl px-4 py-3.5 pr-[96px] text-[14px] font-mono text-white placeholder-white/30 outline-none transition-colors focus:border-[#1683FF]/60 ${
               displayError ? 'border-red-500/50 focus:border-red-500/70' : 'border-white/10'
             }`}
@@ -62,11 +64,11 @@ export function RecipientStep({ networkId, destination, onChange, error }: Recip
             <button
               type="button"
               onClick={handlePaste}
-              className="px-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white/80 hover:text-white text-[12px] font-semibold flex items-center gap-1 transition-colors active:scale-95 cursor-pointer"
-              aria-label="Вставить адрес"
+              className="px-2.5 rounded-xl lg-glass text-white/80 hover:text-white text-[12px] font-semibold flex items-center gap-1 transition-colors active:scale-95 cursor-pointer"
+              aria-label={t('paste')}
             >
               <ClipboardPaste className="w-4 h-4" />
-              Вставить
+              {t('paste')}
             </button>
           </div>
         </div>
@@ -76,13 +78,13 @@ export function RecipientStep({ networkId, destination, onChange, error }: Recip
             {displayError}
           </p>
         ) : destination ? (
-          <p className="mt-2 text-emerald-400 text-[12px]">✓ Формат адреса корректен</p>
+          <p className="mt-2 text-emerald-400 text-[12px]">✓ {t('address_valid')}</p>
         ) : null}
 
         <div className="mt-4 p-3 rounded-2xl bg-white/[0.03] border border-white/5 flex gap-2.5">
           <QrCode className="w-5 h-5 text-white/40 shrink-0 mt-0.5" />
           <div className="text-[12px] leading-relaxed text-white/50">
-            Сканирование QR — в следующем релизе. Пока используйте кнопку вставки. Адресная книга будет доступна позже.
+            {t('qr_soon')}
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Eye, EyeOff, QrCode } from 'lucide-react';
 import { GramIcon } from '../../components/GramIcon';
+import { useTranslation } from '../../lib/i18n';
 
 interface WalletBalanceCardProps {
   /** Баланс в граммах как числовая строка, например "1234.56" */
@@ -42,6 +43,7 @@ function FinancialPattern() {
 }
 
 export function WalletBalanceCard({ amount, loading }: WalletBalanceCardProps) {
+  const { t } = useTranslation();
   const storageKey = 'wallet_balance_hidden';
   const [hidden, setHidden] = useState<boolean>(() => {
     try {
@@ -92,7 +94,7 @@ export function WalletBalanceCard({ amount, loading }: WalletBalanceCardProps) {
         {/* Privacy toggle */}
         <button
           type="button"
-          aria-label={hidden ? 'Показать баланс' : 'Скрыть баланс'}
+          aria-label={hidden ? t('show_balance') : t('hide_balance')}
           aria-pressed={hidden}
           onClick={() => setHidden((v) => !v)}
           className="absolute right-4 top-4 w-11 h-11 rounded-full bg-black/15 backdrop-blur-md border border-white/15 flex items-center justify-center text-white/80 hover:text-white hover:bg-black/25 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 cursor-pointer"
@@ -113,7 +115,7 @@ export function WalletBalanceCard({ amount, loading }: WalletBalanceCardProps) {
             transition: 'filter 320ms ease',
           }}
           aria-hidden={hidden}
-          aria-label={hidden ? 'Баланс скрыт' : `Баланс: ${displayBalance} грамм`}
+          aria-label={hidden ? t('balance_hidden') : `${t('balance')}: ${displayBalance} GRAM`}
         >
           <span className="whitespace-nowrap">{displayBalance}</span>
           <GramIcon className="h-[0.4em] w-[0.4em] mb-[0.07em] drop-shadow-md" />

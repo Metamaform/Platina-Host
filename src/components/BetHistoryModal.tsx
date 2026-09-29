@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ArrowUpRight, ArrowDownRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { cleanNftName } from '../lib/nftUtils';
+import { useTranslation } from '../lib/i18n';
 
 export interface BetHistoryRecord {
   id: string | number;
@@ -37,9 +38,10 @@ interface BetHistoryModalProps {
 export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
   isOpen,
   onClose,
-  title = 'История ваших ставок',
+  title,
   history
 }) => {
+  const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState<string | number | null>(
     history.length > 0 ? history[0].id : null
   );
@@ -97,16 +99,16 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
           <div className="flex items-center justify-between px-5 pt-2 pb-4">
             <div>
               <h2 className="font-display font-bold text-[19px] sm:text-[20px] tracking-tight text-white leading-tight">
-                {title}
+                {title || t('bet_history_title')}
               </h2>
               <p className="text-[12px] text-white/40 font-medium mt-0.5">
-                Последние 20 ставок
+                {t('bet_history_last20')}
               </p>
             </div>
 
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 active:scale-95 flex items-center justify-center text-white/70 hover:text-white transition-all cursor-pointer"
+              className="w-8 h-8 rounded-full lg-glass active:scale-95 flex items-center justify-center text-white/70 hover:text-white transition-all cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -116,8 +118,8 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
           <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-2.5 custom-scrollbar">
             {history.length === 0 ? (
               <div className="py-12 px-4 text-center rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col items-center justify-center">
-                <span className="text-white/40 text-sm font-medium">У вас пока нет ставок</span>
-                <span className="text-white/20 text-xs mt-1">Сделайте ставку, чтобы увидеть историю</span>
+                <span className="text-white/40 text-sm font-medium">{t('bet_history_empty')}</span>
+                <span className="text-white/20 text-xs mt-1">{t('bet_history_empty_hint')}</span>
               </div>
             ) : (
               history.slice(0, 20).map((bet) => {
@@ -192,11 +194,11 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
                             <span className="text-white/30 text-xs">·</span>
                             {isWon ? (
                               <span className="text-emerald-400 text-xs font-semibold">
-                                Выведено @ ×{cashoutMultStr}
+                                {t('bet_history_cashout_at')} ×{cashoutMultStr}
                               </span>
                             ) : (
                               <span className="text-rose-400 text-xs font-semibold flex items-center gap-1">
-                                Краш 💥 ×{crashMultStr}
+                                {t('crashed')} 💥 ×{crashMultStr}
                               </span>
                             )}
                           </div>
@@ -232,7 +234,7 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
                           {/* Column 1 */}
                           <div>
                             <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
-                              ID СТАВКИ
+                              {t('bet_id')}
                             </span>
                             <span className="font-mono text-[12px] text-white/90 font-medium">
                               #{bet.id}
@@ -241,7 +243,7 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
 
                           <div>
                             <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
-                              РАУНД
+                              {t('round')}
                             </span>
                             <span className="font-mono text-[12px] text-white/90 font-medium">
                               #{bet.roundId}
@@ -250,7 +252,7 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
 
                           <div>
                             <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
-                              ТИП
+                              {t('type')}
                             </span>
                             <span className="text-[12px] text-white/90 font-medium">
                               {bet.mode === 'nft' ? 'NFT' : 'GRAM'}
@@ -259,7 +261,7 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
 
                           <div>
                             <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
-                              СТАВКА
+                              {t('bet')}
                             </span>
                             <span className="text-[12px] text-white/90 font-medium">
                               {bet.betAmount.toFixed(bet.betAmount < 1 ? 2 : 1)} GRAM
@@ -268,7 +270,7 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
 
                           <div>
                             <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
-                              ВЫПЛАТА GRAM
+                              {t('payout_gram')}
                             </span>
                             <span
                               className={`text-[12px] font-semibold ${
@@ -281,7 +283,7 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
 
                           <div>
                             <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
-                              ВЫПЛАТА ВСЕГО
+                              {t('payout_total')}
                             </span>
                             <span
                               className={`text-[12px] font-semibold ${
@@ -294,7 +296,7 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
 
                           <div className="col-span-2">
                             <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
-                              ПРЕДМЕТ ВЫПЛАТЫ
+                              {t('payout_item')}
                             </span>
                             <span className="text-[12px] text-white/90 font-medium">
                               {giftName}
@@ -303,16 +305,16 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
 
                           <div>
                             <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
-                              КЭШАУТ
+                              {t('cashout')}
                             </span>
                             <span className="text-[12px] text-white/90 font-medium">
-                              {bet.cashoutType || (isWon ? 'Ручной' : '-')}
+                              {bet.cashoutType === 'Ручной' ? t('cashout_manual') : bet.cashoutType === 'Авто' ? t('cashout_auto') : (bet.cashoutType || (isWon ? t('cashout_manual') : '-'))}
                             </span>
                           </div>
 
                           <div>
                             <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
-                              ПРИНЯТО @
+                              {t('accepted_at')}
                             </span>
                             <span className="font-mono text-[12px] text-white/90 font-medium">
                               {isWon ? `×${bet.acceptedAt || cashoutMultStr}` : '-'}
@@ -321,7 +323,7 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
 
                           <div>
                             <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
-                              КЭШАУТ @
+                              {t('cashout_at')}
                             </span>
                             <span className="font-mono text-[12px] text-white/90 font-medium">
                               {isWon ? `×${cashoutMultStr}` : '-'}
@@ -330,7 +332,7 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
 
                           <div>
                             <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
-                              ЗАПРОС КЭШАУТА
+                              {t('cashout_request')}
                             </span>
                             <span className="font-mono text-[11px] text-white/80">
                               {isWon ? reqTime : '-'}
@@ -339,7 +341,7 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
 
                           <div>
                             <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
-                              КЭШАУТ В
+                              {t('cashout_time')}
                             </span>
                             <span className="font-mono text-[11px] text-white/80">
                               {isWon ? cTime : '-'}
@@ -348,7 +350,7 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
 
                           <div>
                             <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
-                              КРАШ @
+                              {t('crash_at')}
                             </span>
                             <span className="font-mono text-[12px] text-white/90 font-medium">
                               ×{crashMultStr}
@@ -357,7 +359,7 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
 
                           <div>
                             <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
-                              КРАШ В
+                              {t('crash_time')}
                             </span>
                             <span className="font-mono text-[11px] text-white/80">
                               {crTime}
@@ -366,7 +368,7 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
 
                           <div>
                             <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
-                              БАЛАНС ДО
+                              {t('balance_before')}
                             </span>
                             <span className="font-mono text-[11px] text-white/80">
                               {balBefore} GRAM
@@ -375,7 +377,7 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
 
                           <div className="col-span-2">
                             <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
-                              БАЛАНС ПОСЛЕ
+                              {t('balance_after')}
                             </span>
                             <span className="font-mono text-[12px] font-semibold text-emerald-400">
                               {balAfter} GRAM

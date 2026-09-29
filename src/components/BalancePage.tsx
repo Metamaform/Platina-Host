@@ -73,15 +73,15 @@ export function BalancePage({
             onClose();
             haptics.impact('light');
           }}
-          className="w-9 h-9 rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] flex items-center justify-center text-white/70 hover:text-white hover:bg-white/[0.12] transition-all active:scale-95 cursor-pointer focus-visible:outline-none"
-          aria-label="Назад"
+          className="w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white transition-all active:scale-95 cursor-pointer focus-visible:outline-none"
+          aria-label={t('back')}
         >
           <ArrowLeft className="w-4 h-4" />
         </button>
-        <h1 className="font-display text-[20px] font-bold tracking-tight text-white">Кошелёк</h1>
+        <h1 className="font-display text-[20px] font-bold tracking-tight text-white">{t('wallet')}</h1>
       </div>
 
-      <main aria-label="Кошелёк" className="relative z-10 flex-1 overflow-y-auto scrollbar-hide px-4 pt-2 pb-10 space-y-5 w-full max-w-[720px] mx-auto">
+      <main aria-label={t('wallet')} className="relative z-10 flex-1 overflow-y-auto scrollbar-hide px-4 pt-2 pb-10 space-y-5 w-full max-w-[720px] mx-auto">
         {/* Основная карта кошелька — BLACK: баланс в граммах + ник */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -105,7 +105,7 @@ export function BalancePage({
             }}
             onWithdraw={() => {
               haptics.notify('warning');
-              showHint('Скоро будет доступен вывод в Gram');
+              showHint(t('withdraw_gram_soon'));
             }}
           />
         </motion.div>
@@ -128,14 +128,14 @@ export function BalancePage({
             </div>
             <div>
               <h2 className="font-display text-lg font-bold tracking-tight text-white leading-tight">{t('topup_title')}</h2>
-              <p className="text-white/50 text-xs mt-0.5">Stars, Gram или TON</p>
+              <p className="text-white/50 text-xs mt-0.5">{t('topup_methods_sub')}</p>
             </div>
           </div>
 
           <LiquidSegment
             className="relative z-10 mb-4"
             variant="nav"
-            ariaLabel="Способ пополнения"
+            ariaLabel={t('payment_method')}
             value={method}
             onChange={(id) => {
               setMethod(id);
@@ -228,10 +228,10 @@ function AmountForm({
 
   const handleTopUp = async () => {
     if (method === 'stars' && parsedAmount < 1) {
-      setError('Minimum amount - 1 Stars');
+      setError(t('topup_min_stars_error'));
       return;
     } else if (method === 'ton' && parsedAmount <= 0) {
-      setError('Enter amount greater than 0');
+      setError(t('enter_amount'));
       return;
     }
 
@@ -269,7 +269,7 @@ function AmountForm({
                 if (status === 'paid') {
                   onSuccess(gramAmount, method, parsedAmount);
                 } else if (status === 'failed') {
-                  setError('Payment failed');
+                  setError(t('topup_payment_failed'));
                 }
               });
             } else if (twa.openTelegramLink) {
@@ -283,17 +283,17 @@ function AmountForm({
             window.location.href = data.invoiceLink;
           }
         } else {
-          setError(data.error || 'Error creating invoice');
+          setError(data.error || t('topup_invoice_error'));
         }
       } catch (e: any) {
         console.error(e);
-        setError('An error occurred while creating invoice');
+        setError(t('topup_invoice_error'));
       } finally {
         setLoading(false);
       }
     } else {
       if (!tonTopupAddress) {
-        setError('TON top-up is not configured. Use Stars.');
+        setError(t('topup_ton_not_configured'));
         setLoading(false);
         return;
       }
@@ -313,7 +313,7 @@ function AmountForm({
         onSuccess(gramAmount, method, parsedAmount);
       } catch (e: any) {
         console.error(e);
-        setError('Transaction cancelled or error occurred');
+        setError(t('topup_tx_cancelled'));
       } finally {
         setLoading(false);
       }
@@ -366,7 +366,7 @@ function AmountForm({
             className="flex-1 bg-transparent text-3xl font-display font-black text-white outline-none min-w-0"
             placeholder={method === 'stars' ? '50' : '1.0'}
           />
-          <div className="text-white font-bold flex items-center gap-1.5 shrink-0 bg-white/[0.08] px-3.5 py-1.5 rounded-full border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.10)] text-xs">
+          <div className="text-white font-bold flex items-center gap-1.5 shrink-0 lg-glass px-3.5 py-1.5 rounded-full text-xs">
             {method === 'stars' ? (
               <>
                 <StarsIcon className="w-4 h-4" /> <span>Stars</span>
@@ -391,7 +391,7 @@ function AmountForm({
               className={`py-2 rounded-full text-xs font-bold transition-all active:scale-95 cursor-pointer focus-visible:outline-none ${
                 amount === preset
                   ? 'bg-gradient-to-r from-[#0098ea] to-[#00b4d8] text-white border border-cyan-300/40 shadow-[0_0_12px_rgba(0,152,234,0.45)]'
-                  : 'bg-white/[0.12] hover:bg-white/[0.18] text-white border border-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
+                  : 'lg-glass text-white'
               }`}
             >
               +{preset}

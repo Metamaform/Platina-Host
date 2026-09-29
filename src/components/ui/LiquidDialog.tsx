@@ -2,6 +2,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'motion/react';
 import { X } from 'lucide-react';
+import { useTranslation } from '../../lib/i18n';
 
 interface LiquidDialogProps {
   onClose: () => void;
@@ -27,6 +28,7 @@ export function LiquidDialog({
   actionLabel,
   tone = 'brand',
 }: LiquidDialogProps) {
+  const { t } = useTranslation();
   if (typeof document === 'undefined') return null;
 
   const chip =
@@ -43,7 +45,7 @@ export function LiquidDialog({
     <div className="fixed inset-0 z-[220] flex items-end sm:items-center justify-center p-3 sm:p-4">
       <motion.button
         type="button"
-        aria-label="Закрыть"
+        aria-label={t('close')}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.16 }}
@@ -76,7 +78,7 @@ export function LiquidDialog({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 shrink-0 rounded-full bg-white/[0.06] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] flex items-center justify-center text-white/70 hover:text-white active:scale-95 transition-transform cursor-pointer"
+            className="w-8 h-8 shrink-0 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white active:scale-95 transition-transform cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>

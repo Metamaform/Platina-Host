@@ -221,6 +221,72 @@
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Liquid Glass material — точная копия рецепта нижнего меню (.lg-nav__inner):
+   полупрозрачная графитовая основа + backdrop-filter blur/saturate,
+   тонкая светлая линия (hairline), верхний блик и внутренняя подсветка.
+   Применяется ко ВСЕМ стеклянным кнопкам/чипам приложения, чтобы они
+   выглядели и вели себя так же, как нижнее меню.
+--------------------------------------------------------------------------- */
+.lg-glass {
+  --lg-glass-bg: rgba(23, 26, 31, 0.42);
+  --lg-glass-border: rgba(255, 255, 255, 0.16);
+  --lg-glass-sheen: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.09) 0%,
+    rgba(255, 255, 255, 0.02) 40%,
+    rgba(255, 255, 255, 0) 62%
+  );
+  border: 1px solid var(--lg-glass-border);
+  background: var(--lg-glass-sheen), var(--lg-glass-bg);
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+  backdrop-filter: blur(28px) saturate(170%);
+  box-shadow:
+    0 8px 28px -12px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Интерактивные стеклянные элементы (кнопки/ссылки) — мягкий ховер,
+   как активная пилюля меню: чуть светлее основа и ярче линия. */
+button.lg-glass:hover,
+a.lg-glass:hover,
+.lg-glass.is-interactive:hover {
+  --lg-glass-bg: rgba(23, 26, 31, 0.52);
+  --lg-glass-border: rgba(255, 255, 255, 0.26);
+  --lg-glass-sheen: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.13) 0%,
+    rgba(255, 255, 255, 0.04) 40%,
+    rgba(255, 255, 255, 0.02) 62%
+  );
+}
+
+/* Брендовая «подсветка» стекла (например, ховер-глоу баланса):
+   тот же материал, но с синей линией TON. */
+.lg-glass--brand {
+  --lg-glass-border: rgba(0, 152, 234, 0.5);
+  box-shadow:
+    0 8px 28px -12px rgba(0, 0, 0, 0.55),
+    0 0 18px rgba(0, 152, 234, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Фолбэк для движков без backdrop-filter: чуть плотнее, чтобы текст
+   читался (то же поведение, что у нижнего меню). */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .lg-glass { --lg-glass-bg: rgba(23, 26, 31, 0.86); }
+}
+
+/* Доступность: пользователь просит меньше прозрачности — плотная основа
+   без блюра (как у .glass-panel и .lg-nav). */
+@media (prefers-reduced-transparency: reduce) {
+  .lg-glass {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    --lg-glass-bg: rgba(23, 26, 31, 0.96);
+  }
+}
+
 /* Consistent touch feedback without transitioning layout or expensive filters.
    Motion-driven transforms remain owned by Motion, not CSS. */
 @layer base {

@@ -60,7 +60,7 @@ export function LiquidSegment<T extends string>({
       onPointerUp={() => { dragging.current = false; }}
       onPointerCancel={() => { dragging.current = false; }}
       onPointerLeave={() => { dragging.current = false; }}
-      className={`relative flex items-stretch ${variant === 'nav' ? 'p-1.5' : 'p-1'} rounded-full bg-[#17191d]/92 border border-white/[0.09] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_24px_-14px_rgba(0,0,0,0.8)] select-none touch-manipulation ${className}`}
+      className={`relative flex items-stretch ${variant === 'nav' ? 'p-1.5' : 'p-1'} rounded-full lg-glass select-none touch-manipulation ${className}`}
     >
       <span
         aria-hidden="true"
@@ -109,7 +109,7 @@ export function LiquidSegment<T extends string>({
                   className={`relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors duration-150 ${
                     active
                       ? 'bg-brand/20 border border-brand/40 text-brand shadow-[0_0_10px_rgba(0,152,234,0.3),inset_0_1px_0_rgba(255,255,255,0.15)]'
-                      : 'bg-white/[0.06] border border-white/[0.08] text-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
+                      : 'lg-glass text-white/70'
                   }`}
                 >
                   {opt.icon}

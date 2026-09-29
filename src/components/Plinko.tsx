@@ -323,7 +323,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
         isWon,
         payoutGram: g.mode === 'gram' ? g.winAmount : (g.remainder || 0),
         payoutItem: g.gift?.name || (g.mode === 'nft' ? 'NFT' : '-'),
-        cashoutType: `Корзина #${g.targetBucket ?? 4}`,
+        cashoutType: `${t('plinko_bucket')} #${g.targetBucket ?? 4}`,
         cashoutMult: g.multiplier,
         acceptedAt: g.multiplier,
         crashMult: g.multiplier,
@@ -736,8 +736,8 @@ export const Plinko: React.FC<PlinkoProps> = ({
 
       if (mult > 1.0) {
         setLastBanner({
-          text: `Выигран ${cleanNftName(finalGift.name)}! (x${mult.toFixed(2)})`,
-          subText: remainder > 0 ? `+ остаток ${remainder.toFixed(2)} GRAM на баланс` : undefined,
+          text: `${t('plinko_won_nft')} ${cleanNftName(finalGift.name)}! (x${mult.toFixed(2)})`,
+          subText: remainder > 0 ? `+ ${t('plinko_remainder_to_balance')} ${remainder.toFixed(2)} GRAM` : undefined,
           isWon: true
         });
       } else {
@@ -767,7 +767,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
 
       if (mult > 1.0) {
         setLastBanner({
-          text: `Выигрыш: +${wonGrams.toFixed(2)} GRAM (x${mult.toFixed(2)})`,
+          text: `${t('win_amount')}: +${wonGrams.toFixed(2)} GRAM (x${mult.toFixed(2)})`,
           isWon: true
         });
       } else {
@@ -793,7 +793,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
     const dropItem: DropHistoryItem = {
       id: generateDropId(),
       userId: userRef.current?.id || 1,
-      firstName: userRef.current?.firstName || 'Вы',
+      firstName: userRef.current?.firstName || t('you'),
       username: userRef.current?.username,
       photoUrl: userRef.current?.photoUrl,
       betAmount: ball.betAmount,
@@ -1094,26 +1094,26 @@ export const Plinko: React.FC<PlinkoProps> = ({
 
     if (mode === 'gram') {
       if (betGram < MIN_BET_GRAM) {
-        setActionError(`Минимальная ставка — ${MIN_BET_GRAM} GRAM`);
+        setActionError(`${t('min_bet')}: ${MIN_BET_GRAM} GRAM`);
         return;
       }
       if (betGram > balance) {
-        setActionError('Недостаточно GRAM на балансе');
+        setActionError(t('insufficient'));
         return;
       }
       if (betGram > MAX_BET_GRAM) {
-        setActionError(`Максимальная ставка — ${MAX_BET_GRAM} GRAM`);
+        setActionError(`${t('max_bet')}: ${MAX_BET_GRAM} GRAM`);
         return;
       }
       betValue = betGram;
     } else {
       if (!selectedNft) {
-        setActionError('Выберите NFT из инвентаря');
+        setActionError(t('plinko_select_nft'));
         return;
       }
       betValue = Number(selectedNft.floor_price_gram || selectedNft.price || 0);
       if (betValue > MAX_BET_GRAM) {
-        setActionError(`Максимальная ставка в NFT — ${MAX_BET_GRAM} GRAM`);
+        setActionError(`${t('max_bet_nft')} — ${MAX_BET_GRAM} GRAM`);
         return;
       }
       betGift = selectedNft;
@@ -1237,8 +1237,8 @@ export const Plinko: React.FC<PlinkoProps> = ({
       <button
         id="plinko-back-button"
         onClick={onBack}
-        className="absolute top-4 left-4 w-9 h-9 rounded-full bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer z-20"
-        title={t('back') || 'Back'}
+        className="absolute top-4 left-4 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer z-20"
+        title={t('back')}
       >
         <ArrowLeft className="w-4 h-4 text-white" />
       </button>
@@ -1250,14 +1250,14 @@ export const Plinko: React.FC<PlinkoProps> = ({
       </div>
 
       <div className="absolute top-4 right-4 flex items-center gap-2 z-20">
-        <div className="flex items-center gap-1.5 bg-white/[0.12] border border-white/[0.16] px-3 h-9 rounded-full shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]">
+        <div className="flex items-center gap-1.5 lg-glass px-3 h-9 rounded-full">
           <span className="text-white font-bold text-[13px]">{balance.toFixed(2)}</span>
           <GramIcon className="w-3.5 h-3.5 text-brand" />
         </div>
         <button
           onClick={() => setShowBetHistory(true)}
-          className="w-9 h-9 rounded-full bg-white/[0.12] hover:bg-white/[0.20] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer"
-          title="История ваших ставок"
+          className="w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer"
+          title={t('bet_history_title')}
         >
           <History className="w-4 h-4 text-white" />
         </button>
@@ -1368,21 +1368,21 @@ export const Plinko: React.FC<PlinkoProps> = ({
           <div className="w-full flex items-center gap-2 mb-3">
             <LiquidSegment
               className="flex-1 min-w-0"
-              ariaLabel="Риск"
+              ariaLabel={t('risk')}
               value={risk}
               disabled={isDropping}
               onChange={setRisk}
               options={[
-                { value: 'low', label: 'Low' },
-                { value: 'medium', label: 'Mid' },
-                { value: 'high', label: 'High' },
+                { value: 'low', label: t('risk_low') },
+                { value: 'medium', label: t('risk_mid') },
+                { value: 'high', label: t('risk_high') },
               ]}
             />
 
             <button
               disabled={isDropping}
               onClick={() => setShowBetModal(true)}
-              className="px-4 py-2.5 bg-white/[0.14] hover:bg-white/[0.22] border border-white/[0.18] rounded-full text-[13px] font-bold text-white flex items-center gap-1.5 active:scale-95 transition-all cursor-pointer disabled:opacity-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]"
+              className="px-4 py-2.5 lg-glass rounded-full text-[13px] font-bold text-white flex items-center gap-1.5 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
             >
               <span>{mode === 'gram' ? `${betGram} G` : (selectedNft?.name ? cleanNftName(selectedNft.name) : 'NFT')}</span>
               <ChevronRight className="w-3.5 h-3.5 opacity-80" />
@@ -1397,9 +1397,9 @@ export const Plinko: React.FC<PlinkoProps> = ({
             className="w-full relative overflow-hidden group rounded-full font-display font-bold text-[16px] tracking-wide active:scale-[0.98] transition-all py-3.5 shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white cursor-pointer flex items-center justify-center gap-2 select-none disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isDropping ? (
-              <span>Шар в игре...</span>
+              <span>{t('plinko_ball_flying')}</span>
             ) : (
-              <span>Бросить шар ({mode === 'gram' ? `${betGram} GRAM` : 'NFT'})</span>
+              <span>{t('plinko_drop_ball')} ({mode === 'gram' ? `${betGram} GRAM` : 'NFT'})</span>
             )}
           </button>
 
@@ -1409,15 +1409,15 @@ export const Plinko: React.FC<PlinkoProps> = ({
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-white/50" />
                 <span className="text-white font-bold text-xs">
-                  Все игры ({dropHistory.length})
+                  {t('plinko_all_drops')} ({dropHistory.length})
                 </span>
               </div>
             </div>
 
             {dropHistory.length === 0 ? (
               <div className="w-full py-8 px-4 text-center rounded-[24px] bg-white/[0.04] border border-white/[0.08] flex flex-col items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                <span className="text-white/50 text-sm font-medium">Пока нет бросков</span>
-                <span className="text-white/30 text-xs mt-1">Сделайте первый бросок в Plinko!</span>
+                <span className="text-white/50 text-sm font-medium">{t('plinko_no_drops')}</span>
+                <span className="text-white/30 text-xs mt-1">{t('plinko_no_drops_hint')}</span>
               </div>
             ) : (
               <div className="flex flex-col gap-2">
@@ -1525,11 +1525,11 @@ export const Plinko: React.FC<PlinkoProps> = ({
               <div className="relative z-10 flex items-center justify-between mb-4">
                 <div className="w-8" />
                 <h2 className="text-[17px] font-display font-bold text-white text-center">
-                  Параметры ставки
+                  {t('bet_settings')}
                 </h2>
                 <button
                   onClick={() => setShowBetModal(false)}
-                  className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] flex items-center justify-center text-white/70 hover:text-white cursor-pointer"
+                  className="w-8 h-8 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1537,7 +1537,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
 
               <LiquidSegment
                 className="relative z-10 mb-4"
-                ariaLabel="Режим ставки"
+                ariaLabel={t('bet_mode')}
                 value={mode}
                 onChange={setMode}
                 options={[
@@ -1551,7 +1551,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
                 {mode === 'gram' ? (
                   <>
                     <div className="absolute top-3.5 left-4 flex items-center gap-1.5 text-white/50 text-[12px] font-medium">
-                      <span>Баланс:</span>
+                      <span>{t('balance')}:</span>
                       <span className="text-white font-bold">{balance.toFixed(2)}</span>
                       <GramIcon className="w-3.5 h-3.5 text-brand" />
                     </div>
@@ -1570,7 +1570,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
                         <button
                           key={amt}
                           onClick={() => setBetAdd(amt)}
-                          className="px-3 py-1.5 rounded-full bg-white/[0.14] hover:bg-white/[0.22] border border-white/[0.18] text-white text-[12px] font-bold active:scale-95 transition-all cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]"
+                          className="px-3 py-1.5 rounded-full lg-glass text-white text-[12px] font-bold active:scale-95 transition-all cursor-pointer"
                         >
                           +{amt}
                         </button>
@@ -1591,7 +1591,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
                       onSelect={item => setSelectedNft(item)}
                       maxBetGram={MAX_BET_GRAM}
                       maxContainerHeight="max-h-[280px]"
-                      emptyText={t('inventory_empty') || 'Инвентарь пуст'}
+                      emptyText={t('inventory_empty')}
                     />
                   </div>
                 )}
@@ -1610,7 +1610,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
                 }
                 className="relative z-10 w-full bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white font-display font-bold text-[16px] py-3.5 rounded-full active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] cursor-pointer"
               >
-                Бросить шар
+                {t('plinko_drop_ball')}
               </button>
             </motion.div>
           </>
@@ -1621,7 +1621,6 @@ export const Plinko: React.FC<PlinkoProps> = ({
       <BetHistoryModal
         isOpen={showBetHistory}
         onClose={() => setShowBetHistory(false)}
-        title="История ваших ставок"
         history={userPlinkoBetHistory}
       />
 
@@ -1636,7 +1635,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
         maxPrize={MAX_BET_GRAM * 29}
         minBet={MIN_BET_GRAM}
         maxBet={MAX_BET_GRAM}
-        statusText="Сервер онлайн • Готов к броску"
+        statusText={t('plinko_server_ready')}
       />
     </div>
   );
