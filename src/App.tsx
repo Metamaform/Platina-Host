@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { springSmooth, springSnappy } from './lib/motion';
-import { BottomNav } from './components/ui/BottomNav';
+import LiquidGlassNav from './components/ui/LiquidGlassNav';
 import { LiquidSegment } from './components/ui/LiquidSegment';
 import { LiquidDialog } from './components/ui/LiquidDialog';
 import { setLoggerUserId } from './lib/logger';
-import { ShoppingBag, User, Gem, Gift, Wallet, ChevronRight, Activity, CircleDashed, ArrowUpCircle, Shield, LayoutGrid, Trophy, X, ListTodo, Settings, Bomb, Box, Package, ArrowLeft, ArrowUpRight, Users, History, MessageCircle, ExternalLink, Copy, Check, Rocket, Flame, Sparkles } from 'lucide-react';
+import { ShoppingBag, User, Gem, Gift, Wallet, ChevronRight, Activity, CircleDashed, ArrowUpCircle, Shield, LayoutGrid, Trophy, X, Settings, Bomb, Box, Package, ArrowLeft, ArrowUpRight, Users, History, MessageCircle, ExternalLink, Copy, Check, Rocket, Flame, Sparkles } from 'lucide-react';
 import defaultGiftsDb from './gifts_data.json';
 import { LiveFeed } from './components/LiveFeed';
 import { PremiumImage } from './components/PremiumImage';
@@ -1340,12 +1340,16 @@ export default function App() {
     }
   }, [auth.status, pricesLoaded, minTimePassed]);
 
+  // Пункты нижнего меню. Значки для основных вкладок встроены в LiquidGlassNav
+  // (id: inventory / shop / leaderboard / tasks), для админки — щит из lucide.
   const navItems = [
-    { id: 'inventory', icon: Package, label: t('inventory') },
-    { id: 'shop', icon: Flame, label: t('nav_shop') || 'Игры' },
-    { id: 'leaderboard', icon: Trophy, label: t('nav_leaderboard') || 'Топ' },
-    { id: 'tasks', icon: ListTodo, label: t('nav_tasks') || 'Задания' },
-    ...(auth.isAdmin ? [{ id: 'admin', icon: Shield, label: t('nav_admin') }] : [])
+    { id: 'inventory', label: t('inventory') },
+    { id: 'shop', label: t('nav_shop') || 'Игры' },
+    { id: 'leaderboard', label: t('nav_leaderboard') || 'Топ' },
+    { id: 'tasks', label: t('nav_tasks') || 'Задания' },
+    ...(auth.isAdmin
+      ? [{ id: 'admin', label: t('nav_admin'), icon: <Shield size={23} strokeWidth={1.8} aria-hidden /> }]
+      : [])
   ];
 
   if (showLoading) {
@@ -1676,11 +1680,9 @@ export default function App() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 100, opacity: 0 }}
               transition={springSnappy}
-              className="absolute bottom-2.5 left-0 right-0 z-[90] pb-[calc(env(safe-area-inset-bottom,0px)+8px)] px-3 w-full pointer-events-none"
+              className="absolute inset-x-0 bottom-0 z-[90] pointer-events-none"
             >
-              <div className="pointer-events-auto w-full max-w-sm mx-auto">
-                <BottomNav items={navItems} activeId={activeTab} onSelect={setActiveTab} />
-              </div>
+              <LiquidGlassNav items={navItems} activeId={activeTab} onSelect={setActiveTab} />
             </motion.div>
           )}
         </AnimatePresence>
