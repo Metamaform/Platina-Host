@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { Trophy, Users, ChevronRight } from 'lucide-react';
 import { X } from 'lucide-react';
 import type { ArenaHistoryEntry } from '../../lib/arenaShared';
-import { ArenaAvatar, ArenaGiftChip } from './arenaUi';
+import { PlayerAvatar, ArenaGiftChip } from './arenaUi';
 import { GramIcon } from '../GramIcon';
 
 function formatDate(ts: number): string {
@@ -67,7 +67,7 @@ export const ArenaHistoryList: React.FC<{
             <div className="flex items-center gap-2 min-w-0">
               {h.winner && (
                 <>
-                  <ArenaAvatar participant={{ id: '', userId: h.winner.userId ?? 0, username: h.winner.username, firstName: h.winner.firstName, avatar: h.winner.avatar, betAmount: 0, contribution: 0, percentage: 0, status: 'WON', joinedAt: 0 }} className="w-8 h-8" />
+                  <PlayerAvatar participant={{ id: '', userId: h.winner.userId ?? 0, username: h.winner.username, firstName: h.winner.firstName, avatar: h.winner.avatar, betAmount: 0, contribution: 0, percentage: 0, status: 'WON', joinedAt: 0 }} className="w-8 h-8" />
                   <div className="min-w-0 text-right">
                     <div className="text-[9px] font-bold text-white/35 uppercase tracking-wider flex items-center gap-1 justify-end">
                       <Trophy className="w-2.5 h-2.5 text-amber-400" />
@@ -170,7 +170,7 @@ export const RoundDetailsModal: React.FC<{
             {entry.winner && entry.status === 'COMPLETED' && (
               <div className="rounded-[20px] border border-emerald-400/40 bg-emerald-500/[0.07] px-4 py-3.5 shadow-[0_0_25px_rgba(16,185,129,0.15)]">
                 <div className="flex items-center gap-3">
-                  <ArenaAvatar participant={{ id: entry.winner.id, userId: entry.winner.userId, username: entry.winner.username, firstName: entry.winner.firstName, avatar: entry.winner.avatar, betAmount: 0, contribution: 0, percentage: 0, status: 'WON', joinedAt: 0 }} className="w-11 h-11 ring-2 ring-emerald-400/60" />
+                  <PlayerAvatar participant={{ id: entry.winner.id, userId: entry.winner.userId, username: entry.winner.username, firstName: entry.winner.firstName, avatar: entry.winner.avatar, betAmount: 0, contribution: 0, percentage: 0, status: 'WON', joinedAt: 0 }} className="w-11 h-11 ring-2 ring-emerald-400/60" />
                   <div className="flex-1 min-w-0">
                     <div className="text-[10px] font-bold text-emerald-300/80 uppercase tracking-wider flex items-center gap-1">
                       <Trophy className="w-3 h-3" /> {t('arena_winner')}
@@ -200,7 +200,7 @@ export const RoundDetailsModal: React.FC<{
                         isWinner ? 'border-emerald-400/40 bg-emerald-500/[0.06]' : 'border-white/[0.07] bg-white/[0.03]'
                       } ${p.status === 'LOST' ? 'opacity-70' : ''}`}
                     >
-                      <ArenaAvatar participant={p} className="w-8 h-8" />
+                      <PlayerAvatar participant={p} className="w-8 h-8" />
                       <div className="flex-1 min-w-0">
                         <div className="truncate text-[12px] font-bold text-white/90">
                           {p.username || p.firstName || 'Player'}

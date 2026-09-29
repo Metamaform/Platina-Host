@@ -30,7 +30,7 @@ import { Plus } from 'lucide-react';
 import { GramIcon } from '../GramIcon';
 import type { ArenaRoundState } from '../../lib/arenaShared';
 import { playersWord } from '../../lib/arenaShared';
-import { ArenaAvatar, ArenaStatusChip } from './arenaUi';
+import { PlayerAvatar, ArenaStatusChip } from './arenaUi';
 import type { ArenaCountdown } from './useArenaCountdown';
 import {
   buildPlatformLayout,
@@ -442,7 +442,7 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
                         title={`${name} — ${s.participant.percentage.toFixed(1)}%`}
                       >
                         <div className="flex items-center gap-1">
-                          <ArenaAvatar participant={s.participant} className="w-[22px] h-[22px]" />
+                          <PlayerAvatar participant={s.participant} className="w-[22px] h-[22px]" />
                           <span className="max-w-[86px] truncate text-[10px] font-bold text-white/85 leading-tight drop-shadow">
                             {name}
                           </span>

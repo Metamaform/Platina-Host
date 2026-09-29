@@ -90,8 +90,8 @@ function render(state: 'betting' | 'drawing' | 'completed') {
     if (showCard) {
       const ly = side === 'above' ? topY : topY + 24;
       out.push(`<g opacity="${op}">
-        <circle cx="${lx - (name.length * 4.6 + 8) / 2 + 11}" cy="${ly - 4}" r="11" fill="${s.color}" fill-opacity="0.7" stroke="rgba(255,255,255,0.35)"/>
-        <text x="${lx - (name.length * 4.6 + 8) / 2 + 11}" y="${ly - 1}" font-family="Arial" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">${esc(name[0].toUpperCase())}</text>
+        <circle cx="${lx - (name.length * 4.6 + 8) / 2 + 11}" cy="${ly - 4}" r="11" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.25)"/>
+        <text x="${lx - (name.length * 4.6 + 8) / 2 + 11}" y="${ly - 1}" font-family="Arial" font-size="10" font-weight="700" fill="rgba(255,255,255,0.9)" text-anchor="middle">${esc(name[0].toUpperCase())}</text>
         <text x="${lx - (name.length * 4.6 + 8) / 2 + 25}" y="${ly}" font-family="Arial" font-size="10" font-weight="700" fill="rgba(255,255,255,0.85)">${esc(name)}</text>
       </g>`);
     }
