@@ -1,10 +1,12 @@
 /*
   Liquid Glass Navigation — нижнее меню «Platina Gift».
   ---------------------------------------------------------------------------
-  Тёмное стекло приложения: графитовая дорожка #17191d, блик сверху,
-  скользящая светлая пилюля (двигается только transform), активный пункт —
-  брендовый синий TON. Количество вкладок задаётся из компонента
-  (items.length → --lg-count), поэтому меню работает и с 5 вкладками админа.
+  Настоящее стекло: полупрозрачная основа + backdrop-filter,
+  который блюрит всё, что прокручивается под меню. Блик сверху,
+  скользящая светлая пилюля (двигается только transform), активный
+  пункт — брендовый синий TON. Блюр работает и на телефонах —
+  отдельных «тёмных» фолбэков для тач-устройств нет. Количество
+  вкладок задаётся из компонента (items.length → --lg-count).
 */
 .lg-nav {
   /* Геометрия */
@@ -17,12 +19,14 @@
   --lg-ease: cubic-bezier(.2, .8, .2, 1);
   --lg-pill-radius: calc((var(--lg-height) - (var(--lg-side-padding) * 2)) / 2);
 
-  /* Палитра — тёмное стекло + брендовый синий */
+  /* Палитра — стекло + брендовый синий */
   --lg-text: rgba(255, 255, 255, .62);
   --lg-active: #0098ea;
-  --lg-glass: rgba(21, 23, 27, .92);
-  --lg-hairline: rgba(255, 255, 255, .09);
-  --lg-pill: linear-gradient(145deg, rgba(255, 255, 255, .14), rgba(255, 255, 255, .035) 55%, rgba(255, 255, 255, .08));
+  /* Полупрозрачная «подложка» стекла: контент под меню остаётся
+     различимым и размывается backdrop-фильтром ниже. */
+  --lg-glass: rgba(23, 26, 31, .42);
+  --lg-hairline: rgba(255, 255, 255, .16);
+  --lg-pill: linear-gradient(145deg, rgba(255, 255, 255, .18), rgba(255, 255, 255, .05) 55%, rgba(255, 255, 255, .10));
 
   /* Позиционируется относительно ближайшего позиционированного родителя —
      в приложении это нижняя полоса экранного фрейма (max-w-md),
@@ -47,13 +51,24 @@
   padding: var(--lg-side-padding);
   border: 1px solid var(--lg-hairline);
   border-radius: var(--lg-radius);
+  /* Стеклянный блик сверху на полупрозрачной основе —
+     остальное «делает» backdrop-filter. */
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, .06) 0%, rgba(255, 255, 255, .015) 40%, rgba(255, 255, 255, 0) 62%),
+    linear-gradient(180deg, rgba(255, 255, 255, .09) 0%, rgba(255, 255, 255, .02) 40%, rgba(255, 255, 255, 0) 62%),
     var(--lg-glass);
-  backdrop-filter: blur(24px) saturate(155%);
-  -webkit-backdrop-filter: blur(24px) saturate(155%);
-  box-shadow: 0 10px 32px -14px rgba(0, 0, 0, .8), 0 10px 32px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .08);
+  /* Блюр всего, что под меню. Работает и на тач-устройствах. */
+  backdrop-filter: blur(28px) saturate(170%);
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+  box-shadow:
+    0 8px 28px -12px rgba(0, 0, 0, .55),
+    inset 0 1px 0 rgba(255, 255, 255, .10);
   isolation: isolate;
+}
+
+/* Фолбэк для движков без backdrop-filter: чуть плотнее, чтобы
+   текст читался, но не возвращаемся к «тёмной плашке». */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .lg-nav__inner { --lg-glass: rgba(23, 26, 31, .86); }
 }
 
 .lg-nav__active {
@@ -63,10 +78,10 @@
   bottom: var(--lg-side-padding);
   left: var(--lg-side-padding);
   width: calc((100% - (var(--lg-side-padding) * 2) - (var(--lg-gap) * (var(--lg-count) - 1))) / var(--lg-count));
-  border: 1px solid rgba(255, 255, 255, .16);
+  border: 1px solid rgba(255, 255, 255, .22);
   border-radius: var(--lg-pill-radius);
   background: var(--lg-pill);
-  box-shadow: inset 0 1px 2px rgba(255, 255, 255, .22), inset 0 -2px 5px rgba(255, 255, 255, .04), 0 5px 12px -5px rgba(0, 0, 0, .65);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, .28), inset 0 -2px 5px rgba(255, 255, 255, .05), 0 4px 10px -5px rgba(0, 0, 0, .5);
   will-change: transform;
   transform: translate3d(calc((100% + var(--lg-gap)) * var(--lg-index)), 0, 0);
   transition: transform 240ms var(--lg-ease);
@@ -108,6 +123,7 @@
   line-height: 14px;
   font-weight: 560;
   letter-spacing: -.1px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .45);
 }
 .lg-nav__home-indicator {
   width: 116px;
@@ -127,12 +143,12 @@
   .lg-nav__active, .lg-nav__item { transition: none; }
 }
 
-@media (max-width: 480px) and (pointer: coarse) {
+/* Доступность: если пользователь просит меньше прозрачности —
+   отключаем блюр и делаем основу плотной (как у .glass-panel). */
+@media (prefers-reduced-transparency: reduce) {
   .lg-nav__inner {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, .06) 0%, rgba(255, 255, 255, .015) 40%, rgba(255, 255, 255, 0) 62%),
-      rgba(21, 23, 27, .97);
+    background: rgba(23, 26, 31, .96);
   }
 }
