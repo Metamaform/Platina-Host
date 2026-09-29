@@ -12,7 +12,7 @@ import { writeFileSync } from 'node:fs';
 
 const W = 400, H = 190;
 const DECK_W = 26;
-const ROCKET = 46;
+const BALL = 34;
 
 function mkParticipant(id, contribution, i, name) {
   return {
@@ -45,9 +45,7 @@ function render(state: 'betting' | 'drawing' | 'completed') {
     }
   }
 
-  const rocketFrac = state === 'betting' ? 0 : state === 'drawing' ? 0.7 : (ticketFrac as number);
-  const rocket = geo.pointAt(rocketFrac);
-  const showTrail = state !== 'betting';
+  const rocket = state === 'betting' ? { x: W / 2, y: H / 2 } : state === 'drawing' ? { x: W / 2, y: H / 2 } : geo.pointAt(ticketFrac as number);
 
   const out: string[] = [];
   out.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`);
@@ -56,15 +54,6 @@ function render(state: 'betting' | 'drawing' | 'completed') {
   out.push(`<rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="24" fill="none" stroke="rgba(255,255,255,0.10)"/>`);
 
   // defs
-  out.push(`<defs>
-    <linearGradient id="tg" x1="0" y1="1" x2="1" y2="0">
-      <stop offset="0%" stop-color="rgba(255,255,255,0)"/>
-      <stop offset="45%" stop-color="rgba(125,211,252,0.7)"/>
-      <stop offset="100%" stop-color="rgba(255,255,255,0.95)"/>
-    </linearGradient>
-    <filter id="blur"><feGaussianBlur stdDeviation="5"/></filter>
-  </defs>`);
-
   // палуба
   out.push(`<path d="${geo.d}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="${DECK_W + 12}" stroke-linecap="round"/>`);
   out.push(`<path d="${geo.d}" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1.5"/>`);
@@ -80,13 +69,6 @@ function render(state: 'betting' | 'drawing' | 'completed') {
   out.push(`<defs><filter id="wglow" x="-30%" y="-30%" width="160%" height="160%">
     <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="${SEGMENT_COLORS[2]}" flood-opacity="0.9"/>
   </filter></defs>`);
-
-  // след
-  if (showTrail) {
-    const trailLen = rocketFrac * geo.total;
-    out.push(`<path d="${geo.d}" fill="none" stroke="url(#tg)" stroke-width="10" stroke-linecap="round" stroke-dasharray="${trailLen} ${geo.total}" filter="url(#blur)" opacity="0.5"/>`);
-    out.push(`<path d="${geo.d}" fill="none" stroke="url(#tg)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="${trailLen} ${geo.total}"/>`);
-  }
 
   // подписи (дублируем правила компонента)
   layout.segs.forEach((s) => {
@@ -125,16 +107,27 @@ function render(state: 'betting' | 'drawing' | 'completed') {
     out.push(`<text x="${tp.x}" y="${crownY}" font-size="19" text-anchor="middle">👑</text>`);
   }
 
-  // ракета (упрощённая: корпус + огонёк)
-  const ang = rocket.angle + 45;
-  out.push(`<g transform="translate(${rocket.x}, ${rocket.y}) rotate(${ang})">
-    <ellipse cx="0" cy="0" rx="${ROCKET * 0.32}" ry="${ROCKET * 0.32}" fill="rgba(79,195,255,0.18)"/>
-    <path d="M 0 -16 C 7 -8 8 2 6 12 L -6 12 C -8 2 -7 -8 0 -16 Z" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
-    <circle cx="0" cy="-4" r="3" fill="#0ea5e9"/>
-    <path d="M 6 12 L 11 19 L 4 16 Z" fill="#f59e0b"/>
-    <path d="M -6 12 L -11 19 L -4 16 Z" fill="#f59e0b"/>
-    ${(state === 'drawing') ? '<path d="M 0 13 C 4 20 3 26 0 31 C -3 26 -4 20 0 13 Z" fill="#fbbf24" opacity="0.9"/>' : ''}
+  // шарик (свечение + сфера + «полосы» вращение)
+  const glowR = BALL * 1.2;
+  out.push(`<defs><radialGradient id="ballGlow">
+    <stop offset="0%" stop-color="rgba(79,195,255,0.5)"/>
+    <stop offset="42%" stop-color="rgba(0,152,234,0.22)"/>
+    <stop offset="70%" stop-color="transparent"/>
+  </radialGradient>
+  <radialGradient id="ballBody" cx="32%" cy="28%" r="75%">
+    <stop offset="0%" stop-color="rgba(255,255,255,0.98)"/>
+    <stop offset="22%" stop-color="rgba(190,235,255,0.95)"/>
+    <stop offset="55%" stop-color="rgba(0,152,234,0.9)"/>
+    <stop offset="100%" stop-color="rgba(6,38,74,0.95)"/>
+  </radialGradient></defs>`);
+  out.push(`<circle cx="${rocket.x}" cy="${rocket.y}" r="${glowR}" fill="url(#ballGlow)"/>`);
+  out.push(`<circle cx="${rocket.x}" cy="${rocket.y}" r="${BALL / 2}" fill="url(#ballBody)" stroke="rgba(255,255,255,0.25)"/>`);
+  const bAng = state === 'drawing' ? 35 : state === 'completed' ? 200 : 80;
+  out.push(`<g transform="translate(${rocket.x}, ${rocket.y}) rotate(${bAng})">
+    <path d="M ${-BALL * 0.32} ${-BALL * 0.08} Q 0 ${-BALL * 0.30} ${BALL * 0.32} ${-BALL * 0.08}" stroke="rgba(255,255,255,0.30)" stroke-width="3" fill="none"/>
+    <path d="M ${-BALL * 0.30} ${BALL * 0.14} Q 0 ${BALL * 0.32} ${BALL * 0.30} ${BALL * 0.14}" stroke="rgba(255,255,255,0.22)" stroke-width="3" fill="none"/>
   </g>`);
+  out.push(`<ellipse cx="${rocket.x - BALL * 0.16}" cy="${rocket.y - BALL * 0.18}" rx="${BALL * 0.16}" ry="${BALL * 0.11}" fill="rgba(255,255,255,0.9)"/>`);
 
   // статус (для контекста)
   const label = state === 'betting' ? 'ACCEPTING BETS' : state === 'drawing' ? 'DRAWING' : 'COMPLETED';

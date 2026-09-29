@@ -9,24 +9,25 @@
 
   Платформа разделена на территории игроков: длина сегмента = доля игрока
   в банке, порядок сегментов совпадает с порядком, в котором сервер обходит
-  участников при выборе победителя (pickWinner). Победа читается буквально:
-  ракета взлетает со старта и садится ровно на позицию выигрышного билета
-  (provably fair: ticket = roll × банк) — чья территория под ракетой,
-  тот и забирает банк.
+  участников при выборе победителя (pickWinner).
 
-  Жизненный цикл раунда на платформе:
-  · WAITING / ACCEPTING_BETS — ракета ждёт на старте полосы;
-  · LOCKED — «старт»: ракета подрагивает, выхлоп пульсирует;
-  · DRAWING — взлёт: ракета летит по платформе, позади тянется световой след;
-  · COMPLETED — ракета тормозит и садится на позиции билета, территория
-    победителя светится, сверху — корона и янтарная метка билета.
+  В центре поля — шарик:
+  · WAITING / ACCEPTING_BETS — лежит в центре поля, плавно покачивается
+    и медленно вращается;
+  · LOCKED — «заряжается»: свечение пульсирует;
+  · DRAWING — вращается быстрее, направление вращения рандомное каждый
+    раунд (детерминировано от id раунда — все клиенты видят одно и то же);
+  · COMPLETED — шарик запускается ИЗ ЦЕНТРА ПОЛЯ и летит в точку розыгрыша,
+    садясь ровно на позицию выигрышного билета (provably fair:
+    ticket = roll × банк) — чья территория под шариком, тот и забирает
+    банк. Территория победителя светится, сверху — корона и янтарная
+    метка билета.
 */
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Plus } from 'lucide-react';
 import { GramIcon } from '../GramIcon';
-import { CleanModelLottie } from '../CleanModelLottie';
 import type { ArenaRoundState } from '../../lib/arenaShared';
 import { playersWord } from '../../lib/arenaShared';
 import { ArenaAvatar, ArenaStatusChip } from './arenaUi';
@@ -48,19 +49,30 @@ interface ArenaFieldProps {
 
 // Толщина «палубы» платформы, px (в экранных координатах).
 const DECK_W = 26;
-// Размер ракеты, px.
-const ROCKET_SIZE = 46;
-// Доля длины платформы, куда ракета разгоняется в DRAWING (билет ещё не опубликован).
-const LAUNCH_FAR_FRAC = 0.965;
-// Длительность взлёта, ms (сервер держит DRAWING ~2.6s — укладываемся с запасом).
-const LAUNCH_MS = 2000;
-const LAND_MS = 650;
+// Размер шарика, px.
+const BALL_SIZE = 34;
+// Длительность запуска шарика из центра в точку розыгрыша, ms
+// (раунд завершён на 9s — закладываемся с запасом).
+const FLY_MS = 850;
 
 const easeInQuad = (t: number) => t * t;
-const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
-const easeInOutQuad = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
-type FlightPhase = 'idle' | 'launch' | 'land' | 'parked';
+/**
+ * Направление и период вращения шарика для раунда. Детерминировано от id
+ * раунда — каждый раунд шарик крутится в случайную сторону/скорость,
+ * но все клиенты видят одинаковое вращение (общий источник правды — сервер).
+ */
+function roundSpin(id: number): { dir: 1 | -1; dur: number } {
+  let x = (id ^ 0x9e3779b9) >>> 0;
+  x = Math.imul(x ^ (x >>> 16), 0x45d9f3b) >>> 0;
+  x = Math.imul(x ^ (x >>> 16), 0x45d9f3b) >>> 0;
+  x = (x ^ (x >>> 16)) >>> 0;
+  const dir: 1 | -1 = x % 2 === 0 ? 1 : -1;
+  const dur = 0.9 + ((x % 1000) / 1000) * 1.6; // 0.9–2.5 c на оборот
+  return { dir, dur };
+}
+
+type BallPhase = 'center' | 'launch' | 'parked';
 
 function statusDot(status: ArenaRoundState['status']): string {
   switch (status) {
@@ -118,41 +130,50 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
     []
   );
 
+  const spin = useMemo(() => roundSpin(round.id), [round.id]);
+  const empty = participants.length === 0;
+
   // Территории: тот же порядок, что обходит сервер в pickWinner,
   // та же мера — вклад в банке. ticketFrac — позиция билета на дуге.
   const ticketFrac = isCompleted && round.ticket != null && layout
     ? ticketToFrac(round.ticket as number, layout.sumC)
     : null;
+  const ticketPt = isCompleted && ticketFrac != null && layout
+    ? layout.geo.pointAt(ticketFrac)
+    : null;
 
   // ------------------------------------------------------------------
-  // Ракета: idle (на старте) → launch (DRAWING) → land (COMPLETED) → parked.
-  // Позиция хранится долей длины дуги — при ресайзе всё пересчитывается.
+  // Шарик: center (в центре поля) → launch (запуск из центра при
+  // COMPLETED) → parked (на позиции выигрышного билета).
+  // Позиция запуска/посадки — в px текущей области; при ресайзе
+  // «parked» пересчитывается из ticketFrac автоматически.
   // ------------------------------------------------------------------
   const flightRef = useRef({
-    phase: 'idle' as FlightPhase,
+    phase: 'center' as BallPhase,
     raf: 0,
     start: 0,
-    from: 0,
-    to: 0,
+    fx: 0, fy: 0, tx: 0, ty: 0,
     dur: 0,
-    backward: false,
   });
-  const [flightFrac, setFlightFrac] = useState(0);
-  const [phase, setPhase] = useState<FlightPhase>('idle');
+  const [phase, setPhase] = useState<BallPhase>('center');
+  const [flyPos, setFlyPos] = useState<{ x: number; y: number } | null>(null);
   const [landPulse, setLandPulse] = useState(0);
 
-  // Актуальная доля для старта фазы «land» (без добавления в зависимости).
-  const flightFracRef = useRef(0);
-  useEffect(() => { flightFracRef.current = flightFrac; }, [flightFrac]);
+  const flyPosRef = useRef<{ x: number; y: number } | null>(null);
+  useEffect(() => { flyPosRef.current = flyPos; }, [flyPos]);
+
+  const centerX = size.w / 2;
+  const centerY = size.h / 2;
+  // В пустой арене шарик парит выше (CTA-кнопка внизу поля).
+  const centerPos = empty ? { x: centerX, y: size.h * 0.3 } : { x: centerX, y: centerY };
 
   // Сброс при новом раунде.
   useEffect(() => {
     const f = flightRef.current;
     cancelAnimationFrame(f.raf);
-    f.phase = 'idle';
-    f.from = 0; f.to = 0; f.dur = 0;
-    setPhase('idle');
-    setFlightFrac(0);
+    f.phase = 'center';
+    setPhase('center');
+    setFlyPos(null);
   }, [round.id]);
 
   useEffect(() => {
@@ -162,78 +183,77 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
     const tick = () => {
       const el = Math.max(0, performance.now() - f.start);
       const k = Math.min(1, el / f.dur);
-      const eased = f.backward ? easeInOutQuad(k) : (f.phase === 'launch' ? easeInQuad(k) : easeOutCubic(k));
-      setFlightFrac(f.from + (f.to - f.from) * eased);
+      const e = easeInQuad(k);
+      setFlyPos({ x: f.fx + (f.tx - f.fx) * e, y: f.fy + (f.ty - f.fy) * e });
       if (k < 1) {
         f.raf = requestAnimationFrame(tick);
       } else {
-        setFlightFrac(f.to);
         f.phase = 'parked';
         setPhase('parked');
+        setFlyPos(null);
         setLandPulse((n) => n + 1);
       }
     };
 
-    const begin = (from: number, to: number, dur: number, backward: boolean, next: FlightPhase) => {
-      f.from = from; f.to = to; f.dur = Math.max(1, dur); f.backward = backward;
-      f.phase = next;
-      setPhase(next);
+    const beginFlight = (fx: number, fy: number, tx: number, ty: number, dur: number) => {
+      f.fx = fx; f.fy = fy; f.tx = tx; f.ty = ty; f.dur = Math.max(1, dur);
+      f.phase = 'launch';
+      setPhase('launch');
+      f.start = performance.now();
       f.raf = requestAnimationFrame(tick);
     };
 
-    if (isDrawing) {
-      if (reducedMotion) {
-        // reduced-motion: ракета остаётся на старте, пока сервер думает
-      } else if (f.phase === 'idle') {
-        begin(0, LAUNCH_FAR_FRAC, LAUNCH_MS, false, 'launch');
-      } else if (f.phase === 'launch') {
-        // Эффект мог пережить повторный запуск (StrictMode) — продолжаем
-        // полёт с текущей позиции, а не с нуля.
-        const cur = Math.max(0, Math.min(LAUNCH_FAR_FRAC, flightFracRef.current));
-        const remaining = LAUNCH_FAR_FRAC - cur;
-        if (remaining > 0.01) {
-          // easeInQuad: время ∝ √остатка
-          begin(cur, LAUNCH_FAR_FRAC, Math.max(120, LAUNCH_MS * Math.sqrt(remaining / LAUNCH_FAR_FRAC)), false, 'launch');
-        }
-      }
-    } else if (isCompleted && ticketFrac != null) {
-      if (f.phase === 'launch' || f.phase === 'land') {
-        // Ракета уже в полёте — тормозим и садимся на позиции билета.
-        const cur = Math.max(0, Math.min(1, flightFracRef.current));
-        const remaining = Math.abs(ticketFrac - cur);
-        if (remaining > 0.004) {
-          begin(cur, ticketFrac, Math.max(140, Math.min(LAND_MS * 1.4, remaining * 900)), ticketFrac < cur - 0.002, 'land');
+    const park = () => {
+      f.phase = 'parked';
+      setPhase('parked');
+      setFlyPos(null);
+      setLandPulse((n) => n + 1);
+    };
+
+    if (isCompleted && ticketPt != null) {
+      if (f.phase === 'center') {
+        if (reducedMotion) {
+          park(); // без анимации — сразу в точке розыгрыша
         } else {
-          f.phase = 'parked';
-          setPhase('parked');
-          setFlightFrac(ticketFrac);
-          setLandPulse((n) => n + 1);
+          // Запуск ИЗ ЦЕНТРА ПОЛЯ в точку розыгрыша
+          beginFlight(centerPos.x, centerPos.y, ticketPt.x, ticketPt.y, FLY_MS);
         }
-      } else if (f.phase === 'idle') {
-        // Подключились уже после определения победителя — сразу на месте.
-        f.phase = 'parked';
-        setPhase('parked');
-        setFlightFrac(ticketFrac);
-        setLandPulse((n) => n + 1);
+      } else if (f.phase === 'launch') {
+        // Эффект мог перезапуститься (StrictMode) — продолжаем из текущей точки.
+        const cur = flyPosRef.current ?? { x: centerPos.x, y: centerPos.y };
+        const dist = Math.hypot(ticketPt.x - cur.x, ticketPt.y - cur.y);
+        if (dist > 2) {
+          beginFlight(cur.x, cur.y, ticketPt.x, ticketPt.y, Math.max(120, (dist / 260) * FLY_MS));
+        } else {
+          park();
+        }
       }
     } else if (round.status === 'CANCELLED' || round.status === 'ERROR') {
-      // Отмена: ракета не взлетает (нет билета) — тихо возвращаем на старт.
-      f.phase = 'idle';
-      setPhase('idle');
-      setFlightFrac(0);
+      // Отмена: нет точки розыгрыша — шарик возвращается в центр поля.
+      if (f.phase !== 'center') {
+        f.phase = 'center';
+        setPhase('center');
+        setFlyPos(null);
+      }
     }
 
     return () => cancelAnimationFrame(f.raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDrawing, isCompleted, ticketFrac, round.id, round.status, reducedMotion]);
+  }, [isCompleted, ticketFrac, round.id, round.status, reducedMotion, size.w, size.h]);
 
-  const rocketFrac = phase === 'idle' ? 0 : flightFrac;
-  const rocket = layout ? layout.geo.pointAt(rocketFrac) : null;
+  // Текущая позиция шарика.
+  const ballPos = phase === 'launch'
+    ? (flyPos ?? centerPos)
+    : phase === 'parked' && ticketPt
+      ? ticketPt
+      : centerPos;
 
-  // След за ракетой (только когда ракета ушла с места).
-  const trailLen = (phase === 'launch' || phase === 'land' || phase === 'parked')
-    ? flightFrac * (layout?.geo.total || 0)
-    : 0;
+  // Вращение: быстрое — в розыгрыше и в полёте, медленное — в покое.
+  // Направление рандомное каждый раунд (см. roundSpin).
+  const spinning = isDrawing || phase === 'launch';
+  const spinDur = reducedMotion ? 0 : spinning ? spin.dur : spin.dur * 6 + 4;
+  const glowStrong = isLocked || isDrawing || phase === 'launch';
+  const bobbing = phase === 'center' && (round.status === 'WAITING' || isBetting);
 
   // ------------------------------------------------------------------
   let timerLabel: string;
@@ -252,9 +272,7 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
   const winnerSeg: PlatformSegment | null = layout
     ? (round.winnerId ? layout.segs.find((s) => s.participant.id === round.winnerId) ?? null : null)
     : null;
-  const showTicket = isCompleted && ticketFrac != null && layout != null;
-  const ticketPt = showTicket ? layout.geo.pointAt(ticketFrac!) : null;
-  const empty = participants.length === 0;
+  const showTicket = isCompleted && ticketPt != null;
 
   return (
     <div className="w-full relative">
@@ -318,23 +336,12 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
         )}
       </div>
 
-      {/* ПЛАТФОРМА ВЗЛЁТА: территории игроков + ракета */}
+      {/* ПЛАТФОРМА ВЗЛЁТА: территории игроков + шарик */}
       <div ref={areaRef} className="relative z-10 w-full h-[190px] mt-1.5">
         {layout && (
           <>
-            {/* SVG: палуба платформы, территории, след */}
+            {/* SVG: палуба платформы и территории */}
             <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible" aria-hidden="true">
-              <defs>
-                <linearGradient id="arenaTrailGrad" x1="0" y1="1" x2="1" y2="0">
-                  <stop offset="0%" stopColor="rgba(255,255,255,0)" />
-                  <stop offset="45%" stopColor="rgba(125,211,252,0.7)" />
-                  <stop offset="100%" stopColor="rgba(255,255,255,0.95)" />
-                </linearGradient>
-                <filter id="arenaTrailBlur" x="-40%" y="-40%" width="180%" height="180%">
-                  <feGaussianBlur stdDeviation="5" />
-                </filter>
-              </defs>
-
               {/* Основа взлётной полосы (тёмная палуба, закруглённые концы) */}
               <path d={layout.geo.d} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={DECK_W + 12} strokeLinecap="round" />
               {/* Осевая «россыпь огней» — видна в зазорах между территориями */}
@@ -390,33 +397,9 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
                   <animate attributeName="opacity" values="0.05;0.35;0.05" dur="1.6s" repeatCount="indefinite" />
                 </path>
               )}
-
-              {/* Световой след за ракетой */}
-              {trailLen > 4 && (
-                <>
-                  <path
-                    d={layout.geo.d}
-                    fill="none"
-                    stroke="url(#arenaTrailGrad)"
-                    strokeWidth={10}
-                    strokeLinecap="round"
-                    strokeDasharray={`${trailLen} ${layout.geo.total}`}
-                    filter="url(#arenaTrailBlur)"
-                    opacity={0.5}
-                  />
-                  <path
-                    d={layout.geo.d}
-                    fill="none"
-                    stroke="url(#arenaTrailGrad)"
-                    strokeWidth={4.5}
-                    strokeLinecap="round"
-                    strokeDasharray={`${trailLen} ${layout.geo.total}`}
-                  />
-                </>
-              )}
             </svg>
 
-            {/* HTML-слой: метки территорий, YOU, корона, метка билета, ракета */}
+            {/* HTML-слой: метки территорий и YOU */}
             {!empty &&
               layout.segs.map((s) => {
                 const name = s.participant.username || s.participant.firstName || 'Player';
@@ -484,7 +467,7 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
               })}
 
             {/* Метка выигрышного билета (provably fair: билет / банк) */}
-            {ticketPt && (
+            {showTicket && ticketPt && (
               <div className="absolute z-20 pointer-events-none" style={{ left: ticketPt.x, top: 0 }}>
                 <motion.div
                   initial={{ opacity: 0, scaleY: 0.4 }}
@@ -510,7 +493,7 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
               </div>
             )}
 
-            {/* Вспышка посадки */}
+            {/* Вспышка при посадке шарика */}
             <AnimatePresence>
               {landPulse > 0 && phase === 'parked' && ticketPt && (
                 <motion.div
@@ -529,68 +512,75 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
               )}
             </AnimatePresence>
 
-            {/* Ракета: ждёт на старте → взлетает → садится на билет */}
-            {rocket && (
+            {/* ШАРИК: в центре поля → вращается (рандомная сторона) →
+                запускается из центра и садится на позицию билета */}
+            {size.w > 40 && (
               <div
                 className="absolute z-20 pointer-events-none will-change-transform"
                 style={{
-                  left: rocket.x - ROCKET_SIZE / 2,
-                  top: rocket.y - ROCKET_SIZE / 2,
-                  width: ROCKET_SIZE,
-                  height: ROCKET_SIZE,
+                  left: ballPos.x - BALL_SIZE / 2,
+                  top: ballPos.y - BALL_SIZE / 2,
+                  width: BALL_SIZE,
+                  height: BALL_SIZE,
                 }}
               >
+                {/* Покачивание в покое */}
                 <motion.div
-                  animate={
-                    phase === 'idle' && isLocked
-                      ? { rotate: 45, x: [0, 1.2, -1.2, 0] }
-                      : phase === 'idle'
-                        ? { rotate: 45 }
-                        : { rotate: rocket.angle + 45 }
-                  }
-                  transition={
-                    phase === 'idle' && isLocked
-                      ? { rotate: { duration: 0.2 }, x: { duration: 0.7, repeat: Infinity, ease: 'easeInOut' } }
-                      : { duration: 0.1, ease: 'linear' }
-                  }
-                  className="w-full h-full"
+                  animate={bobbing ? { y: [0, -4, 0] } : { y: 0 }}
+                  transition={bobbing ? { duration: 2.8, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.3 }}
+                  className="relative w-full h-full"
                 >
-                  <CleanModelLottie
-                    lottieUrl="/stellarrocket-1-nobg.lottie.json"
-                    loop
-                    className={`w-full h-full drop-shadow-[0_4px_20px_rgba(79,195,255,0.35)] ${
-                      phase === 'idle' && (round.status === 'WAITING' || isBetting) ? 'opacity-90' : ''
-                    }`}
-                  />
-                </motion.div>
-                {/* Выхлоп: рычит на LOCKED, горит в полёте (сзади по вектору движения) */}
-                {(isLocked || phase === 'launch' || phase === 'land') && (
+                  {/* Свечение под шариком */}
                   <motion.div
                     className="absolute rounded-full"
-                    animate={{ scale: [1, 1.45, 1], opacity: [0.55, 1, 0.55] }}
-                    transition={{ duration: phase === 'launch' ? 0.22 : 0.9, repeat: Infinity, ease: 'easeInOut' }}
+                    animate={{ scale: [1, 1.3, 1], opacity: glowStrong ? [0.55, 1, 0.55] : [0.3, 0.55, 0.3] }}
+                    transition={{ duration: glowStrong ? 0.8 : 2.6, repeat: Infinity, ease: 'easeInOut' }}
                     style={{
-                      width: 16,
-                      height: 16,
-                      left: (ROCKET_SIZE - 16) / 2,
-                      top: (ROCKET_SIZE - 16) / 2,
-                      background: 'radial-gradient(circle, rgba(255,196,87,0.95) 0%, rgba(255,122,26,0.55) 45%, transparent 72%)',
-                      transform: phase === 'idle'
-                        ? `rotate(-45deg) translateX(-${ROCKET_SIZE * 0.56}px)`
-                        : `rotate(${rocket.angle}deg) translateX(-${ROCKET_SIZE * 0.56}px)`,
+                      width: BALL_SIZE * 2.3,
+                      height: BALL_SIZE * 2.3,
+                      left: (BALL_SIZE - BALL_SIZE * 2.3) / 2,
+                      top: (BALL_SIZE - BALL_SIZE * 2.3) / 2,
+                      background: 'radial-gradient(circle, rgba(79,195,255,0.5) 0%, rgba(0,152,234,0.22) 42%, transparent 70%)',
                     }}
                   />
-                )}
+                  {/* Сфера */}
+                  <div
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: 'radial-gradient(circle at 32% 28%, rgba(255,255,255,0.98) 0%, rgba(190,235,255,0.95) 22%, rgba(0,152,234,0.9) 55%, rgba(6,38,74,0.95) 100%)',
+                      boxShadow: '0 4px 14px rgba(0,0,0,0.5), inset 0 -5px 10px rgba(0,40,90,0.55), inset 0 3px 6px rgba(255,255,255,0.5)',
+                    }}
+                  >
+                    {/* Вращающиеся «полосы» — видно, как крутится шарик.
+                        Направление/скорость — рандомные каждый раунд. */}
+                    {spinDur > 0 && (
+                      <div
+                        className="absolute inset-0 rounded-full"
+                        style={{
+                          background: 'conic-gradient(from 0deg, transparent 0deg 30deg, rgba(255,255,255,0.30) 55deg, transparent 85deg 175deg, rgba(255,255,255,0.22) 205deg, transparent 235deg 360deg)',
+                          animation: `arena-ball-spin ${spinDur}s linear infinite`,
+                          animationDirection: spin.dir > 0 ? 'normal' : 'reverse',
+                        }}
+                      />
+                    )}
+                    {/* Блик (не вращается) */}
+                    <span
+                      aria-hidden="true"
+                      className="absolute rounded-full bg-white/90 blur-[1.5px]"
+                      style={{ width: BALL_SIZE * 0.3, height: BALL_SIZE * 0.2, left: BALL_SIZE * 0.18, top: BALL_SIZE * 0.14 }}
+                    />
+                  </div>
+                </motion.div>
               </div>
             )}
           </>
         )}
 
-        {/* Пустая арена: слот свободен (CTA поверх пунктирной полосы) */}
+        {/* Пустая арена: слот свободен (CTA внизу поля, шарик парит сверху) */}
         {empty && (
           <button
             onClick={onJoin}
-            className="absolute inset-0 m-auto h-[104px] w-[210px] rounded-[20px] border border-dashed border-white/[0.14] bg-black/25 backdrop-blur-[2px] flex flex-col items-center justify-center gap-1.5 active:scale-[0.99] transition-transform cursor-pointer"
+            className="absolute left-1/2 -translate-x-1/2 bottom-[10px] h-[86px] w-[210px] rounded-[20px] border border-dashed border-white/[0.14] bg-black/25 backdrop-blur-[2px] flex flex-col items-center justify-center gap-1.5 active:scale-[0.99] transition-transform cursor-pointer"
           >
             <span className="w-9 h-9 rounded-full bg-white/[0.05] border border-white/[0.10] flex items-center justify-center">
               <Plus className="w-4 h-4 text-white/40" />
