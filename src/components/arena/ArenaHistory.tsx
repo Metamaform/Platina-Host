@@ -45,9 +45,6 @@ export const ArenaHistoryList: React.FC<{
           <div className="flex items-center justify-between gap-2">
             <span className="font-display text-[14px] font-bold text-white/90">#{h.id}</span>
             <div className="flex items-center gap-2">
-              {h.isPrivate && (
-                <span className="px-1.5 py-0.5 rounded-md bg-violet-500/15 border border-violet-400/30 text-violet-300 text-[8px] font-extrabold tracking-wider">PRIVATE</span>
-              )}
               <span className={`px-2 py-0.5 rounded-full border text-[9px] font-extrabold tracking-wider uppercase ${
                 h.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30' : 'bg-red-500/10 text-red-400 border-red-500/30'
               }`}>
@@ -97,7 +94,6 @@ export interface ArenaHistorySummaryPublic {
   winner: { username?: string; firstName?: string; avatar?: string; userId?: number } | null;
   completedAt: number;
   status: string;
-  isPrivate: boolean;
 }
 
 // ---------------------------------------------------------------------------

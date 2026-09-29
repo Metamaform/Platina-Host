@@ -114,8 +114,6 @@ function rollFromSeed(serverSeed: string, roundId: number): number {
 
 interface ArenaRound {
   id: number;
-  isPrivate: boolean;
-  code?: string;
   mode: 'STANDARD';
   status: ArenaStatus;
   createdAt: number;
@@ -129,7 +127,6 @@ interface ArenaRound {
   maxPlayers: number;
   minBet: number;
   maxBet: number;
-  creatorId?: number;
   winnerId?: string;
   winAmount?: number;
   serverSeed: string;
@@ -137,7 +134,7 @@ interface ArenaRound {
   seedRevealed: boolean;
   roll?: number;
   ticket?: number;
-  // планировщик демо-ботов
+  // планировщик демо-ботов (ARENA_DEMO_BOTS=1)
   botTarget: number;
   nextBotAt: number;
 }
@@ -146,31 +143,26 @@ const rounds = new Map<number, ArenaRound>();
 /** id последнего публичного раунда */
 let publicRoundId: number | null = null;
 
-function newRound(opts: { isPrivate?: boolean; code?: string; creatorId?: number; maxPlayers?: number }): ArenaRound {
+function newRound(): ArenaRound {
   const { seed, hash } = makeSeed();
   const round: ArenaRound = {
     id: nextRoundId(),
-    isPrivate: !!opts.isPrivate,
-    code: opts.code,
     mode: 'STANDARD',
-    status: opts.isPrivate ? 'WAITING' : 'ACCEPTING_BETS',
+    status: 'ACCEPTING_BETS',
     createdAt: Date.now(),
     participants: [],
     totalPool: 0,
-    maxPlayers: opts.maxPlayers || ARENA_LIMITS.DEFAULT_MAX_PLAYERS,
+    maxPlayers: ARENA_LIMITS.DEFAULT_MAX_PLAYERS,
     minBet: ARENA_LIMITS.MIN_BET,
     maxBet: ARENA_LIMITS.MAX_BET,
-    creatorId: opts.creatorId,
     serverSeed: seed,
     serverSeedHash: hash,
     seedRevealed: false,
     botTarget: 0,
     nextBotAt: 0,
   };
-  if (!opts.isPrivate) {
-    round.endsAt = Date.now() + ARENA_TIMINGS.BETTING_MS;
-    scheduleBots(round);
-  }
+  round.endsAt = Date.now() + ARENA_TIMINGS.BETTING_MS;
+  scheduleBots(round);
   rounds.set(round.id, round);
   return round;
 }
@@ -180,7 +172,7 @@ function currentPublicRound(): ArenaRound {
     const r = rounds.get(publicRoundId);
     if (r) return r;
   }
-  const r = newRound({});
+  const r = newRound();
   publicRoundId = r.id;
   broadcastRound(r);
   return r;
@@ -224,16 +216,10 @@ function getGiftsDb(): any[] {
 }
 
 export function arenaBotsEnabled(): boolean {
-  const env = (process.env.ARENA_DEMO_BOTS || '').trim();
-  if (env === '1') return true;
-  if (env === '0') return false;
-  // по умолчанию — только в веб-bypass (демо) режиме
-  try {
-    const cfg = readJson<any>(`${DATA_DIR}/admin_config.json`, {});
-    return !!cfg.allowWebBypass;
-  } catch {
-    return false;
-  }
+  // Автономные демо-боты — только при явном ARENA_DEMO_BOTS=1.
+  // Для одиночного тестирования есть временная кнопка «Добавить участника»
+  // (POST /api/arena/dev-bot) — она добавляет одного бота по запросу.
+  return (process.env.ARENA_DEMO_BOTS || '').trim() === '1';
 }
 
 function scheduleBots(round: ArenaRound) {
@@ -382,7 +368,6 @@ function snapshotHistory(round: ArenaRound): ArenaHistoryEntry {
   return {
     id: round.id,
     mode: round.mode,
-    isPrivate: round.isPrivate,
     status: (round.status === 'CANCELLED' || round.status === 'ERROR' ? round.status : 'COMPLETED') as ArenaHistoryEntry['status'],
     createdAt: round.createdAt,
     completedAt: round.completedAt || Date.now(),
@@ -454,31 +439,6 @@ export function tickArenaEngine() {
     currentPublicRound();
   }
 
-  // --- приватные раунды ---
-  for (const r of rounds.values()) {
-    if (!r.isPrivate) continue;
-    if (r.status === 'WAITING' && now >= r.createdAt + ARENA_TIMINGS.PRIVATE_WAITING_MS) {
-      refundRound(r, 'CANCELLED');
-      r.completedAt = now;
-      if (r.participants.length > 0) pushHistory(snapshotHistory(r));
-      broadcastRound(r);
-    } else if (r.status === 'ACCEPTING_BETS' && now >= (r.endsAt || 0)) {
-      r.status = 'LOCKED';
-      r.lockedAt = now;
-      r.drawAt = now + ARENA_TIMINGS.LOCKED_MS;
-      broadcastRound(r);
-    } else if (r.status === 'LOCKED' && now >= (r.drawAt || 0)) {
-      r.status = 'DRAWING';
-      r.drawAt = now + ARENA_TIMINGS.DRAWING_MS;
-      broadcastRound(r);
-    } else if (r.status === 'DRAWING' && now >= (r.drawAt || 0)) {
-      completeRound(r);
-      broadcastRound(r);
-    } else if ((r.status === 'COMPLETED' || r.status === 'CANCELLED' || r.status === 'ERROR') && now >= (r.completedAt || 0) + 60_000) {
-      rounds.delete(r.id);
-    }
-  }
-
   pruneRounds();
 }
 
@@ -501,11 +461,11 @@ setInterval(tickArenaEngine, 250);
 // ---------------------------------------------------------------------------
 
 
-/** Пуш полного состояния раунда всем подписчикам его скоупа. */
+/** Пуш полного состояния раунда всем подписчикам. */
 function broadcastRound(round: ArenaRound) {
   broadcast({
     type: 'state',
-    scope: round.isPrivate ? `private:${round.code}` : 'public',
+    scope: 'public',
     round: publicState(round),
   });
 }
@@ -513,8 +473,6 @@ function broadcastRound(round: ArenaRound) {
 function publicState(round: ArenaRound): ArenaRoundState {
   return {
     id: round.id,
-    isPrivate: round.isPrivate,
-    code: round.code,
     mode: round.mode,
     status: round.status,
     createdAt: round.createdAt,
@@ -525,7 +483,6 @@ function publicState(round: ArenaRound): ArenaRoundState {
     maxPlayers: round.maxPlayers,
     minBet: round.minBet,
     maxBet: round.maxBet,
-    creatorId: round.creatorId,
     serverSeedHash: round.serverSeedHash,
     serverSeed: round.seedRevealed ? round.serverSeed : undefined,
     roll: round.roll,
@@ -536,12 +493,8 @@ function publicState(round: ArenaRound): ArenaRoundState {
   };
 }
 
-export function getArenaState(code?: string): ArenaRoundState {
+export function getArenaState(): ArenaRoundState {
   tickArenaEngine();
-  if (code) {
-    const r = findPrivateRound(code);
-    if (r) return publicState(r);
-  }
   return publicState(currentPublicRound());
 }
 
@@ -585,14 +538,6 @@ export function getArenaFair(id: number) {
   };
 }
 
-function findPrivateRound(code: string): ArenaRound | undefined {
-  const norm = String(code || '').trim().toUpperCase();
-  for (const r of rounds.values()) {
-    if (r.isPrivate && r.code === norm) return r;
-  }
-  return undefined;
-}
-
 // ---------------------------------------------------------------------------
 // Действия игрока
 // ---------------------------------------------------------------------------
@@ -604,7 +549,6 @@ export interface ArenaActionResult {
   round?: ArenaRoundState;
   balance?: number;
   inventory?: any[];
-  code?: string;
 }
 
 function normalizeGift(gift: any): ArenaParticipant['gift'] {
@@ -623,28 +567,16 @@ function normalizeGift(gift: any): ArenaParticipant['gift'] {
 
 export function placeArenaBet(
   userId: number,
-  opts: { amount?: number; gift?: any; code?: string }
+  opts: { amount?: number; gift?: any }
 ): ArenaActionResult {
   tickArenaEngine();
 
   const user = getUser(userId);
   if (!user) return { error: 'Пользователь не найден', errorCode: 'no_user' };
 
-  // выбираем раунд: приватный по коду или текущий публичный
-  let round: ArenaRound;
-  if (opts.code) {
-    const found = findPrivateRound(opts.code);
-    if (!found) return { error: 'Приватная Arena не найдена или уже завершена', errorCode: 'round_not_found' };
-    round = found;
-  } else {
-    round = currentPublicRound();
-  }
+  const round = currentPublicRound();
 
-  if (round.status === 'WAITING') {
-    // первая ставка в приватном лобби открывает окно приёма ставок
-    round.status = 'ACCEPTING_BETS';
-    round.endsAt = Date.now() + ARENA_TIMINGS.BETTING_MS;
-  } else if (round.status !== 'ACCEPTING_BETS') {
+  if (round.status !== 'ACCEPTING_BETS') {
     return { error: 'Ставки в этом раунде уже закрыты', errorCode: 'bets_closed' };
   }
 
@@ -727,40 +659,25 @@ export function placeArenaBet(
     round: publicState(round),
     balance,
     inventory,
-    code: round.code,
   };
 }
 
-function makeInviteCode(): string {
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '';
-  for (let i = 0; i < 6; i++) code += alphabet[Math.floor(Math.random() * alphabet.length)];
-  return code;
-}
-
-export function createPrivateArena(
-  userId: number,
-  opts: { maxPlayers?: number }
-): ArenaActionResult {
+/**
+ * ТЕМПОРАРНАЯ ТЕСТОВАЯ ФУНКЦИЯ: добавить рандомного бота-участника
+ * в текущий публичный раунд — для одиночного тестирования арены.
+ * Вызывается кнопкой «Добавить участника» на фронтенде.
+ */
+export function addArenaDevBot(): ArenaActionResult {
   tickArenaEngine();
-  const user = getUser(userId);
-  if (!user) return { error: 'Пользователь не найден', errorCode: 'no_user' };
-
-  // у пользователя не должно быть активной приватной лобби
-  for (const r of rounds.values()) {
-    if (r.isPrivate && r.creatorId === userId && (r.status === 'WAITING' || r.status === 'ACCEPTING_BETS')) {
-      return { error: 'У вас уже есть активная приватная Arena', errorCode: 'private_exists', code: r.code };
-    }
+  const round = currentPublicRound();
+  if (round.status !== 'ACCEPTING_BETS') {
+    return { error: 'Ставки в этом раунде уже закрыты', errorCode: 'bets_closed' };
   }
-
-  const maxPlayers = Math.min(
-    ARENA_LIMITS.MAX_PLAYERS,
-    Math.max(ARENA_LIMITS.MIN_PLAYERS, Number(opts.maxPlayers) || ARENA_LIMITS.DEFAULT_MAX_PLAYERS)
-  );
-  const code = makeInviteCode();
-  const round = newRound({ isPrivate: true, code, creatorId: userId, maxPlayers });
-  broadcastRound(round);
-  return { ok: true, code, round: publicState(round) };
+  if (round.participants.length >= round.maxPlayers) {
+    return { error: 'В этом раунде нет свободных мест', errorCode: 'round_full' };
+  }
+  spawnBotBet(round);
+  return { ok: true, round: publicState(round) };
 }
 
 // ---------------------------------------------------------------------------

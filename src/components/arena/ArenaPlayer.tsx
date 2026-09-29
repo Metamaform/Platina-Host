@@ -8,7 +8,7 @@
 */
 
 import React from 'react';
-import { Plus, Gem } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { GramIcon } from '../GramIcon';
 import type { ArenaParticipant } from '../../lib/arenaShared';
 import { ArenaAvatar, ArenaGiftChip, PositionBadge, WinnerCrown } from './arenaUi';
@@ -99,7 +99,7 @@ export const ArenaEmptyTile: React.FC<{ onJoin?: () => void; label: string; hint
     </span>
     <span className="text-[11px] font-bold text-white/45 uppercase tracking-wider text-center leading-tight">{label}</span>
     <span className="flex items-center gap-1 text-[10px] font-semibold text-[#4fc3ff]/80">
-      <Gem className="w-3 h-3" />
+      <GramIcon className="w-3 h-3" />
       {hint}
     </span>
   </button>

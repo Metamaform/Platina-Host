@@ -2,18 +2,16 @@
   Модальные окна AICE ARENA:
   · BetModal — выбор суммы ставки: ручной ввод, быстрые значения, MAX,
     проверка баланса перед подтверждением («Недостаточно средств»);
-  · NftModal — инвентарь пользователя для добавления NFT к ставке;
-  · PrivateModal — создание приватной Arena (макс. игроков → invite-код).
+  · NftModal — инвентарь пользователя для добавления NFT к ставке.
 
   Все окна — нижние шторки в стиле Rocket, без glassmorphism-перебора.
 */
 
 import React, { useMemo, useState } from 'react';
-import { X, AlertTriangle, Users, Copy, Check, Gem } from 'lucide-react';
+import { X, AlertTriangle } from 'lucide-react';
 import { GramIcon } from '../GramIcon';
 import { NftSelectorGrid } from '../NftSelectorGrid';
-import { ARENA_CARD, CardSheen, ArenaGiftChip } from './arenaUi';
-import { ARENA_LIMITS } from '../../lib/arenaShared';
+import { ArenaGiftChip } from './arenaUi';
 
 // ---------------------------------------------------------------------------
 // Общая шторка
@@ -128,7 +126,7 @@ export const BetModal: React.FC<BetModalProps> = ({
         )}
 
         <div className="mt-3 text-[12px] font-semibold text-white/45">
-          {t('arena_total')}: <span className="text-white/80 font-bold">{total.toFixed(2)} 💎</span>
+          {t('arena_total')}: <span className="text-white/80 font-bold">{total.toFixed(2)} GRAM</span>
         </div>
       </div>
 
@@ -144,7 +142,7 @@ export const BetModal: React.FC<BetModalProps> = ({
         <div className={`flex items-center gap-2 rounded-[16px] border px-3.5 py-2.5 mb-2 ${error ? 'border-red-500/40 bg-red-500/[0.08]' : 'border-red-500/40 bg-red-500/[0.08]'}`}>
           <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
           <span className="text-[12px] font-semibold text-red-400">
-            {error || (insufficient ? t('arena_insufficient') : belowMin ? `${t('arena_min_bet')} ${minBet.toFixed(2)} 💎` : `${t('arena_max_bet')} ${maxBet.toFixed(0)} 💎`)}
+            {error || (insufficient ? t('arena_insufficient') : belowMin ? `${t('arena_min_bet')} ${minBet.toFixed(2)} GRAM` : `${t('arena_max_bet')} ${maxBet.toFixed(0)} GRAM`)}
           </span>
         </div>
       )}
@@ -196,108 +194,3 @@ export const NftModal: React.FC<NftModalProps> = ({ onClose, inventory, selected
     />
   </Sheet>
 );
-
-// ---------------------------------------------------------------------------
-// PrivateModal — создание приватной Arena
-// ---------------------------------------------------------------------------
-
-interface PrivateModalProps {
-  onClose: () => void;
-  onCreate: (maxPlayers: number) => void;
-  submitting: boolean;
-  error: string | null;
-  t: (k: string) => string;
-}
-
-const PLAYER_OPTIONS = [2, 4, 6, 8];
-
-export const PrivateModal: React.FC<PrivateModalProps> = ({ onClose, onCreate, submitting, error, t }) => {
-  const [maxPlayers, setMaxPlayers] = useState(4);
-
-  return (
-    <Sheet onClose={onClose} title={t('arena_private_title')}>
-      <div className={`${ARENA_CARD} p-4 mb-3`}>
-        <CardSheen />
-        <div className="relative z-10 text-[12px] text-white/55 font-medium leading-relaxed">
-          {t('arena_private_desc')}
-        </div>
-      </div>
-
-      <div className="px-1 mb-2 text-[11px] font-bold text-white/50 uppercase tracking-wider flex items-center gap-1.5">
-        <Users className="w-3.5 h-3.5" />
-        {t('arena_max_players')}
-      </div>
-      <div className="grid grid-cols-4 gap-2 mb-4">
-        {PLAYER_OPTIONS.map((n) => (
-          <button
-            key={n}
-            onClick={() => setMaxPlayers(n)}
-            className={`h-11 rounded-[16px] font-display font-bold text-[15px] border transition-all cursor-pointer active:scale-95 ${
-              maxPlayers === n
-                ? 'bg-[#0098ea]/15 border-[#0098ea]/50 text-[#4fc3ff] shadow-[0_0_14px_rgba(0,152,234,0.25)]'
-                : 'bg-white/[0.04] border-white/[0.08] text-white/60'
-            }`}
-          >
-            {n}
-          </button>
-        ))}
-      </div>
-
-      {error && (
-        <div className="flex items-center gap-2 rounded-[16px] border border-red-500/40 bg-red-500/[0.08] px-3.5 py-2.5 mb-2">
-          <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
-          <span className="text-[12px] font-semibold text-red-400">{error}</span>
-        </div>
-      )}
-
-      <button
-        onClick={() => onCreate(maxPlayers)}
-        disabled={submitting}
-        className="w-full h-[52px] rounded-full font-display font-bold text-[15px] tracking-wide transition-all select-none bg-gradient-to-r from-violet-500 via-[#7b6cf6] to-[#0098ea] text-white shadow-[0_4px_22px_rgba(123,108,246,0.4),inset_0_1px_0_rgba(255,255,255,0.4)] hover:brightness-110 active:scale-[0.98] cursor-pointer disabled:opacity-50"
-      >
-        {submitting ? t('arena_sending') : t('arena_private_create')}
-      </button>
-    </Sheet>
-  );
-};
-
-// ---------------------------------------------------------------------------
-// JoinByCodeModal — вход в приватную Arena по коду
-// ---------------------------------------------------------------------------
-
-export const JoinByCodeModal: React.FC<{
-  onClose: () => void;
-  onJoin: (code: string) => void;
-  error: string | null;
-  t: (k: string) => string;
-}> = ({ onClose, onJoin, error, t }) => {
-  const [code, setCode] = useState('');
-  const valid = /^[A-Za-z0-9]{6}$/.test(code.trim());
-  return (
-    <Sheet onClose={onClose} title={t('arena_join_title')}>
-      <input
-        value={code}
-        onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
-        placeholder="XXXXXX"
-        className="w-full h-14 bg-white/[0.04] border border-white/[0.10] rounded-[18px] text-center font-display text-[24px] font-black tracking-[0.35em] text-white outline-none focus:border-[#0098ea]/50 mb-3"
-      />
-      {error && (
-        <div className="flex items-center gap-2 rounded-[16px] border border-red-500/40 bg-red-500/[0.08] px-3.5 py-2.5 mb-2">
-          <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
-          <span className="text-[12px] font-semibold text-red-400">{error}</span>
-        </div>
-      )}
-      <button
-        onClick={() => valid && onJoin(code.trim())}
-        disabled={!valid}
-        className={`w-full h-[52px] rounded-full font-display font-bold text-[15px] transition-all ${
-          valid
-            ? 'bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] text-white shadow-[0_4px_22px_rgba(0,152,234,0.5)] active:scale-[0.98] cursor-pointer'
-            : 'bg-white/[0.05] border border-white/[0.08] text-white/35 cursor-not-allowed'
-        }`}
-      >
-        {t('arena_join_btn')}
-      </button>
-    </Sheet>
-  );
-};

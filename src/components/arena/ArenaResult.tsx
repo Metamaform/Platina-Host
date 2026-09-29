@@ -72,8 +72,9 @@ export const ArenaResult: React.FC<ArenaResultProps> = ({ round, myBet, winner, 
     >
       <div className="text-[13px] font-bold text-white/70">{t('arena_round_finished')}</div>
       {iPlayed && (
-        <div className="text-[11px] font-semibold text-red-400/90 mt-0.5">
-          {t('arena_you_lost')} −{myBet!.contribution.toFixed(2)} 💎
+        <div className="flex items-center justify-center gap-1 text-[11px] font-semibold text-red-400/90 mt-0.5">
+          {t('arena_you_lost')} −{myBet!.contribution.toFixed(2)}
+          <GramIcon className="w-3 h-3 text-red-400/90" />
         </div>
       )}
       <div className="text-[11px] text-white/40 mt-1">

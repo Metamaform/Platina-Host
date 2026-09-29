@@ -58,11 +58,6 @@ export const ArenaPoolInfo: React.FC<ArenaPoolInfoProps> = React.memo(({ round, 
             <span className="font-display text-[15px] font-bold text-white/90">
               {t('arena_pool')} #{round.id}
             </span>
-            {round.isPrivate && (
-              <span className="px-1.5 py-0.5 rounded-md bg-violet-500/15 border border-violet-400/30 text-violet-300 text-[9px] font-extrabold tracking-wider">
-                PRIVATE
-              </span>
-            )}
           </div>
           <div className="mt-1.5 flex items-baseline gap-1.5">
             <span className="font-display text-[30px] leading-none font-black text-white display-xl">

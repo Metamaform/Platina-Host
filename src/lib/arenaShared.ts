@@ -51,9 +51,6 @@ export interface ArenaParticipant {
 /** Круг состояния раунда, который сервер отдаёт всем клиентам. */
 export interface ArenaRoundState {
   id: number;
-  isPrivate: boolean;
-  /** invite-код приватной арены */
-  code?: string;
   mode: ArenaMode;
   status: ArenaStatus;
   createdAt: number;
@@ -86,7 +83,6 @@ export interface ArenaRoundState {
 export interface ArenaHistoryEntry {
   id: number;
   mode: ArenaMode;
-  isPrivate: boolean;
   status: Exclude<ArenaStatus, 'WAITING' | 'ACCEPTING_BETS' | 'LOCKED' | 'DRAWING'>;
   createdAt: number;
   completedAt: number;

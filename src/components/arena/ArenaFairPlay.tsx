@@ -179,7 +179,7 @@ export const FairPlayModal: React.FC<FairPlayModalProps> = ({ round, onClose, t 
                       </div>
                       <div className="rounded-[16px] border border-white/[0.08] bg-white/[0.03] px-3 py-2.5">
                         <div className="text-[10px] font-bold text-white/40 uppercase tracking-wider">{t('arena_fair_ticket')}</div>
-                        <div className="font-display font-bold text-white/90 text-[14px] mt-0.5">{fair.ticket?.toFixed(2)} 💎</div>
+                        <div className="font-display font-bold text-white/90 text-[14px] mt-0.5">{fair.ticket?.toFixed(2)}</div>
                       </div>
                     </div>
 

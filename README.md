@@ -83,15 +83,14 @@ const navItems = [
 - игроки делают ставки (GRAM и/или NFT из инвентаря) в общий пул;
 - поле автоматически делится на области по числу игроков (1/2/3/4/адаптив);
 - таймер приёма ставок 25s → LOCKED → DRAWING → COMPLETED;
-- победитель определяется **только на сервере** (provably fair), забирает весь банк в GRAM;
-- приватные Arena с invite-кодом и ссылкой `?arena=CODE`.
+- победитель определяется **только на сервере** (provably fair), забирает весь банк в GRAM.
 
 ## Файлы
 
 | Файл | Назначение |
 | --- | --- |
 | `src/lib/arenaShared.ts` | общие типы/константы (клиент + сервер) |
-| `src/lib/arena.server.ts` | движок: машина состояний, ставки, выплаты, provably fair, история (`data/arena_history.json`), SSE-рассылка |
+| `src/lib/arena.server.ts` | движок: машина состояний, ставки, выплаты, provably fair, история (`data/arena_history.json`), SSE-рассылка, демо-бот |
 | `src/components/arena/Arena.tsx` | страница Arena (ArenaPage) |
 | `src/components/arena/Arena*.tsx` | Header / PoolInfo / Board+Player / Actions / MyBet / Participants / Result / History / FairPlay / модалки |
 | `src/components/arena/useArenaLive.ts` | realtime-хук: SSE `/api/arena/stream` + фолбэк-поллинг |
@@ -103,9 +102,8 @@ const navItems = [
 | --- | --- | --- |
 | GET | `/api/arena/state?code=` | текущий раунд + история (fallback) |
 | GET | `/api/arena/stream?token=&code=` | SSE: `state` / `balance` / `history` |
-| POST | `/api/arena/bet` | ставка `{ amount, gift?, code? }` |
-| POST | `/api/arena/private` | создать приватное лобби → invite-код |
-| GET | `/api/arena/join/:code` | проверка invite-кода |
+| POST | `/api/arena/bet` | ставка `{ amount, gift? }` |
+| POST | `/api/arena/dev-bot` | ТЕМПОРАРНО: рандомный бот-участник для одиночного теста |
 | GET | `/api/arena/history?limit=` | завершённые игры |
 | GET | `/api/arena/round/:id` | детали игры |
 | GET | `/api/arena/fair/:id` | provably fair: хэш/секрет/билет |
@@ -123,8 +121,9 @@ ticket          — roll × totalPool
 После COMPLETED сервер раскрывает `serverSeed`; кнопка «Проверить результат»
 в модалке 🛡 ЧЕСТНАЯ ИГРА пересчитывает всё на клиенте (WebCrypto).
 
-## Демо-боты
+## Демо-боты (тест)
 
-В bypass/демо-режиме (`allowWebBypass` или `ARENA_DEMO_BOTS=1`) в публичные
-пулы добавляются боты-участники, чтобы арена жила. В продакшене с реальными
-Telegram-пользователями выключены (`ARENA_DEMO_BOTS=0`).
+Автономные боты выключены. Для одиночного тестирования на экране Arena есть
+временная кнопка «Добавить участника (тест)» — она вызывает `POST /api/arena/dev-bot`
+и добавляет одного рандомного бота в текущий раунд. Перед релизом удалить
+кнопку и эндпоинт. Для автономных ботов (без кнопки) — `ARENA_DEMO_BOTS=1`.
