@@ -5,7 +5,7 @@ import {
   Plus, Dices, ArrowUpRight, ChevronRight
 } from 'lucide-react';
 import { GramIcon } from './GramIcon';
-import { cleanNftName } from '../lib/nftUtils';
+import { cleanNftName, getNftBackdrop } from '../lib/nftUtils';
 import { NftSelectorGrid } from './NftSelectorGrid';
 import { LiquidSegment } from './ui/LiquidSegment';
 import { PremiumImage } from './PremiumImage';
@@ -14,7 +14,6 @@ import {
   computeIceArenaTerritories,
   samplePointInIceArenaTerritory,
 } from '../lib/iceArenaTerritories';
-import { IceArenaCelebrationModal } from './IceArenaCelebrationModal';
 
 export interface IceArenaProps {
   onBack: () => void;
@@ -57,6 +56,21 @@ export interface CompletedRoundRecord {
   gifts?: any[];
 }
 
+export function getGiftBackdropType(g: any): 'black' | 'onyx' | 'default' {
+  if (!g) return 'default';
+  const bd = String(g.backdrop || '').toLowerCase();
+  const name = String(g.name || '').toLowerCase();
+  const id = String(g.id || '').toLowerCase();
+
+  if (bd.includes('onyx') || name.includes('onyx') || id.includes('_onyx')) {
+    return 'onyx';
+  }
+  if (bd.includes('black') || name.includes('(black)') || name.includes(' black') || id.endsWith('_black') || id.includes('_black_')) {
+    return 'black';
+  }
+  return 'default';
+}
+
 const DEFAULT_HISTORY: CompletedRoundRecord[] = [
   {
     id: 449084,
@@ -80,6 +94,24 @@ const DEFAULT_HISTORY: CompletedRoundRecord[] = [
       { id: 'h_2', userId: 102, firstName: 'Elena', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80', betAmount: 45, contribution: 45, percentage: 24.4, color: '#06b6d4' },
       { id: 'h_3', userId: 103, firstName: 'Dmitry', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', betAmount: 38, contribution: 38, percentage: 20.6, color: '#f59e0b' },
       { id: 'h_4', userId: 104, firstName: 'Sofi', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80', betAmount: 26.5, contribution: 26.5, percentage: 14.3, color: '#ec4899' },
+    ],
+    gifts: [
+      {
+        id: "45_black",
+        name: "Durov’s Caps (Black)",
+        image_url: "https://fragment.com/file/gifts/durovscap/model.tUx9OQD76zRCUJvZus_PPYlsUWIr5bvXUEpBMMEwyjtCbV54nssQ3Ppd_2b7xMCE.webp",
+        backdrop: "Black",
+        price: 110.0,
+        floor_price_gram: 110.0,
+      },
+      {
+        id: "45_onyx",
+        name: "Durov’s Caps (Onyx Black)",
+        image_url: "https://fragment.com/file/gifts/durovscap/model.tUx9OQD76zRCUJvZus_PPYlsUWIr5bvXUEpBMMEwyjtCbV54nssQ3Ppd_2b7xMCE.webp",
+        backdrop: "Onyx Black",
+        price: 74.5,
+        floor_price_gram: 74.5,
+      },
     ],
   },
   {
@@ -170,6 +202,250 @@ const SAMPLE_PLAYERS = [
   },
 ];
 
+/*
+  ==============================================================================
+  NFT PRIZE CARD (Renders won gifts with Black / Onyx Black theme)
+  ==============================================================================
+*/
+interface NftPrizeCardProps {
+  gift: any;
+  compact?: boolean;
+}
+
+const NftPrizeCard: React.FC<NftPrizeCardProps> = ({ gift, compact = false }) => {
+  const backdrop = getNftBackdrop(gift);
+  const isBlack = backdrop === 'Black';
+  const isOnyx = backdrop === 'Onyx Black';
+  const isDark = isBlack || isOnyx;
+
+  const price = Number(gift.floor_price_gram || gift.price || 0);
+  const name = cleanNftName(gift.baseName || gift.name);
+
+  return (
+    <div
+      className={`relative overflow-hidden rounded-2xl flex flex-col items-center transition-all duration-300 ${
+        isBlack
+          ? 'bg-[radial-gradient(circle_at_50%_35%,#2c2d30_0%,#09090b_100%)] border border-white/20 shadow-[0_4px_22px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.15)] ring-1 ring-white/10'
+          : isOnyx
+          ? 'bg-[radial-gradient(circle_at_50%_35%,#3a3f42_0%,#131517_100%)] border border-white/20 shadow-[0_4px_22px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.15)] ring-1 ring-white/10'
+          : 'bg-white/[0.05] border border-white/10 shadow-lg'
+      } ${compact ? 'p-2' : 'p-3 w-full'}`}
+    >
+      {/* Black / Onyx Black Pill Badge */}
+      {isDark && (
+        <div className="mb-1 flex items-center justify-center">
+          <span
+            className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm ${
+              isOnyx
+                ? 'text-zinc-200 bg-[#35393a]/90 border border-white/15'
+                : 'text-zinc-300 bg-black/90 border border-white/15'
+            }`}
+          >
+            {isOnyx ? 'Onyx Black' : 'Black'}
+          </span>
+        </div>
+      )}
+
+      {/* Gift Image */}
+      <div className={`relative flex items-center justify-center ${compact ? 'w-12 h-12 mb-1' : 'w-16 h-16 mb-1'}`}>
+        {isDark && (
+          <div className="absolute inset-0 rounded-full bg-white/5 blur-md pointer-events-none" />
+        )}
+        <PremiumImage
+          src={gift.image_url}
+          alt={name}
+          className="w-full h-full object-contain drop-shadow-md"
+          staticMode={false}
+          loopWithDelay={true}
+          loopDelayMs={4000}
+        />
+      </div>
+
+      {/* Gift Name */}
+      <span className="text-white text-[11px] font-bold truncate max-w-[120px] leading-tight">
+        {name}
+      </span>
+
+      {/* Price in GRAM */}
+      {price > 0 && (
+        <div className="flex items-center gap-1 mt-0.5 text-[11px] font-extrabold text-brand tabular-nums">
+          <span>{price.toFixed(1)}</span>
+          <GramIcon className="w-3 h-3 text-brand" />
+        </div>
+      )}
+    </div>
+  );
+};
+
+/*
+  ==============================================================================
+  CELEBRATION MODAL (Restored previous clean interface for Winner & Top Game 24h)
+  ==============================================================================
+*/
+interface IceArenaCelebrationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  isTopGame?: boolean;
+  roundId: number;
+  winner: ArenaParticipant;
+  totalPool: number;
+  gifts?: any[];
+  onContinue?: () => void;
+}
+
+const IceArenaCelebrationModal: React.FC<IceArenaCelebrationModalProps> = ({
+  isOpen,
+  onClose,
+  isTopGame = false,
+  roundId,
+  winner,
+  totalPool,
+  gifts = [],
+  onContinue,
+}) => {
+  if (!isOpen || !winner) return null;
+
+  const sortedGifts = [...gifts].sort(
+    (a, b) => Number(b.floor_price_gram || b.price || 0) - Number(a.floor_price_gram || a.price || 0)
+  );
+
+  return (
+    <div
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/85 backdrop-blur-md px-6 select-none cursor-pointer"
+      onClick={onClose}
+    >
+      {/* Confetti / Fireworks (Хлопушка) particles */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {Array.from({ length: 40 }).map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ 
+              x: `${Math.random() * 100}vw`, 
+              y: -25, 
+              rotate: 0, 
+              opacity: 1 
+            }}
+            animate={{ 
+              y: '105vh', 
+              rotate: 360 * (Math.random() > 0.5 ? 1 : -1),
+              opacity: [1, 1, 0] 
+            }}
+            transition={{ 
+              duration: 2.4 + Math.random() * 2, 
+              repeat: Infinity,
+              delay: Math.random() * 1.5,
+              ease: "linear"
+            }}
+            style={{
+              backgroundColor: ['#10b981', '#84cc16', '#f59e0b', '#ec4899', '#06b6d4', '#8b5cf6', '#eab308'][i % 7],
+              width: `${6 + (i % 6)}px`,
+              height: `${10 + (i % 8)}px`,
+              borderRadius: i % 2 === 0 ? '2px' : '50%',
+            }}
+            className="absolute"
+          />
+        ))}
+      </div>
+
+      {/* Winner Card Container */}
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.8, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        className="relative z-10 w-full max-w-sm flex flex-col items-center text-center p-6 cursor-default"
+      >
+        {/* Close Button in top right */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-white/70 hover:text-white transition-all cursor-pointer z-20"
+          title="Закрыть"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        {/* Winner Avatar with Glowing Halo */}
+        <div className="relative mb-3">
+          <div 
+            style={{ backgroundColor: winner.color || (isTopGame ? '#f59e0b' : '#10b981') }} 
+            className="absolute inset-0 rounded-full blur-xl opacity-60 animate-pulse" 
+          />
+          <img
+            src={winner.avatar || winner.photoUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Winner'}
+            alt={winner.firstName || 'Победитель'}
+            className="relative z-10 w-20 h-20 rounded-full object-cover border-4 border-white/20 shadow-2xl"
+          />
+        </div>
+
+        <span className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-0.5">
+          {isTopGame ? `Топ игра 24ч • Раунд #${roundId}` : 'Победитель'}
+        </span>
+
+        <h2 className="text-2xl font-display font-black text-white mb-2">
+          {winner.firstName || winner.username || 'Победитель'}
+        </h2>
+
+        {/* Total Winnings Headline */}
+        <div className="flex flex-col items-center mb-4">
+          <div className="flex items-baseline gap-1.5 text-3xl sm:text-4xl font-display font-black text-amber-300 drop-shadow-[0_0_20px_rgba(245,158,11,0.5)]">
+            <span>+{totalPool.toFixed(2)}</span>
+            <span className="text-xl font-bold text-amber-300/90">GRAM</span>
+          </div>
+        </div>
+
+        {/* Pure NFT row: чисто нфт и с фоном блек или оникс */}
+        {sortedGifts.length > 0 && (
+          <div className="flex items-center justify-center flex-wrap gap-2.5 mb-6">
+            {sortedGifts.slice(0, 4).map((g, i) => {
+              const bd = getNftBackdrop(g);
+              const isBlack = bd === 'Black';
+              const isOnyx = bd === 'Onyx Black';
+              return (
+                <div
+                  key={i}
+                  className={`w-14 h-14 rounded-2xl p-2 flex items-center justify-center shrink-0 border transition-all ${
+                    isBlack
+                      ? 'bg-[radial-gradient(circle,#282a2b_0%,#191919_100%)] border-white/30 shadow-[0_0_12px_rgba(0,0,0,0.85)]'
+                      : isOnyx
+                      ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/30 shadow-[0_0_12px_rgba(0,0,0,0.75)]'
+                      : 'bg-white/10 border-white/15 backdrop-blur-md shadow-lg'
+                  }`}
+                  title={`${g.name}${bd !== 'Default' ? ` (${bd})` : ''}`}
+                >
+                  <PremiumImage
+                    src={g.image_url}
+                    alt={g.name}
+                    className="w-full h-full object-contain"
+                    staticMode={true}
+                  />
+                </div>
+              );
+            })}
+
+            {sortedGifts.length > 4 && (
+              <div className="h-14 px-3.5 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md flex items-center justify-center text-white font-display font-black text-sm shrink-0 shadow-lg">
+                +{sortedGifts.length - 4}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Green Button: «Продолжить» / «Закрыть» */}
+        <button
+          onClick={() => {
+            if (onContinue) onContinue();
+            else onClose();
+          }}
+          className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#84cc16] via-[#a3e635] to-[#84cc16] hover:brightness-105 active:scale-95 transition-all text-black font-display font-black text-lg shadow-[0_4px_22px_rgba(132,204,22,0.4)] cursor-pointer"
+        >
+          {isTopGame ? 'Закрыть' : 'Продолжить'}
+        </button>
+      </motion.div>
+    </div>
+  );
+};
+
 export const IceArena: React.FC<IceArenaProps> = ({
   onBack,
   inventory = [],
@@ -199,6 +475,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
   const [now, setNow] = useState(() => Date.now());
   const [territoryMapElement, setTerritoryMapElement] = useState<HTMLDivElement | null>(null);
   const [territoryMapSize, setTerritoryMapSize] = useState({ width: 360, height: 270 });
+  const [landPulse, setLandPulse] = useState<number>(0);
 
   useEffect(() => {
     const element = territoryMapElement;
@@ -439,8 +716,10 @@ export const IceArena: React.FC<IceArenaProps> = ({
     setCountdown(30);
     setWinner(null);
     setShowWinnerModal(false);
+    setShowTopGameModal(false);
     setIsBallActive(false);
     setBallPos(null);
+    setLandPulse(0);
 
     // Initial player (kesha with 4.26 G)
     const p1: ArenaParticipant = {
@@ -492,6 +771,14 @@ export const IceArena: React.FC<IceArenaProps> = ({
     const t2 = setTimeout(() => {
       setParticipants(prev => {
         if (prev.some(p => p.firstName === SAMPLE_PLAYERS[2].name)) return prev;
+        const blackGift = {
+          id: "45_black",
+          name: "Durov’s Caps (Black)",
+          image_url: "https://fragment.com/file/gifts/durovscap/model.tUx9OQD76zRCUJvZus_PPYlsUWIr5bvXUEpBMMEwyjtCbV54nssQ3Ppd_2b7xMCE.webp",
+          backdrop: "Black",
+          price: 4.22,
+          floor_price_gram: 4.22,
+        };
         const p3: ArenaParticipant = {
           id: `p_3_${Date.now()}`,
           userId: 103,
@@ -503,6 +790,9 @@ export const IceArena: React.FC<IceArenaProps> = ({
           contribution: SAMPLE_PLAYERS[2].bet,
           percentage: 0,
           color: SAMPLE_PLAYERS[2].color,
+          gift: blackGift,
+          gifts: [blackGift],
+          isNft: true,
         };
         playSound('bet');
         return [...prev, p3];
@@ -556,164 +846,100 @@ export const IceArena: React.FC<IceArenaProps> = ({
     return () => clearInterval(timer);
   }, [roundStatus, playSound]);
 
-  // При старте розыгрыша шарик катится по арене с инерцией и отскоками,
-  // затем мягко затухает внутри территории выпавшего игрока.
+  // When Drawing starts -> smooth authentic ice glide into winner's sampled territory spot
   useEffect(() => {
     if (roundStatus !== 'drawing') return;
 
-    const pool = Math.max(0, totalPool);
-    let chosen: ArenaParticipant | null = null;
-    if (pool > 0) {
-      const ticket = Math.random() * pool;
-      let accumulated = 0;
-      for (const participant of normalizedParticipants) {
-        accumulated += Math.max(0, participant.contribution);
-        if (ticket <= accumulated) {
-          chosen = participant;
-          break;
-        }
+    // Pick winner based on contribution weights
+    const pool = totalPool;
+    const rand = Math.random() * pool;
+    let running = 0;
+    let chosen = normalizedParticipants[0] || null;
+    for (const p of normalizedParticipants) {
+      running += p.contribution;
+      if (rand <= running) {
+        chosen = p;
+        break;
       }
     }
-    chosen ??= normalizedParticipants[0] ?? null;
-
-    if (!chosen) {
-      setIsBallActive(false);
-      setBallPos(null);
-      return;
-    }
-
     setWinner(chosen);
-    const winnerTerritory = territoryNodes.find((node) => node.participant.id === chosen?.id);
-    const target = winnerTerritory
-      ? samplePointInIceArenaTerritory(winnerTerritory)
-      : { x: 50, y: 50 };
-    const finalStopX = target.x;
-    const finalStopY = target.y;
+
+    const winnerNode = territoryNodes.find(n => n.participant.id === chosen?.id) || territoryNodes[0];
+    const destination = winnerNode ? samplePointInIceArenaTerritory(winnerNode) : { x: 50, y: 50 };
 
     setIsBallActive(true);
+    setLandPulse(0);
 
-    // Start close to a random edge and launch inward across the field.
-    const spawnSides = [
-      { x: 12 + Math.random() * 76, y: 5 },
-      { x: 12 + Math.random() * 76, y: 95 },
-      { x: 5, y: 12 + Math.random() * 76 },
-      { x: 95, y: 12 + Math.random() * 76 },
-    ];
-    const spawn = spawnSides[Math.floor(Math.random() * spawnSides.length)];
-    let posX = spawn.x;
-    let posY = spawn.y;
-    setBallPos({ x: posX, y: posY });
+    // Initial position: center with a slight random offset
+    const startX = 50 + (Math.random() - 0.5) * 12;
+    const startY = 50 + (Math.random() - 0.5) * 12;
+    setBallPos({ x: startX, y: startY });
 
-    const launchAngle = Math.atan2(50 - posY, 50 - posX) + (Math.random() - 0.5) * 0.8;
-    const launchSpeed = 128 + Math.random() * 24;
-    let velocityX = Math.cos(launchAngle) * launchSpeed;
-    let velocityY = Math.sin(launchAngle) * launchSpeed;
+    // Smooth gliding curve with ice momentum
+    const duration = 2400; // 2.4s: swift, smooth and engaging
+    const startTime = performance.now();
+    let animId: number;
 
-    const totalDuration = 4_800;
-    const freeRollDuration = totalDuration * 0.58;
-    let lastFrameTime = performance.now();
-    let elapsed = 0;
-    let lastBounceTime = 0;
-    let animationId = 0;
-    let winnerModalTimer: number | undefined;
+    // Curved control point for realistic arc across ice
+    const midX = (startX + destination.x) / 2 + (Math.random() - 0.5) * 28;
+    const midY = (startY + destination.y) / 2 + (Math.random() - 0.5) * 28;
 
-    const minX = 4.5;
-    const maxX = 95.5;
-    const minY = 5;
-    const maxY = 95;
+    const frameStep = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const t = Math.min(1, elapsed / duration);
+      // Smooth cubic ease out
+      const ease = 1 - Math.pow(1 - t, 3);
 
-    const animate = (nowTime: number) => {
-      // Clamp unusually long frames so returning from a background tab never
-      // teleports the ball or skips the settling animation.
-      const dt = Math.max(0.001, Math.min(1 / 30, (nowTime - lastFrameTime) / 1000));
-      lastFrameTime = nowTime;
-      elapsed += dt * 1000;
-      const progress = Math.min(1, elapsed / totalDuration);
-      let bounced = false;
+      // Quadratic bezier glide
+      const invEase = 1 - ease;
+      const curX = invEase * invEase * startX + 2 * invEase * ease * midX + ease * ease * destination.x;
+      const curY = invEase * invEase * startY + 2 * invEase * ease * midY + ease * ease * destination.y;
 
-      if (elapsed < freeRollDuration) {
-        // Free roll: steady ice friction and energetic, non-sticky wall bounces.
-        posX += velocityX * dt;
-        posY += velocityY * dt;
+      setBallPos({ x: curX, y: curY });
 
-        if (posX < minX) { posX = minX; velocityX = Math.abs(velocityX) * 0.82; bounced = true; }
-        else if (posX > maxX) { posX = maxX; velocityX = -Math.abs(velocityX) * 0.82; bounced = true; }
-        if (posY < minY) { posY = minY; velocityY = Math.abs(velocityY) * 0.82; bounced = true; }
-        else if (posY > maxY) { posY = maxY; velocityY = -Math.abs(velocityY) * 0.82; bounced = true; }
-
-        const iceDrag = Math.exp(-0.28 * dt);
-        velocityX *= iceDrag;
-        velocityY *= iceDrag;
+      if (t < 1) {
+        animId = requestAnimationFrame(frameStep);
       } else {
-        // Critically damped guidance feels like the ball is losing momentum,
-        // rather than being pulled abruptly toward a hard-coded screen point.
-        const guidance = Math.max(0, Math.min(1, (progress - 0.58) / 0.42));
-        const omega = 1.9 + guidance * 2.4;
-        const accelerationX = (finalStopX - posX) * omega * omega - 2 * omega * velocityX;
-        const accelerationY = (finalStopY - posY) * omega * omega - 2 * omega * velocityY;
-        velocityX += accelerationX * dt;
-        velocityY += accelerationY * dt;
-        posX += velocityX * dt;
-        posY += velocityY * dt;
+        setBallPos(destination);
+        setIsBallActive(false);
+        setLandPulse(Date.now());
+        playSound('win');
 
-        if (posX < minX) { posX = minX; velocityX = Math.abs(velocityX) * 0.42; bounced = true; }
-        else if (posX > maxX) { posX = maxX; velocityX = -Math.abs(velocityX) * 0.42; bounced = true; }
-        if (posY < minY) { posY = minY; velocityY = Math.abs(velocityY) * 0.42; bounced = true; }
-        else if (posY > maxY) { posY = maxY; velocityY = -Math.abs(velocityY) * 0.42; bounced = true; }
+        if (chosen?.isUser) {
+          setBalance?.((prev: number) => Number((prev + pool).toFixed(2)));
+          onWin?.(pool, 'gram', undefined, 1.0);
+        }
+
+        const record: CompletedRoundRecord = {
+          id: roundId,
+          totalPool: pool,
+          winner: chosen!,
+          participantsCount: normalizedParticipants.length,
+          giftsCount: roundGifts.length,
+          completedAt: Date.now(),
+          participants: normalizedParticipants,
+          gifts: roundGifts,
+        };
+        setHistoryList(prev => [record, ...prev.slice(0, 49)]);
+
+        setTimeout(() => {
+          setShowWinnerModal(true);
+        }, 550);
       }
-
-      if (bounced && nowTime - lastBounceTime > 110) {
-        lastBounceTime = nowTime;
-        playSound('bounce');
-      }
-
-      setBallPos({ x: posX, y: posY });
-
-      if (progress < 1) {
-        animationId = requestAnimationFrame(animate);
-        return;
-      }
-
-      // The sampled destination is guaranteed to lie inside the selected zone.
-      setBallPos({ x: finalStopX, y: finalStopY });
-      setIsBallActive(false);
-      playSound('win');
-
-      if (chosen?.isUser) {
-        setBalance?.((previous) => Number((previous + pool).toFixed(2)));
-        onWin?.(pool, 'gram', undefined, 1.0);
-      }
-
-      const record: CompletedRoundRecord = {
-        id: roundId,
-        totalPool: pool,
-        winner: chosen,
-        participantsCount: normalizedParticipants.length,
-        giftsCount: roundGifts.length,
-        completedAt: Date.now(),
-        participants: normalizedParticipants,
-        gifts: roundGifts,
-      };
-      setHistoryList((previous) => [record, ...previous.slice(0, 49)]);
-
-      winnerModalTimer = window.setTimeout(() => setShowWinnerModal(true), 700);
     };
 
-    animationId = requestAnimationFrame(animate);
-    return () => {
-      cancelAnimationFrame(animationId);
-      if (winnerModalTimer != null) window.clearTimeout(winnerModalTimer);
-    };
+    animId = requestAnimationFrame(frameStep);
+    return () => cancelAnimationFrame(animId);
   }, [roundStatus, totalPool, normalizedParticipants, territoryNodes, roundGifts, roundId, playSound, setBalance, onWin]);
 
   // Handle Continue from Winner Screen
   const handleContinue = () => {
     setShowWinnerModal(false);
     setRoundStatus('waiting');
-    // Start next round in 2 seconds
+    // Start next round in 1.5 seconds
     setTimeout(() => {
       initSampleRound(roundId + 1);
-    }, 2000);
+    }, 1500);
   };
 
   // Handle Bet Input Change
@@ -943,6 +1169,19 @@ export const IceArena: React.FC<IceArenaProps> = ({
                           <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full font-bold shrink-0">
                             Победитель
                           </span>
+                          {(() => {
+                            const rGifts = h.gifts || h.participants?.flatMap(p => p.gifts || (p.gift ? [p.gift] : [])) || [];
+                            const hasDark = rGifts.some(g => {
+                              const bd = getNftBackdrop(g);
+                              return bd === 'Black' || bd === 'Onyx Black';
+                            });
+                            if (!hasDark) return null;
+                            return (
+                              <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-black/90 text-zinc-300 border border-white/20 shrink-0">
+                                Black
+                              </span>
+                            );
+                          })()}
                         </div>
                         <span className="text-xs text-white/40 mt-0.5">
                           Раунд #{h.id} • {h.participantsCount} уч.
@@ -965,54 +1204,48 @@ export const IceArena: React.FC<IceArenaProps> = ({
                CURRENT GAME VIEW
                ================================================================== */
             <>
-              {/* Premium banner for the largest completed round in the last 24 hours */}
+              {/* Lightweight & simple Top Game banner */}
               <button
                 type="button"
                 disabled={!topGame}
                 onClick={() => topGame && setShowTopGameModal(true)}
-                className="group relative mb-3 w-full overflow-hidden rounded-[22px] border border-amber-300/25 bg-[linear-gradient(110deg,rgba(120,72,12,0.34),rgba(26,28,31,0.82)_58%,rgba(14,18,22,0.96))] p-3.5 text-left shadow-[0_10px_30px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.10)] transition-all hover:border-amber-200/50 hover:shadow-[0_0_28px_rgba(245,158,11,0.12)] active:scale-[0.99] disabled:cursor-default disabled:opacity-75"
+                className="w-full mb-3 flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:border-amber-400/40 hover:bg-white/[0.07] transition-all active:scale-[0.99] cursor-pointer text-left group"
               >
-                <span aria-hidden="true" className="pointer-events-none absolute -right-10 -top-16 h-36 w-36 rounded-full bg-amber-300/15 blur-3xl transition-opacity group-hover:opacity-100" />
-                <span aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),transparent_58%)]" />
-                <div className="relative z-10 flex items-center gap-3">
-                  <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-[17px] border border-amber-200/25 bg-gradient-to-br from-amber-200/20 to-amber-600/10 text-amber-200 shadow-[0_0_20px_rgba(245,158,11,0.14)]">
-                    <Trophy className="h-5 w-5 drop-shadow-[0_0_8px_rgba(251,191,36,0.45)]" />
-                    <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-[#2b2418] bg-emerald-300" />
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-7 h-7 rounded-xl bg-amber-400/15 flex items-center justify-center text-amber-300 shrink-0">
+                    <Trophy className="w-4 h-4" />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.17em] text-amber-200/80">
-                      <Sparkles className="h-3 w-3 text-amber-300" />
-                      Топ игра за 24 часа
-                    </div>
+                  <div className="flex items-center gap-1.5 min-w-0 text-xs font-semibold">
+                    <span className="text-white/60 shrink-0">Топ игра 24ч:</span>
                     {topGame ? (
-                      <div className="mt-1 flex min-w-0 items-center gap-1.5">
-                        {topGame.record.winner.avatar && (
-                          <img src={topGame.record.winner.avatar} alt="" className="h-5 w-5 shrink-0 rounded-full border border-amber-100/30 object-cover" />
-                        )}
-                        <span className="truncate text-[13px] font-extrabold text-white">{topGame.winnerName}</span>
-                        <span className="shrink-0 rounded-full border border-white/10 bg-white/[0.06] px-1.5 py-0.5 text-[8px] font-bold text-white/45">#{topGame.record.id}</span>
-                      </div>
+                      <>
+                        <span className="text-amber-300 font-bold truncate">
+                          {topGame.pool.toFixed(2)} GRAM
+                        </span>
+                        <span className="text-white/40">•</span>
+                        <span className="text-white/80 font-medium truncate">
+                          {topGame.winnerName}
+                        </span>
+                        {(() => {
+                          const tgGifts = topGame.record.gifts || topGame.record.participants?.flatMap(p => p.gifts || (p.gift ? [p.gift] : [])) || [];
+                          const hasDark = tgGifts.some(g => {
+                            const bd = getNftBackdrop(g);
+                            return bd === 'Black' || bd === 'Onyx Black';
+                          });
+                          if (!hasDark) return null;
+                          return (
+                            <span className="ml-1 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-black/90 text-zinc-200 border border-white/20 shrink-0 shadow-sm">
+                              Black NFT
+                            </span>
+                          );
+                        })()}
+                      </>
                     ) : (
-                      <div className="mt-1 text-[12px] font-semibold text-white/45">Пока нет завершённых игр</div>
+                      <span className="text-white/40">Ожидание игр...</span>
                     )}
                   </div>
-                  {topGame && (
-                    <div className="flex shrink-0 flex-col items-end rounded-[14px] border border-amber-200/15 bg-black/20 px-2.5 py-1.5">
-                      <span className="text-[8px] font-bold uppercase tracking-wider text-white/40">Банк</span>
-                      <span className="mt-0.5 flex items-center gap-1 font-display text-[13px] font-black tabular-nums text-amber-200">
-                        {topGame.pool.toFixed(2)}
-                        <GramIcon className="h-3.5 w-3.5 text-amber-300" />
-                      </span>
-                    </div>
-                  )}
-                  <ArrowUpRight className="h-4 w-4 shrink-0 text-amber-200/65 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                 </div>
-                {topGame && (
-                  <div className="relative z-10 mt-3 flex items-center justify-between border-t border-white/[0.08] pt-2 text-[9px] font-semibold text-white/40">
-                    <span>Участников: {topGame.record.participantsCount} · рекорд за сутки</span>
-                    <span className="text-amber-200/75">Открыть результат</span>
-                  </div>
-                )}
+                <ArrowUpRight className="w-4 h-4 text-white/40 group-hover:text-amber-300 shrink-0 ml-2 transition-colors" />
               </button>
 
               {/* Round Header (Pool #, Mode, Status / Countdown) */}
@@ -1051,20 +1284,31 @@ export const IceArena: React.FC<IceArenaProps> = ({
                 {/* Gifts wagered row (if any) */}
                 {roundGifts.length > 0 && (
                   <div className="flex items-center gap-1.5 mt-2 overflow-x-auto pb-1 no-scrollbar">
-                    {roundGifts.slice(0, 7).map((g, idx) => (
-                      <div
-                        key={idx}
-                        className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 p-1 flex items-center justify-center shrink-0"
-                        title={g.name}
-                      >
-                        <PremiumImage
-                          src={g.image_url}
-                          alt={g.name}
-                          className="w-full h-full object-contain"
-                          staticMode={true}
-                        />
-                      </div>
-                    ))}
+                    {roundGifts.slice(0, 7).map((g, idx) => {
+                      const bd = getNftBackdrop(g);
+                      const isBlack = bd === 'Black';
+                      const isOnyx = bd === 'Onyx Black';
+                      return (
+                        <div
+                          key={idx}
+                          className={`w-8 h-8 rounded-xl p-1 flex items-center justify-center shrink-0 border transition-all ${
+                            isBlack
+                              ? 'bg-[radial-gradient(circle,#282a2b_0%,#191919_100%)] border-white/30 shadow-[0_0_8px_rgba(0,0,0,0.85)]'
+                              : isOnyx
+                              ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/30 shadow-[0_0_8px_rgba(0,0,0,0.75)]'
+                              : 'bg-white/5 border-white/10'
+                          }`}
+                          title={`${g.name}${bd !== 'Default' ? ` (${bd})` : ''}`}
+                        >
+                          <PremiumImage
+                            src={g.image_url}
+                            alt={g.name}
+                            className="w-full h-full object-contain"
+                            staticMode={true}
+                          />
+                        </div>
+                      );
+                    })}
                     {roundGifts.length > 7 && (
                       <div className="h-8 px-2.5 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-white font-bold text-xs shrink-0">
                         +{roundGifts.length - 7}
@@ -1161,6 +1405,18 @@ export const IceArena: React.FC<IceArenaProps> = ({
                                   <span className="text-[10px] font-black text-white">{name.slice(0, 1).toUpperCase()}</span>
                                 )}
                               </div>
+                              {/* Winner crown above avatar */}
+                              {winner?.id === p.id && roundStatus === 'drawing' && !isBallActive && (
+                                <motion.div
+                                  initial={{ scale: 0, y: 6 }}
+                                  animate={{ scale: 1, y: 0 }}
+                                  transition={{ type: 'spring', stiffness: 380, damping: 15 }}
+                                  className="pointer-events-none absolute z-30 -translate-x-1/2 text-[18px] leading-none drop-shadow-[0_2px_8px_rgba(251,191,36,0.85)]"
+                                  style={{ left: `${node.cx}%`, top: `calc(${node.cy}% - ${markerSize / 2 + 14}px)` }}
+                                >
+                                  👑
+                                </motion.div>
+                              )}
                               {minDim >= 38 && (
                                 <span
                                   className="pointer-events-none absolute z-20 -translate-x-1/2 whitespace-nowrap rounded-full border border-black/40 bg-black/75 px-1 py-px text-[8px] font-black leading-[12px] text-white shadow"
@@ -1172,6 +1428,25 @@ export const IceArena: React.FC<IceArenaProps> = ({
                             </React.Fragment>
                           );
                         })}
+
+                        {/* Landing flash pulse on ice */}
+                        <AnimatePresence>
+                          {landPulse > 0 && ballPos && (
+                            <motion.div
+                              key={landPulse}
+                              initial={{ opacity: 0.95, scale: 0.2 }}
+                              animate={{ opacity: 0, scale: 2.2 }}
+                              exit={{ opacity: 0 }}
+                              transition={{ duration: 0.65, ease: 'easeOut' }}
+                              className="pointer-events-none absolute z-25 -translate-x-1/2 -translate-y-1/2 rounded-full w-24 h-24"
+                              style={{
+                                left: `${ballPos.x}%`,
+                                top: `${ballPos.y}%`,
+                                background: 'radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(251,191,36,0.6) 35%, transparent 70%)',
+                              }}
+                            />
+                          )}
+                        </AnimatePresence>
 
                         {/* Ice ball: rendered in the same coordinate space as the territories. */}
                         {roundStatus === 'drawing' && ballPos && (
@@ -1272,20 +1547,31 @@ export const IceArena: React.FC<IceArenaProps> = ({
                               if (pGifts.length === 0) return null;
                               return (
                                 <div className="flex items-center gap-1 mt-1">
-                                  {pGifts.slice(0, 4).map((g, gIdx) => (
-                                    <div
-                                      key={gIdx}
-                                      className="w-5 h-5 rounded-md bg-white/10 border border-white/15 p-0.5 flex items-center justify-center shrink-0"
-                                      title={g.name}
-                                    >
-                                      <PremiumImage
-                                        src={g.image_url}
-                                        alt={g.name}
-                                        className="w-full h-full object-contain"
-                                        staticMode={true}
-                                      />
-                                    </div>
-                                  ))}
+                                  {pGifts.slice(0, 4).map((g, gIdx) => {
+                                    const bd = getNftBackdrop(g);
+                                    const isBlack = bd === 'Black';
+                                    const isOnyx = bd === 'Onyx Black';
+                                    return (
+                                      <div
+                                        key={gIdx}
+                                        className={`w-5 h-5 rounded-md p-0.5 flex items-center justify-center shrink-0 border transition-all ${
+                                          isBlack
+                                            ? 'bg-[radial-gradient(circle,#282a2b_0%,#191919_100%)] border-white/30 shadow-[0_0_6px_rgba(0,0,0,0.85)]'
+                                            : isOnyx
+                                            ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/30 shadow-[0_0_6px_rgba(0,0,0,0.75)]'
+                                            : 'bg-white/10 border-white/15'
+                                        }`}
+                                        title={`${g.name}${bd !== 'Default' ? ` (${bd})` : ''}`}
+                                      >
+                                        <PremiumImage
+                                          src={g.image_url}
+                                          alt={g.name}
+                                          className="w-full h-full object-contain"
+                                          staticMode={true}
+                                        />
+                                      </div>
+                                    );
+                                  })}
                                   {pGifts.length > 4 && (
                                     <span className="text-[10px] font-bold text-purple-300 bg-purple-500/20 px-1 py-0.5 rounded border border-purple-500/30">
                                       +{pGifts.length - 4}
@@ -1332,27 +1618,43 @@ export const IceArena: React.FC<IceArenaProps> = ({
         </div>
       </div>
 
-      <IceArenaCelebrationModal
-        isOpen={showWinnerModal && !!winner}
-        winner={winner}
-        amount={totalPool}
-        gifts={sortedRoundGifts}
-        onClose={handleContinue}
-      />
-      {topGame && (
-        <IceArenaCelebrationModal
-          isOpen={showTopGameModal}
-          winner={topGame.record.winner}
-          amount={topGame.pool}
-          gifts={topGame.record.gifts || topGame.record.participants?.flatMap((participant) => (
-            participant.gifts || (participant.gift ? [participant.gift] : [])
-          )) || []}
-          variant="top-game"
-          roundId={topGame.record.id}
-          participantsCount={topGame.record.participantsCount}
-          onClose={() => setShowTopGameModal(false)}
-        />
-      )}
+      {/* 
+        ========================================================================
+        WINNER CELEBRATION MODAL (Clean, elegant native winning interface)
+        ========================================================================
+      */}
+      <AnimatePresence>
+        {showWinnerModal && winner && (
+          <IceArenaCelebrationModal
+            isOpen={showWinnerModal}
+            onClose={() => setShowWinnerModal(false)}
+            roundId={roundId}
+            winner={winner}
+            totalPool={totalPool}
+            gifts={sortedRoundGifts}
+            onContinue={handleContinue}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* 
+        ========================================================================
+        TOP GAME CELEBRATION MODAL (Exact same interface as winning modal)
+        ========================================================================
+      */}
+      <AnimatePresence>
+        {showTopGameModal && topGame && (
+          <IceArenaCelebrationModal
+            isOpen={showTopGameModal}
+            onClose={() => setShowTopGameModal(false)}
+            isTopGame={true}
+            roundId={topGame.record.id}
+            winner={topGame.record.winner}
+            totalPool={topGame.pool}
+            gifts={topGame.record.gifts || topGame.record.participants?.flatMap(p => p.gifts || (p.gift ? [p.gift] : [])) || []}
+          />
+        )}
+      </AnimatePresence>
 
       {/* 
         ========================================================================
@@ -1606,6 +1908,24 @@ export const IceArena: React.FC<IceArenaProps> = ({
                     <span className="text-[10px] text-white/40 font-medium">Выплата</span>
                   </div>
                 </div>
+
+                {/* Won NFTs in History modal (with Black/Onyx styling) */}
+                {(() => {
+                  const hGifts = selectedHistoryRound.gifts || selectedHistoryRound.participants?.flatMap(p => p.gifts || (p.gift ? [p.gift] : [])) || [];
+                  if (hGifts.length === 0) return null;
+                  return (
+                    <div className="flex flex-col gap-1.5 mt-1">
+                      <span className="text-[11px] font-bold text-white/50 uppercase tracking-wider px-1">
+                        Разыгранные NFT ({hGifts.length})
+                      </span>
+                      <div className={`grid gap-2 ${hGifts.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                        {hGifts.slice(0, 4).map((g: any, i: number) => (
+                          <NftPrizeCard key={i} gift={g} compact={hGifts.length > 1} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Participants list if available */}
                 {selectedHistoryRound.participants && selectedHistoryRound.participants.length > 0 && (
