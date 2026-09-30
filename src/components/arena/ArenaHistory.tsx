@@ -6,7 +6,7 @@
 */
 
 import React, { useEffect, useState } from 'react';
-import { Trophy, Users, ChevronRight } from 'lucide-react';
+import { Trophy, Users, ChevronRight, RotateCw, AlertCircle } from 'lucide-react';
 import { X } from 'lucide-react';
 import type { ArenaHistoryEntry } from '../../lib/arenaShared';
 import { PlayerAvatar, ArenaGiftChip } from './arenaUi';
@@ -24,65 +24,96 @@ function formatDate(ts: number): string {
 export const ArenaHistoryList: React.FC<{
   items: ArenaHistorySummaryPublic[];
   onOpen: (id: number) => void;
+  onRefresh?: () => void;
   t: (k: string) => string;
-}> = ({ items, onOpen, t }) => {
-  if (!items.length) {
-    return (
-      <div className="rounded-[24px] border border-white/[0.08] bg-white/[0.03] py-14 flex flex-col items-center gap-2">
-        <Trophy className="w-8 h-8 text-white/15" />
-        <span className="text-[13px] text-white/40 font-medium">{t('arena_history_empty')}</span>
-      </div>
-    );
-  }
+}> = ({ items, onOpen, onRefresh, t }) => {
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    if (!onRefresh) return;
+    setRefreshing(true);
+    try {
+      await onRefresh();
+    } finally {
+      setTimeout(() => setRefreshing(false), 500);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-2.5">
-      {items.map((h) => (
-        <button
-          key={h.id}
-          onClick={() => onOpen(h.id)}
-          className="w-full text-left rounded-[20px] border border-white/[0.08] bg-white/[0.04] px-4 py-3.5 active:scale-[0.985] transition-transform cursor-pointer hover:border-white/[0.14]"
-        >
-          <div className="flex items-center justify-between gap-2">
-            <span className="font-display text-[14px] font-bold text-white/90">#{h.id}</span>
-            <div className="flex items-center gap-2">
-              <span className={`px-2 py-0.5 rounded-full border text-[9px] font-extrabold tracking-wider uppercase ${
-                h.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30' : 'bg-red-500/10 text-red-400 border-red-500/30'
-              }`}>
-                {h.status === 'COMPLETED' ? t('arena_status_completed') : t('arena_round_cancelled')}
-              </span>
-              <ChevronRight className="w-4 h-4 text-white/30" />
-            </div>
-          </div>
-          <div className="mt-2 flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="font-display text-[18px] font-black text-white leading-none">{h.totalPool.toFixed(2)}</span>
-                <GramIcon className="w-4 h-4 text-brand" />
+      <div className="flex items-center justify-between px-1">
+        <span className="text-[11px] font-bold text-white/50 uppercase tracking-wider">
+          {t('arena_tab_history')} ({items.length})
+        </span>
+        {onRefresh && (
+          <button
+            onClick={handleRefresh}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.05] border border-white/[0.08] text-[10px] font-bold text-white/70 active:scale-95 transition-transform cursor-pointer hover:bg-white/[0.10]"
+          >
+            <RotateCw className={`w-3 h-3 ${refreshing ? 'animate-spin text-brand' : ''}`} />
+            <span>{refreshing ? t('arena_sending') : t('refresh')}</span>
+          </button>
+        )}
+      </div>
+
+      {!items.length ? (
+        <div className="rounded-[24px] border border-white/[0.08] bg-white/[0.03] py-14 flex flex-col items-center gap-2">
+          <Trophy className="w-8 h-8 text-white/15" />
+          <span className="text-[13px] text-white/40 font-medium">{t('arena_history_empty')}</span>
+        </div>
+      ) : (
+        items.map((h) => (
+          <button
+            key={h.id}
+            onClick={() => onOpen(h.id)}
+            className="w-full text-left rounded-[20px] border border-white/[0.08] bg-white/[0.04] px-4 py-3.5 active:scale-[0.985] transition-transform cursor-pointer hover:border-white/[0.14]"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-display text-[14px] font-bold text-white/90">#{h.id}</span>
+              <div className="flex items-center gap-2">
+                <span className={`px-2 py-0.5 rounded-full border text-[9px] font-extrabold tracking-wider uppercase ${
+                  h.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30' : 'bg-red-500/10 text-red-400 border-red-500/30'
+                }`}>
+                  {h.status === 'COMPLETED' ? t('arena_status_completed') : t('arena_round_cancelled')}
+                </span>
+                <ChevronRight className="w-4 h-4 text-white/30" />
               </div>
-              <div className="flex items-center gap-1 text-[11px] text-white/40 font-semibold mt-1">
-                <Users className="w-3 h-3" />
-                {h.participantsCount} · {formatDate(h.completedAt)}
-              </div>
             </div>
-            <div className="flex items-center gap-2 min-w-0">
-              {h.winner && (
-                <>
-                  <PlayerAvatar participant={{ id: '', userId: h.winner.userId ?? 0, username: h.winner.username, firstName: h.winner.firstName, avatar: h.winner.avatar, betAmount: 0, contribution: 0, percentage: 0, status: 'WON', joinedAt: 0 }} className="w-8 h-8" />
-                  <div className="min-w-0 text-right">
-                    <div className="text-[9px] font-bold text-white/35 uppercase tracking-wider flex items-center gap-1 justify-end">
-                      <Trophy className="w-2.5 h-2.5 text-amber-400" />
-                      {t('arena_winner')}
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-display text-[18px] font-black text-white leading-none">{h.totalPool.toFixed(2)}</span>
+                  <GramIcon className="w-4 h-4 text-brand" />
+                </div>
+                <div className="flex items-center gap-1 text-[11px] text-white/40 font-semibold mt-1">
+                  <Users className="w-3 h-3" />
+                  {h.participantsCount} · {formatDate(h.completedAt)}
+                </div>
+              </div>
+              <div className="flex items-center gap-2 min-w-0">
+                {h.winner ? (
+                  <>
+                    <PlayerAvatar participant={{ id: '', userId: h.winner.userId ?? 0, username: h.winner.username, firstName: h.winner.firstName, avatar: h.winner.avatar, betAmount: 0, contribution: 0, percentage: 0, status: 'WON', joinedAt: 0 }} className="w-8 h-8" />
+                    <div className="min-w-0 text-right">
+                      <div className="text-[9px] font-bold text-white/35 uppercase tracking-wider flex items-center gap-1 justify-end">
+                        <Trophy className="w-2.5 h-2.5 text-amber-400" />
+                        {t('arena_winner')}
+                      </div>
+                      <div className="truncate text-[12px] font-bold text-white/85">
+                        @{h.winner.username || h.winner.firstName || '—'}
+                      </div>
                     </div>
-                    <div className="truncate text-[12px] font-bold text-white/85">
-                      @{h.winner.username || h.winner.firstName || '—'}
-                    </div>
+                  </>
+                ) : (
+                  <div className="text-right text-[11px] font-semibold text-white/30">
+                    {t('arena_round_cancelled')}
                   </div>
-                </>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-        </button>
-      ))}
+          </button>
+        ))
+      )}
     </div>
   );
 };

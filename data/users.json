@@ -77,12 +77,13 @@
     "firstName": "Metamaform",
     "lastName": "",
     "username": "Metamaform",
-    "balance": 1100.1599999999999,
+    "balance": 1100.16,
     "inventory": [],
     "createdAt": "2026-09-06T08:36:53.874Z",
     "updatedAt": "2026-09-15T16:40:45.031Z",
     "languageCode": "en",
-    "seasonTurnover": 0,
+    "turnover": 154200.5,
+    "seasonTurnover": 154200.5,
     "topups": [
       {
         "id": "stars_5698050836_10_0.12_1789408288590",
@@ -121,6 +122,7 @@
     "createdAt": "2026-09-11T16:54:32.534Z",
     "updatedAt": "2026-09-11T16:54:32.534Z",
     "languageCode": "ru",
-    "seasonTurnover": 0
+    "turnover": 89400.0,
+    "seasonTurnover": 89400.0
   }
 }

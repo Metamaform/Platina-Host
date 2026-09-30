@@ -250,6 +250,12 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Leaderboard.tsx
     'leaderboard_title': 'Таблица Лидеров',
+    'top_day': 'Топ Дня',
+    'top_day_desc': 'Ежедневные награды и гарантированные призы лучшим игрокам!',
+    'champion_label': 'Лидер дня',
+    'ends_in': 'Итоги через',
+    'guaranteed_prize': 'Гарантированный приз',
+    'refresh': 'Обновить',
     'top_players': 'Здесь собраны лучшие игроки проекта. Соревнуйся и побеждай!',
     'how_to_participate': 'Как участвовать?',
     'play_modes': 'Играйте в любые режимы, чтобы увеличивать свой оборот в',
@@ -794,6 +800,12 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Leaderboard.tsx
     'leaderboard_title': 'Leaderboard',
+    'top_day': 'Top of the Day',
+    'top_day_desc': 'Daily rewards and guaranteed prizes for top players!',
+    'champion_label': 'Daily Champion',
+    'ends_in': 'Ends in',
+    'guaranteed_prize': 'Guaranteed prize',
+    'refresh': 'Refresh',
     'top_players': 'The best players of the project are gathered here. Compete and win!',
     'how_to_participate': 'How to participate?',
     'play_modes': 'Play any modes to increase your turnover in',
@@ -1360,6 +1372,12 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Leaderboard.tsx
     'leaderboard_title': '排行榜',
+    'top_day': '今日之星',
+    'top_day_desc': '每日顶级玩家奖励与保底大奖！',
+    'champion_label': '今日冠军',
+    'ends_in': '倒计时',
+    'guaranteed_prize': '保底奖品',
+    'refresh': '刷新',
     'top_players': '这里聚集了项目最好的玩家。竞争并获胜！',
     'how_to_participate': '如何参与？',
     'play_modes': '玩任何模式以增加您在以下方面的流水',

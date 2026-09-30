@@ -112,11 +112,18 @@ export const Arena: React.FC<ArenaProps> = ({
 
   const {
     round, connected, serverOffset, history,
-    placeBet, addDevBot,
+    placeBet, addDevBot, refreshHistory,
   } = useArenaLive({ token, onBalance });
 
   const countdown = useArenaCountdown(round, serverOffset);
   const [prevStatus, setPrevStatus] = useState<string | null>(null);
+
+  // Подгружаем историю при переключении на вкладку
+  useEffect(() => {
+    if (tab === 'history') {
+      refreshHistory();
+    }
+  }, [tab, refreshHistory]);
 
   // Реакции на смену состояния раунда (вибрация/тосты)
   useEffect(() => {
@@ -223,7 +230,7 @@ export const Arena: React.FC<ArenaProps> = ({
       totalPool: h.totalPool,
       participantsCount: h.participantsCount,
       winner: h.winner
-        ? { username: h.winner.username, firstName: h.winner.firstName, avatar: h.winner.avatar }
+        ? { username: h.winner.username, firstName: h.winner.firstName, avatar: h.winner.avatar, userId: h.winner.userId }
         : null,
       completedAt: h.completedAt,
       status: h.status,
@@ -241,7 +248,7 @@ export const Arena: React.FC<ArenaProps> = ({
       <ArenaHeader
         onBack={onBack}
         balance={balance}
-        onOpenHistory={() => { setTab('history'); haptics.selection(); }}
+        onOpenHistory={() => { setTab('history'); refreshHistory(); haptics.selection(); }}
         connected={connected}
       />
 
@@ -267,7 +274,7 @@ export const Arena: React.FC<ArenaProps> = ({
           {/* Переключатель ТЕКУЩАЯ ИГРА / ИСТОРИЯ */}
           <LiquidSegment<'game' | 'history'>
             value={tab}
-            onChange={(v) => { setTab(v); haptics.selection(); }}
+            onChange={(v) => { setTab(v); if (v === 'history') refreshHistory(); haptics.selection(); }}
             variant="text"
             ariaLabel="Arena tabs"
             options={[
@@ -277,7 +284,7 @@ export const Arena: React.FC<ArenaProps> = ({
           />
 
           {tab === 'history' ? (
-            <ArenaHistoryList items={historyItems} onOpen={(id) => setDetailsId(id)} t={t} />
+            <ArenaHistoryList items={historyItems} onOpen={(id) => setDetailsId(id)} onRefresh={refreshHistory} t={t} />
           ) : !roundAlive ? (
             /* Скелетон до первого пакета состояния */
             <div className="flex flex-col gap-3.5">

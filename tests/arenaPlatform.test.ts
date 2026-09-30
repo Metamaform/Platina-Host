@@ -43,32 +43,37 @@ test('curve: endpoints, climb to the top-right, clamping', () => {
   assert.deepEqual(geo.pointAt(5), p2);
 });
 
-test('segments tile the whole deck and stay proportional to contributions', () => {
+test('segments tile the whole deck, preserve order and protect small bets', () => {
   const w = 400, h = 190;
   const contributions = [50, 10, 30, 200, 5];
   const parts = contributions.map((c, i) => mkParticipant(`bet-${i}`, c, i));
   const layout = buildPlatformLayout(w, h, parts);
-  const sum = contributions.reduce((a, b) => a + b, 0);
 
-  let acc = 0;
+  // Все сегменты идут друг за другом без дыр и покрывают дугу
   for (let i = 0; i < parts.length; i++) {
     const s = layout.segs[i];
-    const from = acc / sum;
-    acc += contributions[i];
-    const to = acc / sum;
-    assert.ok(Math.abs(s.dashStart / layout.geo.total - from) < 1e-9, `seg ${i} start`);
-    assert.ok(Math.abs(s.lenPx / layout.geo.total - (to - from)) < 1e-9, `seg ${i} length`);
-    // видимая длина = полная минус зазоры по краям
-    assert.ok(Math.abs(s.dashLen - ((to - from) * layout.geo.total - 2 * SEGMENT_GAP_PX)) < 1e-6, `seg ${i} gap`);
+    if (i > 0) {
+      assert.ok(Math.abs(s.visFrom - layout.segs[i - 1].visTo) < 1e-6, `seg ${i} continuity`);
+    }
+    assert.ok(s.dashLen > 2, `seg ${i} visible dash length`);
+    assert.ok(s.lenPx > 10, `seg ${i} has enough room`);
     assert.ok(s.mid.x >= 0 && s.mid.x <= w && s.mid.y >= 0 && s.mid.y <= h, `seg ${i} mid in bounds`);
   }
-  // последняя территория доходит ровно до конца дуги
-  const last = layout.segs[layout.segs.length - 1];
-  assert.ok(Math.abs(last.dashStart + last.lenPx - layout.geo.total) < 1e-6, 'tiles to the end');
+  // Первая территория начинается с 0, последняя заканчивается на 1
+  assert.ok(Math.abs(layout.segs[0].visFrom) < 1e-6, 'tiles from 0');
+  assert.ok(Math.abs(layout.segs[layout.segs.length - 1].visTo - 1) < 1e-6, 'tiles to 1');
 
-  // самый большой вклад → самая длинная территория
+  // Самый большой вклад → самая длинная территория
   const lens = layout.segs.map((s) => s.lenPx);
   assert.equal(Math.max(...lens), lens[3]);
+
+  // Защита мелких ставок от исчезновения при ставке-гиганте:
+  // При ставках 1000 и 5 мелкий игрок (0.5%) не должен исчезнуть (lenPx > 20px)
+  const extremeParts = [mkParticipant('whale', 1000, 0), mkParticipant('small', 5, 1)];
+  const extremeLayout = buildPlatformLayout(w, h, extremeParts);
+  const smallSeg = extremeLayout.segs[1];
+  assert.ok(smallSeg.lenPx >= 20, 'small bet has at least 20px visual length');
+  assert.ok(smallSeg.dashLen >= 15, 'small bet has visible dash');
 });
 
 test('ticket always lands inside the winner segment (same rule as server pickWinner)', () => {
@@ -87,15 +92,13 @@ test('ticket always lands inside the winner segment (same rule as server pickWin
     let winnerIdx = parts.length - 1;
     for (let i = 0; i < parts.length; i++) {
       acc += contributions[i];
-      if (ticket < acc) { winnerIdx = i; break; }
+      if (ticket <= acc) { winnerIdx = i; break; }
     }
-    let from = 0;
-    for (let i = 0; i < winnerIdx; i++) from += contributions[i];
-    from /= sum;
+    const winSeg = layout.segs[winnerIdx];
 
-    const frac = ticketToFrac(ticket, sum);
-    assert.ok(frac >= from, `roll ${roll}: ticket not before winner segment`);
-    assert.ok(frac < from + contributions[winnerIdx] / sum || frac <= 1, `roll ${roll}: ticket not after winner segment`);
+    const frac = layout.ticketToFrac(ticket);
+    assert.ok(frac >= winSeg.visFrom - 1e-6, `roll ${roll}: ticket not before winner segment`);
+    assert.ok(frac <= winSeg.visTo + 1e-6, `roll ${roll}: ticket not after winner segment`);
     assert.ok(frac >= 0 && frac <= 1, `roll ${roll}: frac clamped`);
   }
 });
@@ -104,6 +107,7 @@ test('edge cases: empty participants, zero pool, single player', () => {
   const empty = buildPlatformLayout(400, 190, []);
   assert.equal(empty.segs.length, 0);
   assert.equal(empty.sumC, 0);
+  assert.equal(empty.ticketToFrac(10), 0);
   assert.equal(ticketToFrac(10, 0), 0);
 
   const solo = buildPlatformLayout(400, 190, [mkParticipant('only', 100, 0)]);
