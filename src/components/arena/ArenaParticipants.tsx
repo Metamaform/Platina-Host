@@ -11,7 +11,7 @@ import React, { useMemo } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Users } from 'lucide-react';
 import type { ArenaParticipant, ArenaRoundState } from '../../lib/arenaShared';
-import { PlayerAvatar, ArenaGiftChip } from './arenaUi';
+import { PlayerAvatar, ArenaGiftChip } from './arenaUiComponents';
 import { GramIcon } from '../GramIcon';
 
 interface ArenaParticipantsProps {

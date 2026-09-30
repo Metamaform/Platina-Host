@@ -1,7 +1,7 @@
 import { useTranslation } from '../lib/i18n';
 import React, { useState, useEffect } from 'react';
 import { Trophy, Clock, Users, Sparkles, HelpCircle } from 'lucide-react';
-import { PremiumImage } from './PremiumImage';
+import { PremiumImage } from './PremiumNftImage';
 import { GramIcon } from './GramIcon';
 import { LiquidDialog } from './ui/LiquidDialog';
 

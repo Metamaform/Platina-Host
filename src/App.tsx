@@ -24,7 +24,7 @@ import { fetchFragmentPrices, fetchFragmentBackdropPrices } from './lib/api';
 const Craft = lazy(() => import('./components/Craft').then((m) => ({ default: m.Craft })));
 const Upgrade = lazy(() => import('./components/Upgrade').then((m) => ({ default: m.Upgrade })));
 const Mines = lazy(() => import('./components/Mines').then((m) => ({ default: m.Mines })));
-const NewGame = lazy(() => import('./components/NewGame').then((m) => ({ default: m.NewGame })));
+const RocketGame = lazy(() => import('./components/RocketGame').then((m) => ({ default: m.RocketGame })));
 const Plinko = lazy(() => import('./components/Plinko').then((m) => ({ default: m.Plinko })));
 const IceArena = lazy(() => import('./components/IceArena').then((m) => ({ default: m.IceArena })));
 const Cases = lazy(() => import('./components/Cases').then((m) => ({ default: m.Cases })));
@@ -77,7 +77,7 @@ function Shop({
   onPlayUpgrade, 
   onPlayCraft, 
   onPlayMines, 
-  onPlayNewGame, 
+  onPlayRocketGame, 
   onPlayPlinko, 
   onPlayIceArena,
   giftsDb, 
@@ -92,7 +92,7 @@ function Shop({
   onPlayUpgrade: () => void, 
   onPlayCraft: () => void, 
   onPlayMines: () => void, 
-  onPlayNewGame: () => void, 
+  onPlayRocketGame: () => void, 
   onPlayPlinko: () => void, 
   onPlayIceArena: () => void,
   giftsDb: any[], 
@@ -183,7 +183,7 @@ function Shop({
       <div className="grid grid-cols-2 gap-3.5 mb-4">
         {/* Rocket Square Card */}
         <div 
-          onClick={onPlayNewGame}
+          onClick={onPlayRocketGame}
           className="aspect-square rounded-[26px] relative overflow-hidden cursor-pointer group flex flex-col justify-between p-4 bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)] active:scale-[0.98] transition-all hover:border-amber-500/40"
         >
           {/* верхний блик жидкого стекла */}
@@ -305,7 +305,7 @@ function Shop({
                   if (game.id === 'upgrade') onPlayUpgrade(); 
                   if (game.id === 'craft') onPlayCraft();
                   if (game.id === 'mines') onPlayMines();
-                  if (game.id === 'new_game') onPlayNewGame();
+                  if (game.id === 'new_game') onPlayRocketGame();
                   }}
                 className="rounded-3xl overflow-hidden cursor-pointer group w-full relative transform-gpu isolate bg-transparent" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}
               >
@@ -321,7 +321,7 @@ function Shop({
               if (game.id === 'upgrade') onPlayUpgrade(); 
               if (game.id === 'craft') onPlayCraft();
               if (game.id === 'mines') onPlayMines();
-              if (game.id === 'new_game') onPlayNewGame();
+              if (game.id === 'new_game') onPlayRocketGame();
               }}
             className="glass-panel-interactive rounded-2xl p-6 flex flex-col cursor-pointer group"
           >
@@ -1532,7 +1532,7 @@ export default function App() {
                     onPlayUpgrade={() => setActiveGame('upgrade')} 
                     onPlayCraft={() => setActiveGame('craft')} 
                     onPlayMines={() => setActiveGame('mines')} 
-                    onPlayNewGame={() => setActiveGame('new_game')} 
+                    onPlayRocketGame={() => setActiveGame('new_game')} 
                     onPlayPlinko={() => setActiveGame('plinko')}
                     onPlayIceArena={() => setActiveGame('ice_arena')}
                     giftsDb={giftsDb} 
@@ -1635,7 +1635,7 @@ export default function App() {
                 className="absolute inset-0 z-[100] bg-canvas"
               >
                 <Suspense fallback={<LazyFallback />}>
-                <NewGame 
+                <RocketGame 
                   onBack={() => setActiveGame(null)} 
                   inventory={inventory} 
                   setInventory={setInventory} 

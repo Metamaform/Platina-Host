@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ArrowLeft, ArrowUpRight, ExternalLink, Diamond, TrendingUp, Shuffle, HelpCircle, Info, AlertCircle } from 'lucide-react';
-import { PremiumImage } from './PremiumImage';
+import { PremiumImage } from './PremiumNftImage';
 import { GramIcon } from './GramIcon';
 import { LiquidDialog } from './ui/LiquidDialog';
 import { useTranslation } from '../lib/i18n';

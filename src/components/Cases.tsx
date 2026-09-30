@@ -5,7 +5,7 @@ import { Box, Lock, ChevronLeft, AlertCircle } from 'lucide-react';
 import { fetchCases, CaseConfig, CaseItemConfig } from '../lib/api';
 import { incrementStat, recordGameProgress } from '../lib/stats';
 import { LiveFeed } from './LiveFeed';
-import { PremiumImage } from './PremiumImage';
+import { PremiumImage } from './PremiumNftImage';
 import { GramIcon } from './GramIcon';
 import { motion, AnimatePresence } from 'motion/react';
 import { CASE_REEL_LENGTH, CASE_REEL_START, CASE_REEL_WINNER, CASE_SPIN_MS, caseReelOffset } from '../lib/caseRoulette';

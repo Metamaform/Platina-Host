@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { Trophy, Users, ChevronRight, RotateCw, AlertCircle } from 'lucide-react';
 import { X } from 'lucide-react';
 import type { ArenaHistoryEntry } from '../../lib/arenaShared';
-import { PlayerAvatar, ArenaGiftChip } from './arenaUi';
+import { PlayerAvatar, ArenaGiftChip } from './arenaUiComponents';
 import { GramIcon } from '../GramIcon';
 
 function formatDate(ts: number): string {
