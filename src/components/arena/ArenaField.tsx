@@ -2,26 +2,22 @@
   ArenaField — игровое поле AICE ARENA: «платформа взлёта» в визуальном
   языке Rocket.
 
-  Никаких кружков и донок: по полю идёт единственная стартовая платформа —
-  линия взлёта из нижнего левого угла в правый верхний, той же сигнатурой,
-  по которой в Rocket летит ракета. Геометрия и деление территорий — в
+  По полю идёт стартовая платформа — ледовая полоса взлёта из нижнего
+  левого угла в правый верхний. Геометрия и деление территорий — в
   arenaPlatform.ts (чистая математика, покрыта тестами).
 
-  Платформа разделена на территории игроков: длина сегмента = доля игрока
-  в банке, порядок сегментов совпадает с порядком, в котором сервер обходит
-  участников при выборе победителя (pickWinner).
+  Платформа разделена на территории игроков с гарантией видимости
+  (даже мелкие ставки защищены от растворения в 0px).
 
-  В центре поля — шарик:
-  · WAITING / ACCEPTING_BETS — лежит в центре поля, плавно покачивается
-    и медленно вращается;
-  · LOCKED — «заряжается»: свечение пульсирует;
-  · DRAWING — вращается быстрее, направление вращения рандомное каждый
-    раунд (детерминировано от id раунда — все клиенты видят одно и то же);
-  · COMPLETED — шарик запускается ИЗ ЦЕНТРА ПОЛЯ и летит в точку розыгрыша,
-    садясь ровно на позицию выигрышного билета (provably fair:
-    ticket = roll × банк) — чья территория под шариком, тот и забирает
-    банк. Территория победителя светится, сверху — корона и янтарная
-    метка билета.
+  Движение шарика:
+  · WAITING / ACCEPTING_BETS — отдыхает на стартовой отметке платформы,
+    плавно покачивается с мягким ледовым свечением;
+  · LOCKED — «заряжается» энергией перед стартом;
+  · DRAWING — динамично скользит ПО ДУГЕ ПЛАТФОРМЫ, проходя по всем
+    территориям игроков с физикой и поворотом по касательной;
+  · COMPLETED — плавно тормозит по дуге платформы ровно в точку выигрышного
+    билета (provably fair: ticket = roll × банк).
+    Победная вспышка, корона и золотая метка билета.
 */
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -34,7 +30,6 @@ import { PlayerAvatar, ArenaStatusChip } from './arenaUi';
 import type { ArenaCountdown } from './useArenaCountdown';
 import {
   buildPlatformLayout,
-  ticketToFrac,
   type PlatformSegment,
 } from './arenaPlatform';
 
@@ -51,16 +46,12 @@ interface ArenaFieldProps {
 const DECK_W = 26;
 // Размер шарика, px.
 const BALL_SIZE = 34;
-// Длительность запуска шарика из центра в точку розыгрыша, ms
-// (раунд завершён на 9s — закладываемся с запасом).
-const FLY_MS = 850;
 
-const easeInQuad = (t: number) => t * t;
+type BallPhase = 'idle' | 'charging' | 'drawing' | 'landing' | 'parked';
 
 /**
- * Направление и период вращения шарика для раунда. Детерминировано от id
- * раунда — каждый раунд шарик крутится в случайную сторону/скорость,
- * но все клиенты видят одинаковое вращение (общий источник правды — сервер).
+ * Направление и период вращения текстуры шарика для раунда.
+ * Детерминировано от id раунда — общий источник правды для всех игроков.
  */
 function roundSpin(id: number): { dir: 1 | -1; dur: number } {
   let x = (id ^ 0x9e3779b9) >>> 0;
@@ -68,11 +59,9 @@ function roundSpin(id: number): { dir: 1 | -1; dur: number } {
   x = Math.imul(x ^ (x >>> 16), 0x45d9f3b) >>> 0;
   x = (x ^ (x >>> 16)) >>> 0;
   const dir: 1 | -1 = x % 2 === 0 ? 1 : -1;
-  const dur = 0.9 + ((x % 1000) / 1000) * 1.6; // 0.9–2.5 c на оборот
+  const dur = 0.9 + ((x % 1000) / 1000) * 1.5;
   return { dir, dur };
 }
-
-type BallPhase = 'center' | 'launch' | 'parked';
 
 function statusDot(status: ArenaRoundState['status']): string {
   switch (status) {
@@ -133,127 +122,121 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
   const spin = useMemo(() => roundSpin(round.id), [round.id]);
   const empty = participants.length === 0;
 
-  // Территории: тот же порядок, что обходит сервер в pickWinner,
-  // та же мера — вклад в банке. ticketFrac — позиция билета на дуге.
-  const ticketFrac = isCompleted && round.ticket != null && layout
-    ? ticketToFrac(round.ticket as number, layout.sumC)
-    : null;
-  const ticketPt = isCompleted && ticketFrac != null && layout
-    ? layout.geo.pointAt(ticketFrac)
-    : null;
+  // Точка выигрышного билета на платформе
+  const ticketFrac = useMemo(() => {
+    if (!layout || round.ticket == null || !isCompleted) return null;
+    return layout.ticketToFrac(round.ticket);
+  }, [layout, round.ticket, isCompleted]);
+
+  const ticketPt = useMemo(() => {
+    if (!layout || ticketFrac == null) return null;
+    return layout.geo.pointAt(ticketFrac);
+  }, [layout, ticketFrac]);
 
   // ------------------------------------------------------------------
-  // Шарик: center (в центре поля) → launch (запуск из центра при
-  // COMPLETED) → parked (на позиции выигрышного билета).
-  // Позиция запуска/посадки — в px текущей области; при ресайзе
-  // «parked» пересчитывается из ticketFrac автоматически.
+  // Передвижение шарика по дуге платформы
   // ------------------------------------------------------------------
-  const flightRef = useRef({
-    phase: 'center' as BallPhase,
-    raf: 0,
-    start: 0,
-    fx: 0, fy: 0, tx: 0, ty: 0,
-    dur: 0,
-  });
-  const [phase, setPhase] = useState<BallPhase>('center');
-  const [flyPos, setFlyPos] = useState<{ x: number; y: number } | null>(null);
+  const [ballFrac, setBallFrac] = useState<number>(0.04);
+  const [ballPhase, setBallPhase] = useState<BallPhase>('idle');
   const [landPulse, setLandPulse] = useState(0);
 
-  const flyPosRef = useRef<{ x: number; y: number } | null>(null);
-  useEffect(() => { flyPosRef.current = flyPos; }, [flyPos]);
+  const ballFracRef = useRef(0.04);
+  useEffect(() => { ballFracRef.current = ballFrac; }, [ballFrac]);
 
-  const centerX = size.w / 2;
-  const centerY = size.h / 2;
-  // В пустой арене шарик парит выше (CTA-кнопка внизу поля).
-  const centerPos = empty ? { x: centerX, y: size.h * 0.3 } : { x: centerX, y: centerY };
-
-  // Сброс при новом раунде.
+  // Сброс при смене раунда
   useEffect(() => {
-    const f = flightRef.current;
-    cancelAnimationFrame(f.raf);
-    f.phase = 'center';
-    setPhase('center');
-    setFlyPos(null);
+    setBallFrac(0.04);
+    setBallPhase('idle');
   }, [round.id]);
 
   useEffect(() => {
-    const f = flightRef.current;
-    cancelAnimationFrame(f.raf);
+    if (!layout) return;
 
-    const tick = () => {
-      const el = Math.max(0, performance.now() - f.start);
-      const k = Math.min(1, el / f.dur);
-      const e = easeInQuad(k);
-      setFlyPos({ x: f.fx + (f.tx - f.fx) * e, y: f.fy + (f.ty - f.fy) * e });
-      if (k < 1) {
-        f.raf = requestAnimationFrame(tick);
-      } else {
-        f.phase = 'parked';
-        setPhase('parked');
-        setFlyPos(null);
-        setLandPulse((n) => n + 1);
+    let rafId = 0;
+
+    if (isCompleted && ticketFrac != null) {
+      if (reducedMotion) {
+        setBallFrac(ticketFrac);
+        setBallPhase('parked');
+        setLandPulse((p) => p + 1);
+        return;
       }
-    };
 
-    const beginFlight = (fx: number, fy: number, tx: number, ty: number, dur: number) => {
-      f.fx = fx; f.fy = fy; f.tx = tx; f.ty = ty; f.dur = Math.max(1, dur);
-      f.phase = 'launch';
-      setPhase('launch');
-      f.start = performance.now();
-      f.raf = requestAnimationFrame(tick);
-    };
+      // Если уже запаркован на нужном билете, повторно не анимируем
+      if (ballPhase === 'parked' && Math.abs(ballFracRef.current - ticketFrac) < 0.003) {
+        return;
+      }
 
-    const park = () => {
-      f.phase = 'parked';
-      setPhase('parked');
-      setFlyPos(null);
-      setLandPulse((n) => n + 1);
-    };
+      // Плавное торможение по дуге прямо в выигрышный билет
+      const startFrac = ballFracRef.current;
+      const targetFrac = ticketFrac;
+      const startTime = performance.now();
+      const duration = 1050; // ~1 c на финальное скольжение по дуге
 
-    if (isCompleted && ticketPt != null) {
-      if (f.phase === 'center') {
-        if (reducedMotion) {
-          park(); // без анимации — сразу в точке розыгрыша
+      setBallPhase('landing');
+
+      const animateLanding = (now: number) => {
+        const elapsed = now - startTime;
+        const progress = Math.min(1, elapsed / duration);
+        // easeOutCubic: естественная инерция скольжения по льду
+        const ease = 1 - Math.pow(1 - progress, 3);
+        const cur = startFrac + (targetFrac - startFrac) * ease;
+        setBallFrac(cur);
+
+        if (progress < 1) {
+          rafId = requestAnimationFrame(animateLanding);
         } else {
-          // Запуск ИЗ ЦЕНТРА ПОЛЯ в точку розыгрыша
-          beginFlight(centerPos.x, centerPos.y, ticketPt.x, ticketPt.y, FLY_MS);
+          setBallFrac(targetFrac);
+          setBallPhase('parked');
+          setLandPulse((p) => p + 1);
         }
-      } else if (f.phase === 'launch') {
-        // Эффект мог перезапуститься (StrictMode) — продолжаем из текущей точки.
-        const cur = flyPosRef.current ?? { x: centerPos.x, y: centerPos.y };
-        const dist = Math.hypot(ticketPt.x - cur.x, ticketPt.y - cur.y);
-        if (dist > 2) {
-          beginFlight(cur.x, cur.y, ticketPt.x, ticketPt.y, Math.max(120, (dist / 260) * FLY_MS));
-        } else {
-          park();
-        }
-      }
-    } else if (round.status === 'CANCELLED' || round.status === 'ERROR') {
-      // Отмена: нет точки розыгрыша — шарик возвращается в центр поля.
-      if (f.phase !== 'center') {
-        f.phase = 'center';
-        setPhase('center');
-        setFlyPos(null);
-      }
+      };
+
+      rafId = requestAnimationFrame(animateLanding);
+    } else if (isDrawing) {
+      // РОЗЫГРЫШ: шарик динамично скользит по дуге платформы
+      // туда и обратно через территории игроков
+      setBallPhase('drawing');
+      const startTime = performance.now();
+      const startFrac = ballFracRef.current;
+
+      const animateDrawing = (now: number) => {
+        const elapsed = now - startTime;
+        // Синусоидальное скольжение от 0.08 до 0.92 по дуге
+        const sweep = 0.5 + 0.42 * Math.sin(elapsed / 260);
+        const blend = Math.min(1, elapsed / 280);
+        const cur = startFrac * (1 - blend) + sweep * blend;
+        setBallFrac(cur);
+        rafId = requestAnimationFrame(animateDrawing);
+      };
+
+      rafId = requestAnimationFrame(animateDrawing);
+    } else if (isLocked) {
+      // СТАВКИ ЗАКРЫТЫ: шарик заряжается энергией на старте
+      setBallPhase('charging');
+      setBallFrac(0.04);
+    } else {
+      // ОЖИДАНИЕ / СТАВКИ: шарик покоится на стартовой отметке
+      setBallPhase('idle');
+      setBallFrac(0.04);
     }
 
-    return () => cancelAnimationFrame(f.raf);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCompleted, ticketFrac, round.id, round.status, reducedMotion, size.w, size.h]);
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, [isCompleted, isDrawing, isLocked, ticketFrac, layout, reducedMotion, round.id]);
 
-  // Текущая позиция шарика.
-  const ballPos = phase === 'launch'
-    ? (flyPos ?? centerPos)
-    : phase === 'parked' && ticketPt
-      ? ticketPt
-      : centerPos;
+  // Координаты шарика на экране (ровно на дуге платформы)
+  const ballPt = useMemo(() => {
+    if (!layout) return { x: size.w / 2, y: size.h / 2, angle: 0 };
+    return layout.geo.pointAt(ballFrac);
+  }, [layout, ballFrac]);
 
-  // Вращение: быстрое — в розыгрыше и в полёте, медленное — в покое.
-  // Направление рандомное каждый раунд (см. roundSpin).
-  const spinning = isDrawing || phase === 'launch';
-  const spinDur = reducedMotion ? 0 : spinning ? spin.dur : spin.dur * 6 + 4;
-  const glowStrong = isLocked || isDrawing || phase === 'launch';
-  const bobbing = phase === 'center' && (round.status === 'WAITING' || isBetting);
+  // Вращение: быстрое в розыгрыше, мягкое в покое
+  const spinning = isDrawing || ballPhase === 'landing';
+  const spinDur = reducedMotion ? 0 : spinning ? spin.dur : spin.dur * 5 + 3;
+  const glowStrong = isLocked || isDrawing || ballPhase === 'landing';
+  const bobbing = ballPhase === 'idle' && (round.status === 'WAITING' || isBetting);
 
   // ------------------------------------------------------------------
   let timerLabel: string;
@@ -272,7 +255,7 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
   const winnerSeg: PlatformSegment | null = layout
     ? (round.winnerId ? layout.segs.find((s) => s.participant.id === round.winnerId) ?? null : null)
     : null;
-  const showTicket = isCompleted && ticketPt != null;
+  const showTicket = isCompleted && ticketPt != null && ballPhase === 'parked';
 
   return (
     <div className="w-full relative">
@@ -286,7 +269,7 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
         <div className="absolute inset-0 opacity-15 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
       </div>
 
-      {/* Статус-пилюля (короткая, секунды — в центре поля) */}
+      {/* Статус-пилюля */}
       <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 bg-white/5 backdrop-blur-md px-2 py-1 rounded-full border border-white/10">
         <span className={`w-1.5 h-1.5 rounded-full ${statusDot(round.status)}`} />
         <span className="text-[9px] font-bold tracking-wider uppercase text-white/70 max-w-[140px] truncate">
@@ -314,7 +297,7 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
           {participants.length} {playersWord(participants.length, lang)}
         </div>
 
-        {/* Таймер приёма ставок — полоса, без крутящегося круга */}
+        {/* Таймер приёма ставок */}
         {isBetting ? (
           <div className="w-full mt-2.5">
             <div className="text-center text-[12px] font-bold text-[#4fc3ff] tabular-nums">
@@ -344,11 +327,11 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
             <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible" aria-hidden="true">
               {/* Основа взлётной полосы (тёмная палуба, закруглённые концы) */}
               <path d={layout.geo.d} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={DECK_W + 12} strokeLinecap="round" />
-              {/* Осевая «россыпь огней» — видна в зазорах между территориями */}
-              <path d={layout.geo.d} fill="none" stroke="rgba(255,255,255,0.10)" strokeWidth={1.5} />
+              {/* Осевая светящаяся полоса льда */}
+              <path d={layout.geo.d} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={1.5} />
 
               {empty ? (
-                /* Пустая полоса — пунктир, слот свободен */
+                /* Пустая полоса — пунктир */
                 <path
                   d={layout.geo.d}
                   fill="none"
@@ -358,9 +341,8 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
                   strokeLinecap="round"
                 />
               ) : (
-                /* Территории: strokeDasharray по длине дуги = честная доля банка */
+                /* Территории: каждый игрок имеет видимый сегмент, не пропадает при больших ставках */
                 layout.segs.map((s) => {
-                  if (s.dashLen <= 0.5) return null;
                   const isWinner = isCompleted && s.participant.id === round.winnerId;
                   const dimmed = roundFinished && !isWinner;
                   return (
@@ -370,11 +352,11 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
                       fill="none"
                       stroke={s.color}
                       strokeWidth={DECK_W - 6}
-                      strokeLinecap="butt"
+                      strokeLinecap="round"
                       strokeDasharray={`${s.dashLen} ${layout.geo.total}`}
                       strokeDashoffset={-s.dashStart}
-                      opacity={dimmed ? 0.32 : 0.95}
-                      style={isWinner ? { filter: `drop-shadow(0 0 10px ${s.color}) drop-shadow(0 0 22px ${s.color}66)` } : undefined}
+                      opacity={dimmed ? 0.35 : 0.95}
+                      style={isWinner ? { filter: `drop-shadow(0 0 10px ${s.color}) drop-shadow(0 0 22px ${s.color}88)` } : undefined}
                     >
                       <title>{`${s.participant.username || s.participant.firstName || 'Player'} — ${s.participant.percentage.toFixed(1)}%`}</title>
                     </path>
@@ -382,33 +364,32 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
                 })
               )}
 
-              {/* Периодическая пульсация территории победителя */}
+              {/* Пульсация территории победителя */}
               {isCompleted && winnerSeg && (
                 <path
                   d={layout.geo.d}
                   fill="none"
                   stroke="#ffffff"
                   strokeWidth={DECK_W - 6}
-                  strokeLinecap="butt"
+                  strokeLinecap="round"
                   strokeDasharray={`${winnerSeg.dashLen} ${layout.geo.total}`}
                   strokeDashoffset={-winnerSeg.dashStart}
-                  opacity={0.12}
+                  opacity={0.15}
                 >
-                  <animate attributeName="opacity" values="0.05;0.35;0.05" dur="1.6s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.05;0.40;0.05" dur="1.5s" repeatCount="indefinite" />
                 </path>
               )}
             </svg>
 
-            {/* HTML-слой: метки территорий и YOU */}
+            {/* HTML-слой: метки территорий, имена, проценты и маркеры */}
             {!empty &&
               layout.segs.map((s) => {
                 const name = s.participant.username || s.participant.firstName || 'Player';
                 const isMe = myUserId != null && s.participant.userId === myUserId;
                 const isWinner = isCompleted && s.participant.id === round.winnerId;
-                const showPct = s.lenPx >= 26;
-                const showCard = s.lenPx >= 90;
-                // Подпись ставим с той стороны палубы, где больше места:
-                // на нижней половине кривой — сверху, на верхней — снизу.
+                const showPct = s.lenPx >= 18;
+                const showCard = s.lenPx >= 75;
+                const showMiniAvatar = !showCard && s.lenPx >= 24;
                 const side: 'above' | 'below' = s.mid.y > size.h * 0.52 ? 'above' : 'below';
                 const lx = Math.max(34, Math.min(size.w - 34, s.mid.x));
                 const topY = side === 'above' ? s.mid.y - DECK_W / 2 - 8 : s.mid.y + DECK_W / 2 + 8;
@@ -421,15 +402,15 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
                         style={{ left: s.mid.x, top: s.mid.y, opacity: roundFinished && !isWinner ? 0.5 : 1 }}
                       >
                         <span
-                          className={`inline-block rounded-md px-1 py-px text-[10px] font-black tabular-nums leading-tight ${
-                            isWinner ? 'bg-black/55 text-amber-300' : 'bg-black/40 text-white/90'
+                          className={`inline-block rounded-md px-1 py-px text-[9.5px] font-black tabular-nums leading-tight shadow-sm ${
+                            isWinner ? 'bg-black/70 text-amber-300 ring-1 ring-amber-400/60' : 'bg-black/50 text-white/95'
                           }`}
                         >
-                          {s.participant.percentage.toFixed(0)}%
+                          {s.participant.percentage >= 1 ? `${s.participant.percentage.toFixed(0)}%` : '<1%'}
                         </span>
                       </div>
                     )}
-                    {/* Аватар + имя (если на сегменте хватает места) */}
+                    {/* Аватар + имя (если хватает места) */}
                     {showCard && (
                       <div
                         className="absolute z-10 flex flex-col items-center gap-0.5 pointer-events-none"
@@ -454,10 +435,30 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
                         </div>
                       </div>
                     )}
-                    {/* Моя территория — маркер, если сегмент мал для карточки */}
-                    {isMe && !showCard && showPct && (
+                    {/* Мини-аватар для компактных сегментов */}
+                    {showMiniAvatar && (
                       <div
-                        className="absolute z-10 w-2 h-2 rounded-full border-2 border-white bg-[#0098ea] shadow-[0_0_8px_rgba(0,152,234,0.9)] pointer-events-none -translate-x-1/2"
+                        className="absolute z-10 flex flex-col items-center pointer-events-none"
+                        style={{
+                          left: lx,
+                          top: topY,
+                          transform: side === 'above' ? 'translate(-50%,-100%)' : 'translate(-50%,0)',
+                          opacity: roundFinished && !isWinner ? 0.45 : 1,
+                        }}
+                        title={`${name} — ${s.participant.percentage.toFixed(1)}%`}
+                      >
+                        <div className="relative">
+                          <PlayerAvatar participant={s.participant} className="w-[18px] h-[18px] border" style={{ borderColor: s.color }} />
+                          {isMe && (
+                            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#0098ea] border border-white" />
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {/* Моя территория — маркер "YOU", если сегмент очень маленький */}
+                    {isMe && !showCard && !showMiniAvatar && (
+                      <div
+                        className="absolute z-10 w-2.5 h-2.5 rounded-full border-2 border-white bg-[#0098ea] shadow-[0_0_8px_rgba(0,152,234,0.9)] pointer-events-none -translate-x-1/2"
                         style={{ left: s.mid.x, top: s.mid.y - DECK_W / 2 - 5 }}
                         title={`${name} — ${s.participant.percentage.toFixed(1)}% (YOU)`}
                       />
@@ -466,7 +467,7 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
                 );
               })}
 
-            {/* Метка выигрышного билета (provably fair: билет / банк) */}
+            {/* Метка выигрышного билета */}
             {showTicket && ticketPt && (
               <div className="absolute z-20 pointer-events-none" style={{ left: ticketPt.x, top: 0 }}>
                 <motion.div
@@ -495,64 +496,64 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
 
             {/* Вспышка при посадке шарика */}
             <AnimatePresence>
-              {landPulse > 0 && phase === 'parked' && ticketPt && (
+              {landPulse > 0 && ballPhase === 'parked' && ticketPt && (
                 <motion.div
                   key={landPulse}
                   initial={{ opacity: 0.85, scale: 0.3 }}
-                  animate={{ opacity: 0, scale: 1.9 }}
+                  animate={{ opacity: 0, scale: 2 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.55, ease: 'easeOut' }}
-                  className="absolute z-10 pointer-events-none w-[74px] h-[74px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+                  className="absolute z-10 pointer-events-none w-[76px] h-[76px] -translate-x-1/2 -translate-y-1/2 rounded-full"
                   style={{
                     left: ticketPt.x,
                     top: ticketPt.y,
-                    background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(251,191,36,0.45) 38%, transparent 70%)',
+                    background: 'radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(251,191,36,0.5) 38%, transparent 70%)',
                   }}
                 />
               )}
             </AnimatePresence>
 
-            {/* ШАРИК: в центре поля → вращается (рандомная сторона) →
-                запускается из центра и садится на позицию билета */}
+            {/* ШАРИК: скользит по дуге платформы */}
             {size.w > 40 && (
               <div
                 className="absolute z-20 pointer-events-none will-change-transform"
                 style={{
-                  left: ballPos.x - BALL_SIZE / 2,
-                  top: ballPos.y - BALL_SIZE / 2,
+                  left: ballPt.x - BALL_SIZE / 2,
+                  top: ballPt.y - BALL_SIZE / 2,
                   width: BALL_SIZE,
                   height: BALL_SIZE,
+                  transform: `rotate(${ballPt.angle}deg)`,
+                  transformOrigin: 'center center',
                 }}
               >
-                {/* Покачивание в покое */}
+                {/* Покачивание на старте */}
                 <motion.div
-                  animate={bobbing ? { y: [0, -4, 0] } : { y: 0 }}
-                  transition={bobbing ? { duration: 2.8, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.3 }}
+                  animate={bobbing ? { y: [0, -3.5, 0] } : { y: 0 }}
+                  transition={bobbing ? { duration: 2.6, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.25 }}
                   className="relative w-full h-full"
                 >
-                  {/* Свечение под шариком */}
+                  {/* Ледовое свечение вокруг шарика */}
                   <motion.div
                     className="absolute rounded-full"
-                    animate={{ scale: [1, 1.3, 1], opacity: glowStrong ? [0.55, 1, 0.55] : [0.3, 0.55, 0.3] }}
-                    transition={{ duration: glowStrong ? 0.8 : 2.6, repeat: Infinity, ease: 'easeInOut' }}
+                    animate={{ scale: [1, 1.25, 1], opacity: glowStrong ? [0.6, 1, 0.6] : [0.35, 0.6, 0.35] }}
+                    transition={{ duration: glowStrong ? 0.7 : 2.5, repeat: Infinity, ease: 'easeInOut' }}
                     style={{
-                      width: BALL_SIZE * 2.3,
-                      height: BALL_SIZE * 2.3,
-                      left: (BALL_SIZE - BALL_SIZE * 2.3) / 2,
-                      top: (BALL_SIZE - BALL_SIZE * 2.3) / 2,
-                      background: 'radial-gradient(circle, rgba(79,195,255,0.5) 0%, rgba(0,152,234,0.22) 42%, transparent 70%)',
+                      width: BALL_SIZE * 2.2,
+                      height: BALL_SIZE * 2.2,
+                      left: (BALL_SIZE - BALL_SIZE * 2.2) / 2,
+                      top: (BALL_SIZE - BALL_SIZE * 2.2) / 2,
+                      background: 'radial-gradient(circle, rgba(79,195,255,0.55) 0%, rgba(0,152,234,0.25) 45%, transparent 70%)',
                     }}
                   />
-                  {/* Сфера */}
+                  {/* Сфера шарика */}
                   <div
                     className="absolute inset-0 rounded-full"
                     style={{
-                      background: 'radial-gradient(circle at 32% 28%, rgba(255,255,255,0.98) 0%, rgba(190,235,255,0.95) 22%, rgba(0,152,234,0.9) 55%, rgba(6,38,74,0.95) 100%)',
+                      background: 'radial-gradient(circle at 32% 28%, rgba(255,255,255,0.98) 0%, rgba(190,235,255,0.95) 22%, rgba(0,152,234,0.92) 55%, rgba(6,38,74,0.96) 100%)',
                       boxShadow: '0 4px 14px rgba(0,0,0,0.5), inset 0 -5px 10px rgba(0,40,90,0.55), inset 0 3px 6px rgba(255,255,255,0.5)',
                     }}
                   >
-                    {/* Вращающиеся «полосы» — видно, как крутится шарик.
-                        Направление/скорость — рандомные каждый раунд. */}
+                    {/* Вращающиеся ледовые полосы */}
                     {spinDur > 0 && (
                       <div
                         className="absolute inset-0 rounded-full"
@@ -563,10 +564,10 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
                         }}
                       />
                     )}
-                    {/* Блик (не вращается) */}
+                    {/* Блик сферы */}
                     <span
                       aria-hidden="true"
-                      className="absolute rounded-full bg-white/90 blur-[1.5px]"
+                      className="absolute rounded-full bg-white/95 blur-[1px]"
                       style={{ width: BALL_SIZE * 0.3, height: BALL_SIZE * 0.2, left: BALL_SIZE * 0.18, top: BALL_SIZE * 0.14 }}
                     />
                   </div>
@@ -576,7 +577,7 @@ export const ArenaField: React.FC<ArenaFieldProps> = ({
           </>
         )}
 
-        {/* Пустая арена: слот свободен (CTA внизу поля, шарик парит сверху) */}
+        {/* Пустая арена: слот свободен (CTA внизу поля) */}
         {empty && (
           <button
             onClick={onJoin}

@@ -76,9 +76,102 @@ function nextRoundId(): number {
   return id;
 }
 
+function generateSeedHistory(): ArenaHistoryEntry[] {
+  const seeds: ArenaHistoryEntry[] = [];
+  const baseId = 449084;
+  const now = Date.now();
+  const sampleUsers = [
+    { name: 'ton_whale', first: 'Alexander', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alexander' },
+    { name: 'crypto_fox', first: 'Dmitry', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Dmitry' },
+    { name: 'ice_queen', first: 'Elena', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Elena' },
+    { name: 'lucky_strike', first: 'Artem', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Artem' },
+    { name: 'platina_king', first: 'Maxim', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maxim' },
+    { name: 'nordic_bear', first: 'Sergey', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sergey' },
+    { name: 'ton_master', first: 'Nikita', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Nikita' },
+    { name: 'polar_star', first: 'Alina', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alina' },
+  ];
+
+  const poolPresets = [
+    [15.5, 30.0, 5.0],
+    [85.0, 12.5],
+    [3.2, 5.8, 1.0],
+    [120.0, 45.0, 35.0],
+    [2.5, 7.5],
+    [64.0, 32.0, 14.0],
+    [8.0, 16.0, 4.0],
+    [195.0, 50.0],
+    [10.0, 20.0, 15.0],
+    [4.5, 9.0],
+    [52.0, 28.0, 20.0],
+    [1.8, 3.2],
+  ];
+
+  for (let i = 0; i < poolPresets.length; i++) {
+    const roundId = baseId - i;
+    const bets = poolPresets[i];
+    const total = Number(bets.reduce((a, b) => a + b, 0).toFixed(2));
+    const roundTime = now - (i * 180_000 + 45_000);
+    const roundUsers = sampleUsers.slice(i % 5, (i % 5) + bets.length);
+
+    const parts: ArenaParticipant[] = bets.map((b, idx) => {
+      const u = roundUsers[idx] || sampleUsers[idx % sampleUsers.length];
+      const pct = Number(((b / total) * 100).toFixed(1));
+      return {
+        id: `seed-${roundId}-${idx}`,
+        userId: -(1000 + idx + i * 10),
+        username: u.name,
+        firstName: u.first,
+        avatar: u.avatar,
+        betAmount: b,
+        contribution: b,
+        percentage: pct,
+        status: idx === 0 ? 'WON' : 'LOST',
+        joinedAt: roundTime - 20_000 + idx * 3000,
+        isBot: true,
+      };
+    });
+
+    const winner = parts[0];
+    const { seed, hash } = makeSeed();
+
+    seeds.push({
+      id: roundId,
+      mode: 'STANDARD',
+      status: 'COMPLETED',
+      createdAt: roundTime - 25_000,
+      completedAt: roundTime,
+      totalPool: total,
+      winAmount: total,
+      participantsCount: parts.length,
+      winner: {
+        id: winner.id,
+        userId: winner.userId,
+        username: winner.username,
+        firstName: winner.firstName,
+        avatar: winner.avatar,
+        contribution: winner.contribution,
+        percentage: winner.percentage,
+      },
+      participants: parts,
+      serverSeedHash: hash,
+      serverSeed: seed,
+      roll: Number((winner.contribution / total * 0.6).toFixed(4)),
+      ticket: Number((total * 0.35).toFixed(2)),
+    });
+  }
+
+  return seeds;
+}
+
 let historyCache: ArenaHistoryEntry[] | null = null;
 function history(): ArenaHistoryEntry[] {
-  if (!historyCache) historyCache = readJson<ArenaHistoryEntry[]>(HISTORY_FILE, []);
+  if (!historyCache) {
+    historyCache = readJson<ArenaHistoryEntry[]>(HISTORY_FILE, []);
+    if (!historyCache.length) {
+      historyCache = generateSeedHistory();
+      writeJson(HISTORY_FILE, historyCache);
+    }
+  }
   return historyCache;
 }
 
@@ -512,7 +605,11 @@ export function getArenaHistory(limit = 30): ArenaHistoryEntry[] {
 }
 
 export function getArenaRoundEntry(id: number): ArenaHistoryEntry | null {
-  return history().find((h) => h.id === id) || null;
+  const fromHistory = history().find((h) => h.id === id);
+  if (fromHistory) return fromHistory;
+  const mem = rounds.get(id);
+  if (mem) return snapshotHistory(mem);
+  return null;
 }
 
 export function getArenaFair(id: number) {

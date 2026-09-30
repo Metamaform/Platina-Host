@@ -5,11 +5,12 @@
 
   Платформа — кубическая кривая Безье «стартовая полоса»: плоский
   разбег снизу слева → набор высоты → крутой взлёт в правый верхний
-  угол (та же сигнатура, что у траектории ракеты в Rocket). По длине
-  дуги делятся территории игроков: доля сегмента = вклад / Σ вклад,
-  порядок сегментов = порядок round.participants (тот же, что обходит
-  сервер в pickWinner). Позиция любого объекта на платформе задаётся
-  долей 0..1 от длины дуги.
+  угол. По длине дуги делятся территории игроков.
+
+  При больших ставках мелкие ставки защищены минимальной визуальной квотой
+  (smart min-slice allocation), чтобы ни один игрок с любым процентом
+  не исчезал с поля, а шарик гарантированно садился внутрь видимой территории
+  победителя.
 */
 
 import type { ArenaParticipant } from '../../lib/arenaShared';
@@ -99,6 +100,10 @@ export interface PlatformSegment {
   lenPx: number;
   /** середина сегмента на дуге */
   mid: { x: number; y: number; angle: number };
+  /** визуальная начальная доля 0..1 */
+  visFrom: number;
+  /** визуальная конечная доля 0..1 */
+  visTo: number;
 }
 
 export interface PlatformLayout {
@@ -106,6 +111,8 @@ export interface PlatformLayout {
   segs: PlatformSegment[];
   /** Σ вклад участников (мера для долей) */
   sumC: number;
+  /** Отображение билета победителя в позицию на дуге (0..1) */
+  ticketToFrac: (ticket: number) => number;
 }
 
 /** Цвета территорий (до 8 игроков — каждому свой оттенок). */
@@ -121,7 +128,7 @@ export const SEGMENT_COLORS = [
 ];
 
 /** Зазор по краям сегмента, px (видна тёмная палуба — «швы» полосы). */
-export const SEGMENT_GAP_PX = 3;
+export const SEGMENT_GAP_PX = 2.5;
 
 export function buildPlatformLayout(
   width: number,
@@ -129,29 +136,117 @@ export function buildPlatformLayout(
   participants: ArenaParticipant[],
 ): PlatformLayout {
   const geo = buildPlatformCurve(width, height);
-  const sumC = participants.reduce((s, p) => s + p.contribution, 0);
-  let acc = 0;
+  const sumC = participants.reduce((s, p) => s + (p.contribution || 0), 0);
+  const n = participants.length;
+
+  if (n === 0) {
+    return {
+      geo,
+      segs: [],
+      sumC: 0,
+      ticketToFrac: () => 0,
+    };
+  }
+
+  // Расчёт сырых долей
+  const rawFractions = participants.map((p, idx) => {
+    if (sumC > 0) return Math.max(0, p.contribution) / sumC;
+    return 1 / n;
+  });
+
+  // Минимальная визуальная доля (5-6% от полосы), чтобы мелкие игроки
+  // не растворялись в 0 px при ставках-гигантах.
+  const minFrac = n > 1 ? Math.min(0.065, 0.85 / n) : 1;
+
+  let smallCount = 0;
+  let largeSum = 0;
+  for (const r of rawFractions) {
+    if (r < minFrac) smallCount++;
+    else largeSum += r;
+  }
+
+  const smallAllocated = smallCount * minFrac;
+  const remainingForLarge = Math.max(0.001, 1 - smallAllocated);
+
+  const visFractions = rawFractions.map((r) => {
+    if (n === 1) return 1;
+    if (r < minFrac) return minFrac;
+    return largeSum > 0 ? (r / largeSum) * remainingForLarge : r;
+  });
+
+  // Нормализуем сумму до точно 1
+  const visSum = visFractions.reduce((s, v) => s + v, 0);
+  const normVis = visFractions.map((v) => (visSum > 0 ? v / visSum : 1 / n));
+
+  // Границы сегментов в координатах дуги
+  const visBounds: { from: number; to: number }[] = [];
+  const rawBounds: { from: number; to: number }[] = [];
+  let visAcc = 0;
+  let rawAcc = 0;
+
+  for (let i = 0; i < n; i++) {
+    const vf = normVis[i];
+    const rf = rawFractions[i];
+    const vFrom = visAcc;
+    visAcc = Math.min(1, visAcc + vf);
+    const vTo = i === n - 1 ? 1 : visAcc;
+    visBounds.push({ from: vFrom, to: vTo });
+
+    const rFrom = rawAcc;
+    rawAcc = Math.min(1, rawAcc + rf);
+    const rTo = i === n - 1 ? 1 : rawAcc;
+    rawBounds.push({ from: rFrom, to: rTo });
+  }
+
   const segs: PlatformSegment[] = participants.map((p, idx) => {
-    const from = sumC > 0 ? acc / sumC : idx / Math.max(1, participants.length);
-    acc += p.contribution;
-    const to = sumC > 0 ? Math.min(1, acc / sumC) : (idx + 1) / Math.max(1, participants.length);
-    const gapFrac = SEGMENT_GAP_PX / geo.total;
-    const sFrac = Math.max(0, from + gapFrac);
-    const eFrac = Math.min(1, to - gapFrac);
-    const startLen = from * geo.total;
-    const segLenPx = Math.max(0, to - from) * geo.total;
-    const mid = geo.pointAt((from + to) / 2);
+    const { from: vFrom, to: vTo } = visBounds[idx];
+    const segLenPx = Math.max(0, vTo - vFrom) * geo.total;
+
+    // Симметричный центрированный зазор между сегментами
+    const gapPx = n > 1 ? Math.min(SEGMENT_GAP_PX, segLenPx * 0.12) : 0;
+    const dashStart = vFrom * geo.total + gapPx / 2;
+    const dashLen = Math.max(1.5, segLenPx - gapPx);
+    const mid = geo.pointAt((vFrom + vTo) / 2);
+
     return {
       participant: p,
       idx,
       color: SEGMENT_COLORS[idx % SEGMENT_COLORS.length],
-      dashStart: startLen,
-      dashLen: Math.max(0, (eFrac - sFrac) * geo.total),
+      dashStart,
+      dashLen,
       lenPx: segLenPx,
       mid,
+      visFrom: vFrom,
+      visTo: vTo,
     };
   });
-  return { geo, segs, sumC };
+
+  const ticketToFracLayout = (ticket: number): number => {
+    if (sumC <= 0 || n === 0) return 0;
+    const t = Math.max(0, Math.min(sumC, ticket));
+
+    // Находим победителя по правилу pickWinner: первый, у кого acc > ticket
+    let acc = 0;
+    for (let i = 0; i < n; i++) {
+      const startC = acc;
+      acc += participants[i].contribution;
+      const endC = acc;
+      if (t <= endC || i === n - 1) {
+        const segC = Math.max(1e-9, endC - startC);
+        const rel = Math.max(0, Math.min(1, (t - startC) / segC));
+        const vb = visBounds[i];
+        return vb.from + rel * (vb.to - vb.from);
+      }
+    }
+    return 1;
+  };
+
+  return {
+    geo,
+    segs,
+    sumC,
+    ticketToFrac: ticketToFracLayout,
+  };
 }
 
 /** Доля длины дуги, на которой лежит билет (ticket / Σ вклад), 0..1. */

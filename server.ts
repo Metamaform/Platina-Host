@@ -834,9 +834,12 @@ app.post("/api/state", requireAuth, (req, res) => {
       round,
       serverTime: Date.now(),
       history: getArenaHistory(20).map((h) => ({
-        id: h.id, totalPool: h.totalPool, participantsCount: h.participantsCount,
-        winner: h.winner ? { username: h.winner.username, firstName: h.winner.firstName, avatar: h.winner.avatar } : null,
-        completedAt: h.completedAt, status: h.status,
+        id: h.id,
+        totalPool: h.totalPool,
+        participantsCount: h.participantsCount,
+        winner: h.winner ? { id: h.winner.id, userId: h.winner.userId, username: h.winner.username, firstName: h.winner.firstName, avatar: h.winner.avatar } : null,
+        completedAt: h.completedAt,
+        status: h.status,
       })),
     });
   });
@@ -865,6 +868,7 @@ app.post("/api/state", requireAuth, (req, res) => {
 
     write({ type: "hello", serverTime: Date.now(), scope });
     write({ type: "state", scope, round: getArenaState() });
+    write({ type: "history" });
 
     const client = addArenaClient(res, userId, scope);
     req.on("close", () => removeArenaClient(client));
@@ -1396,8 +1400,10 @@ app.get("/api/admin/gifts", (req, res) => {
     }
   });
 
-  app.get("/api/leaderboard", requireAuth, (req, res) => {
-    const userId = (req as any).userId as number;
+  app.get("/api/leaderboard", (req, res) => {
+    const authHeader = req.headers.authorization || "";
+    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : ((req.query.token as string) || "");
+    const userId = token ? (verifyToken(token) ?? 0) : 0;
     const limit = Number(req.query.limit) || 100;
     res.json(getLeaderboardData(userId, limit));
   });
