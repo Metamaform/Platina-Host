@@ -2,7 +2,7 @@ import { useTranslation } from '../lib/i18n';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { ArrowLeft, Sparkles, X, Plus, Trash2, AlertTriangle, TrendingUp, Shuffle, Bomb } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { PremiumImage } from './PremiumImage';
+import { PremiumImage } from './PremiumNftImage';
 import { incrementStat, recordGameProgress } from '../lib/stats';
 import { GramIcon } from './GramIcon';
 import { getNftBackdrop } from '../lib/nftUtils';

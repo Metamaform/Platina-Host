@@ -8,7 +8,7 @@ import { GramIcon } from './GramIcon';
 import { cleanNftName, getNftBackdrop } from '../lib/nftUtils';
 import { NftSelectorGrid } from './NftSelectorGrid';
 import { LiquidSegment } from './ui/LiquidSegment';
-import { PremiumImage } from './PremiumImage';
+import { PremiumImage } from './PremiumNftImage';
 import { useTranslation } from '../lib/i18n';
 import {
   computeIceArenaTerritories,

@@ -26,12 +26,12 @@ import { Plus } from 'lucide-react';
 import { GramIcon } from '../GramIcon';
 import type { ArenaRoundState } from '../../lib/arenaShared';
 import { playersWord } from '../../lib/arenaShared';
-import { PlayerAvatar, ArenaStatusChip } from './arenaUi';
+import { PlayerAvatar, ArenaStatusChip } from './arenaUiComponents';
 import type { ArenaCountdown } from './useArenaCountdown';
 import {
   buildPlatformLayout,
   type PlatformSegment,
-} from './arenaPlatform';
+} from './arenaConstants';
 
 interface ArenaFieldProps {
   round: ArenaRoundState;

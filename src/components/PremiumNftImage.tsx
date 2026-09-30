@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CleanModelLottie } from './CleanModelLottie';
+import { CleanModelLottie } from './ModelCleaningAnimation';
 
 interface PremiumImageProps {
   staticMode?: boolean;

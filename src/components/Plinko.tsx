@@ -6,7 +6,7 @@ import { GramIcon } from './GramIcon';
 import { NftSelectorGrid } from './NftSelectorGrid';
 import { cleanNftName } from '../lib/nftUtils';
 import { preparePlinkoRewards, selectPlinkoReward, rewardIdentity } from '../lib/plinkoRewards';
-import { PremiumImage } from './PremiumImage';
+import { PremiumImage } from './PremiumNftImage';
 import { BetHistoryModal, BetHistoryRecord } from './BetHistoryModal';
 import { GameRoundInfoModal } from './GameRoundInfoModal';
 import { LiquidSegment } from './ui/LiquidSegment';

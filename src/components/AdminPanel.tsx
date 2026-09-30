@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { PremiumImage } from './PremiumImage';
+import { PremiumImage } from './PremiumNftImage';
 import { LazyNftCard } from './LazyNftCard';
 import { Plus, Trash2, Edit2, Save, X, RotateCcw, Search, DownloadCloud, RefreshCw, Wand2, Check } from 'lucide-react';
 import defaultGiftsDb from '../gifts_data.json';

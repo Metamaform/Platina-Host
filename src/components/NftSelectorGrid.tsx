@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Search } from 'lucide-react';
-import { PremiumImage } from './PremiumImage';
+import { PremiumImage } from './PremiumNftImage';
 import { GramIcon } from './GramIcon';
 import { cleanNftName, getNftBackdrop } from '../lib/nftUtils';
 import { useTranslation } from '../lib/i18n';
