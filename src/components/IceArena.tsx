@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  ArrowLeft, Users, X, Trophy, Sparkles, ChevronDown, 
-  Plus, Dices, ArrowUpRight, Crown, Gift, ChevronRight
+  ArrowLeft, Users, X, Trophy, Sparkles,
+  Plus, Dices, ArrowUpRight, ChevronRight
 } from 'lucide-react';
 import { GramIcon } from './GramIcon';
 import { cleanNftName } from '../lib/nftUtils';
@@ -10,6 +10,11 @@ import { NftSelectorGrid } from './NftSelectorGrid';
 import { LiquidSegment } from './ui/LiquidSegment';
 import { PremiumImage } from './PremiumImage';
 import { useTranslation } from '../lib/i18n';
+import {
+  computeIceArenaTerritories,
+  samplePointInIceArenaTerritory,
+} from '../lib/iceArenaTerritories';
+import { IceArenaCelebrationModal } from './IceArenaCelebrationModal';
 
 export interface IceArenaProps {
   onBack: () => void;
@@ -165,171 +170,6 @@ const SAMPLE_PLAYERS = [
   },
 ];
 
-export interface TerritoryNode {
-  participant: ArenaParticipant;
-  points: { x: number; y: number }[];
-  pointsStr: string;
-  cx: number;
-  cy: number;
-  w: number;
-  h: number;
-  areaPct: number;
-}
-
-/**
- * Proportional 2D partition of the arena window.
- * Slices the area [x, y, w, h] so that each player's rectangle area
- * exactly matches their share of the total pool.
- */
-function computeTerritories(
-  players: ArenaParticipant[],
-  box = { x: 0, y: 0, w: 100, h: 100 },
-  depth = 0
-): TerritoryNode[] {
-  if (players.length === 0) return [];
-  if (players.length === 1) {
-    const p = players[0];
-    const points = [
-      { x: box.x, y: box.y },
-      { x: box.x + box.w, y: box.y },
-      { x: box.x + box.w, y: box.y + box.h },
-      { x: box.x, y: box.y + box.h },
-    ];
-    return [{
-      participant: p,
-      points,
-      pointsStr: points.map(pt => `${pt.x.toFixed(2)},${pt.y.toFixed(2)}`).join(" "),
-      cx: box.x + box.w / 2,
-      cy: box.y + box.h / 2,
-      w: box.w,
-      h: box.h,
-      areaPct: (box.w * box.h) / 100,
-    }];
-  }
-
-  const total = players.reduce((sum, p) => sum + (p.contribution > 0 ? p.contribution : 0.01), 0);
-  if (total <= 0) return [];
-
-  let bestIdx = 1;
-  let bestDiff = Infinity;
-  let running = 0;
-  for (let i = 0; i < players.length - 1; i++) {
-    running += (players[i].contribution > 0 ? players[i].contribution : 0.01);
-    const diff = Math.abs(running - total / 2);
-    if (diff < bestDiff) {
-      bestDiff = diff;
-      bestIdx = i + 1;
-    }
-  }
-
-  const group1 = players.slice(0, bestIdx);
-  const group2 = players.slice(bestIdx);
-  const sum1 = group1.reduce((sum, p) => sum + (p.contribution > 0 ? p.contribution : 0.01), 0);
-  const ratio1 = Math.max(0.01, Math.min(0.99, sum1 / total));
-
-  // Dynamic straight trapezoid/diagonal seams for single-player leaves
-  if (group1.length === 1 && group2.length === 1) {
-    const p1 = group1[0];
-    const p2 = group2[0];
-    if (box.w >= box.h) {
-      const maxTilt = Math.min(ratio1, 1 - ratio1) * box.w * 0.3;
-      const tilt = (depth % 2 === 0 ? 1 : -1) * maxTilt;
-      const xt = Math.max(box.x, Math.min(box.x + box.w, box.x + box.w * ratio1 - tilt));
-      const xb = Math.max(box.x, Math.min(box.x + box.w, box.x + box.w * ratio1 + tilt));
-      const pts1 = [
-        { x: box.x, y: box.y },
-        { x: xt, y: box.y },
-        { x: xb, y: box.y + box.h },
-        { x: box.x, y: box.y + box.h },
-      ];
-      const pts2 = [
-        { x: xt, y: box.y },
-        { x: box.x + box.w, y: box.y },
-        { x: box.x + box.w, y: box.y + box.h },
-        { x: xb, y: box.y + box.h },
-      ];
-      return [
-        {
-          participant: p1,
-          points: pts1,
-          pointsStr: pts1.map(pt => `${pt.x.toFixed(2)},${pt.y.toFixed(2)}`).join(" "),
-          cx: (box.x + xt + xb + box.x) / 4,
-          cy: box.y + box.h / 2,
-          w: Math.max(xt, xb) - box.x,
-          h: box.h,
-          areaPct: (box.w * ratio1 * box.h) / 100,
-        },
-        {
-          participant: p2,
-          points: pts2,
-          pointsStr: pts2.map(pt => `${pt.x.toFixed(2)},${pt.y.toFixed(2)}`).join(" "),
-          cx: (xt + (box.x + box.w) * 2 + xb) / 4,
-          cy: box.y + box.h / 2,
-          w: box.x + box.w - Math.min(xt, xb),
-          h: box.h,
-          areaPct: (box.w * (1 - ratio1) * box.h) / 100,
-        }
-      ];
-    } else {
-      const maxTilt = Math.min(ratio1, 1 - ratio1) * box.h * 0.3;
-      const tilt = (depth % 2 === 0 ? 1 : -1) * maxTilt;
-      const yl = Math.max(box.y, Math.min(box.y + box.h, box.y + box.h * ratio1 - tilt));
-      const yr = Math.max(box.y, Math.min(box.y + box.h, box.y + box.h * ratio1 + tilt));
-      const pts1 = [
-        { x: box.x, y: box.y },
-        { x: box.x + box.w, y: box.y },
-        { x: box.x + box.w, y: yr },
-        { x: box.x, y: yl },
-      ];
-      const pts2 = [
-        { x: box.x, y: yl },
-        { x: box.x + box.w, y: yr },
-        { x: box.x + box.w, y: box.y + box.h },
-        { x: box.x, y: box.y + box.h },
-      ];
-      return [
-        {
-          participant: p1,
-          points: pts1,
-          pointsStr: pts1.map(pt => `${pt.x.toFixed(2)},${pt.y.toFixed(2)}`).join(" "),
-          cx: box.x + box.w / 2,
-          cy: (box.y * 2 + yr + yl) / 4,
-          w: box.w,
-          h: Math.max(yr, yl) - box.y,
-          areaPct: (box.w * box.h * ratio1) / 100,
-        },
-        {
-          participant: p2,
-          points: pts2,
-          pointsStr: pts2.map(pt => `${pt.x.toFixed(2)},${pt.y.toFixed(2)}`).join(" "),
-          cx: box.x + box.w / 2,
-          cy: (yl + yr + (box.y + box.h) * 2) / 4,
-          w: box.w,
-          h: box.y + box.h - Math.min(yr, yl),
-          areaPct: (box.w * box.h * (1 - ratio1)) / 100,
-        }
-      ];
-    }
-  }
-
-  let box1;
-  let box2;
-  if (box.w >= box.h) {
-    const w1 = box.w * ratio1;
-    box1 = { x: box.x, y: box.y, w: w1, h: box.h };
-    box2 = { x: box.x + w1, y: box.y, w: box.w - w1, h: box.h };
-  } else {
-    const h1 = box.h * ratio1;
-    box1 = { x: box.x, y: box.y, w: box.w, h: h1 };
-    box2 = { x: box.x + h1, y: box.y, w: box.w, h: box.h - h1 };
-  }
-
-  return [
-    ...computeTerritories(group1, box1, depth + 1),
-    ...computeTerritories(group2, box2, depth + 1),
-  ];
-}
-
 export const IceArena: React.FC<IceArenaProps> = ({
   onBack,
   inventory = [],
@@ -353,8 +193,37 @@ export const IceArena: React.FC<IceArenaProps> = ({
   const [participants, setParticipants] = useState<ArenaParticipant[]>([]);
   const [winner, setWinner] = useState<ArenaParticipant | null>(null);
   const [showWinnerModal, setShowWinnerModal] = useState<boolean>(false);
+  const [showTopGameModal, setShowTopGameModal] = useState<boolean>(false);
   const [historyList, setHistoryList] = useState<CompletedRoundRecord[]>(DEFAULT_HISTORY);
   const [selectedHistoryRound, setSelectedHistoryRound] = useState<CompletedRoundRecord | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+  const [territoryMapElement, setTerritoryMapElement] = useState<HTMLDivElement | null>(null);
+  const [territoryMapSize, setTerritoryMapSize] = useState({ width: 360, height: 270 });
+
+  useEffect(() => {
+    const element = territoryMapElement;
+    if (!element || typeof ResizeObserver === 'undefined') return;
+
+    const updateSize = () => {
+      const rect = element.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+      setTerritoryMapSize((previous) => (
+        Math.abs(previous.width - rect.width) < 0.5 && Math.abs(previous.height - rect.height) < 0.5
+          ? previous
+          : { width: rect.width, height: rect.height }
+      ));
+    };
+
+    updateSize();
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [territoryMapElement]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   // Load server history on mount if available
   useEffect(() => {
@@ -372,14 +241,14 @@ export const IceArena: React.FC<IceArenaProps> = ({
             firstName: h.winner.firstName || h.winner.username || 'Победитель',
             username: h.winner.username || '',
             avatar: h.winner.avatar || '',
-            betAmount: 0,
-            contribution: 0,
-            percentage: 0,
+            betAmount: Number(h.winner.contribution || 0),
+            contribution: Number(h.winner.contribution || 0),
+            percentage: Number(h.winner.percentage || 0),
             color: '#10b981',
           } : { id: 'w', userId: 0, firstName: 'Победитель', betAmount: 0, contribution: 0, percentage: 0, color: '#10b981' },
           participantsCount: h.participantsCount || (h.participants ? h.participants.length : 1),
           giftsCount: h.participants ? h.participants.filter((p: any) => !!p.gift).length : 0,
-          completedAt: h.completedAt || Date.now(),
+          completedAt: Number(h.completedAt) || Date.now(),
           participants: h.participants ? h.participants.map((p: any) => ({
             id: String(p.userId || p.id),
             userId: p.userId || 0,
@@ -399,20 +268,26 @@ export const IceArena: React.FC<IceArenaProps> = ({
     return () => { alive = false; };
   }, []);
 
-  // Dynamic Top Game in 24h
+  // Лучший банк среди завершённых раундов за последние 24 часа.
   const topGame = useMemo(() => {
-    let highest = DEFAULT_HISTORY[0];
-    for (const h of historyList) {
-      if (h.totalPool > highest.totalPool) {
-        highest = h;
-      }
-    }
+    const dayAgo = now - 24 * 60 * 60 * 1000;
+    const recentRounds = historyList.filter((round) => (
+      Number.isFinite(round.completedAt) && round.completedAt >= dayAgo && round.completedAt <= now + 5 * 60 * 1000
+    ));
+    if (recentRounds.length === 0) return null;
+
+    const record = recentRounds.reduce((best, round) => (
+      round.totalPool > best.totalPool || (round.totalPool === best.totalPool && round.completedAt > best.completedAt)
+        ? round
+        : best
+    ));
+
     return {
-      pool: highest.totalPool,
-      winnerName: highest.winner.firstName || highest.winner.username || 'Артем',
-      record: highest,
+      pool: record.totalPool,
+      winnerName: record.winner.firstName || record.winner.username || 'Победитель',
+      record,
     };
-  }, [historyList]);
+  }, [historyList, now]);
 
   // Bouncing Ball position during drawing
   const [ballPos, setBallPos] = useState<{ x: number; y: number } | null>(null);
@@ -515,20 +390,20 @@ export const IceArena: React.FC<IceArenaProps> = ({
       return participants.map((p, idx) => ({
         ...p,
         color: p.color || PLAYER_COLORS[idx % PLAYER_COLORS.length],
-        percentage: participants.length > 0 ? Number((100 / participants.length).toFixed(1)) : 0,
+        percentage: participants.length > 0 ? Number((100 / participants.length).toFixed(2)) : 0,
       }));
     }
     return participants.map((p, idx) => ({
       ...p,
       color: p.color || PLAYER_COLORS[idx % PLAYER_COLORS.length],
-      percentage: Number(((p.contribution / totalPool) * 100).toFixed(1)),
+      percentage: Number(((p.contribution / totalPool) * 100).toFixed(2)),
     }));
   }, [participants, totalPool]);
 
-  // Territories in the 2D window
-  const territoryNodes = useMemo(() => {
-    return computeTerritories(normalizedParticipants);
-  }, [normalizedParticipants]);
+  // Territory tiling follows the actual map aspect ratio, not a hard-coded device size.
+  const territoryNodes = useMemo(() => (
+    computeIceArenaTerritories(normalizedParticipants, territoryMapSize)
+  ), [normalizedParticipants, territoryMapSize]);
 
   // Check if current user has placed a bet
   const userBet = useMemo(() => {
@@ -681,170 +556,155 @@ export const IceArena: React.FC<IceArenaProps> = ({
     return () => clearInterval(timer);
   }, [roundStatus, playSound]);
 
-  // When Drawing starts -> run the Bouncing Ball animation with realistic physics
+  // При старте розыгрыша шарик катится по арене с инерцией и отскоками,
+  // затем мягко затухает внутри территории выпавшего игрока.
   useEffect(() => {
     if (roundStatus !== 'drawing') return;
 
-    // Pick winner based on contribution weights
-    const pool = totalPool;
-    const rand = Math.random() * pool;
-    let running = 0;
-    let chosen = normalizedParticipants[0] || null;
-    for (const p of normalizedParticipants) {
-      running += p.contribution;
-      if (rand <= running) {
-        chosen = p;
-        break;
+    const pool = Math.max(0, totalPool);
+    let chosen: ArenaParticipant | null = null;
+    if (pool > 0) {
+      const ticket = Math.random() * pool;
+      let accumulated = 0;
+      for (const participant of normalizedParticipants) {
+        accumulated += Math.max(0, participant.contribution);
+        if (ticket <= accumulated) {
+          chosen = participant;
+          break;
+        }
       }
     }
-    setWinner(chosen);
+    chosen ??= normalizedParticipants[0] ?? null;
 
-    // Pick a natural resting spot inside the winner's territory (varied, not dead-center!)
-    const winnerNode = territoryNodes.find(n => n.participant.id === chosen?.id) || territoryNodes[0];
-    const jitterX = (Math.random() - 0.5) * (winnerNode ? winnerNode.w * 0.45 : 8);
-    const jitterY = (Math.random() - 0.5) * (winnerNode ? winnerNode.h * 0.45 : 8);
-    const finalStopX = Math.max(10, Math.min(90, (winnerNode ? winnerNode.cx : 50) + jitterX));
-    const finalStopY = Math.max(10, Math.min(90, (winnerNode ? winnerNode.cy : 50) + jitterY));
+    if (!chosen) {
+      setIsBallActive(false);
+      setBallPos(null);
+      return;
+    }
+
+    setWinner(chosen);
+    const winnerTerritory = territoryNodes.find((node) => node.participant.id === chosen?.id);
+    const target = winnerTerritory
+      ? samplePointInIceArenaTerritory(winnerTerritory)
+      : { x: 50, y: 50 };
+    const finalStopX = target.x;
+    const finalStopY = target.y;
 
     setIsBallActive(true);
 
-    // Launch from a random perimeter edge
+    // Start close to a random edge and launch inward across the field.
     const spawnSides = [
-      { x: 12 + Math.random() * 76, y: 10 },
-      { x: 12 + Math.random() * 76, y: 90 },
-      { x: 10, y: 12 + Math.random() * 76 },
-      { x: 90, y: 12 + Math.random() * 76 },
+      { x: 12 + Math.random() * 76, y: 5 },
+      { x: 12 + Math.random() * 76, y: 95 },
+      { x: 5, y: 12 + Math.random() * 76 },
+      { x: 95, y: 12 + Math.random() * 76 },
     ];
     const spawn = spawnSides[Math.floor(Math.random() * spawnSides.length)];
     let posX = spawn.x;
     let posY = spawn.y;
     setBallPos({ x: posX, y: posY });
 
-    // Launch inward with high initial velocity
-    const targetAngle = Math.atan2(50 - posY, 50 - posX) + (Math.random() - 0.5) * 0.7;
-    const initialSpeed = 130 + Math.random() * 30; // % per second
-    let vx = Math.cos(targetAngle) * initialSpeed;
-    let vy = Math.sin(targetAngle) * initialSpeed;
+    const launchAngle = Math.atan2(50 - posY, 50 - posX) + (Math.random() - 0.5) * 0.8;
+    const launchSpeed = 128 + Math.random() * 24;
+    let velocityX = Math.cos(launchAngle) * launchSpeed;
+    let velocityY = Math.sin(launchAngle) * launchSpeed;
 
-    const totalDuration = 4400; // 4.4 seconds
-    const startTime = performance.now();
-    let lastTime = startTime;
+    const totalDuration = 4_800;
+    const freeRollDuration = totalDuration * 0.58;
+    let lastFrameTime = performance.now();
+    let elapsed = 0;
     let lastBounceTime = 0;
-    let animId: number;
+    let animationId = 0;
+    let winnerModalTimer: number | undefined;
 
-    const BOUND_MIN_X = 8;
-    const BOUND_MAX_X = 92;
-    const BOUND_MIN_Y = 8;
-    const BOUND_MAX_Y = 92;
+    const minX = 4.5;
+    const maxX = 95.5;
+    const minY = 5;
+    const maxY = 95;
 
-    const frameStep = (now: number) => {
-      const dt = Math.min(0.035, (now - lastTime) / 1000);
-      lastTime = now;
-      const elapsed = now - startTime;
+    const animate = (nowTime: number) => {
+      // Clamp unusually long frames so returning from a background tab never
+      // teleports the ball or skips the settling animation.
+      const dt = Math.max(0.001, Math.min(1 / 30, (nowTime - lastFrameTime) / 1000));
+      lastFrameTime = nowTime;
+      elapsed += dt * 1000;
       const progress = Math.min(1, elapsed / totalDuration);
+      let bounced = false;
 
-      if (progress < 0.55) {
-        // Phase 1: High speed roll and bounce off walls with friction
-        posX += vx * dt;
-        posY += vy * dt;
+      if (elapsed < freeRollDuration) {
+        // Free roll: steady ice friction and energetic, non-sticky wall bounces.
+        posX += velocityX * dt;
+        posY += velocityY * dt;
 
-        let bounced = false;
-        if (posX <= BOUND_MIN_X) {
-          posX = BOUND_MIN_X;
-          vx = -vx * 0.88;
-          bounced = true;
-        } else if (posX >= BOUND_MAX_X) {
-          posX = BOUND_MAX_X;
-          vx = -vx * 0.88;
-          bounced = true;
-        }
+        if (posX < minX) { posX = minX; velocityX = Math.abs(velocityX) * 0.82; bounced = true; }
+        else if (posX > maxX) { posX = maxX; velocityX = -Math.abs(velocityX) * 0.82; bounced = true; }
+        if (posY < minY) { posY = minY; velocityY = Math.abs(velocityY) * 0.82; bounced = true; }
+        else if (posY > maxY) { posY = maxY; velocityY = -Math.abs(velocityY) * 0.82; bounced = true; }
 
-        if (posY <= BOUND_MIN_Y) {
-          posY = BOUND_MIN_Y;
-          vy = -vy * 0.88;
-          bounced = true;
-        } else if (posY >= BOUND_MAX_Y) {
-          posY = BOUND_MAX_Y;
-          vy = -vy * 0.88;
-          bounced = true;
-        }
-
-        if (bounced && now - lastBounceTime > 100) {
-          lastBounceTime = now;
-          playSound('bounce');
-        }
-
-        // Ice rolling friction
-        const friction = Math.pow(0.94, dt * 60);
-        vx *= friction;
-        vy *= friction;
+        const iceDrag = Math.exp(-0.28 * dt);
+        velocityX *= iceDrag;
+        velocityY *= iceDrag;
       } else {
-        // Phase 2: Natural deceleration - losing momentum smoothly into the winner territory
-        const phaseT = (progress - 0.55) / 0.45;
+        // Critically damped guidance feels like the ball is losing momentum,
+        // rather than being pulled abruptly toward a hard-coded screen point.
+        const guidance = Math.max(0, Math.min(1, (progress - 0.58) / 0.42));
+        const omega = 1.9 + guidance * 2.4;
+        const accelerationX = (finalStopX - posX) * omega * omega - 2 * omega * velocityX;
+        const accelerationY = (finalStopY - posY) * omega * omega - 2 * omega * velocityY;
+        velocityX += accelerationX * dt;
+        velocityY += accelerationY * dt;
+        posX += velocityX * dt;
+        posY += velocityY * dt;
 
-        // Smooth guidance towards resting spot
-        const pull = 4.0 + phaseT * 7.5;
-        const dirX = finalStopX - posX;
-        const dirY = finalStopY - posY;
+        if (posX < minX) { posX = minX; velocityX = Math.abs(velocityX) * 0.42; bounced = true; }
+        else if (posX > maxX) { posX = maxX; velocityX = -Math.abs(velocityX) * 0.42; bounced = true; }
+        if (posY < minY) { posY = minY; velocityY = Math.abs(velocityY) * 0.42; bounced = true; }
+        else if (posY > maxY) { posY = maxY; velocityY = -Math.abs(velocityY) * 0.42; bounced = true; }
+      }
 
-        vx += dirX * pull * dt;
-        vy += dirY * pull * dt;
-
-        // Higher damping as speed dies down
-        const damp = Math.pow(0.86 - phaseT * 0.22, dt * 60);
-        vx *= damp;
-        vy *= damp;
-
-        posX += vx * dt;
-        posY += vy * dt;
-
-        if (posX <= BOUND_MIN_X) { posX = BOUND_MIN_X; vx = -vx * 0.4; }
-        if (posX >= BOUND_MAX_X) { posX = BOUND_MAX_X; vx = -vx * 0.4; }
-        if (posY <= BOUND_MIN_Y) { posY = BOUND_MIN_Y; vy = -vy * 0.4; }
-        if (posY >= BOUND_MAX_Y) { posY = BOUND_MAX_Y; vy = -vy * 0.4; }
-
-        if (phaseT > 0.88) {
-          const settle = (phaseT - 0.88) / 0.12;
-          posX = posX + (finalStopX - posX) * (settle * 0.4);
-          posY = posY + (finalStopY - posY) * (settle * 0.4);
-        }
+      if (bounced && nowTime - lastBounceTime > 110) {
+        lastBounceTime = nowTime;
+        playSound('bounce');
       }
 
       setBallPos({ x: posX, y: posY });
 
       if (progress < 1) {
-        animId = requestAnimationFrame(frameStep);
-      } else {
-        // Settled naturally at finalStopX, finalStopY
-        setBallPos({ x: finalStopX, y: finalStopY });
-        playSound('win');
-
-        if (chosen?.isUser) {
-          setBalance?.(prev => Number((prev + pool).toFixed(2)));
-          onWin?.(pool, 'gram', undefined, 1.0);
-        }
-
-        const record: CompletedRoundRecord = {
-          id: roundId,
-          totalPool: pool,
-          winner: chosen!,
-          participantsCount: normalizedParticipants.length,
-          giftsCount: roundGifts.length,
-          completedAt: Date.now(),
-          participants: normalizedParticipants,
-          gifts: roundGifts,
-        };
-        setHistoryList(prev => [record, ...prev.slice(0, 49)]);
-
-        setTimeout(() => {
-          setShowWinnerModal(true);
-        }, 700);
+        animationId = requestAnimationFrame(animate);
+        return;
       }
+
+      // The sampled destination is guaranteed to lie inside the selected zone.
+      setBallPos({ x: finalStopX, y: finalStopY });
+      setIsBallActive(false);
+      playSound('win');
+
+      if (chosen?.isUser) {
+        setBalance?.((previous) => Number((previous + pool).toFixed(2)));
+        onWin?.(pool, 'gram', undefined, 1.0);
+      }
+
+      const record: CompletedRoundRecord = {
+        id: roundId,
+        totalPool: pool,
+        winner: chosen,
+        participantsCount: normalizedParticipants.length,
+        giftsCount: roundGifts.length,
+        completedAt: Date.now(),
+        participants: normalizedParticipants,
+        gifts: roundGifts,
+      };
+      setHistoryList((previous) => [record, ...previous.slice(0, 49)]);
+
+      winnerModalTimer = window.setTimeout(() => setShowWinnerModal(true), 700);
     };
 
-    animId = requestAnimationFrame(frameStep);
-    return () => cancelAnimationFrame(animId);
-  }, [roundStatus, totalPool, normalizedParticipants, territoryNodes, roundGifts.length, roundId, playSound, setBalance, onWin]);
+    animationId = requestAnimationFrame(animate);
+    return () => {
+      cancelAnimationFrame(animationId);
+      if (winnerModalTimer != null) window.clearTimeout(winnerModalTimer);
+    };
+  }, [roundStatus, totalPool, normalizedParticipants, territoryNodes, roundGifts, roundId, playSound, setBalance, onWin]);
 
   // Handle Continue from Winner Screen
   const handleContinue = () => {
@@ -1105,21 +965,54 @@ export const IceArena: React.FC<IceArenaProps> = ({
                CURRENT GAME VIEW
                ================================================================== */
             <>
-              {/* Golden Top Banner (24h Leader) */}
+              {/* Premium banner for the largest completed round in the last 24 hours */}
               <button
                 type="button"
-                onClick={() => setSelectedHistoryRound(topGame.record)}
-                className="w-full mb-3 flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.08)] hover:border-amber-400/50 transition-all active:scale-[0.99] cursor-pointer text-left"
+                disabled={!topGame}
+                onClick={() => topGame && setShowTopGameModal(true)}
+                className="group relative mb-3 w-full overflow-hidden rounded-[22px] border border-amber-300/25 bg-[linear-gradient(110deg,rgba(120,72,12,0.34),rgba(26,28,31,0.82)_58%,rgba(14,18,22,0.96))] p-3.5 text-left shadow-[0_10px_30px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.10)] transition-all hover:border-amber-200/50 hover:shadow-[0_0_28px_rgba(245,158,11,0.12)] active:scale-[0.99] disabled:cursor-default disabled:opacity-75"
               >
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
-                    <Trophy className="w-3.5 h-3.5" />
+                <span aria-hidden="true" className="pointer-events-none absolute -right-10 -top-16 h-36 w-36 rounded-full bg-amber-300/15 blur-3xl transition-opacity group-hover:opacity-100" />
+                <span aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),transparent_58%)]" />
+                <div className="relative z-10 flex items-center gap-3">
+                  <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-[17px] border border-amber-200/25 bg-gradient-to-br from-amber-200/20 to-amber-600/10 text-amber-200 shadow-[0_0_20px_rgba(245,158,11,0.14)]">
+                    <Trophy className="h-5 w-5 drop-shadow-[0_0_8px_rgba(251,191,36,0.45)]" />
+                    <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-[#2b2418] bg-emerald-300" />
                   </div>
-                  <span className="text-amber-300 text-xs font-bold truncate">
-                    Топ игра 24ч • {topGame.pool.toFixed(2)} GRAM • {topGame.winnerName}
-                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.17em] text-amber-200/80">
+                      <Sparkles className="h-3 w-3 text-amber-300" />
+                      Топ игра за 24 часа
+                    </div>
+                    {topGame ? (
+                      <div className="mt-1 flex min-w-0 items-center gap-1.5">
+                        {topGame.record.winner.avatar && (
+                          <img src={topGame.record.winner.avatar} alt="" className="h-5 w-5 shrink-0 rounded-full border border-amber-100/30 object-cover" />
+                        )}
+                        <span className="truncate text-[13px] font-extrabold text-white">{topGame.winnerName}</span>
+                        <span className="shrink-0 rounded-full border border-white/10 bg-white/[0.06] px-1.5 py-0.5 text-[8px] font-bold text-white/45">#{topGame.record.id}</span>
+                      </div>
+                    ) : (
+                      <div className="mt-1 text-[12px] font-semibold text-white/45">Пока нет завершённых игр</div>
+                    )}
+                  </div>
+                  {topGame && (
+                    <div className="flex shrink-0 flex-col items-end rounded-[14px] border border-amber-200/15 bg-black/20 px-2.5 py-1.5">
+                      <span className="text-[8px] font-bold uppercase tracking-wider text-white/40">Банк</span>
+                      <span className="mt-0.5 flex items-center gap-1 font-display text-[13px] font-black tabular-nums text-amber-200">
+                        {topGame.pool.toFixed(2)}
+                        <GramIcon className="h-3.5 w-3.5 text-amber-300" />
+                      </span>
+                    </div>
+                  )}
+                  <ArrowUpRight className="h-4 w-4 shrink-0 text-amber-200/65 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                 </div>
-                <ArrowUpRight className="w-3.5 h-3.5 text-amber-400/70 shrink-0 ml-2" />
+                {topGame && (
+                  <div className="relative z-10 mt-3 flex items-center justify-between border-t border-white/[0.08] pt-2 text-[9px] font-semibold text-white/40">
+                    <span>Участников: {topGame.record.participantsCount} · рекорд за сутки</span>
+                    <span className="text-amber-200/75">Открыть результат</span>
+                  </div>
+                )}
               </button>
 
               {/* Round Header (Pool #, Mode, Status / Countdown) */}
@@ -1192,7 +1085,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
                   {/* Upper glare */}
                   <span
                     aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 rounded-[26px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)] z-20"
+                    className="pointer-events-none absolute inset-0 rounded-[26px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)] z-[5]"
                   />
 
                   {/* Ambient background glow */}
@@ -1210,7 +1103,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
                         </span>
                       </div>
                     ) : (
-                      <div className="relative w-full h-full overflow-hidden rounded-[20px]">
+                      <div ref={setTerritoryMapElement} className="relative w-full h-full overflow-hidden rounded-[20px]">
                         {/* SVG Polygon Mesh: exact area, zero gaps, straight edges */}
                         <svg
                           viewBox="0 0 100 100"
@@ -1235,63 +1128,70 @@ export const IceArena: React.FC<IceArenaProps> = ({
                           })}
                         </svg>
 
-                        {/* Circular Avatars: scaled down proportionally, strictly round, hidden if territory too small */}
+                        {/* Every participant gets a visible marker, including low-share bets. */}
                         {territoryNodes.map((node) => {
                           const p = node.participant;
-                          const pixelW = (node.w / 100) * 360;
-                          const pixelH = (node.h / 100) * 270;
+                          const pixelW = (node.w / 100) * territoryMapSize.width;
+                          const pixelH = (node.h / 100) * territoryMapSize.height;
                           const minDim = Math.min(pixelW, pixelH);
-
-                          // Hide completely if area percent < 4% or shortest dimension < 32px
-                          const showAvatar = p.percentage >= 4 && minDim >= 32;
-                          const avatarSize = Math.max(22, Math.min(64, Math.round(minDim * 0.52)));
-
-                          if (!showAvatar) return null;
+                          const markerSize = Math.max(12, Math.min(58, Math.round(minDim * 0.68)));
+                          const name = p.firstName || p.username || 'Игрок';
+                          const shareLabel = p.percentage > 0 && p.percentage < 0.1
+                            ? '<0.1%'
+                            : `${p.percentage.toFixed(1)}%`;
 
                           return (
-                            <div
-                              key={`av_${p.id}`}
-                              style={{
-                                position: 'absolute',
-                                left: `calc(${node.cx}% - ${avatarSize / 2}px)`,
-                                top: `calc(${node.cy}% - ${avatarSize / 2}px)`,
-                                width: `${avatarSize}px`,
-                                height: `${avatarSize}px`,
-                              }}
-                              className="pointer-events-none rounded-full overflow-hidden border-2 border-white/40 shadow-lg bg-black/40 shrink-0 aspect-square flex items-center justify-center z-20 transition-all duration-300"
-                            >
-                              <img
-                                src={p.avatar || p.photoUrl}
-                                alt={p.firstName}
-                                className="w-full h-full object-cover rounded-full"
-                              />
-                            </div>
+                            <React.Fragment key={`av_${p.id}`}>
+                              <div
+                                title={`${name} — ${shareLabel}`}
+                                style={{
+                                  position: 'absolute',
+                                  left: `${node.cx}%`,
+                                  top: `${node.cy}%`,
+                                  width: `${markerSize}px`,
+                                  height: `${markerSize}px`,
+                                  transform: 'translate(-50%, -50%)',
+                                  borderColor: p.color,
+                                }}
+                                className="pointer-events-none z-20 flex aspect-square shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-black/60 shadow-[0_3px_12px_rgba(0,0,0,0.48)] ring-1 ring-black/20 transition-all duration-300"
+                              >
+                                {p.avatar || p.photoUrl ? (
+                                  <img src={p.avatar || p.photoUrl} alt={name} className="h-full w-full rounded-full object-cover" />
+                                ) : (
+                                  <span className="text-[10px] font-black text-white">{name.slice(0, 1).toUpperCase()}</span>
+                                )}
+                              </div>
+                              {minDim >= 38 && (
+                                <span
+                                  className="pointer-events-none absolute z-20 -translate-x-1/2 whitespace-nowrap rounded-full border border-black/40 bg-black/75 px-1 py-px text-[8px] font-black leading-[12px] text-white shadow"
+                                  style={{ left: `${node.cx}%`, top: `calc(${node.cy}% + ${markerSize / 2}px - 1px)` }}
+                                >
+                                  {shareLabel}
+                                </span>
+                              )}
+                            </React.Fragment>
                           );
                         })}
+
+                        {/* Ice ball: rendered in the same coordinate space as the territories. */}
+                        {roundStatus === 'drawing' && ballPos && (
+                          <div
+                            className="pointer-events-none absolute z-30"
+                            style={{ left: `${ballPos.x}%`, top: `${ballPos.y}%`, transform: 'translate(-50%, -50%)' }}
+                          >
+                            <div className="relative flex h-8 w-8 items-center justify-center">
+                              <div className="absolute bottom-0 h-2 w-6 rounded-full bg-black/55 blur-[2px]" />
+                              <div className="absolute inset-0 scale-125 rounded-full bg-cyan-300/80 opacity-60 blur-sm" />
+                              <div className="relative h-[22px] w-[22px] rounded-full border border-white/90 bg-[radial-gradient(circle_at_30%_28%,#ffffff,#d9f4ff_26%,#63d7f5_54%,#0879a8_82%,#082f49)] shadow-[0_3px_10px_rgba(6,182,212,0.75),inset_-2px_-3px_5px_rgba(0,30,55,0.55),inset_2px_2px_4px_rgba(255,255,255,0.85)]">
+                                <span className="absolute left-[4px] top-[3px] h-[5px] w-[7px] rounded-full bg-white/90 blur-[0.5px]" />
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
 
-                  {/* Natural Rolling Ball with Realistic 3D Sphere and Contact Shadow */}
-                  {roundStatus === 'drawing' && ballPos && (
-                    <div
-                      className="absolute z-30 pointer-events-none transition-none"
-                      style={{
-                        left: `${ballPos.x}%`,
-                        top: `${ballPos.y}%`,
-                        transform: 'translate(-50%, -50%)',
-                      }}
-                    >
-                      <div className="relative w-7 h-7 flex items-center justify-center">
-                        {/* Soft Contact Shadow beneath sphere */}
-                        <div className="absolute bottom-0 w-6 h-2 rounded-full bg-black/50 blur-[2px]" />
-                        {/* Ambient Cyan Glow */}
-                        <div className="absolute inset-0 rounded-full bg-cyan-300 blur-sm opacity-60 scale-110" />
-                        {/* 3D Glass / Ice Sphere with Specular Highlight */}
-                        <div className="relative w-5 h-5 rounded-full bg-[radial-gradient(circle_at_30%_30%,#ffffff,#bae6fd_45%,#06b6d4_85%,#083344)] border border-white/90 shadow-[0_2px_8px_rgba(6,182,212,0.6),inset_-1px_-1px_3px_rgba(0,0,0,0.5)]" />
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -1408,7 +1308,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
                             }}
                             className="px-2 py-0.5 rounded-lg border text-[11px] font-bold tabular-nums"
                           >
-                            {p.percentage}%
+                            {p.percentage > 0 && p.percentage < 0.1 ? '<0.1%' : `${p.percentage.toFixed(1)}%`}
                           </div>
 
                           {/* Bet Amount with green arrow */}
@@ -1432,114 +1332,27 @@ export const IceArena: React.FC<IceArenaProps> = ({
         </div>
       </div>
 
-      {/* 
-        ========================================================================
-        WINNER CELEBRATION MODAL (Matching frame 00:52 in video)
-        ========================================================================
-      */}
-      <AnimatePresence>
-        {showWinnerModal && winner && (
-          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/85 backdrop-blur-md px-6">
-            {/* Confetti particles */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-              {Array.from({ length: 35 }).map((_, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ 
-                    x: `${Math.random() * 100}vw`, 
-                    y: -20, 
-                    rotate: 0,
-                    opacity: 1 
-                  }}
-                  animate={{ 
-                    y: '105vh', 
-                    rotate: 360 * (Math.random() > 0.5 ? 1 : -1),
-                    opacity: [1, 1, 0] 
-                  }}
-                  transition={{ 
-                    duration: 2.5 + Math.random() * 2, 
-                    repeat: Infinity,
-                    delay: Math.random() * 1.5,
-                    ease: "linear"
-                  }}
-                  style={{
-                    backgroundColor: ['#10b981', '#f59e0b', '#ec4899', '#06b6d4', '#8b5cf6'][i % 5],
-                    width: `${6 + (i % 6)}px`,
-                    height: `${10 + (i % 8)}px`,
-                    borderRadius: i % 2 === 0 ? '2px' : '50%',
-                  }}
-                  className="absolute"
-                />
-              ))}
-            </div>
-
-            {/* Winner Card Container */}
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="relative z-10 w-full max-w-sm flex flex-col items-center text-center p-6"
-            >
-              {/* Winner Avatar with Glowing Halo */}
-              <div className="relative mb-3">
-                <div 
-                  style={{ backgroundColor: winner.color }} 
-                  className="absolute inset-0 rounded-full blur-xl opacity-60 animate-pulse" 
-                />
-                <img
-                  src={winner.avatar || winner.photoUrl}
-                  alt={winner.firstName}
-                  className="relative z-10 w-20 h-20 rounded-full object-cover border-4 border-white/20 shadow-2xl"
-                />
-              </div>
-
-              <span className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-0.5">
-                Победитель
-              </span>
-
-              <h2 className="text-2xl font-display font-black text-white mb-2">
-                {winner.firstName}
-              </h2>
-
-              {/* Total Winnings Headline */}
-              <div className="flex flex-col items-center mb-4">
-                <div className="flex items-baseline gap-1.5 text-3xl sm:text-4xl font-display font-black text-amber-300 drop-shadow-[0_0_20px_rgba(245,158,11,0.5)]">
-                  <span>+{totalPool.toFixed(2)}</span>
-                  <span className="text-xl font-bold text-amber-300/90">GRAM</span>
-                </div>
-              </div>
-
-              {/* Pure NFT row: 2 most expensive without names/prices, plus count */}
-              {sortedRoundGifts.length > 0 && (
-                <div className="flex items-center justify-center gap-2.5 mb-6">
-                  {sortedRoundGifts.slice(0, 2).map((g, i) => (
-                    <div
-                      key={i}
-                      className="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md p-1.5 flex items-center justify-center shrink-0 shadow-lg"
-                    >
-                      <PremiumImage src={g.image_url} alt="" className="w-full h-full object-contain" staticMode />
-                    </div>
-                  ))}
-
-                  {sortedRoundGifts.length > 2 && (
-                    <div className="h-12 px-3.5 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md flex items-center justify-center text-white font-display font-black text-sm shrink-0 shadow-lg">
-                      +{sortedRoundGifts.length - 2}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Button: «Продолжить» */}
-              <button
-                onClick={handleContinue}
-                className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#84cc16] via-[#a3e635] to-[#84cc16] hover:brightness-105 active:scale-95 transition-all text-black font-display font-black text-lg shadow-[0_4px_22px_rgba(132,204,22,0.4)] cursor-pointer"
-              >
-                Продолжить
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <IceArenaCelebrationModal
+        isOpen={showWinnerModal && !!winner}
+        winner={winner}
+        amount={totalPool}
+        gifts={sortedRoundGifts}
+        onClose={handleContinue}
+      />
+      {topGame && (
+        <IceArenaCelebrationModal
+          isOpen={showTopGameModal}
+          winner={topGame.record.winner}
+          amount={topGame.pool}
+          gifts={topGame.record.gifts || topGame.record.participants?.flatMap((participant) => (
+            participant.gifts || (participant.gift ? [participant.gift] : [])
+          )) || []}
+          variant="top-game"
+          roundId={topGame.record.id}
+          participantsCount={topGame.record.participantsCount}
+          onClose={() => setShowTopGameModal(false)}
+        />
+      )}
 
       {/* 
         ========================================================================
