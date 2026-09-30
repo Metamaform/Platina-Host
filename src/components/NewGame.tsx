@@ -451,13 +451,13 @@ export const NewGame: React.FC<NewGameProps> = ({
 
   const setBetAdd = (amt: number) => {
     const cur = parseFloat(betInput) || 0;
-    const next = Math.min(cur + amt, balance, MAX_BET_GRAM);
+    const next = Math.min(Number((cur + amt).toFixed(2)), balance, MAX_BET_GRAM);
     setBetInput(next.toString());
   };
 
   const setBetMax = () => {
     const max = Math.min(balance, MAX_BET_GRAM);
-    setBetInput(max.toString());
+    setBetInput(max.toFixed(2));
   };
 
   // Place Bet (calls server)
@@ -470,7 +470,7 @@ export const NewGame: React.FC<NewGameProps> = ({
 
     if (mode === 'gram') {
       if (betGram < 0.1 || betGram > balance || betGram > MAX_BET_GRAM) return;
-      betValue = betGram;
+      betValue = Number(betGram.toFixed(2));
     } else {
       if (!selectedNft) return;
       betValue = Number(selectedNft.floor_price_gram || selectedNft.price || 0);

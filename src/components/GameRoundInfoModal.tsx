@@ -7,7 +7,7 @@ import { useTranslation } from '../lib/i18n';
 export interface GameRoundInfoModalProps {
   isOpen: boolean;
   onClose: () => void;
-  game: 'plinko' | 'rocket';
+  game: 'plinko' | 'rocket' | 'ice_arena';
   roundId?: string | number;
   balance: number;
   timeoutSec?: number;
@@ -70,12 +70,14 @@ export const GameRoundInfoModal: React.FC<GameRoundInfoModalProps> = ({
     ? `${roundId}`
     : game === 'plinko'
     ? `PLK-${currentTime.getFullYear()}${(currentTime.getMonth() + 1).toString().padStart(2, '0')}${currentTime.getDate().toString().padStart(2, '0')}-LIVE`
+    : game === 'ice_arena'
+    ? `ICE-${currentTime.getFullYear()}${(currentTime.getMonth() + 1).toString().padStart(2, '0')}${currentTime.getDate().toString().padStart(2, '0')}-LIVE`
     : `RK-LIVE`;
 
   return (
     <LiquidDialog
       title={t('round_settings')}
-      subtitle={`${game === 'plinko' ? 'Plinko' : 'ROCKET'} · ${t('server_stats')}`}
+      subtitle={`${game === 'plinko' ? 'Plinko' : game === 'ice_arena' ? 'Ice Arena' : 'ROCKET'} · ${t('server_stats')}`}
       icon={<Settings className="w-4 h-4" />}
       onClose={onClose}
       actionLabel={t('close')}

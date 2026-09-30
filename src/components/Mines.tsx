@@ -216,23 +216,24 @@ export function Mines({
     setBetInput((prev) => {
       let next = parseFloat(prev || '0') + amt;
       if (next > MAX_BET_GRAM) next = MAX_BET_GRAM;
-      return next.toString();
+      return Number(next.toFixed(2)).toString();
     });
   };
 
   const setBetMax = () => {
     let max = balance;
     if (max > MAX_BET_GRAM) max = MAX_BET_GRAM;
-    setBetInput(max.toString());
+    setBetInput(max.toFixed(2));
   };
 
   const startGame = () => {
     let betValue = 0;
     if (mode === 'gram') {
       if (betGram < 0.1 || betGram > balance || betGram > MAX_BET_GRAM) return;
-      setBalance(b => b - betGram);
-      onTurnover(betGram);
-      betValue = betGram;
+      const roundedBet = Number(betGram.toFixed(2));
+      setBalance(b => Number((b - roundedBet).toFixed(2)));
+      onTurnover(roundedBet);
+      betValue = roundedBet;
     } else {
       if (!selectedNft) return;
       const nftPrice = Number(selectedNft.floor_price_gram || selectedNft.price || 0);

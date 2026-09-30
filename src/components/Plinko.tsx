@@ -116,13 +116,17 @@ function formatBucketLabel(mult: number) {
   return `${mult.toFixed(1)}x`;
 }
 
-/** Shared reward tiers for the personal history and landing slots. */
+/** Shared reward tiers for the personal history and landing slots (1.5x brighter, saturated color grading). */
 function bucketTone(mult: number): { background: string; color: string; glow: string } {
-  const [background, color, glow] = mult >= 20 ? ['#5e4c29', '#f3d294', '0 0 14px rgba(245,158,11,0.35)']
-    : mult >= 8 ? ['#52416f', '#d7bef1', '0 0 12px rgba(168,85,247,0.35)']
-    : mult >= 3 ? ['#2f516b', '#aed9f5', '0 0 10px rgba(6,182,212,0.30)']
-    : mult >= 1 ? ['#31564b', '#b1e0cc', 'none']
-    : ['#5a4047', '#e6b7c1', 'none'];
+  const [background, color, glow] = mult >= 20 
+    ? ['linear-gradient(180deg, #f59e0b 0%, #b45309 100%)', '#ffffff', '0 0 16px rgba(245,158,11,0.75)']
+    : mult >= 8 
+    ? ['linear-gradient(180deg, #c084fc 0%, #7e22ce 100%)', '#ffffff', '0 0 14px rgba(168,85,247,0.70)']
+    : mult >= 3 
+    ? ['linear-gradient(180deg, #38bdf8 0%, #0284c7 100%)', '#ffffff', '0 0 12px rgba(14,165,233,0.65)']
+    : mult >= 1 
+    ? ['linear-gradient(180deg, #34d399 0%, #059669 100%)', '#ffffff', '0 0 10px rgba(16,185,129,0.60)']
+    : ['linear-gradient(180deg, #fb7185 0%, #e11d48 100%)', '#ffffff', '0 0 10px rgba(244,63,94,0.60)'];
   return { background, color, glow };
 }
 const TOTAL_PEGS = 52; // 3+4+5+6+7+8+9+10 = 52
@@ -1250,11 +1254,12 @@ export const Plinko: React.FC<PlinkoProps> = ({
               return (
                 <div
                   key={idx}
-                  className="flex-1 text-center py-1.5 px-0.5 rounded-full text-[12px] font-semibold tabular-nums leading-none"
+                  className="flex-1 text-center py-1.5 px-0.5 rounded-full text-[12px] font-bold tabular-nums leading-none transition-all"
                   style={tone ? {
                     background: tone.background,
                     color: tone.color,
-                    boxShadow: 'none',
+                    boxShadow: `inset 0 1px 1px rgba(255,255,255,0.4), ${tone.glow}`,
+                    textShadow: '0 1px 2px rgba(0,0,0,0.4)',
                   } : {
                     background: 'rgba(255,255,255,0.05)',
                     color: 'rgba(255,255,255,0.28)',
@@ -1294,16 +1299,14 @@ export const Plinko: React.FC<PlinkoProps> = ({
                         height: `${(b.height / BOARD_HEIGHT) * 100}%`,
                         background: tone.background,
                         color: tone.color,
-                        boxShadow: tone.glow === 'none'
-                          ? 'inset 0 1px 0 rgba(255,255,255,0.10)'
-                          : `inset 0 1px 0 rgba(255,255,255,0.12), ${tone.glow}`,
+                        boxShadow: `inset 0 1px 1px rgba(255,255,255,0.4), ${tone.glow}`,
                         fontSize: '3cqw',
-                        textShadow: tone.color === '#fff' ? '0 1px 1px rgba(0,0,0,0.35)' : 'none',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.5)',
                         transformOrigin: 'center center',
                         letterSpacing: '-0.04em',
                       }}
                     >
-                      <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-white/[0.03]" />
+                      <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-white/[0.15]" />
                       <span className="relative z-10">{b.label}</span>
                     </div>
                   );
@@ -1424,7 +1427,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
                             {item.firstName}
                           </span>
                           <div className="flex items-center gap-1.5 text-[11px] text-white/40 mt-0.5">
-                            <span>{item.betAmount.toFixed(1)} GRAM</span>
+                            <span>{item.betAmount.toFixed(2)} GRAM</span>
                             <span>•</span>
                             <span>x{multStr}</span>
                             <span>•</span>
@@ -1448,7 +1451,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
                                 {cleanNftName(item.gift.name)}
                               </span>
                               <span className="text-[10px] text-white/40 leading-tight">
-                                +{item.winAmount.toFixed(1)} G
+                                +{item.winAmount.toFixed(2)} G
                               </span>
                             </div>
                           </>
@@ -1540,7 +1543,7 @@ export const Plinko: React.FC<PlinkoProps> = ({
                         value={betInput}
                         onChange={handleBetChange}
                         className="bg-transparent text-center text-4xl font-display font-bold text-white outline-none w-full max-w-[180px]"
-                        placeholder="5.0"
+                        placeholder="0.10"
                       />
                     </div>
                     <div className="flex gap-1.5">

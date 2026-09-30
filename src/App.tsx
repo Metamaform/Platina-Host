@@ -5,7 +5,7 @@ import LiquidGlassNav from './components/ui/LiquidGlassNav';
 import { LiquidSegment } from './components/ui/LiquidSegment';
 import { LiquidDialog } from './components/ui/LiquidDialog';
 import { setLoggerUserId } from './lib/logger';
-import { ShoppingBag, User, Gem, Gift, Wallet, ChevronRight, Activity, CircleDashed, ArrowUpCircle, Shield, LayoutGrid, Trophy, X, Settings, Bomb, Box, Package, ArrowLeft, ArrowUpRight, Users, History, MessageCircle, ExternalLink, Copy, Check, Rocket, Flame, Sparkles } from 'lucide-react';
+import { ShoppingBag, User, Gem, Gift, Wallet, ChevronRight, Activity, CircleDashed, ArrowUpCircle, Shield, LayoutGrid, Trophy, X, Settings, Bomb, Box, Package, ArrowLeft, ArrowUpRight, Users, History, MessageCircle, ExternalLink, Copy, Check, Rocket, Flame, Sparkles, Snowflake, Swords } from 'lucide-react';
 import defaultGiftsDb from './gifts_data.json';
 import { LiveFeed } from './components/LiveFeed';
 import { PremiumImage } from './components/PremiumImage';
@@ -16,6 +16,7 @@ import { addTurnover } from './lib/stats';
 import { useTelegramAuth } from './lib/useTelegramAuth';
 import { useTranslation, i18n } from './lib/i18n';
 import { CleanModelLottie } from './components/CleanModelLottie';
+import { Player } from '@lottiefiles/react-lottie-player';
 import { fetchFragmentPrices, fetchFragmentBackdropPrices } from './lib/api';
 
 // Route-level code splitting: heavy game / panel screens load on demand so the
@@ -25,7 +26,7 @@ const Upgrade = lazy(() => import('./components/Upgrade').then((m) => ({ default
 const Mines = lazy(() => import('./components/Mines').then((m) => ({ default: m.Mines })));
 const NewGame = lazy(() => import('./components/NewGame').then((m) => ({ default: m.NewGame })));
 const Plinko = lazy(() => import('./components/Plinko').then((m) => ({ default: m.Plinko })));
-const Arena = lazy(() => import('./components/arena/Arena').then((m) => ({ default: m.Arena })));
+const IceArena = lazy(() => import('./components/IceArena').then((m) => ({ default: m.IceArena })));
 const Cases = lazy(() => import('./components/Cases').then((m) => ({ default: m.Cases })));
 const AdminPanel = lazy(() => import('./components/AdminPanel').then((m) => ({ default: m.AdminPanel })));
 const Leaderboard = lazy(() => import('./components/Leaderboard').then((m) => ({ default: m.Leaderboard })));
@@ -72,14 +73,14 @@ function CraftAnimatedIcon() {
   );
 }
 
-function Shop({
-  onPlayUpgrade,
-  onPlayCraft,
-  onPlayMines,
-  onPlayNewGame,
-  onPlayPlinko,
-  onPlayArena,
-  giftsDb,
+function Shop({ 
+  onPlayUpgrade, 
+  onPlayCraft, 
+  onPlayMines, 
+  onPlayNewGame, 
+  onPlayPlinko, 
+  onPlayIceArena,
+  giftsDb, 
   pricesLoaded,
   balance,
   setBalance,
@@ -87,14 +88,14 @@ function Shop({
   setInventory,
   onAddTurnover,
   turnover
-}: {
-  onPlayUpgrade: () => void,
-  onPlayCraft: () => void,
-  onPlayMines: () => void,
-  onPlayNewGame: () => void,
-  onPlayPlinko: () => void,
-  onPlayArena: () => void,
-  giftsDb: any[],
+}: { 
+  onPlayUpgrade: () => void, 
+  onPlayCraft: () => void, 
+  onPlayMines: () => void, 
+  onPlayNewGame: () => void, 
+  onPlayPlinko: () => void, 
+  onPlayIceArena: () => void,
+  giftsDb: any[], 
   pricesLoaded: boolean,
   balance: number,
   setBalance: any,
@@ -161,7 +162,22 @@ function Shop({
         />
       </a>
 
-      <h2 className="font-display text-2xl font-semibold mb-6 px-1 pt-2">{t('popular_games')}</h2>
+      <h2 className="font-display text-2xl font-semibold mb-4 px-1 pt-2">{t('popular_games')}</h2>
+
+      {/* Simple Banner Card: Ice Arena */}
+      <div 
+        onClick={onPlayIceArena}
+        className="w-full h-16 rounded-[22px] relative overflow-hidden cursor-pointer group px-5 mb-4 bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_12px_30px_-12px_rgba(0,0,0,0.6)] active:scale-[0.98] transition-all hover:border-cyan-400/40 flex items-center justify-between"
+      >
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-[22px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+        />
+        <h3 className="font-display text-lg font-bold text-white tracking-wide z-10">
+          Ice Arena
+        </h3>
+        <ChevronRight className="w-5 h-5 text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all z-10" />
+      </div>
 
       {/* Side-by-side Square Cards: Rocket (Crash) & Plinko on the exact same row/level */}
       <div className="grid grid-cols-2 gap-3.5 mb-4">
@@ -276,35 +292,6 @@ function Shop({
               {t('plinko_card_desc')}
             </p>
           </div>
-        </div>
-      </div>
-
-      {/* AICE ARENA — PVP jackpot arena (полноширинная карточка) */}
-      <div
-        onClick={onPlayArena}
-        className="glass-panel-interactive rounded-[26px] p-5 mb-4 flex flex-col cursor-pointer group relative overflow-hidden active:scale-[0.985] transition-transform"
-      >
-        {/* cyan/blue ambient glow */}
-        <div className="absolute top-0 right-0 w-36 h-36 bg-[#0098ea]/20 rounded-full blur-3xl pointer-events-none group-hover:bg-[#0098ea]/30 transition-all" />
-        <span aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.06)_0%,transparent_55%)]" />
-
-        <div className="relative z-10 flex items-center gap-4">
-          <div className="w-16 h-16 rounded-[20px] bg-gradient-to-br from-[#0098ea]/40 via-cyan-500/25 to-[#00b4d8]/40 p-[1px] shrink-0 shadow-[0_0_24px_rgba(0,152,234,0.30)] group-hover:scale-105 transition-transform duration-300">
-            <div className="w-full h-full rounded-[20px] bg-black/85 flex items-center justify-center relative overflow-hidden">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(0,152,234,0.25),transparent_60%)]" />
-              <Users className="w-7 h-7 text-[#4fc3ff] relative z-10 drop-shadow-[0_0_10px_rgba(0,152,234,0.7)]" />
-            </div>
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-display text-xl font-semibold tracking-wide">ARENA</h3>
-              <span className="px-2 py-0.5 rounded-md bg-[#0098ea]/15 text-[#4fc3ff] text-[10px] font-bold uppercase tracking-wider border border-[#0098ea]/30">
-                PVP
-              </span>
-            </div>
-            <p className="text-sm text-muted leading-tight">{t('arena_card_desc')}</p>
-          </div>
-          <ChevronRight className="w-5 h-5 text-white/25 shrink-0 group-hover:text-[#4fc3ff] transition-colors" />
         </div>
       </div>
 
@@ -1367,10 +1354,21 @@ export default function App() {
   if (showLoading) {
     return (
       <div className="min-h-screen bg-canvas flex flex-col items-center justify-center relative overflow-hidden">
-        {/* Статичный логотип: анимация снежинки при запуске убрана */}
-        <div className="mb-8 flex flex-col items-center relative z-10">
-          <div className="w-24 h-24 rounded-[28px] bg-white/[0.05] border border-white/[0.10] backdrop-blur-xl flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_18px_45px_-16px_rgba(0,0,0,0.85)]">
-            <GramIcon className="w-12 h-12 text-brand drop-shadow-[0_0_12px_rgba(0,152,234,0.55)]" />
+        {/* Ракета при загрузочном экране без свечения */}
+        <div className="mb-6 flex flex-col items-center relative z-10">
+          <div className="relative w-28 h-28 flex items-center justify-center">
+            <motion.div
+              animate={{ y: [-4, 4, -4], rotate: [42, 48, 42] }}
+              transition={{ repeat: Infinity, duration: 2.8, ease: "easeInOut" }}
+              className="w-full h-full flex items-center justify-center"
+            >
+              <Player
+                autoplay
+                loop
+                src="/stellarrocket-1-nobg.lottie.json"
+                style={{ width: '100%', height: '100%' }}
+              />
+            </motion.div>
           </div>
           <div className="mt-4 font-display text-lg font-bold tracking-wide text-white/80">
             Platina Gift
@@ -1536,7 +1534,7 @@ export default function App() {
                     onPlayMines={() => setActiveGame('mines')} 
                     onPlayNewGame={() => setActiveGame('new_game')} 
                     onPlayPlinko={() => setActiveGame('plinko')}
-                    onPlayArena={() => setActiveGame('arena')}
+                    onPlayIceArena={() => setActiveGame('ice_arena')}
                     giftsDb={giftsDb} 
                     pricesLoaded={pricesLoaded} 
                     balance={balance}
@@ -1678,7 +1676,7 @@ export default function App() {
                 </Suspense>
               </motion.div>
             )}
-            {activeGame === 'arena' && (
+            {activeGame === 'ice_arena' && (
               <motion.div
                 initial={{ opacity: 0, y: '100%' }}
                 animate={{ opacity: 1, y: 0 }}
@@ -1687,15 +1685,20 @@ export default function App() {
                 className="absolute inset-0 z-[100] bg-canvas"
               >
                 <Suspense fallback={<LazyFallback />}>
-                  <Arena
-                    onBack={() => setActiveGame(null)}
-                    balance={balance}
-                    setBalance={setBalance}
-                    inventory={inventory}
-                    setInventory={setInventory}
+                  <IceArena 
+                    onBack={() => setActiveGame(null)} 
+                    inventory={inventory} 
+                    setInventory={setInventory} 
+                    balance={balance} 
+                    setBalance={setBalance} 
+                    onTurnover={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} 
+                    onWin={(amt, mode, item, mult) => {
+                      if (mode === 'nft' && item) auth.recordOpen(item, amt, 'nft', mult, 'ice_arena');
+                      else if (mode === 'gram') auth.recordOpen(null, amt, 'gram', mult, 'ice_arena');
+                    }}
+                    giftsDb={giftsDb} 
                     user={user}
                     token={auth.token}
-                    onTurnover={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }}
                   />
                 </Suspense>
               </motion.div>
