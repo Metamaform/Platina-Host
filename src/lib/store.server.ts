@@ -200,7 +200,7 @@ export function upsertUserProfile(profile: {
         firstName: profile.first_name,
         lastName: profile.last_name,
         username: profile.username,
-        photoUrl: profile.photo_url,
+        photoUrl: profile.photo_url || existing.photoUrl,
         needsReload: false,
         updatedAt: now,
       }
@@ -314,6 +314,7 @@ export interface OpenEvent {
   isGram?: boolean;
   multiplier?: number;
   game?: string;
+  photoUrl?: string;
 }
 
 let opensCache: OpenEvent[] | null = null;
@@ -680,6 +681,7 @@ export function setUserLanguage(id: number, languageCode: string, profile?: any)
         firstName: profile.first_name || 'Player',
         lastName: profile.last_name || '',
         username: profile.username || '',
+        photoUrl: profile.photo_url || '',
         balance: STARTING_BALANCE,
         inventory: [],
         createdAt: new Date().toISOString(),

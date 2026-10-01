@@ -230,7 +230,7 @@ export const Arena: React.FC<ArenaProps> = ({
       totalPool: h.totalPool,
       participantsCount: h.participantsCount,
       winner: h.winner
-        ? { username: h.winner.username, firstName: h.winner.firstName, avatar: h.winner.avatar, userId: h.winner.userId }
+        ? { username: h.winner.username, firstName: h.winner.firstName, avatar: h.winner.avatar, photoUrl: h.winner.photoUrl, userId: h.winner.userId }
         : null,
       completedAt: h.completedAt,
       status: h.status,

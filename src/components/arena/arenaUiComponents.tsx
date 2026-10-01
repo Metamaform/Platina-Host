@@ -18,7 +18,7 @@ export const PlayerAvatar: React.FC<{ participant: ArenaParticipant; className?:
   const name = participant.username || participant.firstName || 'Player';
   return (
     <img
-      src={participant.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participant.firstName || name}`}
+      src={participant.photoUrl || participant.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participant.firstName || name}`}
       alt=""
       style={style}
       className={`${className} rounded-full bg-white/5 shrink-0 object-cover border border-white/10`}

@@ -268,7 +268,8 @@ export function cashoutRocketBet(userId: number) {
     price: winAmount,
     isGram: !wonGift,
     gift: wonGift || (bet.isNft ? bet.gift : undefined),
-    multiplier: winMultiplier
+    multiplier: winMultiplier,
+    photoUrl: user.photoUrl
   });
 
   const updatedUser = getUser(userId);

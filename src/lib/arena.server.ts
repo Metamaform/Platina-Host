@@ -453,6 +453,7 @@ function completeRound(round: ArenaRound) {
       isGram: true,
       gift: undefined,
       multiplier: undefined,
+      photoUrl: participant.avatar || participant.photoUrl,
     });
   }
 
@@ -477,6 +478,7 @@ function snapshotHistory(round: ArenaRound): ArenaHistoryEntry {
           username: winner.username,
           firstName: winner.firstName,
           avatar: winner.avatar,
+          photoUrl: winner.photoUrl,
           contribution: winner.contribution,
           percentage: winner.percentage,
         }
@@ -754,6 +756,7 @@ export function placeArenaBet(
     username: user.username,
     firstName: user.firstName || 'Player',
     avatar: user.photoUrl,
+    photoUrl: user.photoUrl,
     betAmount: amount,
     gift: validatedGift,
     contribution,
