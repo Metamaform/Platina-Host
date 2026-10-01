@@ -6,12 +6,16 @@ CREATE TABLE IF NOT EXISTS users (
   first_name TEXT,
   last_name TEXT,
   username TEXT,
+  photo_url TEXT,
   balance NUMERIC DEFAULT 0,
   language_code TEXT,
   inventory JSONB DEFAULT '[]'::jsonb,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Add to existing projects too; profile photos are needed for avatar syncing.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_url TEXT;
 
 -- Таблица промокодов
 CREATE TABLE IF NOT EXISTS promocodes (

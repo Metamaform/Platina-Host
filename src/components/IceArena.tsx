@@ -12,7 +12,9 @@ import { PremiumImage } from './PremiumNftImage';
 import { useTranslation } from '../lib/i18n';
 import {
   computeIceArenaTerritories,
+  createIceArenaRandom,
   samplePointInIceArenaTerritory,
+  shuffleIceArenaTerritoryPlayers,
 } from '../lib/iceArenaTerritories';
 
 export interface IceArenaProps {
@@ -288,6 +290,7 @@ interface IceArenaCelebrationModalProps {
   isTopGame?: boolean;
   roundId: number;
   winner: ArenaParticipant;
+  avatarUrl: string;
   totalPool: number;
   gifts?: any[];
   onContinue?: () => void;
@@ -299,6 +302,7 @@ const IceArenaCelebrationModal: React.FC<IceArenaCelebrationModalProps> = ({
   isTopGame = false,
   roundId,
   winner,
+  avatarUrl,
   totalPool,
   gifts = [],
   onContinue,
@@ -372,7 +376,7 @@ const IceArenaCelebrationModal: React.FC<IceArenaCelebrationModalProps> = ({
             className="absolute inset-0 rounded-full blur-xl opacity-60 animate-pulse" 
           />
           <img
-            src={winner.photoUrl || winner.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Winner'}
+            src={avatarUrl}
             alt={winner.firstName || 'Победитель'}
             className="relative z-10 w-20 h-20 rounded-full object-cover border-4 border-white/20 shadow-2xl"
           />
@@ -460,7 +464,10 @@ export const IceArena: React.FC<IceArenaProps> = ({
   const { t } = useTranslation();
 
   const syncedAvatarFor = useCallback((player?: Partial<ArenaParticipant> | null, fallbackSeed = 'User') => {
-    if (player?.userId === user?.id && user?.photoUrl) return user.photoUrl;
+    const isCurrentUser = user?.id != null
+      && player?.userId != null
+      && Number(player.userId) === Number(user.id);
+    if (isCurrentUser && user?.photoUrl) return user.photoUrl;
     return player?.photoUrl || player?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(player?.firstName || fallbackSeed)}`;
   }, [user?.id, user?.photoUrl]);
 
@@ -469,6 +476,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
 
   // Round State
   const [roundId, setRoundId] = useState<number>(449085);
+  const territoryLayoutSeed = roundId;
   const [roundStatus, setRoundStatus] = useState<'waiting' | 'betting' | 'drawing' | 'completed'>('betting');
   const [countdown, setCountdown] = useState<number>(30);
   const [participants, setParticipants] = useState<ArenaParticipant[]>([]);
@@ -519,10 +527,11 @@ export const IceArena: React.FC<IceArenaProps> = ({
           totalPool: Number(h.totalPool || 0),
           winner: h.winner ? {
             id: String(h.winner.userId || h.winner.id || 'w'),
-            userId: h.winner.userId || 0,
+            userId: Number(h.winner.userId || 0),
             firstName: h.winner.firstName || h.winner.username || 'Победитель',
             username: h.winner.username || '',
-            avatar: h.winner.avatar || '',
+            avatar: h.winner.photoUrl || h.winner.avatar || '',
+            photoUrl: h.winner.photoUrl || h.winner.avatar || '',
             betAmount: Number(h.winner.contribution || 0),
             contribution: Number(h.winner.contribution || 0),
             percentage: Number(h.winner.percentage || 0),
@@ -533,9 +542,11 @@ export const IceArena: React.FC<IceArenaProps> = ({
           completedAt: Number(h.completedAt) || Date.now(),
           participants: h.participants ? h.participants.map((p: any) => ({
             id: String(p.userId || p.id),
-            userId: p.userId || 0,
+            userId: Number(p.userId || 0),
             firstName: p.firstName || p.username || 'Игрок',
-            avatar: p.avatar || '',
+            username: p.username || '',
+            avatar: p.photoUrl || p.avatar || '',
+            photoUrl: p.photoUrl || p.avatar || '',
             betAmount: Number(p.betAmount || p.contribution || 0),
             contribution: Number(p.contribution || p.betAmount || 0),
             percentage: Number(p.percentage || 0),
@@ -682,10 +693,25 @@ export const IceArena: React.FC<IceArenaProps> = ({
     }));
   }, [participants, totalPool]);
 
-  // Territory tiling follows the actual map aspect ratio, not a hard-coded device size.
+  // Territories retain contribution-based areas, but player-to-zone order changes
+  // once per round so participants are not always grouped on the same side.
   const territoryNodes = useMemo(() => (
-    computeIceArenaTerritories(normalizedParticipants, territoryMapSize)
-  ), [normalizedParticipants, territoryMapSize]);
+    computeIceArenaTerritories(
+      shuffleIceArenaTerritoryPlayers(normalizedParticipants, territoryLayoutSeed),
+      territoryMapSize,
+    )
+  ), [normalizedParticipants, territoryMapSize, territoryLayoutSeed]);
+
+  // Spawn each avatar at a stable random point inside its own territory.
+  // Seeded placement avoids jumping on rerenders while still varying by round/player.
+  const territorySpawnPoints = useMemo(() => {
+    const positions = new Map<string, { x: number; y: number }>();
+    for (const node of territoryNodes) {
+      const random = createIceArenaRandom(`${territoryLayoutSeed}:spawn:${node.participant.id}`);
+      positions.set(node.participant.id, samplePointInIceArenaTerritory(node, random));
+    }
+    return positions;
+  }, [territoryNodes, territoryLayoutSeed]);
 
   // Check if current user has placed a bet
   const userBet = useMemo(() => {
@@ -728,7 +754,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
 
     // Initial player (kesha with 4.26 G)
     const p1: ArenaParticipant = {
-      id: `p_1_${Date.now()}`,
+      id: `sample_101_${roundNum}`,
       userId: 101,
       firstName: SAMPLE_PLAYERS[0].name,
       username: SAMPLE_PLAYERS[0].name,
@@ -756,7 +782,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
       setParticipants(prev => {
         if (prev.some(p => p.firstName === SAMPLE_PLAYERS[1].name)) return prev;
         const p2: ArenaParticipant = {
-          id: `p_2_${Date.now()}`,
+          id: `sample_102_${roundId}`,
           userId: 102,
           firstName: SAMPLE_PLAYERS[1].name,
           username: SAMPLE_PLAYERS[1].name,
@@ -785,7 +811,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
           floor_price_gram: 4.22,
         };
         const p3: ArenaParticipant = {
-          id: `p_3_${Date.now()}`,
+          id: `sample_103_${roundId}`,
           userId: 103,
           firstName: SAMPLE_PLAYERS[2].name,
           username: SAMPLE_PLAYERS[2].name,
@@ -809,7 +835,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
       setParticipants(prev => {
         if (prev.some(p => p.firstName === SAMPLE_PLAYERS[3].name)) return prev;
         const p4: ArenaParticipant = {
-          id: `p_4_${Date.now()}`,
+          id: `sample_104_${roundId}`,
           userId: 104,
           firstName: SAMPLE_PLAYERS[3].name,
           username: SAMPLE_PLAYERS[3].name,
@@ -1022,7 +1048,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
       }
 
       const newParticipant: ArenaParticipant = {
-        id: `user_${Date.now()}`,
+        id: `user_${user?.id || 9999}`,
         userId: user?.id || 9999,
         firstName: user?.firstName || 'Вы',
         username: user?.username || 'you',
@@ -1047,6 +1073,10 @@ export const IceArena: React.FC<IceArenaProps> = ({
           const combinedGifts = [...(cur.gifts || (cur.gift ? [cur.gift] : [])), ...betGifts];
           updated[existingIdx] = {
             ...cur,
+            avatar: user?.photoUrl || cur.avatar,
+            photoUrl: user?.photoUrl || cur.photoUrl,
+            firstName: user?.firstName || cur.firstName,
+            username: user?.username || cur.username,
             contribution: Number((cur.contribution + betValue).toFixed(2)),
             betAmount: Number((cur.betAmount + betValue).toFixed(2)),
             gift: combinedGifts[0] || cur.gift,
@@ -1076,7 +1106,10 @@ export const IceArena: React.FC<IceArenaProps> = ({
   };
 
   return (
-    <div className="h-full w-full flex flex-col bg-canvas text-white relative select-none">
+    <div
+      className="h-full w-full flex flex-col bg-canvas text-white relative select-none"
+      style={{ backgroundColor: 'var(--color-canvas)' }}
+    >
       {/* 
         ========================================================================
         TOP HEADER: Back Button, Balance
@@ -1380,6 +1413,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
                         {/* Every participant gets a visible marker, including low-share bets. */}
                         {territoryNodes.map((node) => {
                           const p = node.participant;
+                          const spawnPoint = territorySpawnPoints.get(p.id) ?? { x: node.cx, y: node.cy };
                           const pixelW = (node.w / 100) * territoryMapSize.width;
                           const pixelH = (node.h / 100) * territoryMapSize.height;
                           const minDim = Math.min(pixelW, pixelH);
@@ -1395,8 +1429,8 @@ export const IceArena: React.FC<IceArenaProps> = ({
                                 title={`${name} — ${shareLabel}`}
                                 style={{
                                   position: 'absolute',
-                                  left: `${node.cx}%`,
-                                  top: `${node.cy}%`,
+                                  left: `${spawnPoint.x}%`,
+                                  top: `${spawnPoint.y}%`,
                                   width: `${markerSize}px`,
                                   height: `${markerSize}px`,
                                   transform: 'translate(-50%, -50%)',
@@ -1404,28 +1438,12 @@ export const IceArena: React.FC<IceArenaProps> = ({
                                 }}
                                 className="pointer-events-none z-20 flex aspect-square shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-black/60 shadow-[0_3px_12px_rgba(0,0,0,0.48)] ring-1 ring-black/20 transition-all duration-300"
                               >
-                                {p.photoUrl || p.avatar ? (
-                                  <img src={syncedAvatarFor(p, name)} alt={name} className="h-full w-full rounded-full object-cover" />
-                                ) : (
-                                  <span className="text-[10px] font-black text-white">{name.slice(0, 1).toUpperCase()}</span>
-                                )}
+                                <img src={syncedAvatarFor(p, name)} alt={name} className="h-full w-full rounded-full object-cover" />
                               </div>
-                              {/* Winner crown above avatar */}
-                              {winner?.id === p.id && roundStatus === 'drawing' && !isBallActive && (
-                                <motion.div
-                                  initial={{ scale: 0, y: 6 }}
-                                  animate={{ scale: 1, y: 0 }}
-                                  transition={{ type: 'spring', stiffness: 380, damping: 15 }}
-                                  className="pointer-events-none absolute z-30 -translate-x-1/2 text-[18px] leading-none drop-shadow-[0_2px_8px_rgba(251,191,36,0.85)]"
-                                  style={{ left: `${node.cx}%`, top: `calc(${node.cy}% - ${markerSize / 2 + 14}px)` }}
-                                >
-                                  👑
-                                </motion.div>
-                              )}
                               {minDim >= 38 && (
                                 <span
                                   className="pointer-events-none absolute z-20 -translate-x-1/2 whitespace-nowrap rounded-full border border-black/40 bg-black/75 px-1 py-px text-[8px] font-black leading-[12px] text-white shadow"
-                                  style={{ left: `${node.cx}%`, top: `calc(${node.cy}% + ${markerSize / 2}px - 1px)` }}
+                                  style={{ left: `${spawnPoint.x}%`, top: `calc(${spawnPoint.y}% + ${markerSize / 2}px - 1px)` }}
                                 >
                                   {shareLabel}
                                 </span>
@@ -1635,6 +1653,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
             onClose={() => setShowWinnerModal(false)}
             roundId={roundId}
             winner={winner}
+            avatarUrl={syncedAvatarFor(winner, 'Winner')}
             totalPool={totalPool}
             gifts={sortedRoundGifts}
             onContinue={handleContinue}
@@ -1655,6 +1674,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
             isTopGame={true}
             roundId={topGame.record.id}
             winner={topGame.record.winner}
+            avatarUrl={syncedAvatarFor(topGame.record.winner, 'Winner')}
             totalPool={topGame.pool}
             gifts={topGame.record.gifts || topGame.record.participants?.flatMap(p => p.gifts || (p.gift ? [p.gift] : [])) || []}
           />

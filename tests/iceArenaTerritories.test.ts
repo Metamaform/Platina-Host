@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
   computeIceArenaTerritories,
+  createIceArenaRandom,
   samplePointInIceArenaTerritory,
+  shuffleIceArenaTerritoryPlayers,
 } from '../src/lib/iceArenaTerritories';
 
 interface TestParticipant {
@@ -63,6 +65,46 @@ test('wide and portrait layouts remain fully inside the field and preserve every
       assert.ok(node.areaPct > 0, `${node.participant.id} has visible territory`);
     }
   }
+});
+
+test('territory owners are shuffled per round while contribution-based areas stay unchanged', () => {
+  const players = [
+    participant('player-a', 60),
+    participant('player-b', 25),
+    participant('player-c', 10),
+    participant('player-d', 5),
+  ];
+  const originalIds = players.map((player) => player.id);
+  const firstOrder = shuffleIceArenaTerritoryPlayers(players, 'round-1');
+  const repeatedOrder = shuffleIceArenaTerritoryPlayers(players, 'round-1');
+  const nextRoundOrder = shuffleIceArenaTerritoryPlayers(players, 'round-2');
+
+  assert.deepEqual(firstOrder.map((player) => player.id), repeatedOrder.map((player) => player.id));
+  assert.notDeepEqual(firstOrder.map((player) => player.id), nextRoundOrder.map((player) => player.id));
+  assert.deepEqual(players.map((player) => player.id), originalIds, 'ordering does not mutate the original participants');
+
+  const areasById = (order: TestParticipant[]) => new Map(
+    computeIceArenaTerritories(order, { width: 360, height: 270 })
+      .map((node) => [node.participant.id, node.areaPct]),
+  );
+  const firstAreas = areasById(firstOrder);
+  const nextAreas = areasById(nextRoundOrder);
+  for (const player of players) {
+    assert.ok(Math.abs(firstAreas.get(player.id)! - nextAreas.get(player.id)!) < 1e-6);
+  }
+});
+
+test('player spawn points are deterministic per round and randomized inside their territory', () => {
+  const territory = computeIceArenaTerritories([participant('player', 1)], { width: 360, height: 270 })[0];
+  const first = samplePointInIceArenaTerritory(territory, createIceArenaRandom('round-1:player'));
+  const repeated = samplePointInIceArenaTerritory(territory, createIceArenaRandom('round-1:player'));
+  const nextRound = samplePointInIceArenaTerritory(territory, createIceArenaRandom('round-2:player'));
+
+  assert.deepEqual(first, repeated, 'the same round seed keeps the marker stable across rerenders');
+  assert.notDeepEqual(first, nextRound, 'a new round gets a different spawn point');
+  assert.ok(isInsidePolygon(first, territory.points), 'spawn is inside the player territory');
+  assert.ok(isInsidePolygon(nextRound, territory.points), 'new spawn is inside the player territory');
+  assert.notDeepEqual(first, { x: territory.cx, y: territory.cy }, 'spawn is not locked to the territory center');
 });
 
 test('ball destinations stay inside the winning convex territory', () => {

@@ -40,6 +40,42 @@ interface WeightedPlayer<T extends IceArenaTerritoryParticipant> {
 const DEFAULT_MAP_SIZE: IceArenaMapSize = { width: 360, height: 270 };
 const MIN_VISUAL_SHARE = 0.06;
 
+/** A small deterministic PRNG for stable per-round player placement. */
+export function createIceArenaRandom(seed: string | number): () => number {
+  const value = String(seed);
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index++) {
+    hash = Math.imul(hash ^ value.charCodeAt(index), 16777619);
+  }
+  let state = hash >>> 0;
+
+  return () => {
+    state = (state + 0x6d2b79f5) | 0;
+    let next = state;
+    next = Math.imul(next ^ (next >>> 15), next | 1);
+    next ^= next + Math.imul(next ^ (next >>> 7), next | 61);
+    return ((next ^ (next >>> 14)) >>> 0) / 4_294_967_296;
+  };
+}
+
+/**
+ * Randomize which player owns each spatial slot without changing their stake,
+ * odds, or the contribution-based territory size. The result is stable for a
+ * round seed, so React rerenders do not reshuffle players across the board.
+ */
+export function shuffleIceArenaTerritoryPlayers<T extends IceArenaTerritoryParticipant>(
+  players: readonly T[],
+  seed: string | number,
+): T[] {
+  return players
+    .map((participant) => ({
+      participant,
+      rank: createIceArenaRandom(`${seed}:${participant.id}`)(),
+    }))
+    .sort((a, b) => a.rank - b.rank || a.participant.id.localeCompare(b.participant.id))
+    .map(({ participant }) => participant);
+}
+
 function finiteContribution(value: number): number {
   return Number.isFinite(value) && value > 0 ? value : 0;
 }
