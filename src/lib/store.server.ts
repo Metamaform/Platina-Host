@@ -145,6 +145,7 @@ export async function syncUserFromSupabase(id: number): Promise<void> {
         firstName: data.first_name || '',
         lastName: data.last_name,
         username: data.username,
+        photoUrl: data.photo_url || undefined,
         languageCode: data.language_code,
         balance: Number(data.balance) || 0,
         inventory: typeof data.inventory === 'string' ? JSON.parse(data.inventory) : (data.inventory || []),
@@ -229,6 +230,7 @@ export function upsertUserProfile(profile: {
       first_name: user.firstName,
       last_name: user.lastName || null,
       username: user.username || null,
+      photo_url: user.photoUrl || null,
       balance: user.balance,
       inventory: user.inventory,
     }, { onConflict: 'id' }).then(({ error }: { error: any }) => {

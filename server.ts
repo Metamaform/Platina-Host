@@ -19,28 +19,35 @@ import baseGiftsDb from "./src/gifts_data.json" with { type: "json" };
 const botToken = (process.env.TELEGRAM_BOT_TOKEN || "").trim();
 const bot = botToken ? new TelegramBot(botToken, { polling: true }) : null;
 
-const telegramPhotoPresenceCache = new Map<number, { hasPhoto: boolean; ts: number }>();
-const TELEGRAM_PHOTO_CACHE_TTL = 6 * 60 * 60 * 1000;
+const telegramPhotoPresenceCache = new Map<number, { photoUrl?: string; ts: number }>();
+// Recheck the latest Telegram photo frequently: the old boolean cache kept a
+// stable avatar URL for hours, so clients could not notice profile changes.
+const TELEGRAM_PHOTO_CACHE_TTL = 10 * 1000;
 
 async function resolveTelegramPhotoUrl(tgUser: any): Promise<string | undefined> {
-  if (tgUser?.photo_url) return tgUser.photo_url;
-  if (!bot || !tgUser?.id) return undefined;
+  const directPhotoUrl = typeof tgUser?.photo_url === 'string' ? tgUser.photo_url : undefined;
+  if (!bot || !tgUser?.id) return directPhotoUrl;
 
   const userId = Number(tgUser.id);
   const cached = telegramPhotoPresenceCache.get(userId);
   if (cached && Date.now() - cached.ts < TELEGRAM_PHOTO_CACHE_TTL) {
-    return cached.hasPhoto ? `/api/telegram/avatar/${userId}` : undefined;
+    return cached.photoUrl || directPhotoUrl;
   }
 
   try {
     const photos = await bot.getUserProfilePhotos(userId, { limit: 1 });
-    const hasPhoto = !!photos?.photos?.[0]?.length;
-    telegramPhotoPresenceCache.set(userId, { hasPhoto, ts: Date.now() });
-    return hasPhoto ? `/api/telegram/avatar/${userId}` : undefined;
+    const sizes = photos?.photos?.[0];
+    const latestPhoto = sizes?.[sizes.length - 1];
+    const version = latestPhoto?.file_unique_id || latestPhoto?.file_id;
+    const photoUrl = latestPhoto?.file_id && version
+      ? `/api/telegram/avatar/${userId}?v=${encodeURIComponent(version)}`
+      : directPhotoUrl;
+    telegramPhotoPresenceCache.set(userId, { photoUrl, ts: Date.now() });
+    return photoUrl;
   } catch (e: any) {
     console.warn('[Telegram] Failed to resolve profile photo:', e?.message || e);
   }
-  return undefined;
+  return directPhotoUrl;
 }
 
 // Sensible default ≈ TON spot; refreshed from CoinGecko when reachable.
@@ -309,11 +316,20 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
       const largest = sizes?.[sizes.length - 1];
       if (!largest?.file_id) return res.sendStatus(404);
 
+      const latestVersion = String(largest.file_unique_id || largest.file_id);
+      const requestedVersion = typeof req.query.v === 'string' ? req.query.v : '';
+      if (requestedVersion && requestedVersion !== latestVersion) {
+        res.setHeader('Cache-Control', 'no-store');
+        return res.redirect(302, `/api/telegram/avatar/${userId}?v=${encodeURIComponent(latestVersion)}`);
+      }
+
       const fileUrl = await bot.getFileLink(largest.file_id);
       const upstream = await fetch(fileUrl);
       if (!upstream.ok) return res.sendStatus(404);
 
-      res.setHeader('Cache-Control', 'public, max-age=3600');
+      // Versioned URLs are immutable, so a changed Telegram photo gets a new
+      // URL instead of being hidden behind the browser's old image cache.
+      res.setHeader('Cache-Control', requestedVersion ? 'public, max-age=86400, immutable' : 'public, max-age=60');
       res.setHeader('Content-Type', upstream.headers.get('content-type') || 'image/jpeg');
       const body = Buffer.from(await upstream.arrayBuffer());
       res.send(body);
@@ -413,6 +429,7 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
           first_name: user.firstName,
           last_name: user.lastName || null,
           username: user.username || null,
+          photo_url: user.photoUrl || null,
           language_code: user.languageCode || null,
           balance: user.balance,
           inventory: user.inventory,
