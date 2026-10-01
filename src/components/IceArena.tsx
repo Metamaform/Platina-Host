@@ -1076,7 +1076,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
   };
 
   return (
-    <div className="h-full w-full flex flex-col bg-[#0d0e12] text-white relative select-none">
+    <div className="h-full w-full flex flex-col bg-canvas text-white relative select-none">
       {/* 
         ========================================================================
         TOP HEADER: Back Button, Balance
