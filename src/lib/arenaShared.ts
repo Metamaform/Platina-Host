@@ -25,7 +25,8 @@ export interface ArenaParticipant {
   userId: number;          // telegram id (у ботов отрицательный)
   username?: string;
   firstName?: string;
-  avatar?: string;         // photoUrl
+  avatar?: string;         // photoUrl (legacy field)
+  photoUrl?: string;       // canonical Telegram profile photo
   /** денежная часть ставки (GRAM) */
   betAmount: number;
   /** NFT/предмет, добавленный к ставке (если есть) */
@@ -95,6 +96,7 @@ export interface ArenaHistoryEntry {
     username?: string;
     firstName?: string;
     avatar?: string;
+    photoUrl?: string;
     contribution: number;
     percentage: number;
   };

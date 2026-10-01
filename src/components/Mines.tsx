@@ -554,7 +554,7 @@ export function Mines({
                   className="flex items-center justify-between bg-white/[0.05] backdrop-blur-xl rounded-[22px] p-3 border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
                 >
                   <div className="flex items-center gap-3">
-                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${open.firstName || undefined}`} alt="" className="w-10 h-10 rounded-full bg-white/5 shrink-0" />
+                    <img src={open.photoUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${open.firstName || undefined}`} alt="" className="w-10 h-10 rounded-full bg-white/5 shrink-0 object-cover" />
                     <div className="flex flex-col">
                       <span className="text-white font-medium text-[15px] truncate max-w-[100px]">{open.firstName}</span>
                       <div className="flex items-center gap-1.5 opacity-60">

@@ -19,6 +19,30 @@ import baseGiftsDb from "./src/gifts_data.json" with { type: "json" };
 const botToken = (process.env.TELEGRAM_BOT_TOKEN || "").trim();
 const bot = botToken ? new TelegramBot(botToken, { polling: true }) : null;
 
+const telegramPhotoPresenceCache = new Map<number, { hasPhoto: boolean; ts: number }>();
+const TELEGRAM_PHOTO_CACHE_TTL = 6 * 60 * 60 * 1000;
+
+async function resolveTelegramPhotoUrl(tgUser: any): Promise<string | undefined> {
+  if (tgUser?.photo_url) return tgUser.photo_url;
+  if (!bot || !tgUser?.id) return undefined;
+
+  const userId = Number(tgUser.id);
+  const cached = telegramPhotoPresenceCache.get(userId);
+  if (cached && Date.now() - cached.ts < TELEGRAM_PHOTO_CACHE_TTL) {
+    return cached.hasPhoto ? `/api/telegram/avatar/${userId}` : undefined;
+  }
+
+  try {
+    const photos = await bot.getUserProfilePhotos(userId, { limit: 1 });
+    const hasPhoto = !!photos?.photos?.[0]?.length;
+    telegramPhotoPresenceCache.set(userId, { hasPhoto, ts: Date.now() });
+    return hasPhoto ? `/api/telegram/avatar/${userId}` : undefined;
+  } catch (e: any) {
+    console.warn('[Telegram] Failed to resolve profile photo:', e?.message || e);
+  }
+  return undefined;
+}
+
 // Sensible default ≈ TON spot; refreshed from CoinGecko when reachable.
 let cachedGramPriceUsd = 2.6;
 let lastGramPriceFetch = 0;
@@ -274,6 +298,31 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
   });
   app.use((req, res, next) => { res.header("Access-Control-Allow-Origin", "*"); res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"); res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization"); if (req.method === "OPTIONS") { res.sendStatus(200); return; } next(); });
 
+  app.get("/api/telegram/avatar/:userId", async (req, res) => {
+    if (!bot) return res.sendStatus(404);
+    const userId = Number(req.params.userId);
+    if (!Number.isFinite(userId)) return res.sendStatus(400);
+
+    try {
+      const photos = await bot.getUserProfilePhotos(userId, { limit: 1 });
+      const sizes = photos?.photos?.[0];
+      const largest = sizes?.[sizes.length - 1];
+      if (!largest?.file_id) return res.sendStatus(404);
+
+      const fileUrl = await bot.getFileLink(largest.file_id);
+      const upstream = await fetch(fileUrl);
+      if (!upstream.ok) return res.sendStatus(404);
+
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.setHeader('Content-Type', upstream.headers.get('content-type') || 'image/jpeg');
+      const body = Buffer.from(await upstream.arrayBuffer());
+      res.send(body);
+    } catch (e: any) {
+      console.warn('[Telegram] Failed to proxy profile photo:', e?.message || e);
+      res.sendStatus(404);
+    }
+  });
+
   app.post("/api/logs", (req, res) => {
     try {
       const logData = req.body;
@@ -347,8 +396,13 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
 
       // Restore memory from Supabase if needed
       await syncUserFromSupabase(tgUser.id);
+
+      const resolvedPhotoUrl = await resolveTelegramPhotoUrl(tgUser);
+      const profileForStore = resolvedPhotoUrl
+        ? { ...tgUser, photo_url: resolvedPhotoUrl }
+        : tgUser;
       
-      const user = upsertUserProfile(tgUser, startParam);
+      const user = upsertUserProfile(profileForStore, startParam);
 
       // ----------------------------------------------------
       // Background Supabase Sync on App Open
@@ -747,6 +801,7 @@ app.post("/api/state", requireAuth, (req, res) => {
       price,
       isGram: !!isGram,
       multiplier: multiplier || undefined,
+      photoUrl: user.photoUrl,
       game: game || undefined
     });
     res.json({ ok: true });

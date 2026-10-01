@@ -372,7 +372,7 @@ const IceArenaCelebrationModal: React.FC<IceArenaCelebrationModalProps> = ({
             className="absolute inset-0 rounded-full blur-xl opacity-60 animate-pulse" 
           />
           <img
-            src={winner.avatar || winner.photoUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Winner'}
+            src={winner.photoUrl || winner.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Winner'}
             alt={winner.firstName || 'Победитель'}
             className="relative z-10 w-20 h-20 rounded-full object-cover border-4 border-white/20 shadow-2xl"
           />
@@ -458,6 +458,11 @@ export const IceArena: React.FC<IceArenaProps> = ({
   token,
 }) => {
   const { t } = useTranslation();
+
+  const syncedAvatarFor = useCallback((player?: Partial<ArenaParticipant> | null, fallbackSeed = 'User') => {
+    if (player?.userId === user?.id && user?.photoUrl) return user.photoUrl;
+    return player?.photoUrl || player?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(player?.firstName || fallbackSeed)}`;
+  }, [user?.id, user?.photoUrl]);
 
   // Tabs: 'game' (Текущая игра) | 'history' (История)
   const [activeTab, setActiveTab] = useState<'game' | 'history'>('game');
@@ -1157,7 +1162,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <img
-                        src={h.winner.avatar || h.winner.photoUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Winner'}
+                        src={syncedAvatarFor(h.winner as any, 'Winner')}
                         alt=""
                         className="w-10 h-10 rounded-full object-cover border border-emerald-400/70 shrink-0"
                       />
@@ -1399,8 +1404,8 @@ export const IceArena: React.FC<IceArenaProps> = ({
                                 }}
                                 className="pointer-events-none z-20 flex aspect-square shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-black/60 shadow-[0_3px_12px_rgba(0,0,0,0.48)] ring-1 ring-black/20 transition-all duration-300"
                               >
-                                {p.avatar || p.photoUrl ? (
-                                  <img src={p.avatar || p.photoUrl} alt={name} className="h-full w-full rounded-full object-cover" />
+                                {p.photoUrl || p.avatar ? (
+                                  <img src={syncedAvatarFor(p, name)} alt={name} className="h-full w-full rounded-full object-cover" />
                                 ) : (
                                   <span className="text-[10px] font-black text-white">{name.slice(0, 1).toUpperCase()}</span>
                                 )}
@@ -1527,7 +1532,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
                             {idx + 1}
                           </span>
                           <img
-                            src={p.avatar || p.photoUrl}
+                            src={syncedAvatarFor(p, p.firstName || 'User')}
                             alt=""
                             className="w-10 h-10 rounded-full object-cover border border-white/15 bg-white/5"
                           />
@@ -1886,7 +1891,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
                 <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-3.5 flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
                     <img
-                      src={selectedHistoryRound.winner.avatar || selectedHistoryRound.winner.photoUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Winner'}
+                      src={syncedAvatarFor(selectedHistoryRound.winner, 'Winner')}
                       alt=""
                       className="w-11 h-11 rounded-full object-cover border-2 border-emerald-400 shrink-0"
                     />
@@ -1941,7 +1946,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
                             <img
-                              src={p.avatar || p.photoUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=User'}
+                              src={syncedAvatarFor(p, 'User')}
                               alt=""
                               className="w-8 h-8 rounded-full object-cover border border-white/10 shrink-0"
                             />

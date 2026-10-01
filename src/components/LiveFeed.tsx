@@ -11,6 +11,7 @@ interface RealDrop {
   gift?: { id?: string; name: string; image_url?: string; slug?: string; isGram?: boolean; backdrop?: string; rarity?: string };
   price: number;
   isGram?: boolean;
+  photoUrl?: string;
 }
 
 const POLL_MS = 3000;

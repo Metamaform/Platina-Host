@@ -16,7 +16,7 @@ interface HistorySummary {
   id: number;
   totalPool: number;
   participantsCount: number;
-  winner: { username?: string; firstName?: string; avatar?: string } | null;
+  winner: { username?: string; firstName?: string; avatar?: string; photoUrl?: string; userId?: number } | null;
   completedAt: number;
   status: string;
 }
