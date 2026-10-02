@@ -29,6 +29,10 @@ async function resolveTelegramPhotoUrl(tgUser: any): Promise<string | undefined>
   if (!bot || !tgUser?.id) return directPhotoUrl;
 
   const userId = Number(tgUser.id);
+  if (!Number.isFinite(userId) || userId <= 0 || userId < 10000) {
+    return directPhotoUrl;
+  }
+
   const cached = telegramPhotoPresenceCache.get(userId);
   if (cached && Date.now() - cached.ts < TELEGRAM_PHOTO_CACHE_TTL) {
     return cached.photoUrl || directPhotoUrl;
@@ -45,7 +49,12 @@ async function resolveTelegramPhotoUrl(tgUser: any): Promise<string | undefined>
     telegramPhotoPresenceCache.set(userId, { photoUrl, ts: Date.now() });
     return photoUrl;
   } catch (e: any) {
-    console.warn('[Telegram] Failed to resolve profile photo:', e?.message || e);
+    // Cache the fallback for 2 minutes to prevent hammering Telegram API on 400 Bad Request
+    telegramPhotoPresenceCache.set(userId, { photoUrl: directPhotoUrl, ts: Date.now() + 110 * 1000 });
+    const msg = String(e?.message || e || '');
+    if (!msg.includes('user not found') && !msg.includes('chat not found') && e?.response?.statusCode !== 400) {
+      console.warn('[Telegram] Failed to resolve profile photo:', msg);
+    }
   }
   return directPhotoUrl;
 }
@@ -334,7 +343,10 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
       const body = Buffer.from(await upstream.arrayBuffer());
       res.send(body);
     } catch (e: any) {
-      console.warn('[Telegram] Failed to proxy profile photo:', e?.message || e);
+      const msg = String(e?.message || e || '');
+      if (!msg.includes('user not found') && !msg.includes('chat not found') && e?.response?.statusCode !== 400) {
+        console.warn('[Telegram] Failed to proxy profile photo:', msg);
+      }
       res.sendStatus(404);
     }
   });
@@ -429,7 +441,6 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
           first_name: user.firstName,
           last_name: user.lastName || null,
           username: user.username || null,
-          photo_url: user.photoUrl || null,
           language_code: user.languageCode || null,
           balance: user.balance,
           inventory: user.inventory,

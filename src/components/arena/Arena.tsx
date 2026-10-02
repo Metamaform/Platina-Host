@@ -272,16 +272,30 @@ export const Arena: React.FC<ArenaProps> = ({
         <div className="max-w-md mx-auto flex flex-col gap-3.5">
 
           {/* Переключатель ТЕКУЩАЯ ИГРА / ИСТОРИЯ */}
-          <LiquidSegment<'game' | 'history'>
-            value={tab}
-            onChange={(v) => { setTab(v); if (v === 'history') refreshHistory(); haptics.selection(); }}
-            variant="text"
-            ariaLabel="Arena tabs"
-            options={[
-              { value: 'game', label: t('arena_tab_current') },
-              { value: 'history', label: t('arena_tab_history') },
-            ]}
-          />
+          <div className="w-full flex rounded-2xl bg-white/[0.04] p-1 border border-white/[0.06]">
+            <button
+              type="button"
+              onClick={() => { setTab('game'); haptics.selection(); }}
+              className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                tab === 'game'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              {t('arena_tab_current')}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setTab('history'); refreshHistory(); haptics.selection(); }}
+              className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                tab === 'history'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              {t('arena_tab_history')}
+            </button>
+          </div>
 
           {tab === 'history' ? (
             <ArenaHistoryList items={historyItems} onOpen={(id) => setDetailsId(id)} onRefresh={refreshHistory} t={t} />

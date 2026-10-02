@@ -1347,18 +1347,30 @@ export const Plinko: React.FC<PlinkoProps> = ({
 
           {/* Controls Bar: Risk selector & Stake summary in Liquid Glass */}
           <div className="w-full flex items-center gap-2 mb-3">
-            <LiquidSegment
-              className="flex-1 min-w-0"
-              ariaLabel={t('risk')}
-              value={risk}
-              disabled={isDropping}
-              onChange={setRisk}
-              options={[
-                { value: 'low', label: t('risk_low') },
-                { value: 'medium', label: t('risk_mid') },
-                { value: 'high', label: t('risk_high') },
-              ]}
-            />
+            <div className="flex-1 min-w-0 flex rounded-2xl bg-white/[0.04] p-1 border border-white/[0.06]">
+              {[
+                { value: 'low' as const, label: t('risk_low') || 'Низкий' },
+                { value: 'medium' as const, label: t('risk_mid') || 'Средний' },
+                { value: 'high' as const, label: t('risk_high') || 'Высокий' },
+              ].map((opt) => {
+                const active = risk === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    disabled={isDropping}
+                    onClick={() => setRisk(opt.value)}
+                    className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer disabled:opacity-50 ${
+                      active
+                        ? 'bg-white text-black shadow-sm'
+                        : 'text-white/60 hover:text-white'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
 
             <button
               disabled={isDropping}
@@ -1516,16 +1528,30 @@ export const Plinko: React.FC<PlinkoProps> = ({
                 </button>
               </div>
 
-              <LiquidSegment
-                className="relative z-10 mb-4"
-                ariaLabel={t('bet_mode')}
-                value={mode}
-                onChange={setMode}
-                options={[
-                  { value: 'nft', label: t('gifts') },
-                  { value: 'gram', label: 'GRAM' },
-                ]}
-              />
+              <div className="relative z-10 mb-4 w-full flex rounded-2xl bg-white/[0.04] p-1 border border-white/[0.06]">
+                <button
+                  type="button"
+                  onClick={() => setMode('nft')}
+                  className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                    mode === 'nft'
+                      ? 'bg-white text-black shadow-sm'
+                      : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  {t('gifts')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('gram')}
+                  className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                    mode === 'gram'
+                      ? 'bg-white text-black shadow-sm'
+                      : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  GRAM
+                </button>
+              </div>
 
               {/* Mode Body: GRAM or NFT Picker in Liquid Glass */}
               <div className="relative z-10 bg-white/[0.04] border border-white/[0.08] rounded-[24px] p-5 mb-5 flex flex-col items-center justify-center min-h-[120px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">

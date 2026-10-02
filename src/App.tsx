@@ -8,14 +8,14 @@ import { setLoggerUserId } from './lib/logger';
 import { ShoppingBag, User, Gem, Gift, Wallet, ChevronRight, Activity, CircleDashed, ArrowUpCircle, Shield, LayoutGrid, Trophy, X, Settings, Bomb, Box, Package, ArrowLeft, ArrowUpRight, Users, History, MessageCircle, ExternalLink, Copy, Check, Rocket, Flame, Sparkles, Snowflake, Swords } from 'lucide-react';
 import defaultGiftsDb from './gifts_data.json';
 import { LiveFeed } from './components/LiveFeed';
-import { PremiumImage } from './components/PremiumImage';
+import { PremiumImage } from './components/PremiumNftImage';
 import { GramIcon } from './components/GramIcon';
 import { StarsIcon } from './components/StarsIcon';
 import { BalancePage } from './components/BalancePage';
 import { addTurnover } from './lib/stats';
 import { useTelegramAuth } from './lib/useTelegramAuth';
 import { useTranslation, i18n } from './lib/i18n';
-import { CleanModelLottie } from './components/CleanModelLottie';
+import { CleanModelLottie } from './components/ModelCleaningAnimation';
 import { Player } from '@lottiefiles/react-lottie-player';
 import { fetchFragmentPrices, fetchFragmentBackdropPrices } from './lib/api';
 
@@ -401,7 +401,7 @@ function Gifts({  giftsDb, pricesLoaded }: { giftsDb: any[], pricesLoaded?: bool
           else if (gift.price > 20) rarity = { label: t('rare'), color: 'text-sky-300 bg-sky-400/10 border-sky-400/30' };
 
           return (
-            <div key={gift.id} id={`gift-${gift.id}`} className="facet-card glass-panel-interactive rounded-2xl p-3 flex flex-col items-center cursor-pointer group w-full">
+            <div key={`gift-${gift.id || idx}-${idx}`} id={`gift-${gift.id}`} className="facet-card glass-panel-interactive rounded-2xl p-3 flex flex-col items-center cursor-pointer group w-full">
               <div className={`w-full aspect-square rounded-xl overflow-hidden mb-3 relative bg-white/5`}>
                 
                 <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors duration-300 z-0" />

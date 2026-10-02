@@ -230,7 +230,7 @@ export function upsertUserProfile(profile: {
       first_name: user.firstName,
       last_name: user.lastName || null,
       username: user.username || null,
-      photo_url: user.photoUrl || null,
+      language_code: user.languageCode || null,
       balance: user.balance,
       inventory: user.inventory,
     }, { onConflict: 'id' }).then(({ error }: { error: any }) => {

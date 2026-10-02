@@ -62,9 +62,9 @@ export const ArenaHistoryList: React.FC<{
           <span className="text-[13px] text-white/40 font-medium">{t('arena_history_empty')}</span>
         </div>
       ) : (
-        items.map((h) => (
+        items.map((h, idx) => (
           <button
-            key={h.id}
+            key={`arena_h_${h.id}_${h.completedAt || idx}`}
             onClick={() => onOpen(h.id)}
             className="w-full text-left rounded-[20px] border border-white/[0.08] bg-white/[0.04] px-4 py-3.5 active:scale-[0.985] transition-transform cursor-pointer hover:border-white/[0.14]"
           >

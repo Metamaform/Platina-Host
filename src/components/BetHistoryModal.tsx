@@ -122,7 +122,7 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
                 <span className="text-white/20 text-xs mt-1">{t('bet_history_empty_hint')}</span>
               </div>
             ) : (
-              history.slice(0, 20).map((bet) => {
+              history.slice(0, 20).map((bet, idx) => {
                 const isExpanded = expandedId === bet.id;
                 const isWon = !!bet.isWon;
                 const betMult = bet.multiplier || (isWon ? 1.5 : 1.0);
@@ -158,7 +158,7 @@ export const BetHistoryModal: React.FC<BetHistoryModalProps> = ({
 
                 return (
                   <div
-                    key={bet.id}
+                    key={`bet_${bet.id || 'b'}_${bet.timestamp || ''}_${idx}`}
                     className={`rounded-2xl transition-all border ${
                       isExpanded
                         ? 'bg-[#15171b] border-white/10 shadow-lg'

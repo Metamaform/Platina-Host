@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { X, RotateCcw, Flame, Trash2, ShieldAlert } from 'lucide-react';
 import { useTranslation } from '../lib/i18n';
-import { BombNft } from './BombNft';
+import { BombNft } from './NftBomb';
 
 export interface LossStat {
   label: string;

@@ -5,7 +5,6 @@ import { GramIcon } from './GramIcon';
 import { fetchTasks, completeTask, Task } from '../lib/api';
 import { getTurnover } from '../lib/stats';
 import { motion, AnimatePresence } from 'motion/react';
-import { LiquidSegment } from './ui/LiquidSegment';
 
 /**
  * Шаблонные задания приходят с сервера с русскими заголовками.
@@ -169,19 +168,36 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
         </div>
       </div>
 
-      <LiquidSegment
-        className="mb-4"
-        ariaLabel={t('tasks_title')}
-        value={activeTab}
-        onChange={(id) => {
-          setActiveTab(id);
-          try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch { /* optional */ }
-        }}
-        options={[
-          { value: 'daily', label: t('daily') },
-          { value: 'all', label: t('main_tasks') },
-        ]}
-      />
+      <div className="mb-4 w-full flex rounded-2xl bg-white/[0.04] p-1 border border-white/[0.06]">
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('daily');
+            try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch { /* optional */ }
+          }}
+          className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
+            activeTab === 'daily'
+              ? 'bg-white text-black shadow-sm'
+              : 'text-white/60 hover:text-white'
+          }`}
+        >
+          {t('daily')}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('all');
+            try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch { /* optional */ }
+          }}
+          className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
+            activeTab === 'all'
+              ? 'bg-white text-black shadow-sm'
+              : 'text-white/60 hover:text-white'
+          }`}
+        >
+          {t('main_tasks')}
+        </button>
+      </div>
 
       {loading ? (
         <div className="flex justify-center items-center py-12">

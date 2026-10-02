@@ -554,16 +554,30 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
           />
 
           {/* Tabs */}
-          <LiquidSegment
-            className="relative z-10 mb-4 shrink-0"
-            ariaLabel={t('upgrade')}
-            value={activeTab}
-            onChange={setActiveTab}
-            options={[
-              { value: 'inventory', label: t('upgrade_my_items') },
-              { value: 'targets', label: t('upgrade_targets') },
-            ]}
-          />
+          <div className="relative z-10 mb-4 shrink-0 w-full flex rounded-2xl bg-white/[0.04] p-1 border border-white/[0.06]">
+            <button
+              type="button"
+              onClick={() => setActiveTab('inventory')}
+              className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                activeTab === 'inventory'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              {t('upgrade_my_items') || 'Мои предметы'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('targets')}
+              className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                activeTab === 'targets'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              {t('upgrade_targets') || 'Желаемые'}
+            </button>
+          </div>
 
           {/* Filters */}
           <div className="relative z-10 flex items-center gap-2 mb-4 shrink-0">

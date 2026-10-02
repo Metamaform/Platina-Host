@@ -8,13 +8,30 @@ export const cleanNftName = (name?: string): string => {
 
 export const getNftBackdrop = (item?: { backdrop?: string; name?: string; rarity?: string; id?: string } | null): 'Onyx Black' | 'Black' | 'Default' => {
   if (!item) return 'Default';
-  if (item.backdrop === 'Onyx Black') return 'Onyx Black';
-  if (item.backdrop === 'Black') return 'Black';
-  if (item.name?.includes('(Onyx Black)') || item.name?.toLowerCase().includes('onyx') || item.rarity === 'Onyx Black' || item.id?.endsWith('_onyx')) {
+  const bd = String(item.backdrop || '').trim().toLowerCase();
+  const name = String(item.name || '').toLowerCase();
+  const rarity = String(item.rarity || '').toLowerCase();
+  const id = String(item.id || '').toLowerCase();
+
+  if (
+    bd === 'onyx black' || bd === 'onyx' ||
+    name.includes('onyx') ||
+    rarity.includes('onyx') ||
+    id.includes('_onyx')
+  ) {
     return 'Onyx Black';
   }
-  if (item.name?.includes('(Black)') || item.name?.toLowerCase().endsWith('black') || item.rarity === 'Black' || item.id?.endsWith('_black')) {
+
+  if (
+    bd === 'black' ||
+    name.includes('(black)') ||
+    name.includes(' black') ||
+    name.endsWith('black') ||
+    rarity.includes('black') ||
+    id.includes('_black')
+  ) {
     return 'Black';
   }
+
   return 'Default';
 };

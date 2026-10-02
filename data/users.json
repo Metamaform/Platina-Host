@@ -2,46 +2,13 @@
   "1337": {
     "id": 1337,
     "username": "webtester",
-    "balance": 864636.3,
-    "inventory": [
-      {
-        "id": "115_black",
-        "name": "Heart Locket (Black)",
-        "baseName": "Heart Locket",
-        "slug": "heartlocket",
-        "backdrop": "Black",
-        "rarity": "Black",
-        "description": "Уникальный подарок из коллекции Heart Locket с черным фоном (Black).",
-        "floor_price_gram": 5400.94,
-        "image_url": "https://fragment.com/file/gifts/heartlocket/model.2NiKCqrWaamvKZoMiaJ1n6HegJu5dfV0A90uJgzfc8Z3Y7ACKO55EmG9LoTGruBK.webp",
-        "animation_url": "",
-        "lottie_url": "https://fragment.com/file/gifts/heartlocket/model.2NiKCqrWaamvKZoMiaJ1n6HegJu5dfV0A90uJgzfc8Z3Y7ACKO55EmG9LoTGruBK.webp",
-        "priceVal": 5400.94,
-        "uniqueId": "72fie0dh6",
-        "price": 5400.94
-      },
-      {
-        "id": "45_black",
-        "name": "Durov’s Caps (Black)",
-        "baseName": "Durov’s Caps",
-        "slug": "durovscap",
-        "backdrop": "Black",
-        "rarity": "Black",
-        "description": "Уникальный подарок из коллекции Durov’s Caps с черным фоном (Black).",
-        "floor_price_gram": 2106.01,
-        "image_url": "https://fragment.com/file/gifts/durovscap/model.tUx9OQD76zRCUJvZus_PPYlsUWIr5bvXUEpBMMEwyjtCbV54nssQ3Ppd_2b7xMCE.webp",
-        "animation_url": "",
-        "lottie_url": "",
-        "priceVal": 2106.01,
-        "uniqueId": "fdgjbe9bo",
-        "price": 2106.01
-      }
-    ],
-    "turnover": 873084.8870038729,
+    "balance": 873574.27,
+    "inventory": [],
+    "turnover": 876778.7870038729,
     "topups": [],
     "createdAt": "2026-09-02T04:58:46.689Z",
-    "updatedAt": "2026-09-25T15:42:12.134Z",
-    "seasonTurnover": 265026.9699999994,
+    "updatedAt": "2026-10-01T09:09:22.289Z",
+    "seasonTurnover": 3404.2500000001164,
     "needsReload": false,
     "completedTasks": {
       "1788541215086": {
@@ -78,12 +45,22 @@
     "lastName": "",
     "username": "Metamaform",
     "balance": 1100.16,
-    "inventory": [],
+    "inventory": [
+      {
+        "id": "1790844018133-2",
+        "uniqueId": "1790844018133-2",
+        "name": "Xmas Stocking",
+        "image_url": "https://nft.fragment.com/gift/xmasstocking-1.lottie.json",
+        "lottie_url": "https://nft.fragment.com/gift/xmasstocking-1.lottie.json",
+        "rarity": "Common",
+        "price": 3.42
+      }
+    ],
     "createdAt": "2026-09-06T08:36:53.874Z",
     "updatedAt": "2026-09-15T16:40:45.031Z",
     "languageCode": "en",
     "turnover": 154200.5,
-    "seasonTurnover": 154200.5,
+    "seasonTurnover": 0,
     "topups": [
       {
         "id": "stars_5698050836_10_0.12_1789408288590",
@@ -118,11 +95,21 @@
     "lastName": "",
     "username": "Goychick",
     "balance": 1100,
-    "inventory": [],
+    "inventory": [
+      {
+        "id": "1790844018133-3",
+        "uniqueId": "1790844018133-3",
+        "name": "Heroic Helmet",
+        "image_url": "https://nft.fragment.com/gift/heroichelmet-1.lottie.json",
+        "lottie_url": "https://nft.fragment.com/gift/heroichelmet-1.lottie.json",
+        "rarity": "Epic",
+        "price": 170.85
+      }
+    ],
     "createdAt": "2026-09-11T16:54:32.534Z",
     "updatedAt": "2026-09-11T16:54:32.534Z",
     "languageCode": "ru",
-    "turnover": 89400.0,
-    "seasonTurnover": 89400.0
+    "turnover": 89400,
+    "seasonTurnover": 0
   }
 }

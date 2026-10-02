@@ -6,7 +6,7 @@ import {
   ticketToFrac,
   SEGMENT_GAP_PX,
   PLATFORM_CURVE,
-} from '../src/components/arena/arenaPlatform';
+} from '../src/components/arena/arenaConstants';
 import type { ArenaParticipant } from '../src/lib/arenaShared';
 
 function mkParticipant(id: string, contribution: number, i: number): ArenaParticipant {

@@ -230,24 +230,9 @@ const NftPrizeCard: React.FC<NftPrizeCardProps> = ({ gift, compact = false }) =>
           ? 'bg-[radial-gradient(circle_at_50%_35%,#2c2d30_0%,#09090b_100%)] border border-white/20 shadow-[0_4px_22px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.15)] ring-1 ring-white/10'
           : isOnyx
           ? 'bg-[radial-gradient(circle_at_50%_35%,#3a3f42_0%,#131517_100%)] border border-white/20 shadow-[0_4px_22px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.15)] ring-1 ring-white/10'
-          : 'bg-white/[0.05] border border-white/10 shadow-lg'
+          : 'bg-white/[0.05] border border-purple-400/40 shadow-[0_0_10px_rgba(192,132,252,0.12)]'
       } ${compact ? 'p-2' : 'p-3 w-full'}`}
     >
-      {/* Black / Onyx Black Pill Badge */}
-      {isDark && (
-        <div className="mb-1 flex items-center justify-center">
-          <span
-            className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm ${
-              isOnyx
-                ? 'text-zinc-200 bg-[#35393a]/90 border border-white/15'
-                : 'text-zinc-300 bg-black/90 border border-white/15'
-            }`}
-          >
-            {isOnyx ? 'Onyx Black' : 'Black'}
-          </span>
-        </div>
-      )}
-
       {/* Gift Image */}
       <div className={`relative flex items-center justify-center ${compact ? 'w-12 h-12 mb-1' : 'w-16 h-16 mb-1'}`}>
         {isDark && (
@@ -410,16 +395,16 @@ const IceArenaCelebrationModal: React.FC<IceArenaCelebrationModalProps> = ({
                   key={i}
                   className={`w-14 h-14 rounded-2xl p-2 flex items-center justify-center shrink-0 border transition-all ${
                     isBlack
-                      ? 'bg-[radial-gradient(circle,#282a2b_0%,#191919_100%)] border-white/30 shadow-[0_0_12px_rgba(0,0,0,0.85)]'
+                      ? 'bg-[radial-gradient(circle_at_center,#2d2e30_0%,#09090b_100%)] border-white/25 shadow-[0_4px_16px_rgba(0,0,0,0.85)]'
                       : isOnyx
-                      ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/30 shadow-[0_0_12px_rgba(0,0,0,0.75)]'
-                      : 'bg-white/10 border-white/15 backdrop-blur-md shadow-lg'
+                      ? 'bg-[radial-gradient(circle_at_center,#3d4245_0%,#1a1d1f_100%)] border-white/25 shadow-[0_4px_16px_rgba(0,0,0,0.75)]'
+                      : 'bg-white/10 border-purple-400/40 shadow-[0_0_12px_rgba(192,132,252,0.18)] backdrop-blur-md'
                   }`}
-                  title={`${g.name}${bd !== 'Default' ? ` (${bd})` : ''}`}
+                  title={cleanNftName(g.name)}
                 >
                   <PremiumImage
                     src={g.image_url}
-                    alt={g.name}
+                    alt={cleanNftName(g.name)}
                     className="w-full h-full object-contain"
                     staticMode={true}
                   />
@@ -428,7 +413,7 @@ const IceArenaCelebrationModal: React.FC<IceArenaCelebrationModalProps> = ({
             })}
 
             {sortedGifts.length > 4 && (
-              <div className="h-14 px-3.5 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md flex items-center justify-center text-white font-display font-black text-sm shrink-0 shadow-lg">
+              <div className="h-14 px-3.5 rounded-2xl bg-white/10 border border-purple-400/30 backdrop-blur-md flex items-center justify-center text-white font-display font-black text-sm shrink-0 shadow-lg">
                 +{sortedGifts.length - 4}
               </div>
             )}
@@ -540,6 +525,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
           participantsCount: h.participantsCount || (h.participants ? h.participants.length : 1),
           giftsCount: h.participants ? h.participants.filter((p: any) => !!p.gift).length : 0,
           completedAt: Number(h.completedAt) || Date.now(),
+          gifts: h.gifts || (h.participants ? h.participants.flatMap((p: any) => p.gifts || (p.gift ? [p.gift] : [])) : []),
           participants: h.participants ? h.participants.map((p: any) => ({
             id: String(p.userId || p.id),
             userId: Number(p.userId || 0),
@@ -555,7 +541,15 @@ export const IceArena: React.FC<IceArenaProps> = ({
             color: '#06b6d4',
           })) : undefined,
         }));
-        setHistoryList(mapped);
+        setHistoryList(prev => {
+          const map = new Map<number, CompletedRoundRecord>();
+          for (const item of mapped) map.set(item.id, item);
+          for (const item of prev) {
+            // Keep recent local state if newer
+            if (!map.has(item.id)) map.set(item.id, item);
+          }
+          return Array.from(map.values()).sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
+        });
       })
       .catch(() => {});
     return () => { alive = false; };
@@ -951,7 +945,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
           participants: normalizedParticipants,
           gifts: roundGifts,
         };
-        setHistoryList(prev => [record, ...prev.slice(0, 49)]);
+        setHistoryList(prev => [record, ...prev.filter(r => r.id !== roundId)].slice(0, 50));
 
         setTimeout(() => {
           setShowWinnerModal(true);
@@ -1186,9 +1180,9 @@ export const IceArena: React.FC<IceArenaProps> = ({
                   История пока пуста. Завершите хотя бы одну игру!
                 </div>
               ) : (
-                historyList.map(h => (
+                historyList.map((h, hIdx) => (
                   <button
-                    key={h.id}
+                    key={`ice_h_${h.id}_${h.completedAt || hIdx}`}
                     type="button"
                     onClick={() => setSelectedHistoryRound(h)}
                     className="w-full text-left flex items-center justify-between rounded-[20px] p-3.5 bg-white/[0.05] border border-white/[0.08] hover:border-white/[0.18] backdrop-blur-md transition-all active:scale-[0.99] cursor-pointer"
@@ -1207,19 +1201,6 @@ export const IceArena: React.FC<IceArenaProps> = ({
                           <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full font-bold shrink-0">
                             Победитель
                           </span>
-                          {(() => {
-                            const rGifts = h.gifts || h.participants?.flatMap(p => p.gifts || (p.gift ? [p.gift] : [])) || [];
-                            const hasDark = rGifts.some(g => {
-                              const bd = getNftBackdrop(g);
-                              return bd === 'Black' || bd === 'Onyx Black';
-                            });
-                            if (!hasDark) return null;
-                            return (
-                              <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-black/90 text-zinc-300 border border-white/20 shrink-0">
-                                Black
-                              </span>
-                            );
-                          })()}
                         </div>
                         <span className="text-xs text-white/40 mt-0.5">
                           Раунд #{h.id} • {h.participantsCount} уч.
@@ -1264,19 +1245,6 @@ export const IceArena: React.FC<IceArenaProps> = ({
                         <span className="text-white/80 font-medium truncate">
                           {topGame.winnerName}
                         </span>
-                        {(() => {
-                          const tgGifts = topGame.record.gifts || topGame.record.participants?.flatMap(p => p.gifts || (p.gift ? [p.gift] : [])) || [];
-                          const hasDark = tgGifts.some(g => {
-                            const bd = getNftBackdrop(g);
-                            return bd === 'Black' || bd === 'Onyx Black';
-                          });
-                          if (!hasDark) return null;
-                          return (
-                            <span className="ml-1 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-black/90 text-zinc-200 border border-white/20 shrink-0 shadow-sm">
-                              Black NFT
-                            </span>
-                          );
-                        })()}
                       </>
                     ) : (
                       <span className="text-white/40">Ожидание игр...</span>
@@ -1334,13 +1302,13 @@ export const IceArena: React.FC<IceArenaProps> = ({
                               ? 'bg-[radial-gradient(circle,#282a2b_0%,#191919_100%)] border-white/30 shadow-[0_0_8px_rgba(0,0,0,0.85)]'
                               : isOnyx
                               ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/30 shadow-[0_0_8px_rgba(0,0,0,0.75)]'
-                              : 'bg-white/5 border-white/10'
+                              : 'bg-white/5 border-purple-400/40 shadow-[0_0_8px_rgba(192,132,252,0.18)]'
                           }`}
-                          title={`${g.name}${bd !== 'Default' ? ` (${bd})` : ''}`}
+                          title={cleanNftName(g.name)}
                         >
                           <PremiumImage
                             src={g.image_url}
-                            alt={g.name}
+                            alt={cleanNftName(g.name)}
                             className="w-full h-full object-contain"
                             staticMode={true}
                           />
@@ -1348,7 +1316,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
                       );
                     })}
                     {roundGifts.length > 7 && (
-                      <div className="h-8 px-2.5 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                      <div className="h-8 px-2.5 rounded-xl bg-white/10 border border-purple-400/30 flex items-center justify-center text-white font-bold text-xs shrink-0">
                         +{roundGifts.length - 7}
                       </div>
                     )}
@@ -1440,14 +1408,6 @@ export const IceArena: React.FC<IceArenaProps> = ({
                               >
                                 <img src={syncedAvatarFor(p, name)} alt={name} className="h-full w-full rounded-full object-cover" />
                               </div>
-                              {minDim >= 38 && (
-                                <span
-                                  className="pointer-events-none absolute z-20 -translate-x-1/2 whitespace-nowrap rounded-full border border-black/40 bg-black/75 px-1 py-px text-[8px] font-black leading-[12px] text-white shadow"
-                                  style={{ left: `${spawnPoint.x}%`, top: `calc(${spawnPoint.y}% + ${markerSize / 2}px - 1px)` }}
-                                >
-                                  {shareLabel}
-                                </span>
-                              )}
                             </React.Fragment>
                           );
                         })}
@@ -1582,13 +1542,13 @@ export const IceArena: React.FC<IceArenaProps> = ({
                                             ? 'bg-[radial-gradient(circle,#282a2b_0%,#191919_100%)] border-white/30 shadow-[0_0_6px_rgba(0,0,0,0.85)]'
                                             : isOnyx
                                             ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/30 shadow-[0_0_6px_rgba(0,0,0,0.75)]'
-                                            : 'bg-white/10 border-white/15'
+                                            : 'bg-white/10 border-purple-400/40 shadow-[0_0_4px_rgba(192,132,252,0.15)]'
                                         }`}
-                                        title={`${g.name}${bd !== 'Default' ? ` (${bd})` : ''}`}
+                                        title={cleanNftName(g.name)}
                                       >
                                         <PremiumImage
                                           src={g.image_url}
-                                          alt={g.name}
+                                          alt={cleanNftName(g.name)}
                                           className="w-full h-full object-contain"
                                           staticMode={true}
                                         />
@@ -1723,16 +1683,30 @@ export const IceArena: React.FC<IceArenaProps> = ({
               </div>
 
               {/* Segment Toggle: Gifts / GRAM */}
-              <LiquidSegment
-                className="relative z-10 mb-4"
-                ariaLabel="Режим ставки"
-                value={mode}
-                onChange={setMode}
-                options={[
-                  { value: 'nft', label: t('gifts') || 'NFT' },
-                  { value: 'gram', label: 'GRAM' },
-                ]}
-              />
+              <div className="relative z-10 mb-4 w-full flex rounded-2xl bg-white/[0.04] p-1 border border-white/[0.06]">
+                <button
+                  type="button"
+                  onClick={() => setMode('nft')}
+                  className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                    mode === 'nft'
+                      ? 'bg-white text-black shadow-sm'
+                      : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  {t('gifts') || 'NFT'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('gram')}
+                  className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                    mode === 'gram'
+                      ? 'bg-white text-black shadow-sm'
+                      : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  GRAM
+                </button>
+              </div>
 
               {/* Mode Body: GRAM or NFT Picker in Liquid Glass */}
               <div className="relative z-10 bg-white/[0.04] border border-white/[0.08] rounded-[24px] p-5 mb-5 flex flex-col items-center justify-center min-h-[120px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
@@ -1789,24 +1763,35 @@ export const IceArena: React.FC<IceArenaProps> = ({
                         </div>
                         {/* Chips: up to 7 icons, then count of remaining */}
                         <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-                          {selectedNfts.slice(0, 7).map((nft, idx) => (
-                            <div
-                              key={nft.uniqueId || nft.id || idx}
-                              onClick={() => handleToggleNft(nft)}
-                              className="relative w-8 h-8 rounded-xl bg-white/5 border border-white/15 p-1 flex items-center justify-center shrink-0 cursor-pointer hover:border-red-400 transition-all group"
-                              title={`Удалить ${nft.name}`}
-                            >
-                              <PremiumImage
-                                src={nft.image_url}
-                                alt={nft.name}
-                                className="w-full h-full object-contain"
-                                staticMode={true}
-                              />
-                              <div className="absolute inset-0 bg-black/60 rounded-xl opacity-0 group-hover:opacity-100 flex items-center justify-center text-red-400 text-xs transition-opacity font-bold">
-                                ✕
+                          {selectedNfts.slice(0, 7).map((nft, idx) => {
+                            const bd = getNftBackdrop(nft);
+                            const isBlack = bd === 'Black';
+                            const isOnyx = bd === 'Onyx Black';
+                            return (
+                              <div
+                                key={nft.uniqueId || nft.id || idx}
+                                onClick={() => handleToggleNft(nft)}
+                                className={`relative w-8 h-8 rounded-xl p-1 flex items-center justify-center shrink-0 cursor-pointer hover:border-red-400 transition-all group border ${
+                                  isBlack
+                                    ? 'bg-[radial-gradient(circle,#282a2b_0%,#191919_100%)] border-white/30 shadow-[0_0_6px_rgba(0,0,0,0.85)]'
+                                    : isOnyx
+                                    ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/30 shadow-[0_0_6px_rgba(0,0,0,0.75)]'
+                                    : 'bg-white/5 border-purple-400/40 shadow-[0_0_6px_rgba(192,132,252,0.15)]'
+                                }`}
+                                title={`Удалить ${cleanNftName(nft.name)}`}
+                              >
+                                <PremiumImage
+                                  src={nft.image_url}
+                                  alt={cleanNftName(nft.name)}
+                                  className="w-full h-full object-contain"
+                                  staticMode={true}
+                                />
+                                <div className="absolute inset-0 bg-black/60 rounded-xl opacity-0 group-hover:opacity-100 flex items-center justify-center text-red-400 text-xs transition-opacity font-bold">
+                                  ✕
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                           {selectedNfts.length > 7 && (
                             <div className="h-8 px-2.5 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white font-bold text-xs shrink-0">
                               +{selectedNfts.length - 7} ещё

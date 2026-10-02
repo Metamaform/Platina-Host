@@ -297,12 +297,25 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
 
           <div className="w-full mb-5 relative z-10">
             <h3 className="text-white/50 text-[10px] font-bold uppercase tracking-widest text-center mb-2">{t('choose_x')}</h3>
-            <LiquidSegment
-              ariaLabel={t('craft_multiplier')}
-              value={String(multiplier)}
-              onChange={(value) => setMultiplier(Number(value))}
-              options={MULTIPLIERS.map((m) => ({ value: String(m), label: `${m}x` }))}
-            />
+            <div className="w-full flex rounded-2xl bg-white/[0.04] p-1 border border-white/[0.06]">
+              {MULTIPLIERS.map((m) => {
+                const active = multiplier === m;
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setMultiplier(m)}
+                    className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                      active
+                        ? 'bg-white text-black shadow-sm'
+                        : 'text-white/60 hover:text-white'
+                    }`}
+                  >
+                    {m}x
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="w-full bg-white/[0.04] border border-white/[0.08] rounded-[20px] p-3.5 text-center z-10 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">

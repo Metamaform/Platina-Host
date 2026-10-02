@@ -6,8 +6,9 @@
 */
 
 import React from 'react';
-import { PremiumImage } from '../PremiumImage';
+import { PremiumImage } from '../PremiumNftImage';
 import type { ArenaParticipant, ArenaStatus } from '../../lib/arenaShared';
+import { cleanNftName, getNftBackdrop } from '../../lib/nftUtils';
 
 // ---------------------------------------------------------------------------
 // Аватар игрока — один в один как в Crash: фото или dicebear-аватар,
@@ -30,17 +31,33 @@ export const PlayerAvatar: React.FC<{ participant: ArenaParticipant; className?:
 // NFT/предмет в ставке
 // ---------------------------------------------------------------------------
 
-export const ArenaGiftChip: React.FC<{ gift: NonNullable<ArenaParticipant['gift']>; size?: 'sm' | 'md' }> = ({ gift, size = 'sm' }) => (
-  <span className={`inline-flex items-center gap-1.5 rounded-full bg-white/[0.07] border border-white/[0.12] ${size === 'sm' ? 'pl-1 pr-2 py-0.5' : 'pl-1.5 pr-3 py-1'} max-w-full`}>
-    <PremiumImage
-      staticMode
-      src={gift.image_url || gift.lottie_url}
-      alt={gift.name || 'NFT'}
-      className={`${size === 'sm' ? 'w-5 h-5' : 'w-7 h-7'} rounded-full bg-black/40 overflow-hidden shrink-0`}
-    />
-    <span className="truncate text-[11px] font-semibold text-white/80">{gift.name || 'NFT'}</span>
-  </span>
-);
+export const ArenaGiftChip: React.FC<{ gift: NonNullable<ArenaParticipant['gift']>; size?: 'sm' | 'md' }> = ({ gift, size = 'sm' }) => {
+  const bd = getNftBackdrop(gift);
+  const isBlack = bd === 'Black';
+  const isOnyx = bd === 'Onyx Black';
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full ${
+        isBlack
+          ? 'bg-black/80 border border-white/25 shadow-[0_0_6px_rgba(0,0,0,0.85)]'
+          : isOnyx
+          ? 'bg-[#1a1d1f]/90 border border-white/25 shadow-[0_0_6px_rgba(0,0,0,0.75)]'
+          : 'bg-white/[0.07] border border-purple-400/40 shadow-[0_0_6px_rgba(192,132,252,0.15)]'
+      } ${size === 'sm' ? 'pl-1 pr-2 py-0.5' : 'pl-1.5 pr-3 py-1'} max-w-full`}
+    >
+      <PremiumImage
+        staticMode
+        src={gift.image_url || gift.lottie_url}
+        alt={cleanNftName(gift.name) || 'NFT'}
+        className={`${size === 'sm' ? 'w-5 h-5' : 'w-7 h-7'} rounded-full bg-black/40 overflow-hidden shrink-0`}
+      />
+      <span className="truncate text-[11px] font-semibold text-white/80">
+        {cleanNftName(gift.name) || 'NFT'}
+      </span>
+    </span>
+  );
+};
 
 // ---------------------------------------------------------------------------
 // Чип статуса раунда
