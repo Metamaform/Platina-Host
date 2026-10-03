@@ -9,6 +9,7 @@ import { ShoppingBag, User, Gem, Gift, Wallet, ChevronRight, Activity, CircleDas
 import defaultGiftsDb from './gifts_data.json';
 import { LiveFeed } from './components/LiveFeed';
 import { PremiumImage } from './components/PremiumNftImage';
+import { UserAvatar } from './components/UserAvatar';
 import { GramIcon } from './components/GramIcon';
 import { StarsIcon } from './components/StarsIcon';
 import { BalancePage } from './components/BalancePage';
@@ -613,14 +614,12 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
         )}
         <div className="relative mb-3 mt-1">
           <div className="w-24 h-24 rounded-full bg-gradient-to-br from-brand via-brand/40 to-amber-400 p-[2.5px] shadow-xl shadow-brand/20">
-            <div className="w-full h-full rounded-full bg-[#15161b] flex items-center justify-center overflow-hidden relative">
-               <div className="absolute inset-0 bg-white/5" />
-               {photoUrl ? (
-                 <img src={photoUrl || undefined} alt={firstName} className="w-full h-full object-cover relative z-10" />
-               ) : (
-                 <User className="w-10 h-10 text-muted relative z-10" />
-               )}
-            </div>
+            <UserAvatar
+              src={photoUrl}
+              alt={firstName}
+              className="w-full h-full"
+              iconClassName="w-10 h-10"
+            />
           </div>
           <div className="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-emerald-400 border-3 border-[#121316] shadow-sm" />
         </div>
@@ -940,13 +939,11 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                     <div className="flex flex-col gap-2">
                       {referrals.map((r) => (
                         <div key={r.id} className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-3 flex items-center gap-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                          <div className="w-9 h-9 rounded-full bg-brand/20 overflow-hidden shrink-0 flex items-center justify-center border border-brand/30 shadow-[0_0_8px_rgba(0,152,234,0.25)]">
-                            {r.photoUrl ? (
-                              <img src={r.photoUrl} alt="avatar" className="w-full h-full object-cover" />
-                            ) : (
-                              <User className="w-4 h-4 text-brand" />
-                            )}
-                          </div>
+                          <UserAvatar
+                            src={r.photoUrl}
+                            alt={r.firstName || 'avatar'}
+                            className="w-9 h-9 shrink-0 border border-white/10"
+                          />
                           <div className="flex-1 min-w-0">
                             <div className="font-semibold text-xs text-white truncate">{r.firstName} {r.lastName}</div>
                             <div className="text-[11px] text-white/40 truncate">
@@ -1466,15 +1463,14 @@ export default function App() {
                     aria-label={t('profile')}
                     className="relative shrink-0 transition-transform active:scale-95 cursor-pointer outline-none z-10"
                   >
-                    <span className={`relative flex h-9 w-9 shrink-0 aspect-square items-center justify-center rounded-full lg-glass overflow-hidden transition-all ${
-                      activeTab === 'profile' ? 'lg-glass--brand' : ''
-                    }`}>
-                      {user?.photoUrl ? (
-                        <img src={user.photoUrl} alt="Avatar" className="w-full h-full object-cover" />
-                      ) : (
-                        <User className="w-4 h-4 text-white/80" strokeWidth={2.2} />
-                      )}
-                    </span>
+                    <UserAvatar
+                      src={user?.photoUrl}
+                      alt="Avatar"
+                      iconClassName="w-4 h-4"
+                      className={`h-9 w-9 shrink-0 aspect-square lg-glass transition-all ${
+                        activeTab === 'profile' ? 'lg-glass--brand' : ''
+                      }`}
+                    />
                   </button>
 
                   {/* Level chip (в стеклянном чипе QuickActions, белые буквы) */}
@@ -1545,7 +1541,7 @@ export default function App() {
                     turnover={turnover}
                   />
                 )}
-                {activeTab === 'leaderboard' && <Suspense fallback={<LazyFallback />}><Leaderboard /></Suspense>}
+                {activeTab === 'leaderboard' && <Suspense fallback={<LazyFallback />}><Leaderboard user={user} /></Suspense>}
                 {activeTab === 'tasks' && <Suspense fallback={<LazyFallback />}><Tasks onBalanceUpdate={setBalance} /></Suspense>}
                 {activeTab === 'profile' && (
                   <Profile 
@@ -1623,7 +1619,7 @@ export default function App() {
                 transition={springSmooth}
                 className="absolute inset-0 z-[100] bg-canvas"
               >
-                <Suspense fallback={<LazyFallback />}><Mines onBack={() => setActiveGame(null)} inventory={inventory} setInventory={setInventory} balance={balance} setBalance={setBalance} onTurnover={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} onWin={(amt, mode, item, mult) => { if (mode === 'nft' && item) auth.recordOpen(item, amt, 'nft', mult, 'mines'); else if (mode === 'gram') auth.recordOpen(null, amt, 'gram', mult, 'mines'); }} giftsDb={giftsDb} onNavigate={(t) => { setActiveGame(null); setTimeout(() => { if(t==='inventory') setActiveTab('inventory'); else setActiveGame(t as any); }, 50); }} /></Suspense>
+                <Suspense fallback={<LazyFallback />}><Mines onBack={() => setActiveGame(null)} inventory={inventory} setInventory={setInventory} balance={balance} setBalance={setBalance} onTurnover={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} onWin={(amt, mode, item, mult) => { if (mode === 'nft' && item) auth.recordOpen(item, amt, 'nft', mult, 'mines'); else if (mode === 'gram') auth.recordOpen(null, amt, 'gram', mult, 'mines'); }} giftsDb={giftsDb} user={user} onNavigate={(t) => { setActiveGame(null); setTimeout(() => { if(t==='inventory') setActiveTab('inventory'); else setActiveGame(t as any); }, 50); }} /></Suspense>
               </motion.div>
             )}
             {activeGame === 'new_game' && (

@@ -5,6 +5,7 @@ import { incrementStat, recordGameProgress } from '../lib/stats';
 import { ArrowLeft, Zap, Trophy, Bomb, X, TrendingUp, Shuffle, Trash2 } from 'lucide-react';
 import { GramIcon } from './GramIcon';
 import { PremiumImage } from './PremiumNftImage';
+import { UserAvatar } from './UserAvatar';
 import { CleanModelLottie } from './ModelCleaningAnimation';
 import { BombNft } from './NftBomb';
 import { getNftBackdrop } from '../lib/nftUtils';
@@ -52,6 +53,7 @@ export function Mines({
   onTurnover, 
   onWin, 
   giftsDb,
+  user,
   onNavigate
 }: { 
   onBack: () => void,
@@ -62,6 +64,7 @@ export function Mines({
   onTurnover: (amt: number) => void,
   onWin: (amt: number, mode: 'gram' | 'nft', item?: any, mult?: number) => void,
   giftsDb: any[],
+  user?: any,
   onNavigate?: (target: string) => void
 }) {
   const { t } = useTranslation();
@@ -554,7 +557,15 @@ export function Mines({
                   className="flex items-center justify-between bg-white/[0.05] backdrop-blur-xl rounded-[22px] p-3 border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
                 >
                   <div className="flex items-center gap-3">
-                    <img src={open.photoUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${open.firstName || undefined}`} alt="" className="w-10 h-10 rounded-full bg-white/5 shrink-0 object-cover" />
+                    <UserAvatar
+                      src={
+                        (open.userId != null && user?.id != null && Number(open.userId) === Number(user.id))
+                          ? (user.photoUrl || open.photoUrl)
+                          : open.photoUrl
+                      }
+                      alt={open.firstName}
+                      className="w-10 h-10 shrink-0 border border-white/10"
+                    />
                     <div className="flex flex-col">
                       <span className="text-white font-medium text-[15px] truncate max-w-[100px]">{open.firstName}</span>
                       <div className="flex items-center gap-1.5 opacity-60">

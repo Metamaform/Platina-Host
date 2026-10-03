@@ -2,11 +2,19 @@ import { useTranslation } from '../lib/i18n';
 import React, { useState, useEffect } from 'react';
 import { Trophy, Clock, Users, Sparkles, HelpCircle } from 'lucide-react';
 import { PremiumImage } from './PremiumNftImage';
+import { UserAvatar } from './UserAvatar';
 import { GramIcon } from './GramIcon';
 import { LiquidDialog } from './ui/LiquidDialog';
 
-export function Leaderboard() {
+export function Leaderboard({ user: authUser }: { user?: any } = {}) {
   const { t } = useTranslation();
+  const resolveEntryPhoto = (entry?: any) => {
+    if (!entry) return undefined;
+    if (authUser?.id != null && entry.id != null && Number(entry.id) === Number(authUser.id)) {
+      return authUser.photoUrl || entry.photoUrl;
+    }
+    return entry.photoUrl;
+  };
   const [data, setData] = useState<{ top: any[]; currentUser: any } | null>(null);
   const [config, setConfig] = useState<any>(null);
   const [timeLeft, setTimeLeft] = useState('');
@@ -178,13 +186,11 @@ export function Leaderboard() {
               {runnerUp ? (
                 <div className="flex flex-col items-center p-2 rounded-[20px] bg-slate-400/[0.08] border border-slate-300/30">
                   <span className="text-[14px] leading-none mb-1">🥈</span>
-                  <div className="relative w-12 h-12 rounded-full ring-2 ring-slate-300 shadow-[0_0_12px_rgba(203,213,225,0.4)] overflow-hidden bg-black/40">
-                    {runnerUp.photoUrl ? (
-                      <img src={runnerUp.photoUrl} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-white/60 font-black text-xs">2</div>
-                    )}
-                  </div>
+                  <UserAvatar
+                    src={resolveEntryPhoto(runnerUp)}
+                    alt={runnerUp.firstName || runnerUp.username || ''}
+                    className="w-12 h-12 ring-2 ring-slate-300 shadow-[0_0_12px_rgba(203,213,225,0.4)]"
+                  />
                   <span className="text-[11px] font-bold text-white/90 truncate max-w-[80px] mt-1.5">
                     {maskName(runnerUp.firstName || runnerUp.username)}
                   </span>
@@ -205,13 +211,11 @@ export function Leaderboard() {
               {/* #1 ЧЕМПИОН ДНЯ (Золотой кубок, увеличенный масштаб) */}
               <div className="flex flex-col items-center p-3 rounded-[22px] bg-gradient-to-b from-amber-500/[0.22] via-emerald-500/[0.10] to-black/40 border border-amber-400/50 shadow-[0_0_25px_rgba(251,191,36,0.3)] -translate-y-1">
                 <span className="text-[20px] leading-none mb-1 animate-bounce">👑</span>
-                <div className="relative w-16 h-16 rounded-full ring-4 ring-amber-400 shadow-[0_0_24px_rgba(251,191,36,0.7)] overflow-hidden bg-black/50">
-                  {champion.photoUrl ? (
-                    <img src={champion.photoUrl} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-amber-300 font-black text-base">1</div>
-                  )}
-                </div>
+                <UserAvatar
+                  src={resolveEntryPhoto(champion)}
+                  alt={champion.firstName || champion.username || ''}
+                  className="w-16 h-16 ring-4 ring-amber-400 shadow-[0_0_24px_rgba(251,191,36,0.7)]"
+                />
                 <span className="text-[13px] font-black text-white truncate max-w-[95px] mt-1.5">
                   {maskName(champion.firstName || champion.username)}
                 </span>
@@ -233,13 +237,11 @@ export function Leaderboard() {
               {thirdPlace ? (
                 <div className="flex flex-col items-center p-2 rounded-[20px] bg-amber-600/[0.08] border border-amber-600/30">
                   <span className="text-[14px] leading-none mb-1">🥉</span>
-                  <div className="relative w-12 h-12 rounded-full ring-2 ring-amber-600 shadow-[0_0_12px_rgba(217,119,6,0.4)] overflow-hidden bg-black/40">
-                    {thirdPlace.photoUrl ? (
-                      <img src={thirdPlace.photoUrl} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-white/60 font-black text-xs">3</div>
-                    )}
-                  </div>
+                  <UserAvatar
+                    src={resolveEntryPhoto(thirdPlace)}
+                    alt={thirdPlace.firstName || thirdPlace.username || ''}
+                    className="w-12 h-12 ring-2 ring-amber-600 shadow-[0_0_12px_rgba(217,119,6,0.4)]"
+                  />
                   <span className="text-[11px] font-bold text-white/90 truncate max-w-[80px] mt-1.5">
                     {maskName(thirdPlace.firstName || thirdPlace.username)}
                   </span>
@@ -298,15 +300,11 @@ export function Leaderboard() {
                 </div>
 
                 {/* Аватар */}
-                <div className="w-[38px] h-[38px] shrink-0 rounded-full overflow-hidden bg-white/[0.08] border border-white/[0.12] shadow-sm">
-                  {user.photoUrl ? (
-                    <img src={user.photoUrl} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-[#18181b] flex items-center justify-center text-white/40 font-bold text-xs">
-                      {(user.firstName || user.username || 'P')[0].toUpperCase()}
-                    </div>
-                  )}
-                </div>
+                <UserAvatar
+                  src={resolveEntryPhoto(user)}
+                  alt={user.firstName || user.username || ''}
+                  className="w-[38px] h-[38px] shrink-0 border border-white/[0.12] shadow-sm"
+                />
 
                 {/* Имя */}
                 <div className="flex-1 min-w-0">
@@ -363,15 +361,11 @@ export function Leaderboard() {
               </div>
 
               {/* Аватар */}
-              <div className="relative z-10 w-[34px] h-[34px] shrink-0 rounded-full overflow-hidden bg-white/[0.08] border border-white/[0.12] shadow-sm">
-                {currentUser.photoUrl ? (
-                  <img src={currentUser.photoUrl} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-[#18181b] flex items-center justify-center text-white/40 font-bold text-xs">
-                    {(currentUser.firstName || currentUser.username || 'U')[0].toUpperCase()}
-                  </div>
-                )}
-              </div>
+              <UserAvatar
+                src={resolveEntryPhoto(currentUser)}
+                alt={currentUser.firstName || currentUser.username || ''}
+                className="relative z-10 w-[34px] h-[34px] shrink-0 border border-white/[0.12] shadow-sm"
+              />
 
               {/* Бейдж YOU */}
               <div className="relative z-10 flex-1 min-w-0 flex items-center">

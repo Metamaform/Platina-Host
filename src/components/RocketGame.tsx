@@ -4,6 +4,7 @@ import { ArrowLeft, Rocket, X, Flame, ShieldCheck, History, Users, Settings } fr
 import { useTranslation } from '../lib/i18n';
 import { GramIcon } from './GramIcon';
 import { PremiumImage } from './PremiumNftImage';
+import { UserAvatar } from './UserAvatar';
 import { CleanModelLottie } from './ModelCleaningAnimation';
 import { BoomIcon } from './ExplosionIcon';
 import { multAtTime, RocketBet, ServerRocketState, buildRocketLadder, getRocketReachedGiftFromLadder } from '../lib/rocketShared';
@@ -1088,10 +1089,10 @@ export const RocketGame: React.FC<NewGameProps> = ({
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <img
-                          src={open.photoUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${open.firstName || undefined}`}
-                          alt=""
-                          className="w-10 h-10 rounded-full bg-white/5 shrink-0 object-cover border border-white/10"
+                        <UserAvatar
+                          src={isMyBet ? (user?.photoUrl || open.photoUrl) : open.photoUrl}
+                          alt={open.firstName}
+                          className="w-10 h-10 shrink-0 border border-white/10"
                         />
                         <div className="flex flex-col min-w-0">
                           <div className="flex items-center gap-1.5">

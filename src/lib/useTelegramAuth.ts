@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { sanitizeAvatarUrl } from '../components/UserAvatar';
 
 /**
  * Реальная авторизация через Telegram Mini App.
@@ -65,6 +66,8 @@ export function useTelegramAuth() {
     // @ts-ignore
     const tg = window.Telegram?.WebApp;
     let initData = tg?.initData;
+    const unsafeUser = tg?.initDataUnsafe?.user;
+    const clientPhotoUrl = sanitizeAvatarUrl(unsafeUser?.photo_url);
 
     if (!initData) {
       initData = 'bypass_auth';
@@ -75,7 +78,7 @@ export function useTelegramAuth() {
     fetch('/api/auth/telegram', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ initData }),
+      body: JSON.stringify({ initData, clientPhotoUrl }),
     })
       .then(async (res) => {
         const contentType = res.headers.get('content-type');
@@ -88,10 +91,16 @@ export function useTelegramAuth() {
         try {
           sessionStorage.setItem(TOKEN_KEY, data.token);
         } catch(e) {}
+        const resolvedUser = data.user
+          ? {
+              ...data.user,
+              photoUrl: sanitizeAvatarUrl(data.user.photoUrl) || clientPhotoUrl,
+            }
+          : null;
         setState({
           status: 'ready',
           token: data.token,
-          user: data.user,
+          user: resolvedUser,
           balance: data.balance,
           inventory: data.inventory,
           turnover: data.turnover || 0,
@@ -107,6 +116,45 @@ export function useTelegramAuth() {
         setState((s) => ({ ...s, status: 'error', error: e.message }));
       });
   }, []);
+
+  // Re-sync Telegram profile photo & metadata when user returns to the Mini App
+  useEffect(() => {
+    if (state.status !== 'ready' || !state.token) return;
+    const syncProfile = () => {
+      if (document.visibilityState !== 'visible') return;
+      fetch('/api/me', {
+        headers: { Authorization: `Bearer ${state.token}` },
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (!d?.user) return;
+          setState((prev) => {
+            if (!prev.user) return prev;
+            const nextPhoto = sanitizeAvatarUrl(d.user.photoUrl) || prev.user.photoUrl;
+            if (
+              prev.user.photoUrl === nextPhoto &&
+              prev.user.firstName === d.user.firstName &&
+              prev.user.username === d.user.username
+            ) {
+              return prev;
+            }
+            return {
+              ...prev,
+              user: {
+                ...prev.user,
+                firstName: d.user.firstName || prev.user.firstName,
+                lastName: d.user.lastName ?? prev.user.lastName,
+                username: d.user.username ?? prev.user.username,
+                photoUrl: nextPhoto,
+              },
+            };
+          });
+        })
+        .catch(() => {});
+    };
+    document.addEventListener('visibilitychange', syncProfile);
+    return () => document.removeEventListener('visibilitychange', syncProfile);
+  }, [state.status, state.token]);
 
   // Дебаунс-синхронизация состояния на сервер, привязанного к реальному userId
   const syncState = useCallback(
