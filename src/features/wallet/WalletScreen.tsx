@@ -120,7 +120,7 @@ export function WalletScreen({ balance, onClose, onDeposit, onGoToInventory }: W
             <p className="text-white/50 text-[13px] leading-relaxed mb-3">{t('withdraw_nft_description')}</p>
             <button
               onClick={onGoToInventory}
-              className="w-full py-3 rounded-2xl lg-glass text-white font-semibold text-[14px] transition-colors active:scale-[0.98] cursor-pointer"
+              className="w-full py-3 rounded-2xl lg-glass text-white font-semibold text-[14px] transition-colors cursor-pointer"
             >
               {t('go_to_inventory')}
             </button>
@@ -202,7 +202,7 @@ export function WalletScreen({ balance, onClose, onDeposit, onGoToInventory }: W
                   setShowDepositSheet(false);
                   if (onDeposit) onDeposit();
                 }}
-                className="w-full py-3.5 rounded-2xl bg-[#1683FF] text-white font-bold hover:bg-[#1478eb] transition-colors active:scale-[0.98] cursor-pointer"
+                className="w-full py-3.5 rounded-2xl bg-[#1683FF] text-white font-bold hover:bg-[#1478eb] transition-colors cursor-pointer"
               >
                 {t('open_topup')}
               </button>

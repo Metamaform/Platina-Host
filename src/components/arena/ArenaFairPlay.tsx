@@ -56,7 +56,7 @@ const CopyBtn: React.FC<{ text: string }> = ({ text }) => {
       onClick={async () => {
         try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch {}
       }}
-      className="shrink-0 w-7 h-7 rounded-full bg-white/[0.06] border border-white/[0.10] flex items-center justify-center active:scale-90 transition-transform cursor-pointer"
+      className="shrink-0 w-7 h-7 rounded-full bg-white/[0.06] border border-white/[0.10] flex items-center justify-center transition-transform cursor-pointer"
       aria-label="copy"
     >
       {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-white/60" />}
@@ -145,7 +145,7 @@ export const FairPlayModal: React.FC<FairPlayModalProps> = ({ round, onClose, t 
           <button
             onClick={onClose}
             aria-label="Закрыть"
-            className="w-8 h-8 rounded-full bg-white/[0.06] border border-white/[0.10] flex items-center justify-center active:scale-95 transition-transform cursor-pointer"
+            className="w-8 h-8 rounded-full bg-white/[0.06] border border-white/[0.10] flex items-center justify-center transition-transform cursor-pointer"
           >
             <X className="w-4 h-4 text-white/80" />
           </button>
@@ -186,7 +186,7 @@ export const FairPlayModal: React.FC<FairPlayModalProps> = ({ round, onClose, t 
                     <button
                       onClick={runVerify}
                       disabled={verifyState === 'checking'}
-                      className="w-full h-[48px] rounded-full font-display font-bold text-[14px] tracking-wide bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 shadow-[0_0_18px_rgba(16,185,129,0.2)] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
+                      className="w-full h-[48px] rounded-full font-display font-bold text-[14px] tracking-wide bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 shadow-[0_0_18px_rgba(16,185,129,0.2)] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
                     >
                       {verifyState === 'checking' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
                       {t('arena_fair_check_btn')}

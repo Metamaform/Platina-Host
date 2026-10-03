@@ -206,32 +206,32 @@ const SheetInner: React.FC<InnerProps> = ({
       <motion.div
         ref={sheetRef}
         style={{ y, willChange: 'transform' }}
-        exit={{ y: '110%', transition: { duration: 0.28, ease: easeIn } }}
+        exit={{ y: '110%', transition: { duration: 0.22, ease: easeIn } }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={(e) => finishDrag(e)}
         onPointerCancel={(e) => finishDrag(e, true)}
         onLostPointerCapture={(e) => finishDrag(e, true)}
-        className="relative w-full max-w-md bg-surface border-t sm:border border-hairline rounded-t-[28px] sm:rounded-[28px] text-[color:var(--color-text)] shadow-[0_-12px_40px_rgba(0,0,0,0.7)] overflow-hidden flex flex-col"
+        className="bottom-sheet relative w-full max-w-md bg-[#18181b]/95 border-t sm:border border-white/[0.08] rounded-t-[26px] sm:rounded-[26px] text-white shadow-[0_-12px_40px_rgba(0,0,0,0.7)] backdrop-blur-2xl overflow-hidden flex flex-col"
       >
         {/* Grab handle */}
-        <div data-sheet-drag-handle className="pt-2.5 pb-3 sm:hidden touch-none select-none cursor-grab active:cursor-grabbing">
-          <div className="w-10 h-1 bg-white/20 rounded-full mx-auto" />
+        <div data-sheet-drag-handle className="pt-2 pb-3 touch-none select-none cursor-grab active:cursor-grabbing">
+          <div className="w-10 h-1.5 bg-white/25 rounded-full mx-auto" />
         </div>
 
         {(title || icon) && (
-          <div data-sheet-drag-handle className="px-5 pt-3 pb-3 border-b border-hairline flex items-center justify-between shrink-0 touch-none select-none cursor-grab active:cursor-grabbing">
+          <div data-sheet-drag-handle className="px-5 pt-1 pb-3.5 border-b border-white/[0.08] flex items-center justify-between shrink-0 touch-none select-none cursor-grab active:cursor-grabbing">
             <div className="flex items-center gap-3 min-w-0">
               {icon && <div className="shrink-0">{icon}</div>}
               <div className="min-w-0">
                 {title && <h2 className="font-display text-lg font-bold tracking-tight truncate">{title}</h2>}
-                {subtitle && <p className="text-[11px] text-muted mt-0.5 truncate">{subtitle}</p>}
+                {subtitle && <p className="text-[11px] text-white/50 mt-0.5 truncate">{subtitle}</p>}
               </div>
             </div>
             <button
               onClick={onClose}
               aria-label={t("close")}
-              className="w-8 h-8 rounded-full lg-glass flex items-center justify-center text-white/50 hover:text-white active:scale-95 transition-all cursor-pointer shrink-0"
+              className="w-8 h-8 rounded-full bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.08] flex items-center justify-center text-white/60 hover:text-white transition-all cursor-pointer shrink-0"
             >
               <X className="w-4 h-4" />
             </button>
@@ -240,7 +240,7 @@ const SheetInner: React.FC<InnerProps> = ({
 
         <div
           className="overflow-y-auto overscroll-contain custom-scrollbar p-5 pt-4 flex-1 min-h-0"
-          style={{ maxHeight }}
+          style={{ maxHeight, paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}
           data-nodrag
         >
           {children}

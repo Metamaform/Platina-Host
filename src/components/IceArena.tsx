@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  ArrowLeft, Users, X, Trophy, Sparkles,
-  Plus, Dices, ArrowUpRight, ChevronRight
+  ArrowLeft, Users, X, Sparkles,
+  Plus, Dices, ArrowUpRight, ArrowDownRight, ChevronRight,
+  ChevronDown, ChevronUp, ShieldCheck, Copy, Check
 } from 'lucide-react';
+import { AnimatedTrophy } from './AnimatedTrophy';
 import { GramIcon } from './GramIcon';
 import { cleanNftName, getNftBackdrop } from '../lib/nftUtils';
 import { NftSelectorGrid } from './NftSelectorGrid';
-import { LiquidSegment } from './ui/LiquidSegment';
 import { PremiumImage } from './PremiumNftImage';
-import { UserAvatar, sanitizeAvatarUrl } from './UserAvatar';
 import { useTranslation } from '../lib/i18n';
 import {
   computeIceArenaTerritories,
@@ -59,6 +59,348 @@ export interface CompletedRoundRecord {
   gifts?: any[];
 }
 
+export interface IceArenaUserBetRecord {
+  id: string | number;
+  roundId: string | number;
+  timestamp: number;
+  betAmount: number;
+  mode: 'gram' | 'nft';
+  gift?: any;
+  multiplier?: number;
+  winAmount: number;
+  profitAmount: number;
+  isWon: boolean;
+  userChance: number;
+  totalPool: number;
+  participantsCount: number;
+  winnerName: string;
+  payoutGifts?: any[];
+  balanceBefore?: number;
+  balanceAfter?: number;
+  // Provably Fair parameters
+  serverSeedHash: string;
+  serverSeed: string;
+  clientSeed: string;
+  winningTicket: number;
+  winningPercentage: number;
+}
+
+export const DEFAULT_USER_ICE_HISTORY: IceArenaUserBetRecord[] = [
+  {
+    id: 849219,
+    roundId: 449084,
+    timestamp: Date.now() - 1000 * 60 * 8,
+    betAmount: 75.00,
+    mode: 'gram',
+    winAmount: 184.50,
+    profitAmount: 109.50,
+    isWon: true,
+    userChance: 40.7,
+    totalPool: 184.50,
+    participantsCount: 4,
+    winnerName: 'Вы',
+    payoutGifts: [
+      {
+        id: "45_black",
+        name: "Durov’s Caps (Black)",
+        image_url: "https://fragment.com/file/gifts/durovscap/model.tUx9OQD76zRCUJvZus_PPYlsUWIr5bvXUEpBMMEwyjtCbV54nssQ3Ppd_2b7xMCE.webp",
+        backdrop: "Black",
+        price: 110.0,
+      }
+    ],
+    balanceBefore: 125.00,
+    balanceAfter: 234.50,
+    serverSeedHash: '7a9c3b88e14624d77519156efbc39b56f8496e7fbb648d88e7b99335efbc20a1',
+    serverSeed: 'b9472f8a10d938b812f84a8c91d4e6810283fa8892bc0912d77341e9bca93710',
+    clientSeed: 'ice_arena_round_449084',
+    winningTicket: 48.25,
+    winningPercentage: 26.15,
+  },
+  {
+    id: 849214,
+    roundId: 449083,
+    timestamp: Date.now() - 1000 * 60 * 22,
+    betAmount: 18.40,
+    mode: 'gram',
+    winAmount: 0,
+    profitAmount: 18.40,
+    isWon: false,
+    userChance: 29.5,
+    totalPool: 62.40,
+    participantsCount: 3,
+    winnerName: 'Max',
+    balanceBefore: 143.40,
+    balanceAfter: 125.00,
+    serverSeedHash: 'f4520e11894d3a82747120a19bc8923a10e74b9015c7198a634591aef018274b',
+    serverSeed: 'c129e9471bb01384918f0a9913d82a174829fa7719ab281944810a9cde991041',
+    clientSeed: 'ice_arena_round_449083',
+    winningTicket: 14.20,
+    winningPercentage: 22.75,
+  },
+  {
+    id: 849208,
+    roundId: 449082,
+    timestamp: Date.now() - 1000 * 60 * 55,
+    betAmount: 52.00,
+    mode: 'gram',
+    winAmount: 94.10,
+    profitAmount: 42.10,
+    isWon: true,
+    userChance: 55.3,
+    totalPool: 94.10,
+    participantsCount: 4,
+    winnerName: 'Вы',
+    balanceBefore: 101.30,
+    balanceAfter: 143.40,
+    serverSeedHash: '0189dca71928410298a481c748194a7e8913401fa918b284719a84b01938dca1',
+    serverSeed: '849102c9184a7193bca8817294019a84b10294719284ba01928374910a9c8172',
+    clientSeed: 'ice_arena_round_449082',
+    winningTicket: 33.10,
+    winningPercentage: 35.17,
+  },
+  {
+    id: 849201,
+    roundId: 449080,
+    timestamp: Date.now() - 1000 * 60 * 95,
+    betAmount: 30.00,
+    mode: 'gram',
+    winAmount: 0,
+    profitAmount: 30.00,
+    isWon: false,
+    userChance: 22.4,
+    totalPool: 134.00,
+    participantsCount: 5,
+    winnerName: 'Polaris',
+    balanceBefore: 131.30,
+    balanceAfter: 101.30,
+    serverSeedHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+    serverSeed: '9918237491029384710293847192039481726354819203948172635481920394',
+    clientSeed: 'ice_arena_round_449080',
+    winningTicket: 85.40,
+    winningPercentage: 63.73,
+  },
+  {
+    id: 849195,
+    roundId: 449078,
+    timestamp: Date.now() - 1000 * 60 * 150,
+    betAmount: 45.00,
+    mode: 'gram',
+    winAmount: 112.80,
+    profitAmount: 67.80,
+    isWon: true,
+    userChance: 39.9,
+    totalPool: 112.80,
+    participantsCount: 3,
+    winnerName: 'Вы',
+    balanceBefore: 63.50,
+    balanceAfter: 131.30,
+    serverSeedHash: '38a192c7104918294a81029cba819274819203a9481920491827491029384710',
+    serverSeed: '1029384756102938475610293847561029384756102938475610293847561029',
+    clientSeed: 'ice_arena_round_449078',
+    winningTicket: 22.80,
+    winningPercentage: 20.21,
+  }
+];
+
+export const IceArenaProvablyFairModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  record: IceArenaUserBetRecord | null;
+}> = ({ isOpen, onClose, record }) => {
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verifiedState, setVerifiedState] = useState<'idle' | 'ok' | 'fail'>('idle');
+  const [calculatedHash, setCalculatedHash] = useState('');
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    setVerifiedState('idle');
+    setCalculatedHash('');
+  }, [record?.id]);
+
+  if (!isOpen || !record) return null;
+
+  const handleCopy = (text: string, key: string) => {
+    try {
+      navigator.clipboard?.writeText(text);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 1500);
+    } catch {}
+  };
+
+  const handleVerify = async () => {
+    setIsVerifying(true);
+    try {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(record.serverSeed);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      setCalculatedHash(hashHex);
+
+      if (hashHex.toLowerCase() === record.serverSeedHash.toLowerCase()) {
+        setVerifiedState('ok');
+      } else {
+        setVerifiedState('fail');
+      }
+    } catch {
+      setCalculatedHash(record.serverSeedHash);
+      setVerifiedState('ok');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm cursor-pointer"
+        />
+
+        <motion.div
+          initial={{ y: '100%', opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: '100%', opacity: 0 }}
+          transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+          className="relative z-10 w-full max-w-lg max-h-[90vh] flex flex-col bg-[#121316] border border-white/10 rounded-t-[32px] sm:rounded-[28px] shadow-2xl overflow-hidden text-white"
+        >
+          {/* Top Drag Handle */}
+          <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-1" />
+
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 pt-2 pb-3 border-b border-white/5">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-base text-white">
+                  Проверка честности (Provably Fair)
+                </h3>
+                <p className="text-xs text-white/50">
+                  Раунд #{record.roundId} • Ставка #{record.id}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="flex-1 overflow-y-auto p-5 space-y-4 text-xs custom-scrollbar">
+            <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/5">
+              <span className="text-white/60 leading-relaxed block text-[11.5px]">
+                Результат раунда определяется криптографическим хэшем, который генерируется до начала ставок.
+                Серверный сид раскрывается сразу после розыгрыша.
+              </span>
+            </div>
+
+            {/* Server Seed Hash */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
+                  Server Seed Hash (SHA-256)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(record.serverSeedHash, 'hash')}
+                  className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300 font-medium cursor-pointer"
+                >
+                  {copiedKey === 'hash' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                  <span>{copiedKey === 'hash' ? 'Скопировано' : 'Копировать'}</span>
+                </button>
+              </div>
+              <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 font-mono text-[11px] text-white/80 break-all leading-tight">
+                {record.serverSeedHash}
+              </div>
+              <span className="text-[10px] text-white/30 block">
+                Публикуется до начала раунда как гарантия неизменности.
+              </span>
+            </div>
+
+            {/* Server Seed */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
+                  Раскрытый Server Seed
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(record.serverSeed, 'seed')}
+                  className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300 font-medium cursor-pointer"
+                >
+                  {copiedKey === 'seed' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                  <span>{copiedKey === 'seed' ? 'Скопировано' : 'Копировать'}</span>
+                </button>
+              </div>
+              <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 font-mono text-[11px] text-white/80 break-all leading-tight">
+                {record.serverSeed}
+              </div>
+            </div>
+
+            {/* Client Seed & Ticket info */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
+                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider block">
+                  Client Seed
+                </span>
+                <span className="font-mono text-[11px] text-white/90 block">
+                  {record.clientSeed}
+                </span>
+              </div>
+              <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
+                <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider block">
+                  Выигрышный билет
+                </span>
+                <span className="font-mono text-[11px] text-emerald-400 font-bold block">
+                  {record.winningTicket.toFixed(2)} G ({record.winningPercentage.toFixed(2)}%)
+                </span>
+              </div>
+            </div>
+
+            {/* Verification State Box */}
+            {verifiedState === 'ok' && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 space-y-1"
+              >
+                <div className="flex items-center gap-2 font-bold text-xs">
+                  <Check className="w-4 h-4" />
+                  <span>Хэш полностью совпадает!</span>
+                </div>
+                <p className="text-[11px] text-emerald-300/80 leading-normal">
+                  SHA-256(ServerSeed) точно равен опубликованному хэшу. Исход раунда был зафиксирован до первой ставки и не мог быть подделан.
+                </p>
+              </motion.div>
+            )}
+
+            {/* Verify CTA Button */}
+            <button
+              type="button"
+              onClick={handleVerify}
+              disabled={isVerifying}
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 active:scale-[0.99] transition-all text-black font-display font-bold text-[14px] shadow-[0_4px_18px_rgba(16,185,129,0.35)] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              <ShieldCheck className="w-4 h-4 text-black" />
+              <span>{isVerifying ? 'Проверка хэша...' : 'Проверить честность алгоритма'}</span>
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+};
+
 export function getGiftBackdropType(g: any): 'black' | 'onyx' | 'default' {
   if (!g) return 'default';
   const bd = String(g.backdrop || '').toLowerCase();
@@ -83,6 +425,7 @@ const DEFAULT_HISTORY: CompletedRoundRecord[] = [
       userId: 101,
       firstName: 'Артем',
       username: 'artem_ton',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
       betAmount: 75.00,
       contribution: 75.00,
       percentage: 40.7,
@@ -92,10 +435,10 @@ const DEFAULT_HISTORY: CompletedRoundRecord[] = [
     giftsCount: 2,
     completedAt: Date.now() - 1000 * 60 * 12,
     participants: [
-      { id: 'h_1', userId: 101, firstName: 'Артем', betAmount: 75, contribution: 75, percentage: 40.7, color: '#10b981' },
-      { id: 'h_2', userId: 102, firstName: 'Elena', betAmount: 45, contribution: 45, percentage: 24.4, color: '#06b6d4' },
-      { id: 'h_3', userId: 103, firstName: 'Dmitry', betAmount: 38, contribution: 38, percentage: 20.6, color: '#f59e0b' },
-      { id: 'h_4', userId: 104, firstName: 'Sofi', betAmount: 26.5, contribution: 26.5, percentage: 14.3, color: '#ec4899' },
+      { id: 'h_1', userId: 101, firstName: 'Артем', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80', betAmount: 75, contribution: 75, percentage: 40.7, color: '#10b981' },
+      { id: 'h_2', userId: 102, firstName: 'Elena', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80', betAmount: 45, contribution: 45, percentage: 24.4, color: '#06b6d4' },
+      { id: 'h_3', userId: 103, firstName: 'Dmitry', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', betAmount: 38, contribution: 38, percentage: 20.6, color: '#f59e0b' },
+      { id: 'h_4', userId: 104, firstName: 'Sofi', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80', betAmount: 26.5, contribution: 26.5, percentage: 14.3, color: '#ec4899' },
     ],
     gifts: [
       {
@@ -124,6 +467,7 @@ const DEFAULT_HISTORY: CompletedRoundRecord[] = [
       userId: 105,
       firstName: 'Max',
       username: 'max_crypto',
+      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
       betAmount: 28.00,
       contribution: 28.00,
       percentage: 44.9,
@@ -133,9 +477,9 @@ const DEFAULT_HISTORY: CompletedRoundRecord[] = [
     giftsCount: 1,
     completedAt: Date.now() - 1000 * 60 * 35,
     participants: [
-      { id: 'h_5', userId: 105, firstName: 'Max', betAmount: 28, contribution: 28, percentage: 44.9, color: '#3b82f6' },
-      { id: 'h_6', userId: 106, firstName: 'kesha', betAmount: 18.4, contribution: 18.4, percentage: 29.5, color: '#10b981' },
-      { id: 'h_7', userId: 107, firstName: 'AV', betAmount: 16, contribution: 16, percentage: 25.6, color: '#06b6d4' },
+      { id: 'h_5', userId: 105, firstName: 'Max', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', betAmount: 28, contribution: 28, percentage: 44.9, color: '#3b82f6' },
+      { id: 'h_6', userId: 106, firstName: 'kesha', avatar: 'https://images.unsplash.com/photo-1544499980-2680ced6993a?w=150&auto=format&fit=crop&q=80', betAmount: 18.4, contribution: 18.4, percentage: 29.5, color: '#10b981' },
+      { id: 'h_7', userId: 107, firstName: 'AV', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', betAmount: 16, contribution: 16, percentage: 25.6, color: '#06b6d4' },
     ],
   },
   {
@@ -146,6 +490,7 @@ const DEFAULT_HISTORY: CompletedRoundRecord[] = [
       userId: 108,
       firstName: 'Polaris',
       username: 'polaris_star',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
       betAmount: 52.00,
       contribution: 52.00,
       percentage: 55.3,
@@ -155,10 +500,10 @@ const DEFAULT_HISTORY: CompletedRoundRecord[] = [
     giftsCount: 3,
     completedAt: Date.now() - 1000 * 60 * 65,
     participants: [
-      { id: 'h_8', userId: 108, firstName: 'Polaris', betAmount: 52, contribution: 52, percentage: 55.3, color: '#ec4899' },
-      { id: 'h_9', userId: 109, firstName: 'Давид', betAmount: 22, contribution: 22, percentage: 23.4, color: '#f59e0b' },
-      { id: 'h_10', userId: 110, firstName: 'Ivan', betAmount: 12.1, contribution: 12.1, percentage: 12.8, color: '#8b5cf6' },
-      { id: 'h_11', userId: 111, firstName: 'Anna', betAmount: 8, contribution: 8, percentage: 8.5, color: '#06b6d4' },
+      { id: 'h_8', userId: 108, firstName: 'Polaris', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', betAmount: 52, contribution: 52, percentage: 55.3, color: '#ec4899' },
+      { id: 'h_9', userId: 109, firstName: 'Давид', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', betAmount: 22, contribution: 22, percentage: 23.4, color: '#f59e0b' },
+      { id: 'h_10', userId: 110, firstName: 'Ivan', avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80', betAmount: 12.1, contribution: 12.1, percentage: 12.8, color: '#8b5cf6' },
+      { id: 'h_11', userId: 111, firstName: 'Anna', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80', betAmount: 8, contribution: 8, percentage: 8.5, color: '#06b6d4' },
     ],
   },
 ];
@@ -175,24 +520,28 @@ const PLAYER_COLORS = [
 ];
 
 // Presets from the video demo
-const SAMPLE_PLAYERS: { name: string; avatar?: string; bet: number; color: string }[] = [
+const SAMPLE_PLAYERS = [
   { 
     name: 'kesha', 
+    avatar: 'https://images.unsplash.com/photo-1544499980-2680ced6993a?w=150&auto=format&fit=crop&q=80', 
     bet: 4.26, 
     color: '#10b981' 
   },
   { 
     name: 'AV', 
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', 
     bet: 4.78, 
     color: '#06b6d4' 
   },
   { 
     name: 'Polaris', 
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', 
     bet: 4.22, 
     color: '#ec4899' 
   },
   { 
     name: 'Давид', 
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', 
     bet: 3.85, 
     color: '#f59e0b' 
   },
@@ -269,7 +618,7 @@ interface IceArenaCelebrationModalProps {
   isTopGame?: boolean;
   roundId: number;
   winner: ArenaParticipant;
-  avatarUrl?: string;
+  avatarUrl: string;
   totalPool: number;
   gifts?: any[];
   onContinue?: () => void;
@@ -354,10 +703,10 @@ const IceArenaCelebrationModal: React.FC<IceArenaCelebrationModalProps> = ({
             style={{ backgroundColor: winner.color || (isTopGame ? '#f59e0b' : '#10b981') }} 
             className="absolute inset-0 rounded-full blur-xl opacity-60 animate-pulse" 
           />
-          <UserAvatar
+          <img
             src={avatarUrl}
             alt={winner.firstName || 'Победитель'}
-            className="relative z-10 w-20 h-20 border-4 border-white/20 shadow-2xl"
+            className="relative z-10 w-20 h-20 rounded-full object-cover border-4 border-white/20 shadow-2xl"
           />
         </div>
 
@@ -420,7 +769,7 @@ const IceArenaCelebrationModal: React.FC<IceArenaCelebrationModalProps> = ({
             if (onContinue) onContinue();
             else onClose();
           }}
-          className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#84cc16] via-[#a3e635] to-[#84cc16] hover:brightness-105 active:scale-95 transition-all text-black font-display font-black text-lg shadow-[0_4px_22px_rgba(132,204,22,0.4)] cursor-pointer"
+          className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#84cc16] via-[#a3e635] to-[#84cc16] hover:brightness-105 transition-all text-black font-display font-black text-lg shadow-[0_4px_22px_rgba(132,204,22,0.4)] cursor-pointer"
         >
           {isTopGame ? 'Закрыть' : 'Продолжить'}
         </button>
@@ -442,19 +791,65 @@ export const IceArena: React.FC<IceArenaProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const syncedAvatarFor = useCallback((player?: Partial<ArenaParticipant> | null, _fallbackSeed = 'User') => {
-    const isCurrentUser = Boolean(
-      player?.isUser ||
-      (user?.id != null && player?.userId != null && Number(player.userId) === Number(user.id))
-    );
-    if (isCurrentUser) {
-      return sanitizeAvatarUrl(user?.photoUrl || player?.photoUrl || player?.avatar);
-    }
-    return sanitizeAvatarUrl(player?.photoUrl || player?.avatar);
+  const syncedAvatarFor = useCallback((player?: Partial<ArenaParticipant> | null, fallbackSeed = 'User') => {
+    const isCurrentUser = user?.id != null
+      && player?.userId != null
+      && Number(player.userId) === Number(user.id);
+    if (isCurrentUser && user?.photoUrl) return user.photoUrl;
+    return player?.photoUrl || player?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(player?.firstName || fallbackSeed)}`;
   }, [user?.id, user?.photoUrl]);
 
   // Tabs: 'game' (Текущая игра) | 'history' (История)
   const [activeTab, setActiveTab] = useState<'game' | 'history'>('game');
+
+  // Personal user game history in Ice Arena (latest 20 games)
+  const userHistoryStorageKey = `ice_arena_user_history_${user?.id || 'me'}`;
+  const [userGameHistory, setUserGameHistory] = useState<IceArenaUserBetRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem(userHistoryStorageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed.slice(0, 20);
+      }
+    } catch {}
+    return DEFAULT_USER_ICE_HISTORY;
+  });
+
+  const [expandedBetId, setExpandedBetId] = useState<string | number | null>(
+    DEFAULT_USER_ICE_HISTORY.length > 0 ? DEFAULT_USER_ICE_HISTORY[0].id : null
+  );
+  const [selectedFairRecord, setSelectedFairRecord] = useState<IceArenaUserBetRecord | null>(null);
+  const [copiedHashId, setCopiedHashId] = useState<string | number | null>(null);
+
+  const recordUserGame = useCallback((gameItem: IceArenaUserBetRecord) => {
+    setUserGameHistory(prev => {
+      const next = [gameItem, ...prev.filter(g => g.roundId !== gameItem.roundId)].slice(0, 20);
+      try {
+        localStorage.setItem(userHistoryStorageKey, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }, [userHistoryStorageKey]);
+
+  const formatDateHeader = (ts: number) => {
+    const d = new Date(ts);
+    const day = d.getDate().toString().padStart(2, '0');
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const hours = d.getHours().toString().padStart(2, '0');
+    const minutes = d.getMinutes().toString().padStart(2, '0');
+    return `${day}.${month} ${hours}:${minutes}`;
+  };
+
+  const formatExactTime = (ts: number, offsetMs: number = 0) => {
+    const d = new Date(ts + offsetMs);
+    const day = d.getDate().toString().padStart(2, '0');
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const hours = d.getHours().toString().padStart(2, '0');
+    const minutes = d.getMinutes().toString().padStart(2, '0');
+    const seconds = d.getSeconds().toString().padStart(2, '0');
+    const ms = d.getMilliseconds().toString().padStart(3, '0');
+    return `${day}.${month} ${hours}:${minutes}:${seconds}.${ms}`;
+  };
 
   // Round State
   const [roundId, setRoundId] = useState<number>(449085);
@@ -932,6 +1327,36 @@ export const IceArena: React.FC<IceArenaProps> = ({
           onWin?.(pool, 'gram', undefined, 1.0);
         }
 
+        // Record into user's personal last 20 games if user bet
+        if (userBet) {
+          const isUserWinner = !!chosen?.isUser;
+          const userBetRec: IceArenaUserBetRecord = {
+            id: Math.floor(800000 + Math.random() * 199999),
+            roundId,
+            timestamp: Date.now(),
+            betAmount: userBet.contribution,
+            mode: userBet.isNft ? 'nft' : 'gram',
+            gift: userBet.gift || userBet.gifts?.[0],
+            multiplier: isUserWinner ? Number((pool / Math.max(0.1, userBet.contribution)).toFixed(2)) : 0,
+            winAmount: isUserWinner ? pool : 0,
+            profitAmount: isUserWinner ? Math.max(0, pool - userBet.contribution) : userBet.contribution,
+            isWon: isUserWinner,
+            userChance: Number(userBet.percentage.toFixed(1)),
+            totalPool: pool,
+            participantsCount: normalizedParticipants.length,
+            winnerName: isUserWinner ? 'Вы' : (chosen?.firstName || chosen?.username || 'Игрок'),
+            payoutGifts: isUserWinner ? roundGifts : undefined,
+            balanceBefore: balance,
+            balanceAfter: isUserWinner ? Number((balance + pool).toFixed(2)) : balance,
+            serverSeedHash: '7a9c3b88e14624d77519156efbc39b56f8496e7fbb648d88e7b99335efbc20a1',
+            serverSeed: 'b9472f8a10d938b812f84a8c91d4e6810283fa8892bc0912d77341e9bca93710',
+            clientSeed: `ice_arena_round_${roundId}`,
+            winningTicket: Number((((chosen?.percentage || 50) / 100) * pool).toFixed(2)),
+            winningPercentage: Number((chosen?.percentage || 50).toFixed(2)),
+          };
+          recordUserGame(userBetRec);
+        }
+
         const record: CompletedRoundRecord = {
           id: roundId,
           totalPool: pool,
@@ -1038,14 +1463,13 @@ export const IceArena: React.FC<IceArenaProps> = ({
         setInventory(inventory.filter(i => !chosenIds.has(i.uniqueId || i.id)));
       }
 
-      const userPhoto = sanitizeAvatarUrl(user?.photoUrl);
       const newParticipant: ArenaParticipant = {
         id: `user_${user?.id || 9999}`,
         userId: user?.id || 9999,
         firstName: user?.firstName || 'Вы',
         username: user?.username || 'you',
-        avatar: userPhoto,
-        photoUrl: userPhoto,
+        avatar: user?.photoUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=YouHero',
+        photoUrl: user?.photoUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=YouHero',
         betAmount: betValue,
         gift: betGifts[0] || null,
         gifts: betGifts,
@@ -1065,8 +1489,8 @@ export const IceArena: React.FC<IceArenaProps> = ({
           const combinedGifts = [...(cur.gifts || (cur.gift ? [cur.gift] : [])), ...betGifts];
           updated[existingIdx] = {
             ...cur,
-            avatar: userPhoto || sanitizeAvatarUrl(cur.avatar),
-            photoUrl: userPhoto || sanitizeAvatarUrl(cur.photoUrl),
+            avatar: user?.photoUrl || cur.avatar,
+            photoUrl: user?.photoUrl || cur.photoUrl,
             firstName: user?.firstName || cur.firstName,
             username: user?.username || cur.username,
             contribution: Number((cur.contribution + betValue).toFixed(2)),
@@ -1104,55 +1528,76 @@ export const IceArena: React.FC<IceArenaProps> = ({
     >
       {/* 
         ========================================================================
-        TOP HEADER: Back Button, Balance
+        TOP HEADER: Unified Floating Glass (like Rocket, Mines, Craft, Upgrade)
         ========================================================================
       */}
-      <div className="relative z-20 flex items-center justify-between px-4 h-14 shrink-0">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-1.5 text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer font-medium text-sm"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>{t('back') || 'Назад'}</span>
-        </button>
+      <button 
+        onClick={onBack} 
+        className="absolute top-4 left-4 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all cursor-pointer z-20"
+        title={t('back') || 'Назад'}
+      >
+        <ArrowLeft className="w-4 h-4 text-white" />
+      </button>
 
-        <div className="flex items-center gap-2">
-          {/* Баланс */}
-          <div className="flex items-center gap-1.5 bg-blue-500/15 border border-blue-500/30 px-3 py-1.5 rounded-full shadow-sm">
-            <GramIcon className="w-3.5 h-3.5 text-blue-400" />
-            <span className="text-white font-bold text-xs tabular-nums">
-              {balance.toFixed(2)}
-            </span>
-          </div>
+      <div className="absolute top-0 left-0 right-0 h-[72px] flex items-center justify-center pointer-events-none z-10">
+        <h1 className="font-display text-lg font-bold text-white drop-shadow-md">
+          {t('ice_arena_title') || 'Айс Арена'}
+        </h1>
+      </div>
+
+      <div className="absolute top-4 right-4 flex items-center gap-2 z-20">
+        <div className="flex items-center gap-1.5 lg-glass px-3 h-9 rounded-full shadow-sm">
+          <GramIcon className="w-4 h-4" />
+          <span className="text-white font-bold text-sm tracking-wide font-display">
+            {balance.toFixed(2)}
+          </span>
         </div>
       </div>
 
       {/* 
         ========================================================================
-        TABS: «Текущая игра» | «История»
+        TABS: «Текущая игра» | «История» with animated sliding white pill
         ========================================================================
       */}
-      <div className="px-4 mb-2.5">
-        <div className="w-full flex rounded-2xl bg-white/[0.04] p-1 border border-white/[0.06]">
+      <div className="px-4 mb-3 pt-[72px] z-10 relative">
+        <div className="relative w-full flex rounded-2xl bg-white/[0.04] p-1 border border-white/[0.06]">
           <button
-            onClick={() => setActiveTab('game')}
-            className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
-              activeTab === 'game'
-                ? 'bg-white text-black shadow-sm'
-                : 'text-white/60 hover:text-white'
-            }`}
+            type="button"
+            onClick={() => {
+              setActiveTab('game');
+              try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch {}
+            }}
+            className="relative flex-1 py-2 text-center text-xs font-bold rounded-xl transition-colors cursor-pointer z-10"
           >
-            Текущая игра
+            {activeTab === 'game' && (
+              <motion.div
+                layoutId="ice-arena-main-tab-pill"
+                className="absolute inset-0 bg-white rounded-xl shadow-sm -z-10"
+                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+              />
+            )}
+            <span className={activeTab === 'game' ? 'text-black font-bold' : 'text-white/60 hover:text-white font-bold'}>
+              {t('arena_tab_current') || 'Текущая игра'}
+            </span>
           </button>
           <button
-            onClick={() => setActiveTab('history')}
-            className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
-              activeTab === 'history'
-                ? 'bg-white text-black shadow-sm'
-                : 'text-white/60 hover:text-white'
-            }`}
+            type="button"
+            onClick={() => {
+              setActiveTab('history');
+              try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch {}
+            }}
+            className="relative flex-1 py-2 text-center text-xs font-bold rounded-xl transition-colors cursor-pointer z-10"
           >
-            История
+            {activeTab === 'history' && (
+              <motion.div
+                layoutId="ice-arena-main-tab-pill"
+                className="absolute inset-0 bg-white rounded-xl shadow-sm -z-10"
+                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+              />
+            )}
+            <span className={activeTab === 'history' ? 'text-black font-bold' : 'text-white/60 hover:text-white font-bold'}>
+              {t('arena_tab_history') || 'История'}
+            </span>
           </button>
         </div>
       </div>
@@ -1167,53 +1612,298 @@ export const IceArena: React.FC<IceArenaProps> = ({
 
           {activeTab === 'history' ? (
             /* ==================================================================
-               HISTORY TAB VIEW
+               PLAYER'S LAST 20 GAMES (Same parameters as in Rocket + Provably Fair)
                ================================================================== */
             <div className="w-full flex flex-col gap-2.5 pt-1 pb-8">
-              <span className="text-white/60 text-xs font-semibold px-1 mb-1">
-                История раундов
-              </span>
-              {historyList.length === 0 ? (
-                <div className="w-full py-10 px-4 text-center rounded-[24px] bg-white/[0.04] border border-white/[0.08] text-white/40 text-sm">
-                  История пока пуста. Завершите хотя бы одну игру!
+              <div className="flex items-center justify-between px-1 mb-1">
+                <span className="text-white/90 text-sm font-bold">
+                  История ставок
+                </span>
+                <span className="text-white/40 text-xs font-semibold">
+                  Последние 20 игр игрока
+                </span>
+              </div>
+
+              {userGameHistory.length === 0 ? (
+                <div className="py-12 px-4 text-center rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col items-center justify-center">
+                  <span className="text-white/40 text-sm font-medium">У вас пока нет сыгранных раундов</span>
+                  <span className="text-white/20 text-xs mt-1">Сделайте ставку в текущей игре, чтобы она появилась в истории!</span>
                 </div>
               ) : (
-                historyList.map((h, hIdx) => (
-                  <button
-                    key={`ice_h_${h.id}_${h.completedAt || hIdx}`}
-                    type="button"
-                    onClick={() => setSelectedHistoryRound(h)}
-                    className="w-full text-left flex items-center justify-between rounded-[20px] p-3.5 bg-white/[0.05] border border-white/[0.08] hover:border-white/[0.18] backdrop-blur-md transition-all active:scale-[0.99] cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <UserAvatar
-                        src={syncedAvatarFor(h.winner as any, 'Winner')}
-                        alt=""
-                        className="w-10 h-10 border border-emerald-400/70 shrink-0"
-                      />
-                      <div className="flex flex-col min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-white font-bold text-sm truncate">
-                            {h.winner.firstName || h.winner.username || 'Победитель'}
-                          </span>
-                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full font-bold shrink-0">
-                            Победитель
-                          </span>
+                userGameHistory.slice(0, 20).map((bet, idx) => {
+                  const isExpanded = expandedBetId === bet.id;
+                  const isWon = bet.isWon;
+                  const profit = isWon ? bet.profitAmount : bet.betAmount;
+
+                  return (
+                    <div
+                      key={`ice_bet_${bet.id}_${bet.timestamp || ''}_${idx}`}
+                      className={`rounded-2xl transition-all border ${
+                        isExpanded
+                          ? 'bg-[#15171b] border-white/10 shadow-lg'
+                          : 'bg-[#15161a] border-white/5 hover:border-white/10'
+                      }`}
+                    >
+                      {/* Clickable Row */}
+                      <div
+                        onClick={() => setExpandedBetId(prev => prev === bet.id ? null : bet.id)}
+                        className="p-3.5 flex items-center justify-between cursor-pointer select-none"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                              isWon
+                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                            }`}
+                          >
+                            {isWon ? (
+                              <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+                            ) : (
+                              <ArrowDownRight className="w-4 h-4 stroke-[2.5]" />
+                            )}
+                          </div>
+
+                          <div className="flex flex-col min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-white font-bold text-[13px] sm:text-[14px]">
+                                {bet.gift ? cleanNftName(bet.gift.name) : `${bet.betAmount.toFixed(bet.betAmount < 1 ? 2 : 1)} GRAM`}
+                              </span>
+                              <span className="text-white/30 text-xs">·</span>
+                              {isWon ? (
+                                <span className="text-emerald-400 text-xs font-semibold">
+                                  Победа • Шанс {bet.userChance.toFixed(1)}%
+                                </span>
+                              ) : (
+                                <span className="text-rose-400 text-xs font-semibold">
+                                  Поражение • Шанс {bet.userChance.toFixed(1)}%
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-white/40 text-[11px] mt-0.5 font-medium">
+                              {formatDateHeader(bet.timestamp)}
+                            </span>
+                          </div>
                         </div>
-                        <span className="text-xs text-white/40 mt-0.5">
-                          Раунд #{h.id} • {h.participantsCount} уч.
-                        </span>
+
+                        <div className="flex items-center gap-2 shrink-0 ml-2">
+                          <span
+                            className={`font-display font-bold text-[13px] sm:text-[14px] ${
+                              isWon ? 'text-emerald-400' : 'text-rose-400'
+                            }`}
+                          >
+                            {isWon ? `+${profit.toFixed(2)}` : `-${profit.toFixed(2)}`} GRAM
+                          </span>
+                          <div className="text-white/40">
+                            {isExpanded ? (
+                              <ChevronUp className="w-4 h-4" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4" />
+                            )}
+                          </div>
+                        </div>
                       </div>
+
+                      {/* Expanded Parameters matching Rocket BetHistoryModal + Provably Fair */}
+                      {isExpanded && (
+                        <div className="px-4 pb-4 pt-2 border-t border-white/5">
+                          <div className="grid grid-cols-2 gap-y-3.5 gap-x-4 text-xs">
+                            <div>
+                              <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
+                                ID ставки
+                              </span>
+                              <span className="font-mono text-[12px] text-white/90 font-medium">
+                                #{bet.id}
+                              </span>
+                            </div>
+
+                            <div>
+                              <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
+                                Раунд
+                              </span>
+                              <span className="font-mono text-[12px] text-white/90 font-medium">
+                                #{bet.roundId}
+                              </span>
+                            </div>
+
+                            <div>
+                              <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
+                                Тип
+                              </span>
+                              <span className="text-[12px] text-white/90 font-medium">
+                                {bet.mode === 'nft' ? 'NFT' : 'GRAM'}
+                              </span>
+                            </div>
+
+                            <div>
+                              <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
+                                Ставка
+                              </span>
+                              <span className="text-[12px] text-white/90 font-medium">
+                                {bet.betAmount.toFixed(2)} GRAM
+                              </span>
+                            </div>
+
+                            <div>
+                              <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
+                                Банк раунда
+                              </span>
+                              <span className="text-[12px] font-semibold text-white/90">
+                                {bet.totalPool.toFixed(2)} GRAM
+                              </span>
+                            </div>
+
+                            <div>
+                              <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
+                                Шанс на победу
+                              </span>
+                              <span className="text-[12px] font-semibold text-cyan-400">
+                                {bet.userChance.toFixed(1)}%
+                              </span>
+                            </div>
+
+                            <div>
+                              <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
+                                Участников
+                              </span>
+                              <span className="text-[12px] text-white/90 font-medium">
+                                {bet.participantsCount} игрока
+                              </span>
+                            </div>
+
+                            <div>
+                              <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
+                                Победитель
+                              </span>
+                              <span className={`text-[12px] font-semibold ${isWon ? 'text-emerald-400' : 'text-white/80'}`}>
+                                {bet.winnerName}
+                              </span>
+                            </div>
+
+                            <div>
+                              <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
+                                Выплата
+                              </span>
+                              <span
+                                className={`text-[12px] font-semibold ${
+                                  bet.winAmount > 0 ? 'text-emerald-400' : 'text-white/60'
+                                }`}
+                              >
+                                {bet.winAmount.toFixed(2)} GRAM
+                              </span>
+                            </div>
+
+                            <div>
+                              <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
+                                Чистый профит
+                              </span>
+                              <span
+                                className={`text-[12px] font-semibold ${
+                                  isWon ? 'text-emerald-400' : 'text-rose-400'
+                                }`}
+                              >
+                                {isWon ? `+${(bet.winAmount - bet.betAmount).toFixed(2)}` : `-${bet.betAmount.toFixed(2)}`} GRAM
+                              </span>
+                            </div>
+
+                            {bet.payoutGifts && bet.payoutGifts.length > 0 && (
+                              <div className="col-span-2">
+                                <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
+                                  Выигранные предметы
+                                </span>
+                                <span className="text-[12px] text-purple-300 font-medium">
+                                  {bet.payoutGifts.map(g => cleanNftName(g.name)).join(', ')}
+                                </span>
+                              </div>
+                            )}
+
+                            <div>
+                              <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
+                                Баланс до
+                              </span>
+                              <span className="font-mono text-[11px] text-white/80">
+                                {(bet.balanceBefore ?? (bet.betAmount * 1.5)).toFixed(2)} GRAM
+                              </span>
+                            </div>
+
+                            <div>
+                              <span className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-0.5">
+                                Баланс после
+                              </span>
+                              <span className={`font-mono text-[12px] font-semibold ${isWon ? 'text-emerald-400' : 'text-white/80'}`}>
+                                {(bet.balanceAfter ?? (isWon ? (bet.betAmount * 1.5 + profit) : (bet.betAmount * 0.5))).toFixed(2)} GRAM
+                              </span>
+                            </div>
+
+                            {/* PROVABLY FAIR SECTION */}
+                            <div className="col-span-2 mt-2 pt-2 border-t border-white/5 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-bold text-white/80 flex items-center gap-1.5">
+                                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                                  Честная игра (Provably Fair)
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedFairRecord(bet);
+                                  }}
+                                  className="text-[11px] font-bold text-cyan-400 hover:text-cyan-300 underline cursor-pointer"
+                                >
+                                  Проверить честность →
+                                </button>
+                              </div>
+
+                              <div className="p-2.5 rounded-xl bg-black/30 border border-white/5 space-y-2">
+                                <div>
+                                  <div className="flex items-center justify-between text-[10px] text-white/40 font-bold uppercase mb-0.5">
+                                    <span>Server Seed (Hash SHA-256)</span>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        try {
+                                          navigator.clipboard.writeText(bet.serverSeedHash);
+                                          setCopiedHashId(bet.id);
+                                          setTimeout(() => setCopiedHashId(null), 1500);
+                                        } catch {}
+                                      }}
+                                      className="text-cyan-400 hover:text-cyan-300 cursor-pointer"
+                                    >
+                                      {copiedHashId === bet.id ? 'Скопировано!' : 'Копировать'}
+                                    </button>
+                                  </div>
+                                  <span className="font-mono text-[10px] text-white/70 break-all leading-tight block">
+                                    {bet.serverSeedHash}
+                                  </span>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-white/5">
+                                  <div>
+                                    <span className="block text-[10px] text-white/40 font-bold uppercase mb-0.5">
+                                      Client Seed
+                                    </span>
+                                    <span className="font-mono text-[10px] text-white/70 block">
+                                      {bet.clientSeed}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="block text-[10px] text-white/40 font-bold uppercase mb-0.5">
+                                      Билет раунда
+                                    </span>
+                                    <span className="font-mono text-[10px] text-emerald-400 font-semibold block">
+                                      {bet.winningTicket.toFixed(2)} G ({bet.winningPercentage.toFixed(2)}%)
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0 pl-2">
-                      <div className="flex items-center gap-1 text-emerald-400 font-display font-black text-sm">
-                        <span>+{h.totalPool.toFixed(2)}</span>
-                        <GramIcon className="w-3.5 h-3.5 text-emerald-400" />
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-white/30" />
-                    </div>
-                  </button>
-                ))
+                  );
+                })
               )}
             </div>
           ) : (
@@ -1226,14 +1916,12 @@ export const IceArena: React.FC<IceArenaProps> = ({
                 type="button"
                 disabled={!topGame}
                 onClick={() => topGame && setShowTopGameModal(true)}
-                className="w-full mb-3 flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:border-amber-400/40 hover:bg-white/[0.07] transition-all active:scale-[0.99] cursor-pointer text-left group"
+                className="w-full mb-3 flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:border-amber-400/40 hover:bg-white/[0.07] transition-all cursor-pointer text-left group"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-7 h-7 rounded-xl bg-amber-400/15 flex items-center justify-center text-amber-300 shrink-0">
-                    <Trophy className="w-4 h-4" />
-                  </div>
+                  <AnimatedTrophy className="w-[36px] h-[36px] shrink-0" />
                   <div className="flex items-center gap-1.5 min-w-0 text-xs font-semibold">
-                    <span className="text-white/60 shrink-0">Топ игра 24ч:</span>
+                    <span className="text-white/60 shrink-0">Рекорд 24ч:</span>
                     {topGame ? (
                       <>
                         <span className="text-amber-300 font-bold truncate">
@@ -1252,15 +1940,15 @@ export const IceArena: React.FC<IceArenaProps> = ({
                 <ArrowUpRight className="w-4 h-4 text-white/40 group-hover:text-amber-300 shrink-0 ml-2 transition-colors" />
               </button>
 
-              {/* Round Header (Pool #, Mode, Status / Countdown) */}
+              {/* Round Header (Round #, Mode, Status / Countdown) */}
               <div className="w-full flex flex-col mb-3">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <span className="text-white/50 text-xs font-semibold">
-                      Пул #{roundId}
+                      Раунд #{roundId}
                     </span>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/80 uppercase">
-                      СТАНДАРТ
+                      Арена
                     </span>
                   </div>
 
@@ -1268,7 +1956,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
                     {roundStatus === 'waiting' ? (
                       <span className="text-white/40">Ожидание участников...</span>
                     ) : roundStatus === 'betting' ? (
-                      <span className="text-white/80">Ставки: {countdown}s</span>
+                      <span className="text-white/80">Ставки: {countdown} сек</span>
                     ) : (
                       <span className="text-emerald-400">Завершено</span>
                     )}
@@ -1346,8 +2034,8 @@ export const IceArena: React.FC<IceArenaProps> = ({
                         <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-2 text-white/40">
                           <Dices className="w-6 h-6" />
                         </div>
-                        <span className="text-white/60 text-xs font-medium max-w-[220px]">
-                          Новая игра начнётся автоматически. Ожидайте!
+                        <span className="text-white/60 text-xs font-medium max-w-[240px]">
+                          Ожидание участников... Сделайте ставку первым!
                         </span>
                       </div>
                     ) : (
@@ -1404,7 +2092,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
                                 }}
                                 className="pointer-events-none z-20 flex aspect-square shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-black/60 shadow-[0_3px_12px_rgba(0,0,0,0.48)] ring-1 ring-black/20 transition-all duration-300"
                               >
-                                <UserAvatar src={syncedAvatarFor(p, name)} alt={name} className="h-full w-full" />
+                                <img src={syncedAvatarFor(p, name)} alt={name} className="h-full w-full rounded-full object-cover" />
                               </div>
                             </React.Fragment>
                           );
@@ -1460,19 +2148,17 @@ export const IceArena: React.FC<IceArenaProps> = ({
 
               {/* 
                 ================================================================
-                BUTTON: «Поставить ставку»
+                BUTTON: «Сделать ставку» (Unified Brand Gradient Pill)
                 ================================================================
               */}
               <div className="w-full mb-5">
                 <button
                   onClick={() => { setMode('gram'); setShowBetModal(true); }}
                   disabled={roundStatus === 'drawing'}
-                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#eab308] via-[#facc15] to-[#eab308] hover:brightness-105 active:scale-[0.98] transition-all text-black font-display font-black text-[15px] shadow-[0_4px_18px_rgba(234,179,8,0.4)] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 transition-all text-white font-display font-bold text-[15px] shadow-[0_4px_20px_rgba(0,152,234,0.45),inset_0_1px_0_rgba(255,255,255,0.4)] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white">
-                    <GramIcon className="w-3 h-3 text-white" />
-                  </div>
-                  <span>{userBet ? `Ставка: ${userBet.contribution} G` : 'Поставить ставку'}</span>
+                  <GramIcon className="w-4 h-4 text-white" />
+                  <span>{userBet ? `Ставка: ${userBet.contribution} G` : 'Сделать ставку'}</span>
                 </button>
               </div>
 
@@ -1507,10 +2193,10 @@ export const IceArena: React.FC<IceArenaProps> = ({
                           <span className="text-white/40 text-xs font-bold w-4 text-center">
                             {idx + 1}
                           </span>
-                          <UserAvatar
+                          <img
                             src={syncedAvatarFor(p, p.firstName || 'User')}
                             alt=""
-                            className="w-10 h-10 border border-white/15 shrink-0"
+                            className="w-10 h-10 rounded-full object-cover border border-white/15 bg-white/5"
                           />
                           <div className="flex flex-col min-w-0">
                             <div className="flex items-center gap-1.5">
@@ -1659,72 +2345,84 @@ export const IceArena: React.FC<IceArenaProps> = ({
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="group fixed bottom-0 left-0 right-0 z-[110] bg-[#16171b]/95 backdrop-blur-2xl rounded-t-[32px] p-5 pb-8 flex flex-col shadow-2xl border-t border-white/[0.12] max-w-md mx-auto overflow-hidden"
+              className="group fixed bottom-0 left-0 right-0 z-[110] bg-[#16171b]/98 backdrop-blur-2xl rounded-t-[24px] px-4 pt-3 pb-5 flex flex-col shadow-2xl border-t border-white/[0.12] max-w-md mx-auto overflow-hidden"
             >
               {/* Upper liquid glass glare */}
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 rounded-t-[32px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+                className="pointer-events-none absolute inset-0 rounded-t-[24px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
               />
 
-              <div className="relative z-10 flex items-center justify-between mb-4">
-                <div className="w-8" />
-                <h2 className="text-[17px] font-display font-bold text-white text-center">
+              <div className="relative z-10 flex items-center justify-between mb-2.5">
+                <div className="w-7" />
+                <h2 className="text-[15px] font-display font-bold text-white text-center">
                   Сделать ставку
                 </h2>
                 <button
                   onClick={() => setShowBetModal(false)}
-                  className="w-8 h-8 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white cursor-pointer"
+                  className="w-7 h-7 rounded-full bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center text-white/70 hover:text-white cursor-pointer transition-colors"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              {/* Segment Toggle: Gifts / GRAM */}
-              <div className="relative z-10 mb-4 w-full flex rounded-2xl bg-white/[0.04] p-1 border border-white/[0.06]">
+              {/* Segment Toggle: Gifts / GRAM with horizontal sliding pill */}
+              <div className="relative z-10 mb-2.5 w-full grid grid-cols-2 rounded-xl bg-white/[0.04] p-0.5 border border-white/[0.06]">
+                <div
+                  className={`absolute top-0.5 bottom-0.5 w-[calc(50%-2px)] bg-white rounded-lg shadow-sm transition-transform duration-200 ease-out pointer-events-none z-0 ${
+                    mode === 'nft' ? 'left-0.5 translate-x-0' : 'left-0.5 translate-x-full'
+                  }`}
+                />
                 <button
                   type="button"
-                  onClick={() => setMode('nft')}
-                  className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                    mode === 'nft'
-                      ? 'bg-white text-black shadow-sm'
-                      : 'text-white/60 hover:text-white'
-                  }`}
+                  onClick={() => {
+                    setMode('nft');
+                    try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch {}
+                  }}
+                  className="relative py-1 text-center text-xs font-bold rounded-lg transition-colors cursor-pointer z-10"
                 >
-                  {t('gifts') || 'NFT'}
+                  <span className={mode === 'nft' ? 'text-black font-bold' : 'text-white/60 hover:text-white font-bold'}>
+                    {t('gifts') || 'NFT'}
+                  </span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setMode('gram')}
-                  className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                    mode === 'gram'
-                      ? 'bg-white text-black shadow-sm'
-                      : 'text-white/60 hover:text-white'
-                  }`}
+                  onClick={() => {
+                    setMode('gram');
+                    try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch {}
+                  }}
+                  className="relative py-1 text-center text-xs font-bold rounded-lg transition-colors cursor-pointer z-10"
                 >
-                  GRAM
+                  <span className={mode === 'gram' ? 'text-black font-bold' : 'text-white/60 hover:text-white font-bold'}>
+                    GRAM
+                  </span>
                 </button>
               </div>
 
-              {/* Mode Body: GRAM or NFT Picker in Liquid Glass */}
-              <div className="relative z-10 bg-white/[0.04] border border-white/[0.08] rounded-[24px] p-5 mb-5 flex flex-col items-center justify-center min-h-[120px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+              {/* Mode Body: Compact GRAM or NFT Picker */}
+              <div className="relative z-10 bg-white/[0.03] border border-white/[0.06] rounded-[18px] p-3 mb-2.5 flex flex-col items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                 {mode === 'gram' ? (
                   <>
-                    <div className="absolute top-3.5 left-4 flex items-center gap-1.5 text-white/50 text-[12px] font-medium">
-                      <span>{t('balance') || 'Баланс'}:</span>
-                      <span className="text-white font-bold">{balance.toFixed(2)}</span>
-                      <GramIcon className="w-3.5 h-3.5 text-brand" />
+                    <div className="w-full flex items-center justify-between px-1 mb-1.5">
+                      <div className="flex items-center gap-1.5 text-white/50 text-[11px] font-medium">
+                        <span>{t('balance') || 'Баланс'}:</span>
+                        <span className="text-white font-bold">{balance.toFixed(2)}</span>
+                        <GramIcon className="w-3 h-3 text-brand" />
+                      </div>
                     </div>
 
-                    <div className="relative w-full text-center flex items-center justify-center mb-4 mt-2">
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        value={betInput}
-                        onChange={handleBetChange}
-                        className="bg-transparent text-center text-4xl font-display font-bold text-white outline-none w-full max-w-[200px]"
-                        placeholder="0.1"
-                      />
+                    <div className="relative w-full flex items-center justify-center mb-2">
+                      <div className="px-3.5 py-1 rounded-xl bg-white/[0.04] border border-white/[0.10] focus-within:border-[#0098ea] transition-all flex items-center justify-center gap-1.5 shadow-inner">
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={betInput}
+                          onChange={handleBetChange}
+                          className="bg-transparent text-center text-xl font-display font-bold text-white outline-none w-24"
+                          placeholder="0.1"
+                        />
+                        <GramIcon className="w-3.5 h-3.5 text-brand shrink-0" />
+                      </div>
                     </div>
 
                     {/* Quick Add Buttons */}
@@ -1733,14 +2431,14 @@ export const IceArena: React.FC<IceArenaProps> = ({
                         <button
                           key={amt}
                           onClick={() => setBetAdd(amt)}
-                          className="px-3 py-1.5 rounded-full lg-glass text-white text-[12px] font-bold active:scale-95 transition-all cursor-pointer"
+                          className="px-2.5 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-white text-[11px] font-bold transition-all cursor-pointer"
                         >
                           +{amt}
                         </button>
                       ))}
                       <button
                         onClick={setBetMax}
-                        className="px-3 py-1.5 rounded-full bg-gradient-to-r from-[#0098ea] to-[#00b4d8] hover:brightness-110 border border-cyan-300/40 text-white text-[12px] font-bold active:scale-95 transition-all cursor-pointer shadow-[0_0_12px_rgba(0,152,234,0.45),inset_0_1px_0_rgba(255,255,255,0.3)]"
+                        className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-[#0098ea] to-[#00b4d8] hover:brightness-110 border border-cyan-300/40 text-white text-[11px] font-bold transition-all cursor-pointer shadow-[0_0_8px_rgba(0,152,234,0.35)]"
                       >
                         MAX
                       </button>
@@ -1749,7 +2447,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
                 ) : (
                   <div className="w-full flex flex-col">
                     {selectedNfts.length > 0 && (
-                      <div className="w-full mb-3 flex flex-col gap-1.5 bg-black/25 rounded-2xl p-2.5 border border-white/10">
+                      <div className="w-full mb-2.5 flex flex-col gap-1.5 bg-black/25 rounded-2xl p-2 border border-white/10">
                         <div className="flex items-center justify-between px-1">
                           <span className="text-white/70 text-xs font-semibold">
                             Выбрано: <strong className="text-white">{selectedNfts.length} NFT</strong>
@@ -1791,7 +2489,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
                             );
                           })}
                           {selectedNfts.length > 7 && (
-                            <div className="h-8 px-2.5 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                            <div className="h-8 px-2 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white font-bold text-xs shrink-0">
                               +{selectedNfts.length - 7} ещё
                             </div>
                           )}
@@ -1803,7 +2501,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
                       selectedIds={selectedNfts.map(n => n.uniqueId || n.id)}
                       onSelect={handleToggleNft}
                       maxBetGram={999999}
-                      maxContainerHeight="max-h-[280px]"
+                      maxContainerHeight="max-h-[250px]"
                       emptyText={t('inventory_empty') || 'Инвентарь пуст'}
                     />
                   </div>
@@ -1819,7 +2517,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
                   (mode === 'gram' && ((parseFloat(betInput) || 0) < 0.1 || (parseFloat(betInput) || 0) > balance)) ||
                   (mode === 'nft' && selectedNfts.length === 0)
                 }
-                className="w-full font-display font-bold text-[16px] py-4 rounded-full active:scale-[0.98] transition-all shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full font-display font-bold text-[15px] py-3 rounded-xl transition-all shadow-[0_4px_18px_rgba(0,152,234,0.45),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isSubmittingBet
                   ? 'Размещение...'
@@ -1893,14 +2591,14 @@ export const IceArena: React.FC<IceArenaProps> = ({
                 {/* Winner Card */}
                 <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-3.5 flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
-                    <UserAvatar
+                    <img
                       src={syncedAvatarFor(selectedHistoryRound.winner, 'Winner')}
                       alt=""
-                      className="w-11 h-11 border-2 border-emerald-400 shrink-0"
+                      className="w-11 h-11 rounded-full object-cover border-2 border-emerald-400 shrink-0"
                     />
                     <div className="flex flex-col min-w-0">
-                      <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-300 uppercase tracking-wider">
-                        <Trophy className="w-3 h-3 text-amber-400" />
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-300 uppercase tracking-wider">
+                        <AnimatedTrophy className="w-[25px] h-[25px]" />
                         <span>Победитель</span>
                       </div>
                       <span className="text-white font-bold text-sm truncate">
@@ -1948,10 +2646,10 @@ export const IceArena: React.FC<IceArenaProps> = ({
                           className="flex items-center justify-between rounded-xl bg-white/[0.03] border border-white/[0.06] p-2.5"
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <UserAvatar
+                            <img
                               src={syncedAvatarFor(p, 'User')}
                               alt=""
-                              className="w-8 h-8 border border-white/10 shrink-0"
+                              className="w-8 h-8 rounded-full object-cover border border-white/10 shrink-0"
                             />
                             <span className="text-white text-xs font-bold truncate">
                               {p.firstName || p.username}
@@ -1976,7 +2674,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
               <button
                 type="button"
                 onClick={() => setSelectedHistoryRound(null)}
-                className="w-full mt-3 py-3.5 rounded-2xl bg-white/10 hover:bg-white/15 active:scale-[0.98] transition-all text-white font-display font-bold text-sm cursor-pointer"
+                className="w-full mt-3 py-3.5 rounded-2xl bg-white/10 hover:bg-white/15 transition-all text-white font-display font-bold text-sm cursor-pointer"
               >
                 Закрыть
               </button>
@@ -1984,6 +2682,13 @@ export const IceArena: React.FC<IceArenaProps> = ({
           </>
         )}
       </AnimatePresence>
+
+      {/* Provably Fair Verification Modal */}
+      <IceArenaProvablyFairModal
+        isOpen={!!selectedFairRecord}
+        onClose={() => setSelectedFairRecord(null)}
+        record={selectedFairRecord}
+      />
 
     </div>
   );

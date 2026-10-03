@@ -190,21 +190,44 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
     let refundAmount = 0;
 
     if (isWin) {
-      // Craft output restricted to normal random NFTs without background (Default backdrop)
-      const classicGifts = (giftsDb || []).filter(g => getNftBackdrop(g) === 'Default');
-      const validItems = classicGifts.filter(i => (i.floor_price_gram || i.price || 0) <= targetValue);
-      let target;
-      if (validItems.length > 0) {
-        // Pick randomly among the higher-tier items up to targetValue
-        const topTier = validItems.filter(i => (i.floor_price_gram || i.price || 0) >= targetValue * 0.65);
-        const pool = topTier.length > 0 ? topTier : validItems;
-        target = pool[Math.floor(Math.random() * pool.length)];
+      // Find the gifts closest to targetValue across the entire catalog (including Black & Onyx Black)
+      const allAvailableGifts = (giftsDb || [])
+        .map(g => ({
+          ...g,
+          priceVal: Number(g.floor_price_gram || g.price || 0),
+          backdrop: getNftBackdrop(g)
+        }))
+        .filter(g => g.priceVal > 0);
+
+      // 1. Look for gifts within a window [targetValue * 0.70, targetValue * 1.35]
+      const tightWindow = allAvailableGifts.filter(
+        i => i.priceVal >= targetValue * 0.70 && i.priceVal <= targetValue * 1.35
+      );
+
+      let candidatePool: any[] = [];
+      if (tightWindow.length > 0) {
+        // Sort by proximity to targetValue and pick among the top closest items
+        tightWindow.sort((a, b) => Math.abs(a.priceVal - targetValue) - Math.abs(b.priceVal - targetValue));
+        candidatePool = tightWindow.slice(0, Math.min(5, tightWindow.length));
       } else {
-        target = [...classicGifts].sort((a, b) => (a.floor_price_gram || a.price || 0) - (b.floor_price_gram || b.price || 0))[0];
+        // If no items in tight window (e.g. large price jump), sort all gifts by distance to targetValue
+        const sortedByProximity = [...allAvailableGifts].sort(
+          (a, b) => Math.abs(a.priceVal - targetValue) - Math.abs(b.priceVal - targetValue)
+        );
+        candidatePool = sortedByProximity.slice(0, Math.min(3, sortedByProximity.length));
       }
 
-      const itemPrice = Number(target?.floor_price_gram || target?.price || 0);
-      wonItem = { ...target, uniqueId: Date.now().toString(), price: itemPrice, image_url: target.image_url };
+      const target = candidatePool[Math.floor(Math.random() * candidatePool.length)];
+      const itemPrice = Number(target.priceVal || 0);
+
+      wonItem = {
+        ...target,
+        uniqueId: Date.now().toString(),
+        price: itemPrice,
+        image_url: target.image_url,
+        backdrop: target.backdrop
+      };
+
       refundAmount = Math.max(0, Number((targetValue - itemPrice).toFixed(2)));
     }
     
@@ -249,7 +272,7 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
           }
           onBack();
         }} 
-        className="absolute top-4 left-4 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer z-20"
+        className="absolute top-4 left-4 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all cursor-pointer z-20"
       >
         <ArrowLeft className="w-4 h-4 text-white" />
       </button>
@@ -361,7 +384,7 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
         <button
           onClick={handleCraft}
           disabled={!canCraft}
-          className="pointer-events-auto w-full py-4 rounded-full font-display font-bold text-[17px] tracking-wide shadow-[0_4px_24px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+          className="pointer-events-auto w-full py-4 rounded-2xl font-display font-bold text-[17px] tracking-wide primary-button text-white disabled:opacity-40 disabled:cursor-not-allowed transition-transform flex items-center justify-center gap-2 cursor-pointer shadow-lg"
         >
           {spinning ? (
             <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
@@ -388,47 +411,70 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
              >
                <div className="w-full flex justify-center pt-1 relative">
                  <div className="flex flex-col items-center">
-                   <span className="text-[11px] font-bold text-[#3b82f6] uppercase tracking-widest">Random</span>
+                   <span className="text-[11px] font-bold text-[#c7c7cc] uppercase tracking-widest">Random</span>
                    <span className="text-[8px] text-white/20 font-bold tracking-widest uppercase mt-0.5">Platina Gift</span>
                  </div>
                  <button onClick={() => setResult(null)} className="absolute top-0 right-1 p-1 text-white/40 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
                </div>
-               <div className="relative overflow-hidden w-full aspect-square rounded-[20px] flex flex-col items-center p-1 transition-all duration-300">
-                 <div className="flex-1 w-full flex items-center justify-center min-h-0 mb-2">
-                   <PremiumImage 
-                     staticMode={false} 
-                     loopWithDelay={true} 
-                     loopDelayMs={5000} 
-                     src={result.item?.image_url || `/nft/${result.item?.name}.png`} 
-                     alt={result.item?.name} 
-                     className="w-[85%] h-[85%] object-contain drop-shadow-lg" 
-                   />
-                 </div>
-                 <div className="relative z-20 w-full flex flex-col items-center justify-end shrink-0 pb-1.5 px-1">
-                   <span className="text-[12px] text-white/90 w-full text-center font-bold leading-tight line-clamp-2">{result.item?.name}</span>
-                   <span className="text-[13px] font-bold text-white flex items-center justify-center gap-1 mt-0.5">{Number(result.item?.price || 0).toFixed(2)} <GramIcon className="w-3.5 h-3.5" /></span>
-                 </div>
-               </div>
+                {(() => {
+                  const bd = result.item ? getNftBackdrop(result.item) : 'Default';
+                  const isOnyx = bd === 'Onyx Black';
+                  const isBlack = bd === 'Black';
+                  return (
+                    <div className={`relative overflow-hidden w-full aspect-square rounded-[20px] flex flex-col items-center p-1 transition-all duration-300 border ${
+                      isBlack
+                        ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/20'
+                        : isOnyx
+                        ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/20'
+                        : 'bg-white/[0.04] border-white/10'
+                    }`}>
+                      {(isOnyx || isBlack) && (
+                        <span className="absolute top-1.5 left-0 right-0 z-20 text-[9px] font-bold uppercase tracking-widest text-center text-[#c7c7cc]">
+                          {isOnyx ? 'Onyx Black' : 'Black'}
+                        </span>
+                      )}
+                      <div className="flex-1 w-full flex items-center justify-center min-h-0 mb-2">
+                        <PremiumImage 
+                          staticMode={false} 
+                          loopWithDelay={true} 
+                          loopDelayMs={5000} 
+                          src={result.item?.image_url || `/nft/${result.item?.name}.png`} 
+                          alt={result.item?.name} 
+                          className="w-[85%] h-[85%] object-contain drop-shadow-lg" 
+                        />
+                      </div>
+                      <div className="relative z-20 w-full flex flex-col items-center justify-end shrink-0 pb-1.5 px-1">
+                        <span className="text-[12px] text-white/90 w-full text-center font-bold leading-tight line-clamp-2">{result.item?.name}</span>
+                        <span className="text-[13px] font-bold text-white flex items-center justify-center gap-1 mt-0.5">{Number(result.item?.price || 0).toFixed(2)} <GramIcon className="w-3.5 h-3.5" /></span>
+                        {result.refund && result.refund > 0 ? (
+                          <span className="text-[10px] font-semibold text-emerald-400 mt-1 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                            +{result.refund.toFixed(2)} G на баланс
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })()}
                
                <div className="flex flex-col gap-1.5 w-full mt-1">
                  <div className="flex gap-1.5 w-full">
                    <button 
                      onClick={() => { setResult(null); if(onNavigate) onNavigate('upgrade'); }}
-                     className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#22c55e] text-white hover:bg-[#16a34a] shadow-[0_2px_10px_rgba(34,197,94,0.35)] active:scale-95 transition-all cursor-pointer"
+                     className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#22c55e] text-white hover:bg-[#16a34a] shadow-[0_2px_10px_rgba(34,197,94,0.35)] transition-all cursor-pointer"
                    >
                      <TrendingUp className="w-3.5 h-3.5 shrink-0" />
                      <span className="truncate">{t('upgrade')}</span>
                    </button>
                    <button 
                      onClick={() => { setResult(null); if(onNavigate) onNavigate('craft'); }}
-                     className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#dc2626] text-white hover:bg-[#b91c1c] shadow-[0_2px_10px_rgba(220,38,38,0.35)] active:scale-95 transition-all cursor-pointer"
+                     className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#dc2626] text-white hover:bg-[#b91c1c] shadow-[0_2px_10px_rgba(220,38,38,0.35)] transition-all cursor-pointer"
                    >
                      <Shuffle className="w-3.5 h-3.5 shrink-0" />
                      <span className="truncate">{t('craft')}</span>
                    </button>
                    <button 
                      onClick={() => { setResult(null); if(onNavigate) onNavigate('mines'); }}
-                     className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#a855f7] text-white hover:bg-[#9333ea] shadow-[0_2px_10px_rgba(168,85,247,0.35)] active:scale-95 transition-all cursor-pointer"
+                     className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#a855f7] text-white hover:bg-[#9333ea] shadow-[0_2px_10px_rgba(168,85,247,0.35)] transition-all cursor-pointer"
                    >
                      <Bomb className="w-3.5 h-3.5 shrink-0" />
                      <span className="truncate">{t('mines_title')}</span>
@@ -436,7 +482,7 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
                  </div>
                  <button 
                    onClick={() => { setResult(null); if(onNavigate) onNavigate('inventory'); }}
-                   className="w-full py-3 rounded-[12px] text-[12px] font-bold flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#0098ea] to-[#00b4d8] text-white hover:brightness-110 shadow-[0_4px_16px_rgba(0,152,234,0.4)] active:scale-[0.98] transition-all cursor-pointer"
+                   className="w-full py-3 rounded-[12px] text-[12px] font-bold flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#0098ea] to-[#00b4d8] text-white hover:brightness-110 shadow-[0_4px_16px_rgba(0,152,234,0.4)] transition-all cursor-pointer"
                  >
                    {t('my_inventory')}
                  </button>
@@ -454,7 +500,7 @@ export function Craft({ inventory, giftsDb, onBack, setInventory, onWin, onTurno
                      });
                      setResult(null);
                    }}
-                   className="w-full py-3 flex items-center justify-center gap-1.5 rounded-[12px] text-[12px] font-bold lg-glass text-white active:scale-[0.98] transition-all cursor-pointer"
+                   className="w-full py-3 flex items-center justify-center gap-1.5 rounded-[12px] text-[12px] font-bold lg-glass text-white transition-all cursor-pointer"
                  >
                    {t('sell')} {Number(result.item?.price || 0).toFixed(2)} <GramIcon className="w-4 h-4 opacity-80" />
                  </button>

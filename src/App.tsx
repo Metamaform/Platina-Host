@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { springSmooth, springSnappy } from './lib/motion';
+import { springSmooth, springSnappy, pageVariants, itemVariants, containerVariants } from './lib/motion';
 import LiquidGlassNav from './components/ui/LiquidGlassNav';
 import { LiquidSegment } from './components/ui/LiquidSegment';
 import { LiquidDialog } from './components/ui/LiquidDialog';
@@ -9,7 +9,6 @@ import { ShoppingBag, User, Gem, Gift, Wallet, ChevronRight, Activity, CircleDas
 import defaultGiftsDb from './gifts_data.json';
 import { LiveFeed } from './components/LiveFeed';
 import { PremiumImage } from './components/PremiumNftImage';
-import { UserAvatar } from './components/UserAvatar';
 import { GramIcon } from './components/GramIcon';
 import { StarsIcon } from './components/StarsIcon';
 import { BalancePage } from './components/BalancePage';
@@ -19,6 +18,8 @@ import { useTranslation, i18n } from './lib/i18n';
 import { CleanModelLottie } from './components/ModelCleaningAnimation';
 import { Player } from '@lottiefiles/react-lottie-player';
 import { fetchFragmentPrices, fetchFragmentBackdropPrices } from './lib/api';
+import { getNftBackdrop, cleanNftName } from './lib/nftUtils';
+import { AnimatedTrophy } from './components/AnimatedTrophy';
 
 // Route-level code splitting: heavy game / panel screens load on demand so the
 // initial bundle stays small and the first paint is fast.
@@ -36,8 +37,12 @@ const Inventory = lazy(() => import('./components/Inventory').then((m) => ({ def
 const WelcomeScreen = lazy(() => import('./components/WelcomeScreen').then((m) => ({ default: m.WelcomeScreen })));
 
 const LazyFallback = () => (
-  <div className="flex items-center justify-center py-16">
-    <div className="w-8 h-8 rounded-full border-2 border-brand border-t-transparent animate-spin" />
+  <div className="w-full py-6 flex flex-col gap-3">
+    <div className="skeleton w-full h-28 rounded-[20px]" />
+    <div className="grid grid-cols-2 gap-3">
+      <div className="skeleton aspect-square rounded-[20px]" />
+      <div className="skeleton aspect-square rounded-[20px]" />
+    </div>
   </div>
 );
 
@@ -154,7 +159,7 @@ function Shop({
         href="https://t.me/Platina_Gift"
         target="_blank"
         rel="noopener noreferrer"
-        className="block w-full rounded-3xl overflow-hidden cursor-pointer transform-gpu active:scale-[0.98] transition-transform isolate bg-transparent relative" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}
+        className="block w-full rounded-3xl overflow-hidden cursor-pointer transform-gpu transition-transform isolate bg-transparent relative" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}
       >
         <img 
           src={getLocalizedImage('subscribe', '/subscribe_nft.webp') || undefined} 
@@ -168,15 +173,16 @@ function Shop({
       {/* Simple Banner Card: Ice Arena */}
       <div 
         onClick={onPlayIceArena}
-        className="w-full h-16 rounded-[22px] relative overflow-hidden cursor-pointer group px-5 mb-4 bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_12px_30px_-12px_rgba(0,0,0,0.6)] active:scale-[0.98] transition-all hover:border-cyan-400/40 flex items-center justify-between"
+        className="premium-card w-full h-16 rounded-[22px] relative overflow-hidden cursor-pointer group px-5 mb-4 flex items-center justify-between"
       >
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-[22px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
-        />
-        <h3 className="font-display text-lg font-bold text-white tracking-wide z-10">
-          Ice Arena
-        </h3>
+        <div className="flex items-center gap-3 z-10">
+          <div className="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+            <Snowflake className="w-5 h-5" />
+          </div>
+          <h3 className="font-display text-lg font-bold text-white tracking-wide">
+            Ice Arena
+          </h3>
+        </div>
         <ChevronRight className="w-5 h-5 text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all z-10" />
       </div>
 
@@ -185,15 +191,10 @@ function Shop({
         {/* Rocket Square Card */}
         <div 
           onClick={onPlayRocketGame}
-          className="aspect-square rounded-[26px] relative overflow-hidden cursor-pointer group flex flex-col justify-between p-4 bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)] active:scale-[0.98] transition-all hover:border-amber-500/40"
+          className="premium-card aspect-square rounded-[24px] relative overflow-hidden cursor-pointer group flex flex-col justify-between p-4 "
         >
-          {/* верхний блик жидкого стекла */}
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 rounded-[26px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
-          />
           {/* Ambient Glow */}
-          <div className="absolute top-0 right-0 w-28 h-28 bg-amber-500/15 rounded-full blur-2xl pointer-events-none group-hover:bg-amber-500/25 transition-all" />
+          <div className="absolute top-0 right-0 w-28 h-28 bg-amber-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-amber-500/20 transition-all" />
 
           {/* Top Badge & Multiplier */}
           <div className="flex items-center justify-between z-10 w-full">
@@ -235,15 +236,10 @@ function Shop({
         {/* Plinko Square Card */}
         <div 
           onClick={onPlayPlinko}
-          className="aspect-square rounded-[26px] relative overflow-hidden cursor-pointer group flex flex-col justify-between p-4 bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)] active:scale-[0.98] transition-all hover:border-violet-500/40"
+          className="premium-card aspect-square rounded-[24px] relative overflow-hidden cursor-pointer group flex flex-col justify-between p-4 "
         >
-          {/* верхний блик жидкого стекла */}
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 rounded-[26px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
-          />
           {/* Ambient Glow */}
-          <div className="absolute top-0 right-0 w-28 h-28 bg-violet-500/15 rounded-full blur-2xl pointer-events-none group-hover:bg-violet-500/25 transition-all" />
+          <div className="absolute top-0 right-0 w-28 h-28 bg-violet-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-violet-500/20 transition-all" />
 
           {/* Top Badge & Multiplier */}
           <div className="flex items-center justify-between z-10 w-full">
@@ -307,10 +303,15 @@ function Shop({
                   if (game.id === 'craft') onPlayCraft();
                   if (game.id === 'mines') onPlayMines();
                   if (game.id === 'new_game') onPlayRocketGame();
-                  }}
-                className="rounded-3xl overflow-hidden cursor-pointer group w-full relative transform-gpu isolate bg-transparent" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}
+                }}
+                className="block w-full rounded-3xl overflow-hidden cursor-pointer transform-gpu transition-transform isolate bg-transparent relative"
+                style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}
               >
-                <img src={game.fullCardImage || undefined} alt={typeof game.name === 'string' ? game.name : ''} className="w-full h-auto group-hover:scale-[1.02] transition-transform duration-300 rounded-3xl" />
+                <img 
+                  src={game.fullCardImage || undefined} 
+                  alt={typeof game.name === 'string' ? game.name : ''} 
+                  className="w-full h-auto group-hover:scale-[1.02] transition-transform duration-300 rounded-3xl" 
+                />
               </div>
             );
           }
@@ -324,7 +325,7 @@ function Shop({
               if (game.id === 'mines') onPlayMines();
               if (game.id === 'new_game') onPlayRocketGame();
               }}
-            className="glass-panel-interactive rounded-2xl p-6 flex flex-col cursor-pointer group"
+            className="premium-card rounded-2xl p-6 flex flex-col cursor-pointer group "
           >
             <div className="flex items-center gap-5">
               <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${game.color} p-[1px] shrink-0 shadow-lg group-hover:scale-105 transition-transform duration-300`}>
@@ -597,7 +598,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
             setShowSettings(true);
             try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch (e) {}
           }} 
-          className="absolute top-0 right-0 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/80 hover:text-white transition-transform active:scale-95 z-20 cursor-pointer"
+          className="absolute top-0 right-0 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/80 hover:text-white transition-transform z-20 cursor-pointer"
         >
           <Settings className="w-5 h-5 text-white" strokeWidth={2.2} />
         </button>
@@ -607,19 +608,21 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               onBack();
               try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch (e) {}
             }} 
-            className="absolute top-0 left-0 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/80 hover:text-white transition-transform active:scale-95 z-20 cursor-pointer"
+            className="absolute top-0 left-0 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/80 hover:text-white transition-transform z-20 cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5 text-white" strokeWidth={2.2} />
           </button>
         )}
         <div className="relative mb-3 mt-1">
           <div className="w-24 h-24 rounded-full bg-gradient-to-br from-brand via-brand/40 to-amber-400 p-[2.5px] shadow-xl shadow-brand/20">
-            <UserAvatar
-              src={photoUrl}
-              alt={firstName}
-              className="w-full h-full"
-              iconClassName="w-10 h-10"
-            />
+            <div className="w-full h-full rounded-full bg-[#15161b] flex items-center justify-center overflow-hidden relative">
+               <div className="absolute inset-0 bg-white/5" />
+               {photoUrl ? (
+                 <img src={photoUrl || undefined} alt={firstName} className="w-full h-full object-cover relative z-10" />
+               ) : (
+                 <User className="w-10 h-10 text-muted relative z-10" />
+               )}
+            </div>
           </div>
           <div className="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-emerald-400 border-3 border-[#121316] shadow-sm" />
         </div>
@@ -630,17 +633,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
       </div>
       
       {/* Turnover & Level Card */}
-      <div className="group relative overflow-hidden bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] p-5 rounded-[26px] shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)]">
-        {/* верхнее бликовое свечение жидкого стекла */}
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-[26px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
-        />
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.08] blur-2xl opacity-70"
-        />
-
+      <div className="premium-card p-5 rounded-[22px]">
         <div className="relative z-10 flex justify-between items-end mb-3">
           <div>
             <div className="text-white/40 text-[11px] mb-1 font-bold uppercase tracking-wider">{t('turnover')}</div>
@@ -654,7 +647,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                 setShowLevelModal(true);
                 try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
               }} 
-              className="text-white text-xs font-bold active:scale-95 transition-all cursor-pointer bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] shadow-[0_3px_12px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] hover:brightness-110 px-3.5 py-1.5 rounded-full"
+              className="text-white text-xs font-bold transition-all cursor-pointer bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] shadow-[0_3px_12px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] hover:brightness-110 px-3.5 py-1.5 rounded-full"
             >
               {t('level')} {currentLevel}
             </button>
@@ -675,24 +668,14 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
       </div>
 
       {/* Promocode Card */}
-      <div className="group relative overflow-hidden bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] rounded-[26px] p-4.5 flex flex-col gap-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)]">
-        {/* верхнее бликовое свечение жидкого стекла */}
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-[26px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
-        />
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.08] blur-2xl opacity-70"
-        />
-
+      <div className="premium-card p-4.5 rounded-[22px] flex flex-col gap-2.5">
         <h3 className="relative z-10 font-display text-sm font-bold text-white tracking-wide">{t('enter_promocode')}</h3>
         <div className="relative z-10 flex gap-2">
           <input 
             value={promoCode} 
             onChange={(e) => setPromoCode(e.target.value.toUpperCase())} 
             placeholder={t('promocode_placeholder')} 
-            className="flex-1 bg-black/50 border border-white/20 focus:border-[#0098ea] focus:ring-2 focus:ring-[#0098ea]/30 rounded-full px-4 py-3 text-sm font-bold text-white placeholder-white/35 uppercase outline-none transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]" 
+            className="input flex-1 px-4 py-2.5 text-sm font-bold text-white placeholder-white/35 uppercase outline-none" 
           />
           <button 
             onClick={() => {
@@ -700,7 +683,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               try { (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch (e) {}
             }} 
             disabled={isActivating || !promoCode.trim()} 
-            className="px-6 py-3 bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white font-bold text-sm rounded-full active:scale-95 transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_18px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] cursor-pointer"
+            className="px-6 py-3 primary-button text-white font-bold text-sm rounded-xl transition-transform disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-md"
           >
             {isActivating ? '...' : t('promo_ok')}
           </button>
@@ -717,16 +700,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
       </div>
 
       {/* Menu Action List */}
-      <div className="group relative overflow-hidden bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] p-2.5 rounded-[26px] flex flex-col space-y-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)]">
-        {/* верхнее бликовое свечение жидкого стекла */}
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-[26px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
-        />
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.08] blur-2xl opacity-70"
-        />
+      <div className="premium-card p-2 rounded-[22px] flex flex-col space-y-1">
         {onGoToInventory && (
           <button 
             onClick={() => {
@@ -758,7 +732,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
           >
             <div className="flex items-center gap-3.5">
               <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full lg-glass text-amber-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
-                <Trophy size={16} strokeWidth={2.4} />
+                <AnimatedTrophy className="w-5 h-5" />
               </span>
               <div className="flex flex-col text-left">
                 <span className="font-semibold text-[14px] text-white leading-tight">{t('nav_leaderboard')}</span>
@@ -842,20 +816,10 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-              className="group relative z-10 w-full max-w-md bg-[#16171b]/95 backdrop-blur-2xl border border-white/[0.12] rounded-t-[32px] sm:rounded-[28px] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_25px_50px_-12px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[85vh] text-white"
+              className="bottom-sheet group relative z-10 w-full max-w-md bg-[#18181b]/95 backdrop-blur-2xl border-t sm:border border-white/[0.08] rounded-t-[26px] sm:rounded-[26px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[85vh] text-white"
             >
-              {/* верхнее бликовое свечение жидкого стекла */}
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 rounded-t-[32px] sm:rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
-              />
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.08] blur-2xl opacity-70"
-              />
-
               {/* Grab Handle */}
-              <div className="relative z-10 w-12 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-1 sm:hidden" />
+              <div className="relative z-10 w-10 h-1.5 bg-white/25 rounded-full mx-auto mt-2 mb-2 sm:hidden" />
 
               <div className="relative z-10 p-5 pb-3 border-b border-white/[0.08] flex items-center justify-between shrink-0">
                  <div>
@@ -864,7 +828,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                  </div>
                  <button 
                    onClick={() => setShowReferrals(false)} 
-                   className="w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white active:scale-95 transition-all cursor-pointer"
+                   className="w-8 h-8 rounded-full bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.08] flex items-center justify-center text-white/70 hover:text-white transition-all cursor-pointer"
                  >
                    <X className="w-4 h-4" strokeWidth={2.5} />
                  </button>
@@ -890,7 +854,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                         try { (window as any).Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch (e) {}
                         setTimeout(() => setIsCopied(false), 2000);
                       }} 
-                      className="px-4 lg-glass active:scale-95 rounded-2xl flex items-center justify-center transition-all text-white cursor-pointer"
+                      className="px-4 lg-glass rounded-2xl flex items-center justify-center transition-all text-white cursor-pointer"
                     >
                       {isCopied ? (
                         <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold">
@@ -905,7 +869,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                   <button 
                     onClick={() => { void handleShareInvite(); }}
                     disabled={isSharingInvite}
-                    className="w-full mt-3 py-3.5 rounded-full bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white font-bold text-sm active:scale-[0.98] transition-all shadow-[0_4px_22px_rgba(0,152,234,0.55),inset_0_1px_0_rgba(255,255,255,0.4)] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-wait"
+                    className="w-full mt-3 py-3.5 rounded-2xl primary-button text-white font-bold text-sm transition-transform flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-wait shadow-lg"
                   >
                     {isSharingInvite ? (
                       <Activity className="w-4 h-4 animate-spin" />
@@ -939,11 +903,13 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                     <div className="flex flex-col gap-2">
                       {referrals.map((r) => (
                         <div key={r.id} className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-3 flex items-center gap-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                          <UserAvatar
-                            src={r.photoUrl}
-                            alt={r.firstName || 'avatar'}
-                            className="w-9 h-9 shrink-0 border border-white/10"
-                          />
+                          <div className="w-9 h-9 rounded-full bg-brand/20 overflow-hidden shrink-0 flex items-center justify-center border border-brand/30 shadow-[0_0_8px_rgba(0,152,234,0.25)]">
+                            {r.photoUrl ? (
+                              <img src={r.photoUrl} alt="avatar" className="w-full h-full object-cover" />
+                            ) : (
+                              <User className="w-4 h-4 text-brand" />
+                            )}
+                          </div>
                           <div className="flex-1 min-w-0">
                             <div className="font-semibold text-xs text-white truncate">{r.firstName} {r.lastName}</div>
                             <div className="text-[11px] text-white/40 truncate">
@@ -983,20 +949,10 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-              className="group relative z-10 w-full max-w-sm bg-[#16171b]/95 backdrop-blur-2xl border border-white/[0.12] rounded-t-[32px] sm:rounded-[28px] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_25px_50px_-12px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[80vh] text-white"
+              className="bottom-sheet group relative z-10 w-full max-w-sm bg-[#18181b]/95 backdrop-blur-2xl border-t sm:border border-white/[0.08] rounded-t-[26px] sm:rounded-[26px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[80vh] text-white"
             >
-              {/* верхнее бликовое свечение жидкого стекла */}
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 rounded-t-[32px] sm:rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
-              />
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.08] blur-2xl opacity-70"
-              />
-
               {/* Grab Handle */}
-              <div className="relative z-10 w-12 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-1 sm:hidden" />
+              <div className="relative z-10 w-10 h-1.5 bg-white/25 rounded-full mx-auto mt-2 mb-2 sm:hidden" />
 
               <div className="relative z-10 p-5 pb-3 border-b border-white/[0.08] flex items-center justify-between shrink-0">
                  <div>
@@ -1005,7 +961,7 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                  </div>
                  <button 
                    onClick={() => setShowHistory(false)} 
-                   className="w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/80 hover:text-white active:scale-95 transition-all cursor-pointer"
+                   className="w-8 h-8 rounded-full bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.08] flex items-center justify-center text-white/70 hover:text-white transition-all cursor-pointer"
                  >
                    <X className="w-4 h-4" strokeWidth={2.5} />
                  </button>
@@ -1064,11 +1020,11 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                   <PremiumImage staticMode src={selectedNft.image_url || `/nft/${selectedNft.name}.png`} alt={selectedNft.name} className="w-full h-full relative z-10 drop-shadow-[0_4px_16px_rgba(0,0,0,0.5)]" />
                 </div>
                 {selectedNft.backdrop === 'Onyx Black' ? (
-                  <span className="relative z-10 text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full bg-gradient-to-r from-neutral-900 to-black text-amber-300 border border-amber-500/40 mb-2 shadow-sm">
+                  <span className="relative z-10 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-[#35393b]/90 text-[#c7c7cc] border border-white/20 mb-2 shadow-sm">
                     Onyx Black
                   </span>
                 ) : selectedNft.backdrop === 'Black' ? (
-                  <span className="relative z-10 text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full bg-zinc-950 text-zinc-200 border border-zinc-700/80 mb-2 shadow-sm">
+                  <span className="relative z-10 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-[#18191b]/95 text-[#c7c7cc] border border-white/15 mb-2 shadow-sm">
                     Black
                   </span>
                 ) : null}
@@ -1081,14 +1037,14 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
                   <button 
                     onClick={() => handleSell({ ...selectedNft, price: currentPrice })}
                     disabled={selectedNft.isWithdrawing}
-                    className="w-full py-3.5 rounded-full bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 disabled:opacity-40 disabled:pointer-events-none text-white font-bold transition-all shadow-[0_4px_20px_rgba(0,152,234,0.55),inset_0_1px_0_rgba(255,255,255,0.4)] active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="w-full py-3.5 rounded-full bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 disabled:opacity-40 disabled:pointer-events-none text-white font-bold transition-all shadow-[0_4px_20px_rgba(0,152,234,0.55),inset_0_1px_0_rgba(255,255,255,0.4)] flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <span>{t('sell_for')} {currentPrice.toFixed(2)}</span>
                     <GramIcon className="w-4 h-4 text-white drop-shadow-md" />
                   </button>
                   <button 
                     onClick={() => handleToggleWithdraw(selectedNft)}
-                    className={`w-full py-3.5 rounded-full font-bold transition-all border active:scale-95 cursor-pointer shadow-md ${
+                    className={`w-full py-3.5 rounded-full font-bold transition-all border cursor-pointer shadow-md ${
                       selectedNft.isWithdrawing 
                         ? 'bg-rose-500/25 border-rose-500/50 text-rose-300 hover:bg-rose-500/35' 
                         : 'lg-glass text-white'
@@ -1117,104 +1073,36 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
         </LiquidDialog>
       )}
 
-      {/* Settings / Language Modal (Liquid Glass Bottom Sheet style, unified with Profile modals) */}
-      <AnimatePresence>
-        {showSettings && (
-          <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowSettings(false)}
-              className="fixed inset-0 bg-black/80 backdrop-blur-md cursor-pointer"
-            />
-            <motion.div
-              initial={{ y: '100%', opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: '100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-              className="group relative z-10 w-full max-w-sm bg-[#16171b]/95 backdrop-blur-2xl border border-white/[0.12] rounded-t-[32px] sm:rounded-[28px] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_25px_50px_-12px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[80vh] text-white"
-            >
-              {/* верхнее бликовое свечение жидкого стекла */}
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 rounded-t-[32px] sm:rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
-              />
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.08] blur-2xl opacity-70"
-              />
-
-              {/* Grab Handle */}
-              <div className="relative z-10 w-12 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-1 sm:hidden" />
-
-              <div className="relative z-10 p-5 pb-3 border-b border-white/[0.08] flex items-center justify-between shrink-0">
-                <div>
-                  <h3 className="font-display text-lg font-bold tracking-tight text-white">{t('settings')}</h3>
-                  <p className="text-white/40 text-xs mt-0.5">{t('settings_desc')}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowSettings(false)}
-                  className="w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white active:scale-95 transition-all cursor-pointer"
-                >
-                  <X className="w-4 h-4" strokeWidth={2.5} />
-                </button>
+      {showSettings && (
+        <LiquidDialog
+          title={t('settings')}
+          subtitle={t('settings_desc')}
+          icon={<Settings className="w-4 h-4" />}
+          onClose={() => setShowSettings(false)}
+          actionLabel={t('got_it')}
+        >
+          <div className="space-y-4 pb-1">
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-white/50 mb-2">
+                {t('language')}
               </div>
-
-              <div className="relative z-10 overflow-y-auto custom-scrollbar p-5 pt-4 space-y-3">
-                <span className="block text-[11px] font-bold text-white/40 uppercase tracking-wider">
-                  {t('language')}
-                </span>
-
-                <div className="flex flex-col gap-2">
-                  {([
-                    { code: 'ru' as const, label: 'Русский', sub: 'RU' },
-                    { code: 'en' as const, label: 'English', sub: 'EN' },
-                    { code: 'zh' as const, label: '中文', sub: 'ZH' },
-                  ]).map((item) => {
-                    const currentLang = lang === 'en' || lang === 'zh' ? lang : 'ru';
-                    const isActive = currentLang === item.code;
-                    return (
-                      <button
-                        key={item.code}
-                        type="button"
-                        onClick={() => {
-                          handleSetLang(item.code);
-                          try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch { /* optional */ }
-                        }}
-                        className={`w-full rounded-2xl p-3.5 flex items-center justify-between border transition-all active:scale-[0.99] cursor-pointer ${
-                          isActive
-                            ? 'bg-white/[0.09] border-white/[0.18] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
-                            : 'bg-white/[0.04] border-white/[0.08] hover:bg-white/[0.06] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full lg-glass text-[11px] font-bold text-white/80 tracking-wider">
-                            {item.sub}
-                          </span>
-                          <span className={`text-[14px] leading-tight ${isActive ? 'font-bold text-white' : 'font-medium text-white/75'}`}>
-                            {item.label}
-                          </span>
-                        </div>
-                        <span
-                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-all ${
-                            isActive
-                              ? 'bg-white/[0.14] border-white/[0.28] text-white'
-                              : 'bg-white/[0.03] border-white/[0.10] text-transparent'
-                          }`}
-                        >
-                          <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </motion.div>
+              <LiquidSegment<'ru' | 'en' | 'zh'>
+                ariaLabel={t('language')}
+                value={lang === 'en' || lang === 'zh' ? lang : 'ru'}
+                onChange={(code) => {
+                  handleSetLang(code);
+                  try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch { /* optional */ }
+                }}
+                options={[
+                  { value: 'ru', label: 'Русский', icon: <span className="text-[14px] leading-none">🇷🇺</span> },
+                  { value: 'en', label: 'English', icon: <span className="text-[14px] leading-none">🇬🇧</span> },
+                  { value: 'zh', label: '中文', icon: <span className="text-[14px] leading-none">🇨🇳</span> },
+                ]}
+              />
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+        </LiquidDialog>
+      )}
     </div>
   );
 }
@@ -1330,7 +1218,17 @@ export default function App() {
   const [topups, setTopups] = useState<any[]>([]);
   const [topUpGlow, setTopUpGlow] = useState(false);
   const [toastMessage, setToastMessage] = useState<{amount: number; method: 'stars'|'ton'; type?: 'topup'|'withdraw'; title?: string}|null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
   const isInitializedRef = useRef(false);
+
+  const handleScroll = (e: React.UIEvent<HTMLElement>) => {
+    const top = e.currentTarget.scrollTop;
+    if (top > 12) {
+      if (!isScrolled) setIsScrolled(true);
+    } else {
+      if (isScrolled) setIsScrolled(false);
+    }
+  };
 
   const currentLevel = Math.min(100, Math.floor(turnover / 1000) + 1);
 
@@ -1339,7 +1237,27 @@ export default function App() {
   useEffect(() => {
     if (auth.status === 'ready') {
       setBalance(auth.balance);
-      setInventory(auth.inventory.map((i: any, idx: number) => ({...i, uniqueId: i.uniqueId || i.id || `fallback-${idx}-${Date.now()}`})));
+      const syncedInventory = (auth.inventory || []).map((i: any, idx: number) => {
+        const uniqueId = i.uniqueId || i.id || `fallback-${idx}-${Date.now()}`;
+        const itemBackdrop = getNftBackdrop(i);
+        const matchingGift = (giftsDb || []).find((g: any) =>
+          (i.id && g.id === i.id) ||
+          (itemBackdrop !== 'Default' && g.backdrop === itemBackdrop && (g.name === i.name || cleanNftName(g.name) === cleanNftName(i.name) || g.slug === i.slug)) ||
+          (itemBackdrop === 'Default' && (g.backdrop || 'Default') === 'Default' && (g.name === i.name || cleanNftName(g.name) === cleanNftName(i.name) || g.slug === i.slug))
+        ) || (giftsDb || []).find((g: any) => i.name && g.name === i.name);
+
+        const currentPrice = Number(matchingGift?.floor_price_gram != null ? matchingGift.floor_price_gram : (i.floor_price_gram || i.price || 0));
+
+        return {
+          ...i,
+          uniqueId,
+          price: currentPrice,
+          floor_price_gram: currentPrice,
+          rarity: matchingGift?.rarity || i.rarity,
+          backdrop: itemBackdrop !== 'Default' ? itemBackdrop : (matchingGift?.backdrop || i.backdrop || 'Default')
+        };
+      });
+      setInventory(syncedInventory);
       setTurnover(auth.turnover || 0);
       setTopups(auth.topups || []);
       isInitializedRef.current = true;
@@ -1354,6 +1272,42 @@ export default function App() {
       }
     }
   }, [auth.status, auth.welcomeSeen]);
+
+  // Синхронизация цен выпавших NFT в инвентаре при изменении общих цен в giftsDb
+  useEffect(() => {
+    if (!giftsDb || giftsDb.length === 0) return;
+    setInventory((prevInventory) => {
+      if (!prevInventory || prevInventory.length === 0) return prevInventory;
+      let hasChanges = false;
+      const updatedInventory = prevInventory.map((item) => {
+        const itemBackdrop = getNftBackdrop(item);
+        const matchingGift = giftsDb.find((g: any) =>
+          (item.id && g.id === item.id) ||
+          (itemBackdrop !== 'Default' && g.backdrop === itemBackdrop && (g.name === item.name || cleanNftName(g.name) === cleanNftName(item.name) || g.slug === item.slug)) ||
+          (itemBackdrop === 'Default' && (g.backdrop || 'Default') === 'Default' && (g.name === item.name || cleanNftName(g.name) === cleanNftName(item.name) || g.slug === item.slug))
+        ) || giftsDb.find((g: any) => item.name && g.name === item.name);
+
+        if (matchingGift && matchingGift.floor_price_gram != null && matchingGift.floor_price_gram > 0) {
+          const newPrice = Number(matchingGift.floor_price_gram);
+          const oldPrice = Number(item.floor_price_gram || item.price || 0);
+          const newRarity = matchingGift.rarity || item.rarity;
+          if (oldPrice !== newPrice || item.price !== newPrice || item.floor_price_gram !== newPrice || (matchingGift.rarity && item.rarity !== matchingGift.rarity)) {
+            hasChanges = true;
+            return {
+              ...item,
+              price: newPrice,
+              floor_price_gram: newPrice,
+              rarity: newRarity,
+              backdrop: itemBackdrop !== 'Default' ? itemBackdrop : (matchingGift.backdrop || item.backdrop || 'Default')
+            };
+          }
+        }
+        return item;
+      });
+
+      return hasChanges ? updatedInventory : prevInventory;
+    });
+  }, [giftsDb]);
 
   // Дебаунс-синк изменений баланса/инвентаря на сервер (источник правды).
   useEffect(() => {
@@ -1513,35 +1467,35 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-              className="absolute inset-x-3 top-2.5 z-50 flex justify-center pointer-events-none"
+              className={`fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md z-50 px-3 pt-2.5 pb-2 transition-all duration-300 pointer-events-none ${
+                isScrolled ? 'header scrolled' : 'header bg-transparent'
+              }`}
             >
-                <div className={`group relative overflow-hidden flex items-center gap-2 lg-glass rounded-full p-1.5 w-full pointer-events-auto transition-all duration-300 ${
-                  topUpGlow ? 'lg-glass--brand' : ''
+                <div className={`group relative overflow-hidden flex items-center gap-2 premium-card rounded-full p-1.5 w-full pointer-events-auto transition-all duration-300 ${
+                  topUpGlow ? 'border-brand/40 shadow-[0_0_20px_rgba(0,152,234,0.35)]' : ''
                 }`}>
-                  {/* Тот же материал, что у нижнего меню (.lg-nav__inner): полупрозрачная
-                      основа + backdrop-blur, без тёмной подложки. Блик уже встроен
-                      в .lg-glass, отдельные спэны-свечения не нужны. */}
 
-                  {/* Avatar -> Profile (в стеклянном чипе QuickActions) */}
+                  {/* Avatar -> Profile (в чипе) */}
                   <button 
                     onClick={() => {
                       setActiveTab('profile');
                       try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch (e) {}
                     }} 
                     aria-label={t('profile')}
-                    className="relative shrink-0 transition-transform active:scale-95 cursor-pointer outline-none z-10"
+                    className="relative shrink-0 transition-transform cursor-pointer outline-none z-10"
                   >
-                    <UserAvatar
-                      src={user?.photoUrl}
-                      alt="Avatar"
-                      iconClassName="w-4 h-4"
-                      className={`h-9 w-9 shrink-0 aspect-square lg-glass transition-all ${
-                        activeTab === 'profile' ? 'lg-glass--brand' : ''
-                      }`}
-                    />
+                    <span className={`relative flex h-9 w-9 shrink-0 aspect-square items-center justify-center rounded-full bg-white/[0.08] border border-white/[0.10] overflow-hidden transition-all ${
+                      activeTab === 'profile' ? 'border-brand shadow-[0_0_10px_rgba(0,152,234,0.35)]' : ''
+                    }`}>
+                      {user?.photoUrl ? (
+                        <img src={user.photoUrl} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-4 h-4 text-white/80" strokeWidth={2.2} />
+                      )}
+                    </span>
                   </button>
 
-                  {/* Level chip (в стеклянном чипе QuickActions, белые буквы) */}
+                  {/* Level chip */}
                   <span className="relative z-10 flex items-center justify-center px-2.5 py-1 rounded-full bg-white/[0.08] border border-white/[0.10] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] whitespace-nowrap shrink-0 leading-none">
                     <span className="text-[11px] font-bold text-white tracking-tight leading-none">
                       LVL {currentLevel}
@@ -1560,7 +1514,7 @@ export default function App() {
                     />
                   </div>
 
-                  {/* Balance -> Balance page (жидкое стекло, белые цифры) */}
+                  {/* Balance -> Balance page */}
                   <button 
                     onClick={() => {
                       setShowBalancePage(true);
@@ -1570,15 +1524,15 @@ export default function App() {
                     className="ml-auto relative z-10 flex items-center gap-1.5 pl-3 pr-1 py-1 rounded-full
                       bg-white/[0.08] hover:bg-white/[0.12] active:bg-white/[0.10]
                       border border-white/[0.10] hover:border-white/[0.18]
-                      shadow-[inset_0_1px_0_rgba(255,255,255,0.12),inset_0_-1px_0_rgba(255,255,255,0.03),0_6px_18px_-4px_rgba(0,0,0,0.6)]
-                      active:scale-[0.97] transition-all duration-150 cursor-pointer group/btn"
+                      shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_6px_18px_-4px_rgba(0,0,0,0.6)]
+                      transition-all duration-150 cursor-pointer group/btn"
                   >
                     <span className="font-display text-[14px] font-bold tracking-tight text-white whitespace-nowrap leading-none">
                       {balance.toFixed(2)}
                     </span>
                     <GramIcon className="w-3.5 h-3.5 text-brand drop-shadow-sm shrink-0" />
-                    {/* стеклянный чип плюсика с подсветкой бренда */}
-                    <span className="relative flex h-6 w-6 shrink-0 aspect-square items-center justify-center rounded-full bg-brand/20 border border-brand/40 text-brand shadow-[0_0_10px_rgba(0,152,234,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] transition-transform duration-150 group-active/btn:scale-95">
+                    {/* чип плюсика с подсветкой */}
+                    <span className="relative flex h-6 w-6 shrink-0 aspect-square items-center justify-center rounded-full bg-brand/20 border border-brand/40 text-brand shadow-[0_0_10px_rgba(0,152,234,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] transition-transform duration-150 ">
                       <span className="text-[12px] font-bold leading-none">+</span>
                     </span>
                   </button>
@@ -1589,8 +1543,19 @@ export default function App() {
 
         {/* Scrollable Content Area */}
         <div className="relative flex-1 w-full overflow-hidden flex flex-col">
-          <main className="flex-1 overflow-y-auto pt-[78px] pb-[124px] px-4.5 scrollbar-hide relative">
-            <div key={activeTab} className="w-full menu-content-enter">
+          <main 
+            onScroll={handleScroll}
+            className="flex-1 overflow-y-auto pt-[78px] pb-[124px] px-4.5 scrollbar-hide relative"
+          >
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={activeTab} 
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="w-full"
+              >
                 {activeTab === 'shop' && (
                   <Shop 
                     onPlayUpgrade={() => setActiveGame('upgrade')} 
@@ -1609,7 +1574,7 @@ export default function App() {
                     turnover={turnover}
                   />
                 )}
-                {activeTab === 'leaderboard' && <Suspense fallback={<LazyFallback />}><Leaderboard user={user} /></Suspense>}
+                {activeTab === 'leaderboard' && <Suspense fallback={<LazyFallback />}><Leaderboard currentUser={user} /></Suspense>}
                 {activeTab === 'tasks' && <Suspense fallback={<LazyFallback />}><Tasks onBalanceUpdate={setBalance} /></Suspense>}
                 {activeTab === 'profile' && (
                   <Profile 
@@ -1645,15 +1610,16 @@ export default function App() {
                   </Suspense>
                 )}
                 {activeTab === 'admin' && <Suspense fallback={<LazyFallback />}><AdminPanel giftsDb={giftsDb} setGiftsDb={(newDb) => {
-      setGiftsDb(newDb);
-      const token = sessionStorage.getItem('pg_session_token');
-      fetch('/api/admin/gifts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ gifts: newDb })
-      });
-    }} /></Suspense>}
-            </div>
+                  setGiftsDb(newDb);
+                  const token = sessionStorage.getItem('pg_session_token');
+                  fetch('/api/admin/gifts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ gifts: newDb })
+                  });
+                }} /></Suspense>}
+              </motion.div>
+            </AnimatePresence>
           </main>
 
           <AnimatePresence>
@@ -1687,7 +1653,7 @@ export default function App() {
                 transition={springSmooth}
                 className="absolute inset-0 z-[100] bg-canvas"
               >
-                <Suspense fallback={<LazyFallback />}><Mines onBack={() => setActiveGame(null)} inventory={inventory} setInventory={setInventory} balance={balance} setBalance={setBalance} onTurnover={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} onWin={(amt, mode, item, mult) => { if (mode === 'nft' && item) auth.recordOpen(item, amt, 'nft', mult, 'mines'); else if (mode === 'gram') auth.recordOpen(null, amt, 'gram', mult, 'mines'); }} giftsDb={giftsDb} user={user} onNavigate={(t) => { setActiveGame(null); setTimeout(() => { if(t==='inventory') setActiveTab('inventory'); else setActiveGame(t as any); }, 50); }} /></Suspense>
+                <Suspense fallback={<LazyFallback />}><Mines onBack={() => setActiveGame(null)} inventory={inventory} setInventory={setInventory} balance={balance} setBalance={setBalance} onTurnover={(amount) => { setTurnover(prev => prev + amount); addTurnover(amount); }} onWin={(amt, mode, item, mult) => { if (mode === 'nft' && item) auth.recordOpen(item, amt, 'nft', mult, 'mines'); else if (mode === 'gram') auth.recordOpen(null, amt, 'gram', mult, 'mines'); }} giftsDb={giftsDb} onNavigate={(t) => { setActiveGame(null); setTimeout(() => { if(t==='inventory') setActiveTab('inventory'); else setActiveGame(t as any); }, 50); }} /></Suspense>
               </motion.div>
             )}
             {activeGame === 'new_game' && (

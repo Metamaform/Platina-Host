@@ -278,7 +278,7 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
             {step !== 'asset' && step !== 'result' && (
               <button
                 onClick={prevStep}
-                className="w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white transition-colors active:scale-95 cursor-pointer"
+                className="w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white transition-colors cursor-pointer"
                 aria-label={t('back')}
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -295,7 +295,7 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
           </div>
           <button
             onClick={handleClose}
-            className="w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/60 hover:text-white transition-colors active:scale-95 cursor-pointer"
+            className="w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/60 hover:text-white transition-colors cursor-pointer"
             aria-label={t('close')}
           >
             <X className="w-4 h-4" />
@@ -410,7 +410,7 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
                         setGlobalError(null);
                         idempotencyKeyRef.current = `idem_${Math.random().toString(36).slice(2)}_${Date.now()}`;
                       }}
-                      className="w-full py-3.5 rounded-2xl lg-glass text-white font-semibold transition-colors active:scale-[0.98] cursor-pointer"
+                      className="w-full py-3.5 rounded-2xl lg-glass text-white font-semibold transition-colors cursor-pointer"
                     >
                       {t('welcome_retry')}
                     </button>
@@ -438,7 +438,7 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
               {step !== 'asset' && (
                 <button
                   onClick={prevStep}
-                  className="flex-1 py-3.5 rounded-2xl lg-glass text-white font-semibold transition-colors active:scale-[0.98] cursor-pointer"
+                  className="flex-1 py-3.5 rounded-2xl lg-glass text-white font-semibold transition-colors cursor-pointer"
                 >
                   {t('back')}
                 </button>
@@ -447,7 +447,7 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
                 <button
                   onClick={handleSubmit}
                   disabled={submitting || !canGoNext()}
-                  className="flex-[2] py-3.5 rounded-2xl bg-[#1683FF] hover:bg-[#1478eb] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-[0_8px_24px_rgba(22,131,255,0.25)] cursor-pointer"
+                  className="flex-[2] py-3.5 rounded-2xl bg-[#1683FF] hover:bg-[#1478eb] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold flex items-center justify-center gap-2 transition-all shadow-[0_8px_24px_rgba(22,131,255,0.25)] cursor-pointer"
                 >
                   {submitting ? (
                     <>
@@ -462,7 +462,7 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
                 <button
                   onClick={step === 'amount' ? handleRequestQuote : nextStep}
                   disabled={!canGoNext() || quoteLoading}
-                  className="flex-[2] py-3.5 rounded-2xl bg-white text-black hover:bg-white/90 disabled:opacity-40 disabled:cursor-not-allowed font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
+                  className="flex-[2] py-3.5 rounded-2xl bg-white text-black hover:bg-white/90 disabled:opacity-40 disabled:cursor-not-allowed font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
                   {step === 'amount' && !quote ? t('quote_calculate') : t('next')}
                 </button>
@@ -485,7 +485,7 @@ export function WithdrawDialog({ open, onClose, initialAsset, onSuccess }: Withd
                   resetFlow();
                 }
               }}
-              className="w-full py-3.5 rounded-2xl bg-white text-black font-bold hover:bg-white/90 transition-colors active:scale-[0.98] cursor-pointer"
+              className="w-full py-3.5 rounded-2xl bg-white text-black font-bold hover:bg-white/90 transition-colors cursor-pointer"
             >
               {withdrawal?.status === 'success' ? t('done') : t('new_withdraw')}
             </button>

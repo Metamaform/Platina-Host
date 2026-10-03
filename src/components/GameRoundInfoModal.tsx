@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Clock, Timer, Wallet, Trophy, Hash, Copy, Check, Activity, Layers } from 'lucide-react';
+import { Settings, Clock, Timer, Wallet, Hash, Copy, Check, Activity, Layers } from 'lucide-react';
+import { AnimatedTrophy } from './AnimatedTrophy';
 import { GramIcon } from './GramIcon';
 import { LiquidDialog } from './ui/LiquidDialog';
 import { useTranslation } from '../lib/i18n';
@@ -167,7 +168,7 @@ export const GameRoundInfoModal: React.FC<GameRoundInfoModalProps> = ({
               <div className="col-span-2 bg-[#1b1c24] p-3.5 rounded-2xl border border-white/5 flex items-center justify-between">
                 <div className="flex flex-col">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-white/40 flex items-center gap-1">
-                    <Trophy className="w-3 h-3 text-amber-400" />
+                    <AnimatedTrophy className="w-3.5 h-3.5" />
                     {t('prize_max')}
                   </span>
                   <div className="flex items-center gap-1 font-display font-black text-lg text-amber-300 mt-0.5">

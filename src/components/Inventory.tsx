@@ -81,7 +81,19 @@ export function Inventory({
   }, [showHelp, showImportant]);
 
   const handleSell = (item: any) => {
-    const itemPrice = Number(item.price);
+    const itemBackdrop = getNftBackdrop(item);
+    let itemPrice = Number(item.floor_price_gram || item.price || 0);
+    if (giftsDb) {
+      const dbItem = giftsDb.find((g: any) => 
+        (item.id && g.id === item.id) ||
+        (itemBackdrop !== 'Default' && g.backdrop === itemBackdrop && (g.name === item.name || cleanNftName(g.name) === cleanNftName(item.name) || g.slug === item.slug)) ||
+        (itemBackdrop === 'Default' && (g.backdrop || 'Default') === 'Default' && (g.name === item.name || cleanNftName(g.name) === cleanNftName(item.name) || g.slug === item.slug))
+      ) || giftsDb.find((g: any) => item.name && g.name === item.name);
+
+      if (dbItem && dbItem.floor_price_gram != null && dbItem.floor_price_gram > 0) {
+        itemPrice = Number(dbItem.floor_price_gram);
+      }
+    }
     setBalance((prev: number) => {
       const newBal = Number((prev + itemPrice).toFixed(2));
       setInventory((prevInv: any[]) => {
@@ -174,19 +186,13 @@ export function Inventory({
         </LiquidDialog>
       )}
 
-      <div className="group relative overflow-hidden bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] rounded-[32px] p-4 sm:p-5 flex-1 min-h-[400px] shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)]">
-        {/* верхнее бликовое свечение жидкого стекла */}
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-[32px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
-        />
-
+      <div className="premium-card rounded-[26px] p-4 sm:p-5 flex-1 min-h-[400px]">
         <div className="relative z-10 flex items-center justify-between mb-4 px-2">
           <div className="flex items-center gap-2.5">
             {onBack && (
               <button 
                 onClick={onBack}
-                className="w-8 h-8 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white transition-all active:scale-95 cursor-pointer"
+                className="w-8 h-8 rounded-full bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.08] flex items-center justify-center text-white/70 hover:text-white transition-all cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
@@ -196,14 +202,14 @@ export function Inventory({
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setShowImportant(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-amber-500/25 active:scale-95 transition-all text-[12px] font-bold shadow-[0_0_8px_rgba(245,158,11,0.2)] cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-amber-500/25 transition-all text-[12px] font-bold shadow-[0_0_8px_rgba(245,158,11,0.2)] cursor-pointer"
             >
               <AlertCircle className="w-3.5 h-3.5 shrink-0" />
               <span>{t('important_btn')}</span>
             </button>
             <button 
               onClick={() => setShowHelp(true)}
-              className="w-8 h-8 flex items-center justify-center text-white/60 hover:text-white lg-glass rounded-full transition-all active:scale-95 cursor-pointer"
+              className="w-8 h-8 flex items-center justify-center text-white/60 hover:text-white bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.08] rounded-full transition-all cursor-pointer"
             >
               <HelpCircle className="w-4 h-4" />
             </button>
@@ -211,19 +217,9 @@ export function Inventory({
         </div>
 
         {inventory.length === 0 ? (
-          <div className="relative z-10 group overflow-hidden bg-white/[0.05] backdrop-blur-xl border border-white/[0.10] rounded-[28px] p-6 text-center flex flex-col items-center mx-2 mt-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_15px_35px_-10px_rgba(0,0,0,0.7)]">
-            {/* верхний блик жидкого стекла в карточке пустого инвентаря */}
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.01)_40%,transparent_62%)]"
-            />
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.08] blur-2xl opacity-70"
-            />
-
-            <div className="relative z-10 w-16 h-16 rounded-full bg-brand/20 border border-brand/40 text-brand shadow-[0_0_20px_rgba(0,152,234,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] flex items-center justify-center mb-5 p-3.5">
-              <GramIcon className="w-full h-full text-brand drop-shadow-md" />
+          <div className="relative z-10 premium-card rounded-[24px] p-6 text-center flex flex-col items-center mx-1 mt-4 shadow-xl border border-white/[0.08]">
+            <div className="relative z-10 w-16 h-16 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center mb-5 p-3.5 shadow-[0_0_20px_rgba(99,102,241,0.25)]">
+              <GramIcon className="w-full h-full text-indigo-400 drop-shadow-md" />
             </div>
             
             <h2 className="relative z-10 text-xl font-bold text-white mb-2 tracking-tight">{t('inventory_empty')}</h2>
@@ -236,9 +232,9 @@ export function Inventory({
               href="https://t.me/platina_relayer" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="relative z-10 w-full max-w-xs bg-brand/20 hover:bg-brand/30 border border-brand/40 text-white font-bold py-3.5 rounded-full flex items-center justify-center gap-2 transition-all shadow-[0_0_14px_rgba(0,152,234,0.35),inset_0_1px_0_rgba(255,255,255,0.18)] mb-3 active:scale-95 cursor-pointer"
+              className="relative z-10 w-full max-w-xs primary-button text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-transform mb-3 cursor-pointer shadow-md"
             >
-              <ExternalLink className="w-4 h-4 text-brand" />
+              <ExternalLink className="w-4 h-4 text-white" />
               <span>{t('empty_backpack_btn1')}</span>
             </a>
 
@@ -258,13 +254,13 @@ export function Inventory({
 
             <button 
               onClick={onGoToCases}
-              className="relative z-10 w-full max-w-xs bg-brand/20 hover:bg-brand/30 border border-brand/40 text-white font-bold py-3.5 rounded-full transition-all shadow-[0_0_14px_rgba(0,152,234,0.35),inset_0_1px_0_rgba(255,255,255,0.18)] active:scale-95 cursor-pointer"
+              className="relative z-10 w-full max-w-xs bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.10] text-white font-bold py-3.5 rounded-2xl transition-transform cursor-pointer"
             >
               {t('empty_backpack_btn2')}
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 pb-24 px-1">
+          <div className="grid grid-cols-2 gap-3 pb-24 px-0.5">
 
             {inventory.map((item, i) => {
               const itemBackdrop = getNftBackdrop(item);
@@ -301,62 +297,60 @@ export function Inventory({
               return (
                 <div key={item.uniqueId || i} className="w-full">
                 <div
-                  className={`flex flex-col gap-2.5 w-full mx-auto p-2 rounded-[28px] border ${
+                  className={`flex flex-col gap-2.5 w-full mx-auto p-2.5 rounded-[24px] border ${
                     isBlack 
-                      ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/10' 
+                      ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/15 shadow-[0_8px_25px_rgba(0,0,0,0.5)]' 
                       : isOnyx 
-                        ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/10' 
-                        : 'bg-[#16181d] border-[#3b82f6]/20'
+                        ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/20 shadow-[0_8px_25px_rgba(0,0,0,0.5)]' 
+                        : 'bg-[#16181d] border-[#3b82f6]/25 shadow-[0_8px_25px_rgba(0,0,0,0.3)]'
                   } ${
                     item.isWithdrawing ? 'opacity-80 grayscale-[0.3]' : ''
                   }`}
                 >
                   <div className="w-full flex justify-center pt-1">
                     <div className="flex flex-col items-center">
-                      <span className={`text-[11px] font-bold uppercase tracking-widest ${
-                        isOnyx ? 'text-zinc-300' : isBlack ? 'text-zinc-400' : 'text-[#3b82f6]'
-                      }`}>
-                        {isOnyx ? 'Onyx Black' : isBlack ? 'Black' : 'Random'}
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#c7c7cc]">
+                        {isOnyx ? 'Onyx Black' : isBlack ? 'Black' : (dbItem?.rarity || item.rarity || 'Common')}
                       </span>
-                      <span className="text-[8px] text-white/20 font-bold tracking-widest uppercase mt-0.5">Platina Gift</span>
+                      <span className="text-[8px] text-white/30 font-semibold tracking-wider uppercase mt-0.5">Platina Gift</span>
                     </div>
                   </div>
                   <div 
-                    className={`relative overflow-hidden w-full aspect-square rounded-[20px] flex flex-col items-center p-1 transition-all duration-300 ${
+                    className={`relative overflow-hidden w-full aspect-square rounded-[20px] flex flex-col items-center p-1 transition-opacity duration-200 ${
                       item.isWithdrawing ? 'blur-[2px]' : ''
                     }`}
                   >
-                    <div className="flex-1 w-full flex items-center justify-center min-h-0 mb-2">
+                    <div className="flex-1 w-full flex items-center justify-center min-h-0 mb-1">
                       <PremiumImage 
                         staticMode={false} 
                         isPlaying={activeAnimIndex === i}
                         onAnimationComplete={() => handleNextAnim(i)}
                         src={displayImage} 
                         alt={displayName} 
-                        className="w-[85%] h-[85%] object-contain drop-shadow-lg" 
+                        className="w-[85%] h-[85%] object-contain drop-shadow-md" 
                       />
                     </div>
                     <div className="relative z-20 w-full flex flex-col items-center justify-end shrink-0 pb-1.5 px-1">
-                      <span className="text-[12px] text-white/90 w-full text-center font-bold leading-tight line-clamp-2">{cleanNftName(displayName)}</span>
-                      <span className="text-[13px] font-bold text-white flex items-center justify-center gap-1 mt-0.5">{currentPrice.toFixed(2)} <GramIcon className="w-3.5 h-3.5" /></span>
+                      <span className="text-[12px] text-white/90 w-full text-center font-bold leading-tight line-clamp-1">{cleanNftName(displayName)}</span>
+                      <span className="text-[12px] font-bold text-white flex items-center justify-center gap-1 mt-0.5">{currentPrice.toFixed(2)} <GramIcon className="w-3.5 h-3.5" /></span>
                     </div>
                     
                     {item.isWithdrawing && (
-                      <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
-                         <span className="text-white text-xs font-bold bg-black/40 px-3 py-1 rounded-full">{t('withdraw_pending')}</span>
+                      <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-[2px] rounded-[18px]">
+                         <span className="text-white text-[11px] font-bold bg-black/60 border border-white/10 px-3 py-1 rounded-full">{t('withdraw_pending')}</span>
                       </div>
                     )}
                   </div>
                   
                   {/* Action Buttons */}
-                  <div className="flex flex-col gap-1.5 w-full mt-1">
-                    {/* Game Buttons - Upgrade / Contract (Now at the top) */}
+                  <div className="flex flex-col gap-1.5 w-full mt-0.5">
+                    {/* Game Buttons - Upgrade / Contract */}
                     <div className="flex gap-1.5 w-full">
                       <button 
                         onClick={() => onPlayUpgrade && onPlayUpgrade()}
                         disabled={item.isWithdrawing}
-                        className={`flex-1 py-2.5 rounded-[10px] text-[11px] font-bold flex items-center justify-center gap-1 active:scale-95 transition-all px-0.5 ${
-                          item.isWithdrawing ? 'bg-green-500/20 text-green-500/50 opacity-50 blur-[1px]' : 'bg-[#22c55e] text-white hover:bg-[#16a34a]'
+                        className={`flex-1 py-2.5 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 active:opacity-80 transition-opacity px-0.5 ${
+                          item.isWithdrawing ? 'bg-green-500/20 text-green-500/50 opacity-50 blur-[1px]' : 'bg-[#22c55e] text-white shadow-sm'
                         }`}
                       >
                         <TrendingUp className="w-3.5 h-3.5 shrink-0" />
@@ -365,8 +359,8 @@ export function Inventory({
                       <button 
                         onClick={() => onPlayCraft && onPlayCraft()}
                         disabled={item.isWithdrawing}
-                        className={`flex-1 py-2.5 rounded-[10px] text-[11px] font-bold flex items-center justify-center gap-1 active:scale-95 transition-all px-0.5 ${
-                          item.isWithdrawing ? 'opacity-50 blur-[1px] bg-white/5 text-white/50' : 'bg-[#dc2626] text-white hover:bg-[#b91c1c]'
+                        className={`flex-1 py-2.5 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 active:opacity-80 transition-opacity px-0.5 ${
+                          item.isWithdrawing ? 'opacity-50 blur-[1px] bg-white/5 text-white/50' : 'bg-[#ef4444] text-white shadow-sm'
                         }`}
                       >
                         <Shuffle className="w-3.5 h-3.5 shrink-0" />
@@ -376,15 +370,15 @@ export function Inventory({
 
                     <button 
                       onClick={() => handleToggleWithdraw(item)}
-                      className={`w-full py-3 rounded-[10px] text-[12px] font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all ${
+                      className={`w-full py-2.5 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 active:opacity-80 transition-opacity ${
                         item.isWithdrawing 
-                          ? 'bg-danger/20 text-danger border border-danger/30' 
-                          : 'bg-brand text-white hover:bg-brand/90'
+                          ? 'bg-red-500/20 text-red-400 border border-red-500/30' 
+                          : 'bg-white/[0.08] hover:bg-white/[0.12] text-white border border-white/[0.08]'
                       }`}
                     >
                       {item.isWithdrawing ? t('cancel') : (
                         <>
-                          <ArrowUpRight className="w-4 h-4" />
+                          <ArrowUpRight className="w-3.5 h-3.5" />
                           {t('withdraw')}
                         </>
                       )}
@@ -393,11 +387,11 @@ export function Inventory({
                     <button 
                       onClick={() => handleSell({ ...item, price: currentPrice })}
                       disabled={item.isWithdrawing}
-                      className={`w-full py-3 flex items-center justify-center gap-1.5 rounded-[10px] text-[12px] font-bold active:scale-95 transition-all ${
-                        item.isWithdrawing ? 'bg-[#181a20] text-white/20 opacity-50 blur-[1px]' : 'bg-[#2a2c33] text-white/90 hover:bg-white/10'
+                      className={`w-full py-2.5 flex items-center justify-center gap-1.5 rounded-xl text-[11px] font-bold active:opacity-80 transition-opacity ${
+                        item.isWithdrawing ? 'bg-[#181a20] text-white/20 opacity-50 blur-[1px]' : 'bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-[0_4px_14px_rgba(99,102,241,0.25)]'
                       }`}
                     >
-                      {t('sell')} {currentPrice.toFixed(2)} <GramIcon className="w-4 h-4 opacity-80" />
+                      {t('sell')} {currentPrice.toFixed(2)} <GramIcon className="w-3.5 h-3.5 opacity-90" />
                     </button>
                   </div>
                 </div>

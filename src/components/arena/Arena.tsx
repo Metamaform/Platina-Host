@@ -272,28 +272,45 @@ export const Arena: React.FC<ArenaProps> = ({
         <div className="max-w-md mx-auto flex flex-col gap-3.5">
 
           {/* Переключатель ТЕКУЩАЯ ИГРА / ИСТОРИЯ */}
-          <div className="w-full flex rounded-2xl bg-white/[0.04] p-1 border border-white/[0.06]">
+          <div className="relative w-full flex rounded-2xl bg-white/[0.04] p-1 border border-white/[0.06]">
             <button
               type="button"
-              onClick={() => { setTab('game'); haptics.selection(); }}
-              className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                tab === 'game'
-                  ? 'bg-white text-black shadow-sm'
-                  : 'text-white/60 hover:text-white'
-              }`}
+              onClick={() => {
+                setTab('game');
+                haptics.selection();
+              }}
+              className="relative flex-1 py-2 text-center text-xs font-bold rounded-xl transition-colors cursor-pointer z-10"
             >
-              {t('arena_tab_current')}
+              {tab === 'game' && (
+                <motion.div
+                  layoutId="arena-main-tab-pill"
+                  className="absolute inset-0 bg-white rounded-xl shadow-sm -z-10"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                />
+              )}
+              <span className={tab === 'game' ? 'text-black' : 'text-white/60 hover:text-white'}>
+                {t('arena_tab_current')}
+              </span>
             </button>
             <button
               type="button"
-              onClick={() => { setTab('history'); refreshHistory(); haptics.selection(); }}
-              className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                tab === 'history'
-                  ? 'bg-white text-black shadow-sm'
-                  : 'text-white/60 hover:text-white'
-              }`}
+              onClick={() => {
+                setTab('history');
+                refreshHistory();
+                haptics.selection();
+              }}
+              className="relative flex-1 py-2 text-center text-xs font-bold rounded-xl transition-colors cursor-pointer z-10"
             >
-              {t('arena_tab_history')}
+              {tab === 'history' && (
+                <motion.div
+                  layoutId="arena-main-tab-pill"
+                  className="absolute inset-0 bg-white rounded-xl shadow-sm -z-10"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                />
+              )}
+              <span className={tab === 'history' ? 'text-black' : 'text-white/60 hover:text-white'}>
+                {t('arena_tab_history')}
+              </span>
             </button>
           </div>
 
@@ -341,7 +358,7 @@ export const Arena: React.FC<ArenaProps> = ({
                 <button
                   onClick={handleAddDevBot}
                   disabled={addingBot}
-                  className="w-full h-[38px] rounded-full border border-dashed border-white/[0.14] bg-transparent text-white/40 hover:text-white/70 hover:border-white/[0.25] active:scale-[0.99] transition-all text-[11px] font-bold tracking-wider uppercase cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full h-[38px] rounded-full border border-dashed border-white/[0.14] bg-transparent text-white/40 hover:text-white/70 hover:border-white/[0.25] transition-all text-[11px] font-bold tracking-wider uppercase cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   <UserPlus className="w-3.5 h-3.5" />
                   {addingBot ? t('arena_sending') : t('arena_dev_add_player')}
@@ -356,7 +373,7 @@ export const Arena: React.FC<ArenaProps> = ({
               {/* Честная игра */}
               <button
                 onClick={() => setFairModal(true)}
-                className="w-full rounded-[20px] border border-white/[0.08] bg-white/[0.03] px-4 py-3.5 flex items-center gap-3 active:scale-[0.985] transition-transform cursor-pointer hover:border-emerald-500/30"
+                className="w-full rounded-[20px] border border-white/[0.08] bg-white/[0.03] px-4 py-3.5 flex items-center gap-3 transition-transform cursor-pointer hover:border-emerald-500/30"
               >
                 <span className="w-9 h-9 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
                   <ShieldCheck className="w-4.5 h-4.5 text-emerald-400" />

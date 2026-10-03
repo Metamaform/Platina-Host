@@ -89,7 +89,7 @@ export const GameLossModal: React.FC<GameLossModalProps> = ({
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full lg-glass active:scale-90 text-white/50 hover:text-white flex items-center justify-center transition-all z-20 cursor-pointer"
+          className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full lg-glass text-white/50 hover:text-white flex items-center justify-center transition-all z-20 cursor-pointer"
           title={t('close')}
         >
           <X className="w-4 h-4" />
@@ -157,7 +157,7 @@ export const GameLossModal: React.FC<GameLossModalProps> = ({
           {onRetry ? (
             <button
               onClick={onRetry}
-              className="w-full py-3.5 rounded-[16px] font-bold text-[14px] flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white shadow-[0_0_25px_rgba(239,68,68,0.35)] active:scale-[0.98] transition-all cursor-pointer"
+              className="w-full py-3.5 rounded-[16px] font-bold text-[14px] flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white shadow-[0_0_25px_rgba(239,68,68,0.35)] transition-all cursor-pointer"
             >
               <RotateCcw className="w-4 h-4 shrink-0" />
               <span>{retryLabel || t('try_again')}</span>
@@ -165,7 +165,7 @@ export const GameLossModal: React.FC<GameLossModalProps> = ({
           ) : (
             <button
               onClick={onClose}
-              className="w-full py-3.5 rounded-[16px] font-bold text-[14px] flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white shadow-[0_0_25px_rgba(239,68,68,0.35)] active:scale-[0.98] transition-all cursor-pointer"
+              className="w-full py-3.5 rounded-[16px] font-bold text-[14px] flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white shadow-[0_0_25px_rgba(239,68,68,0.35)] transition-all cursor-pointer"
             >
               <RotateCcw className="w-4 h-4 shrink-0" />
               <span>{retryLabel || t('play_again')}</span>
@@ -180,13 +180,13 @@ export const GameLossModal: React.FC<GameLossModalProps> = ({
                   onClose();
                   onNavigate('inventory');
                 }}
-                className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold text-white lg-glass transition-all text-center cursor-pointer active:scale-95"
+                className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold text-white lg-glass transition-all text-center cursor-pointer "
               >
                 {t('my_inventory')}
               </button>
               <button
                 onClick={onClose}
-                className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold text-white lg-glass transition-all text-center cursor-pointer active:scale-95"
+                className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold text-white lg-glass transition-all text-center cursor-pointer "
               >
                 {closeLabel || t('close')}
               </button>
@@ -194,7 +194,7 @@ export const GameLossModal: React.FC<GameLossModalProps> = ({
           ) : (
             <button
               onClick={onClose}
-              className="w-full py-2.5 rounded-[12px] text-[12px] font-bold text-white lg-glass transition-all cursor-pointer active:scale-95"
+              className="w-full py-2.5 rounded-[12px] text-[12px] font-bold text-white lg-glass transition-all cursor-pointer "
             >
               {closeLabel || t('close')}
             </button>

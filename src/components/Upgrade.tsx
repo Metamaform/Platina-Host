@@ -1,6 +1,6 @@
 import { useTranslation } from '../lib/i18n';
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { ArrowLeft, Sparkles, X, Settings, RefreshCw, Volume2, VolumeX, Search, Filter } from 'lucide-react';
+import { ArrowLeft, Sparkles, X, Settings, RefreshCw, Volume2, VolumeX, Search, Filter, Check } from 'lucide-react';
 import { motion, AnimatePresence, useAnimation } from 'motion/react';
 import { PremiumImage } from './PremiumNftImage';
 import { incrementStat, recordGameProgress } from '../lib/stats';
@@ -372,7 +372,7 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
             }
             onBack();
           }} 
-          className="absolute top-4 left-4 z-20 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer"
+          className="absolute top-4 left-4 z-20 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4 text-white" />
         </button>
@@ -381,7 +381,7 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
           <h1 className="font-display text-lg font-bold text-white drop-shadow-md">{t('upgrade')}</h1>
         </div>
 
-        <button onClick={() => setShowSettings(true)} className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer">
+        <button onClick={() => setShowSettings(true)} className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all cursor-pointer">
           <Settings className="w-4 h-4 text-white" />
         </button>
 
@@ -417,9 +417,7 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                    <h3 className="text-white font-bold text-[11px] leading-tight text-white/50 uppercase tracking-widest">{t('upgrade_source_items')}</h3>
                    {singleSrc && (isSingleOnyx || isSingleBlack) && (
                      <div className="w-full flex justify-center pt-0.5">
-                       <span className={`text-[11px] font-bold uppercase tracking-widest ${
-                         isSingleOnyx ? 'text-zinc-300' : 'text-zinc-400'
-                       }`}>
+                       <span className="text-[11px] font-bold uppercase tracking-widest text-[#c7c7cc]">
                          {isSingleOnyx ? 'Onyx Black' : 'Black'}
                        </span>
                      </div>
@@ -483,9 +481,7 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                <h3 className="text-white font-bold text-[11px] leading-tight text-white/50 uppercase tracking-widest">{t('target_item')}</h3>
                {target && (isTargetOnyx || isTargetBlack) && (
                  <div className="w-full flex justify-center pt-0.5">
-                   <span className={`text-[11px] font-bold uppercase tracking-widest ${
-                     isTargetOnyx ? 'text-zinc-300' : 'text-zinc-400'
-                   }`}>
+                   <span className="text-[11px] font-bold uppercase tracking-widest text-[#c7c7cc]">
                      {isTargetOnyx ? 'Onyx Black' : 'Black'}
                    </span>
                  </div>
@@ -539,7 +535,7 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
           <button 
             onClick={handleUpgrade}
             disabled={!canUpgrade}
-            className="w-full py-4 rounded-full font-display font-bold text-[17px] tracking-wide shadow-[0_4px_24px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer uppercase"
+            className="w-full py-4 rounded-2xl font-display font-bold text-[17px] tracking-wide primary-button text-white disabled:opacity-40 disabled:cursor-not-allowed transition-transform flex items-center justify-center gap-2 cursor-pointer uppercase shadow-lg"
           >
             {t('upgrade')}
           </button>
@@ -660,21 +656,27 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                             });
                           }
                         }}
-                        className={`relative overflow-hidden w-full aspect-[3/4] rounded-[16px] border flex flex-col items-center p-2 transition-all ${
+                        className={`relative overflow-hidden w-full aspect-[3/4] rounded-[16px] border flex flex-col items-center p-2 transition-all duration-150 ${
                           isOverLimit && !isSelected ? 'opacity-40 cursor-not-allowed border-white/5 bg-[#181a20]' :
+                          isBlack 
+                            ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)]' 
+                            : isOnyx 
+                              ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)]' 
+                              : 'bg-[#181a20]'
+                        } ${
                           isSelected 
-                            ? 'border-brand bg-[#fbc740]/10 scale-95 shadow-[0_4px_15px_rgba(251,199,64,0.15)]' 
-                            : isBlack 
-                              ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/10' 
-                              : isOnyx 
-                                ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/10' 
-                                : 'border-white/5 bg-[#181a20] hover:bg-[#1f2129]'
+                            ? 'border-[#0098ea] shadow-[0_2px_10px_rgba(0,152,234,0.18)]' 
+                            : 'border-white/5 hover:border-white/15 hover:bg-[#1f2129]'
                         }`}
                       >
+                        {/* Minimalist corner checkmark */}
+                        {isSelected && (
+                          <div className="absolute top-1.5 right-1.5 z-30 w-4 h-4 rounded-full bg-[#0098ea] text-white flex items-center justify-center shadow-sm">
+                            <Check className="w-2.5 h-2.5 stroke-[2.5]" />
+                          </div>
+                        )}
                         {(isOnyx || isBlack) && (
-                          <span className={`absolute top-1.5 left-0 right-0 z-20 text-[9px] font-bold uppercase tracking-widest text-center ${
-                            isOnyx ? 'text-zinc-300' : 'text-zinc-400'
-                          }`}>
+                          <span className="absolute top-1.5 left-0 right-0 z-20 text-[9px] font-bold uppercase tracking-widest text-center text-[#c7c7cc]">
                             {isOnyx ? 'Onyx Black' : 'Black'}
                           </span>
                         )}
@@ -714,20 +716,26 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                       <button
                         key={g.uniqueId || `${g.id || 'target'}-${idx}`}
                         onClick={() => setTargetId(isSelected ? null : g.id)}
-                        className={`relative overflow-hidden w-full aspect-square rounded-[16px] border flex flex-col items-center justify-end pb-2 transition-all ${
+                        className={`relative overflow-hidden w-full aspect-square rounded-[16px] border flex flex-col items-center justify-end pb-2 transition-all duration-150 ${
+                          isBlack 
+                            ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)]' 
+                            : isOnyx 
+                              ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)]' 
+                              : 'bg-[#181a20]'
+                        } ${
                           isSelected 
-                            ? 'border-brand bg-[#fbc740]/10 scale-95 shadow-[0_4px_15px_rgba(251,199,64,0.15)]' 
-                            : isBlack 
-                              ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/10' 
-                              : isOnyx 
-                                ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/10' 
-                                : 'border-white/5 bg-[#181a20] hover:bg-[#1f2129]'
+                            ? 'border-[#0098ea] shadow-[0_2px_10px_rgba(0,152,234,0.18)]' 
+                            : 'border-white/5 hover:border-white/15 hover:bg-[#1f2129]'
                         }`}
                       >
+                        {/* Minimalist corner checkmark */}
+                        {isSelected && (
+                          <div className="absolute top-1.5 right-1.5 z-30 w-4 h-4 rounded-full bg-[#0098ea] text-white flex items-center justify-center shadow-sm">
+                            <Check className="w-2.5 h-2.5 stroke-[2.5]" />
+                          </div>
+                        )}
                         {(isOnyx || isBlack) && (
-                          <span className={`absolute top-1.5 left-0 right-0 z-20 text-[9px] font-bold uppercase tracking-widest text-center ${
-                            isOnyx ? 'text-zinc-300' : 'text-zinc-400'
-                          }`}>
+                          <span className="absolute top-1.5 left-0 right-0 z-20 text-[9px] font-bold uppercase tracking-widest text-center text-[#c7c7cc]">
                             {isOnyx ? 'Onyx Black' : 'Black'}
                           </span>
                         )}
@@ -775,9 +783,9 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                   <span className="text-[13px] text-white/50 font-bold uppercase tracking-wider">{t('success_chance')}</span>
                   <div className="flex flex-wrap items-center gap-2">
                     {[20, 35, 50, 70, 80].map(c => (
-                      <button key={c} onClick={() => setChanceTarget(c)} className="flex-1 min-w-[60px] py-3 rounded-xl lg-glass text-[15px] font-bold text-white transition-all cursor-pointer active:scale-95">{c}%</button>
+                      <button key={c} onClick={() => setChanceTarget(c)} className="flex-1 min-w-[60px] py-3 rounded-xl lg-glass text-[15px] font-bold text-white transition-all cursor-pointer ">{c}%</button>
                     ))}
-                    <button onClick={() => setTargetId(null)} className="w-[50px] h-[50px] shrink-0 rounded-xl lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all cursor-pointer active:scale-95">
+                    <button onClick={() => setTargetId(null)} className="w-[50px] h-[50px] shrink-0 rounded-xl lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all cursor-pointer ">
                       <RefreshCw className="w-5 h-5" />
                     </button>
                   </div>
@@ -803,7 +811,7 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                           setChanceTarget(val);
                         }
                       }}
-                      className="py-3 px-5 rounded-xl bg-gradient-to-r from-[#0098ea] to-[#00b4d8] text-white font-bold hover:brightness-110 transition-all shadow-[0_0_14px_rgba(0,152,234,0.45)] active:scale-95 shrink-0 cursor-pointer"
+                      className="py-3 px-5 rounded-xl bg-gradient-to-r from-[#0098ea] to-[#00b4d8] text-white font-bold hover:brightness-110 transition-all shadow-[0_0_14px_rgba(0,152,234,0.45)] shrink-0 cursor-pointer"
                     >
                       {t('choose')}
                     </button>
@@ -815,7 +823,7 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                   <span className="text-[13px] text-white/50 font-bold uppercase tracking-wider">{t('quick_multiplier')}</span>
                   <div className="flex items-center gap-2">
                     {[2, 4, 8].map(m => (
-                      <button key={m} onClick={() => setMultiplierTarget(m)} className="flex-1 py-3 rounded-xl lg-glass text-[15px] font-bold text-white transition-all cursor-pointer active:scale-95">x{m}</button>
+                      <button key={m} onClick={() => setMultiplierTarget(m)} className="flex-1 py-3 rounded-xl lg-glass text-[15px] font-bold text-white transition-all cursor-pointer ">x{m}</button>
                     ))}
                   </div>
                 </div>
@@ -840,7 +848,7 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
 
               </div>
 
-              <button onClick={() => setShowSettings(false)} className="mt-8 w-full py-4 rounded-full font-bold text-[15px] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white transition-all shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] cursor-pointer active:scale-[0.98]">
+              <button onClick={() => setShowSettings(false)} className="mt-8 w-full py-4 rounded-full font-bold text-[15px] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white transition-all shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] cursor-pointer ">
                 {t('save_and_close')}
               </button>
             </motion.div>
@@ -875,9 +883,7 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                      const isBlack = wonBackdrop === "Black";
                      if (!isOnyx && !isBlack) return null;
                      return (
-                       <span className={`text-[11px] font-bold uppercase tracking-widest ${
-                         isOnyx ? "text-zinc-300" : "text-zinc-400"
-                       }`}>
+                       <span className="text-[11px] font-bold uppercase tracking-widest text-[#c7c7cc]">
                          {isOnyx ? "Onyx Black" : "Black"}
                        </span>
                      );
@@ -906,7 +912,7 @@ export function Upgrade({ inventory, giftsDb, onBack, balance, setBalance, onWin
                <div className="flex flex-col gap-1.5 w-full mt-1">
                  <button 
                    onClick={() => { setResult(null); }}
-                   className="w-full py-3.5 rounded-[16px] text-[14px] font-bold flex items-center justify-center bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] text-white shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
+                   className="w-full py-3.5 rounded-[16px] text-[14px] font-bold flex items-center justify-center bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] text-white shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] hover:brightness-110 transition-all cursor-pointer"
                  >
                    {t('great')}
                  </button>

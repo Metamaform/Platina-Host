@@ -13,6 +13,8 @@
  * velocity-aware by construction.
  */
 
+import type { Variants } from 'motion/react';
+
 /** Critically-damped default — sheets, modals, pills, tab switches. */
 export const springSmooth = { type: 'spring', bounce: 0, duration: 0.35 } as const;
 
@@ -33,6 +35,92 @@ export const easeIn = [0.55, 0, 0.55, 0.2] as const;
 
 /** Gentle fade for cross-fades under prefers-reduced-motion. */
 export const fade = { duration: 0.18, ease: 'easeOut' } as const;
+
+export const motionConfig = {
+  fast: {
+    duration: 0.16,
+    ease: [0.22, 1, 0.36, 1] as const,
+  },
+  normal: {
+    duration: 0.28,
+    ease: [0.22, 1, 0.36, 1] as const,
+  },
+  spring: {
+    type: "spring",
+    stiffness: 400,
+    damping: 30,
+    mass: 0.8,
+  },
+} as const;
+
+export const pageVariants: Variants = {
+  initial: {
+    opacity: 0,
+  },
+  animate: {
+    opacity: 1,
+    transition: {
+      duration: 0.18,
+      ease: 'easeOut',
+    },
+  },
+  exit: {
+    opacity: 0,
+    transition: {
+      duration: 0.12,
+      ease: 'easeIn',
+    },
+  },
+};
+
+export const sheetVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: "100%",
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 400,
+      damping: 32,
+      mass: 0.8,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: "100%",
+    transition: {
+      duration: 0.22,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
+
+export const itemVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 8,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.24,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
+
+export const containerVariants: Variants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.045,
+    },
+  },
+};
 
 export function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined' || !window.matchMedia) return false;

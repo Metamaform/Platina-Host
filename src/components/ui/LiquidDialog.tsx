@@ -33,16 +33,16 @@ export function LiquidDialog({
 
   const chip =
     tone === 'amber'
-      ? 'lg-glass text-amber-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
-      : 'lg-glass text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]';
+      ? 'bg-amber-500/20 border-amber-500/40 text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.3),inset_0_1px_0_rgba(255,255,255,0.15)]'
+      : 'bg-brand/20 border-brand/40 text-brand shadow-[0_0_10px_rgba(0,152,234,0.3),inset_0_1px_0_rgba(255,255,255,0.15)]';
 
   const action =
     tone === 'amber'
-      ? 'bg-white/[0.09] hover:bg-white/[0.13] border border-white/[0.14] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
-      : 'bg-white/[0.09] hover:bg-white/[0.13] border border-white/[0.14] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]';
+      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-[0_4px_18px_rgba(245,158,11,0.4),inset_0_1px_0_rgba(255,255,255,0.35)]'
+      : 'bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] text-white shadow-[0_4px_18px_rgba(0,152,234,0.45),inset_0_1px_0_rgba(255,255,255,0.35)]';
 
   return createPortal(
-    <div className="fixed inset-0 z-[220] flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-[220] flex items-end sm:items-center justify-center p-3 sm:p-4">
       <motion.button
         type="button"
         aria-label={t('close')}
@@ -50,53 +50,48 @@ export function LiquidDialog({
         animate={{ opacity: 1 }}
         transition={{ duration: 0.16 }}
         onClick={onClose}
-        className="fixed inset-0 bg-black/80 backdrop-blur-md cursor-pointer"
+        className="absolute inset-0 bg-black/75 cursor-pointer"
       />
       <motion.div
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        initial={{ opacity: 0, y: '100%' }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-        className="group relative z-10 w-full max-w-sm max-h-[85vh] flex flex-col rounded-t-[32px] sm:rounded-[28px] bg-[#16171b]/95 backdrop-blur-2xl border border-white/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_25px_50px_-12px_rgba(0,0,0,0.9)] overflow-hidden text-white"
+        transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+        className="relative z-10 w-full max-w-sm max-h-[85vh] flex flex-col rounded-[24px] bg-[#18181b]/95 backdrop-blur-2xl border border-white/[0.08] shadow-[0_20px_50px_rgba(0,0,0,0.7)] overflow-hidden"
       >
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-t-[32px] sm:rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.06)_0%,transparent_42%)]"
         />
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.08] blur-2xl opacity-70"
-        />
-        <div className="relative z-10 w-12 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-1 sm:hidden" />
-        <div className="relative z-10 flex items-center gap-3 p-5 pb-3 border-b border-white/[0.08] shrink-0">
+        <div className="relative z-10 flex items-center gap-3 px-4.5 pt-4.5 pb-3 shrink-0">
           {icon && (
-            <span className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${chip}`}>
+            <span className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border ${chip}`}>
               {icon}
             </span>
           )}
           <div className="min-w-0 flex-1">
-            <h3 className="font-display text-lg font-bold tracking-tight text-white leading-tight truncate">{title}</h3>
-            {subtitle && <p className="text-xs text-white/40 mt-0.5 truncate">{subtitle}</p>}
+            <h3 className="font-display text-[16px] font-bold text-white leading-tight truncate">{title}</h3>
+            {subtitle && <p className="text-[11px] text-white/50 mt-0.5 truncate">{subtitle}</p>}
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-9 h-9 shrink-0 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white active:scale-95 transition-all cursor-pointer"
+            className="w-8 h-8 shrink-0 rounded-full bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.08] flex items-center justify-center text-white/70 hover:text-white transition-transform cursor-pointer"
           >
-            <X className="w-4 h-4" strokeWidth={2.5} />
+            <X className="w-4 h-4" />
           </button>
         </div>
-        <div className="relative z-10 overflow-y-auto custom-scrollbar overscroll-contain p-5 pt-4 pb-3 flex-1 min-h-0">
+        <div className="relative z-10 overflow-y-auto overscroll-contain px-4.5 pb-2 flex-1 min-h-0">
           {children}
         </div>
         {actionLabel && (
-          <div className="relative z-10 px-5 pb-5 pt-1 shrink-0">
+          <div className="relative z-10 px-4.5 pb-4.5 pt-2 shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className={`w-full py-3.5 rounded-2xl font-display font-bold text-sm active:scale-[0.98] transition-all cursor-pointer ${action}`}
+              className={`w-full py-3 rounded-2xl font-bold text-[14px] transition-transform cursor-pointer ${action}`}
             >
               {actionLabel}
             </button>

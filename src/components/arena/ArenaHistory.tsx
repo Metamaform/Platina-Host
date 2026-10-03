@@ -6,11 +6,13 @@
 */
 
 import React, { useEffect, useState } from 'react';
-import { Trophy, Users, ChevronRight, RotateCw, AlertCircle } from 'lucide-react';
-import { X } from 'lucide-react';
+import { Users, ChevronRight, RotateCw, AlertCircle } from 'lucide-react';
+import { X, ShieldCheck } from 'lucide-react';
+import { AnimatedTrophy } from '../AnimatedTrophy';
 import type { ArenaHistoryEntry } from '../../lib/arenaShared';
 import { PlayerAvatar, ArenaGiftChip } from './arenaUiComponents';
 import { GramIcon } from '../GramIcon';
+import { FairPlayModal } from './ArenaFairPlay';
 
 function formatDate(ts: number): string {
   const d = new Date(ts);
@@ -48,7 +50,7 @@ export const ArenaHistoryList: React.FC<{
         {onRefresh && (
           <button
             onClick={handleRefresh}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.05] border border-white/[0.08] text-[10px] font-bold text-white/70 active:scale-95 transition-transform cursor-pointer hover:bg-white/[0.10]"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.05] border border-white/[0.08] text-[10px] font-bold text-white/70 transition-transform cursor-pointer hover:bg-white/[0.10]"
           >
             <RotateCw className={`w-3 h-3 ${refreshing ? 'animate-spin text-brand' : ''}`} />
             <span>{refreshing ? t('arena_sending') : t('refresh')}</span>
@@ -58,7 +60,7 @@ export const ArenaHistoryList: React.FC<{
 
       {!items.length ? (
         <div className="rounded-[24px] border border-white/[0.08] bg-white/[0.03] py-14 flex flex-col items-center gap-2">
-          <Trophy className="w-8 h-8 text-white/15" />
+          <AnimatedTrophy className="w-16 h-16 opacity-40" />
           <span className="text-[13px] text-white/40 font-medium">{t('arena_history_empty')}</span>
         </div>
       ) : (
@@ -66,7 +68,7 @@ export const ArenaHistoryList: React.FC<{
           <button
             key={`arena_h_${h.id}_${h.completedAt || idx}`}
             onClick={() => onOpen(h.id)}
-            className="w-full text-left rounded-[20px] border border-white/[0.08] bg-white/[0.04] px-4 py-3.5 active:scale-[0.985] transition-transform cursor-pointer hover:border-white/[0.14]"
+            className="w-full text-left rounded-[20px] border border-white/[0.08] bg-white/[0.04] px-4 py-3.5 transition-transform cursor-pointer hover:border-white/[0.14]"
           >
             <div className="flex items-center justify-between gap-2">
               <span className="font-display text-[14px] font-bold text-white/90">#{h.id}</span>
@@ -87,7 +89,11 @@ export const ArenaHistoryList: React.FC<{
                 </div>
                 <div className="flex items-center gap-1 text-[11px] text-white/40 font-semibold mt-1">
                   <Users className="w-3 h-3" />
-                  {h.participantsCount} · {formatDate(h.completedAt)}
+                  <span>{h.participantsCount} · {formatDate(h.completedAt)}</span>
+                </div>
+                <div className="flex items-center gap-1 text-[10px] text-emerald-400 font-bold mt-1">
+                  <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
+                  <span>Provably Fair</span>
                 </div>
               </div>
               <div className="flex items-center gap-2 min-w-0">
@@ -95,8 +101,8 @@ export const ArenaHistoryList: React.FC<{
                   <>
                     <PlayerAvatar participant={{ id: '', userId: h.winner.userId ?? 0, username: h.winner.username, firstName: h.winner.firstName, avatar: h.winner.avatar, photoUrl: h.winner.photoUrl, betAmount: 0, contribution: 0, percentage: 0, status: 'WON', joinedAt: 0 }} className="w-8 h-8" />
                     <div className="min-w-0 text-right">
-                      <div className="text-[9px] font-bold text-white/35 uppercase tracking-wider flex items-center gap-1 justify-end">
-                        <Trophy className="w-2.5 h-2.5 text-amber-400" />
+                       <div className="text-[9px] font-bold text-white/35 uppercase tracking-wider flex items-center gap-1.5 justify-end">
+                        <AnimatedTrophy className="w-[25px] h-[25px]" />
                         {t('arena_winner')}
                       </div>
                       <div className="truncate text-[12px] font-bold text-white/85">
@@ -139,6 +145,7 @@ export const RoundDetailsModal: React.FC<{
 }> = ({ roundId, onClose, myUserId, t }) => {
   const [entry, setEntry] = useState<ArenaHistoryEntry | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showFairPlay, setShowFairPlay] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -161,7 +168,7 @@ export const RoundDetailsModal: React.FC<{
           <button
             onClick={onClose}
             aria-label="Закрыть"
-            className="w-8 h-8 rounded-full bg-white/[0.06] border border-white/[0.10] flex items-center justify-center active:scale-95 transition-transform cursor-pointer"
+            className="w-8 h-8 rounded-full bg-white/[0.06] border border-white/[0.10] flex items-center justify-center transition-transform cursor-pointer"
           >
             <X className="w-4 h-4 text-white/80" />
           </button>
@@ -203,8 +210,8 @@ export const RoundDetailsModal: React.FC<{
                 <div className="flex items-center gap-3">
                   <PlayerAvatar participant={{ id: entry.winner.id, userId: entry.winner.userId, username: entry.winner.username, firstName: entry.winner.firstName, avatar: entry.winner.avatar, photoUrl: entry.winner.photoUrl, betAmount: 0, contribution: 0, percentage: 0, status: 'WON', joinedAt: 0 }} className="w-11 h-11 ring-2 ring-emerald-400/60" />
                   <div className="flex-1 min-w-0">
-                    <div className="text-[10px] font-bold text-emerald-300/80 uppercase tracking-wider flex items-center gap-1">
-                      <Trophy className="w-3 h-3" /> {t('arena_winner')}
+                    <div className="text-[10px] font-bold text-emerald-300/80 uppercase tracking-wider flex items-center gap-1.5">
+                      <AnimatedTrophy className="w-[29px] h-[29px]" /> {t('arena_winner')}
                     </div>
                     <div className="truncate text-[15px] font-bold text-white">@{entry.winner.username || entry.winner.firstName}</div>
                   </div>
@@ -253,18 +260,38 @@ export const RoundDetailsModal: React.FC<{
 
             {/* Provably fair */}
             <div className="rounded-[16px] border border-white/[0.08] bg-white/[0.03] px-3.5 py-3">
-              <div className="text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1">🛡 {t('arena_fair_hash')}</div>
-              <code className="text-[9px] font-mono text-white/50 break-all leading-relaxed">{entry.serverSeedHash}</code>
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="text-[10px] font-bold text-white/40 uppercase tracking-wider flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>{t('arena_fair_hash')}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowFairPlay(true)}
+                  className="text-[11px] font-bold text-cyan-400 hover:text-cyan-300 underline cursor-pointer"
+                >
+                  Проверить честность →
+                </button>
+              </div>
+              <code className="text-[9px] font-mono text-white/50 break-all leading-relaxed block">{entry.serverSeedHash}</code>
               {entry.serverSeed && (
                 <>
                   <div className="text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1 mt-2">{t('arena_fair_seed')}</div>
-                  <code className="text-[9px] font-mono text-emerald-300/70 break-all leading-relaxed">{entry.serverSeed}</code>
+                  <code className="text-[9px] font-mono text-emerald-300/70 break-all leading-relaxed block">{entry.serverSeed}</code>
                 </>
               )}
             </div>
           </div>
         )}
       </div>
+
+      {showFairPlay && entry && (
+        <FairPlayModal
+          round={entry as any}
+          onClose={() => setShowFairPlay(false)}
+          t={t}
+        />
+      )}
     </div>
   );
 };

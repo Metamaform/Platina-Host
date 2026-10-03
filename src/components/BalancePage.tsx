@@ -73,7 +73,7 @@ export function BalancePage({
             onClose();
             haptics.impact('light');
           }}
-          className="w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white transition-all active:scale-95 cursor-pointer focus-visible:outline-none"
+          className="w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white transition-all cursor-pointer focus-visible:outline-none"
           aria-label={t('back')}
         >
           <ArrowLeft className="w-4 h-4" />
@@ -111,19 +111,9 @@ export function BalancePage({
         </motion.div>
 
         {/* Пополнение в стиле жидкого стекла */}
-        <div ref={topupRef} className="group relative overflow-hidden bg-white/[0.07] backdrop-blur-2xl border border-white/[0.10] rounded-[28px] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),inset_0_-1px_0_rgba(255,255,255,0.03),0_18px_45px_-16px_rgba(0,0,0,0.85)] flex flex-col scroll-mt-4">
-          {/* верхнее бликовое свечение жидкого стекла */}
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
-          />
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.08] blur-2xl opacity-70"
-          />
-
+        <div ref={topupRef} className="premium-card rounded-[24px] p-5 flex flex-col scroll-mt-4 border border-white/[0.08]">
           <div className="relative z-10 flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-brand/20 border border-brand/40 text-brand flex items-center justify-center shrink-0 shadow-[0_0_14px_rgba(0,152,234,0.35),inset_0_1px_0_rgba(255,255,255,0.2)]">
+            <div className="w-10 h-10 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shrink-0 shadow-[0_0_14px_rgba(99,102,241,0.25)]">
               <ArrowDownLeft className="w-5 h-5" />
             </div>
             <div>
@@ -151,7 +141,7 @@ export function BalancePage({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => haptics.impact('light')}
-                className="w-full py-4 rounded-full bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] cursor-pointer"
+                className="w-full py-4 rounded-2xl primary-button text-white font-bold flex items-center justify-center gap-2 transition-transform cursor-pointer shadow-lg"
               >
                 <Gem className="w-5 h-5 text-white" />
                 <span>{t('topup_nft_button')}</span>
@@ -342,13 +332,7 @@ function AmountForm({
 
   return (
     <div className="w-full flex flex-col space-y-4">
-      <div className="group relative overflow-hidden w-full bg-white/[0.05] backdrop-blur-xl border border-white/[0.10] rounded-[24px] p-4.5 flex flex-col focus-within:border-brand/40 transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_35px_-12px_rgba(0,0,0,0.5)]">
-        {/* Specular Top Sheen */}
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-[24px] bg-[linear-gradient(180deg,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0.01)_40%,transparent_60%)]"
-        />
-
+      <div className="premium-card rounded-[22px] p-4.5 flex flex-col focus-within:border-indigo-500/50 transition-all border border-white/[0.08]">
         <div className="relative z-10 flex items-center justify-between gap-3">
           <input
             type="text"
@@ -366,7 +350,7 @@ function AmountForm({
             className="flex-1 bg-transparent text-3xl font-display font-black text-white outline-none min-w-0"
             placeholder={method === 'stars' ? '50' : '1.0'}
           />
-          <div className="text-white font-bold flex items-center gap-1.5 shrink-0 lg-glass px-3.5 py-1.5 rounded-full text-xs">
+          <div className="text-white font-bold flex items-center gap-1.5 shrink-0 bg-white/[0.08] border border-white/[0.10] px-3.5 py-1.5 rounded-full text-xs">
             {method === 'stars' ? (
               <>
                 <StarsIcon className="w-4 h-4" /> <span>Stars</span>
@@ -388,10 +372,10 @@ function AmountForm({
                 setAmount(preset);
                 haptics.selection();
               }}
-              className={`py-2 rounded-full text-xs font-bold transition-all active:scale-95 cursor-pointer focus-visible:outline-none ${
+              className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer focus-visible:outline-none ${
                 amount === preset
-                  ? 'bg-gradient-to-r from-[#0098ea] to-[#00b4d8] text-white border border-cyan-300/40 shadow-[0_0_12px_rgba(0,152,234,0.45)]'
-                  : 'lg-glass text-white'
+                  ? 'bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-[0_0_12px_rgba(99,102,241,0.45)]'
+                  : 'bg-white/[0.06] border border-white/[0.08] text-white hover:bg-white/[0.10]'
               }`}
             >
               +{preset}
@@ -423,7 +407,7 @@ function AmountForm({
       <button
         onClick={handleTopUp}
         disabled={loading || gramAmount <= 0}
-        className="w-full py-4 rounded-full font-display font-bold text-[16px] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 flex justify-center items-center gap-2 shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] active:scale-[0.98] cursor-pointer"
+        className="w-full py-4 rounded-2xl font-display font-bold text-[16px] primary-button text-white disabled:opacity-40 disabled:cursor-not-allowed transition-transform duration-150 flex justify-center items-center gap-2 cursor-pointer shadow-lg"
       >
         {loading ? (
           <>

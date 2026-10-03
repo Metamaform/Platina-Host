@@ -20,51 +20,12 @@ const botToken = (process.env.TELEGRAM_BOT_TOKEN || "").trim();
 const bot = botToken ? new TelegramBot(botToken, { polling: true }) : null;
 
 const telegramPhotoPresenceCache = new Map<number, { photoUrl?: string; ts: number }>();
-const telegramAvatarBinaryCache = new Map<number, { body?: Buffer; contentType?: string; version?: string; notFound?: boolean; ts: number }>();
 // Recheck the latest Telegram photo frequently: the old boolean cache kept a
 // stable avatar URL for hours, so clients could not notice profile changes.
 const TELEGRAM_PHOTO_CACHE_TTL = 10 * 1000;
-const TELEGRAM_AVATAR_BINARY_TTL = 60 * 1000;
-
-async function resolveTelegramPhotoFile(userId: number): Promise<{ fileId: string; version: string } | null> {
-  if (!bot || !Number.isFinite(userId) || userId < 10000) return null;
-  try {
-    const photos = await bot.getUserProfilePhotos(userId, { limit: 1 });
-    const sizes = photos?.photos?.[0];
-    const latestPhoto = sizes?.[sizes.length - 1];
-    if (latestPhoto?.file_id) {
-      return {
-        fileId: latestPhoto.file_id,
-        version: String(latestPhoto.file_unique_id || latestPhoto.file_id),
-      };
-    }
-  } catch (e: any) {
-    const msg = String(e?.message || e || '');
-    if (!msg.includes('user not found') && !msg.includes('chat not found') && e?.response?.statusCode !== 400) {
-      console.warn('[Telegram] Failed getUserProfilePhotos:', msg);
-    }
-  }
-
-  try {
-    const chat: any = await bot.getChat(userId);
-    const chatPhoto = chat?.photo;
-    const fileId = chatPhoto?.big_file_id || chatPhoto?.small_file_id;
-    const version = chatPhoto?.big_file_unique_id || chatPhoto?.small_file_unique_id || fileId;
-    if (fileId && version) {
-      return { fileId: String(fileId), version: String(version) };
-    }
-  } catch {
-    // Ignore chat lookup errors when user hasn't started a chat with the bot
-  }
-
-  return null;
-}
 
 async function resolveTelegramPhotoUrl(tgUser: any): Promise<string | undefined> {
-  const rawDirect = typeof tgUser?.photo_url === 'string' ? tgUser.photo_url.trim() : undefined;
-  const directPhotoUrl = rawDirect && !rawDirect.includes('dicebear.com') && !rawDirect.includes('unsplash.com')
-    ? rawDirect
-    : undefined;
+  const directPhotoUrl = typeof tgUser?.photo_url === 'string' ? tgUser.photo_url : undefined;
   if (!bot || !tgUser?.id) return directPhotoUrl;
 
   const userId = Number(tgUser.id);
@@ -78,14 +39,22 @@ async function resolveTelegramPhotoUrl(tgUser: any): Promise<string | undefined>
   }
 
   try {
-    const resolved = await resolveTelegramPhotoFile(userId);
-    const photoUrl = resolved?.fileId && resolved?.version
-      ? `/api/telegram/avatar/${userId}?v=${encodeURIComponent(resolved.version)}`
+    const photos = await bot.getUserProfilePhotos(userId, { limit: 1 });
+    const sizes = photos?.photos?.[0];
+    const latestPhoto = sizes?.[sizes.length - 1];
+    const version = latestPhoto?.file_unique_id || latestPhoto?.file_id;
+    const photoUrl = latestPhoto?.file_id && version
+      ? `/api/telegram/avatar/${userId}?v=${encodeURIComponent(version)}`
       : directPhotoUrl;
     telegramPhotoPresenceCache.set(userId, { photoUrl, ts: Date.now() });
     return photoUrl;
   } catch (e: any) {
+    // Cache the fallback for 2 minutes to prevent hammering Telegram API on 400 Bad Request
     telegramPhotoPresenceCache.set(userId, { photoUrl: directPhotoUrl, ts: Date.now() + 110 * 1000 });
+    const msg = String(e?.message || e || '');
+    if (!msg.includes('user not found') && !msg.includes('chat not found') && e?.response?.statusCode !== 400) {
+      console.warn('[Telegram] Failed to resolve profile photo:', msg);
+    }
   }
   return directPhotoUrl;
 }
@@ -346,58 +315,33 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
   app.use((req, res, next) => { res.header("Access-Control-Allow-Origin", "*"); res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"); res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization"); if (req.method === "OPTIONS") { res.sendStatus(200); return; } next(); });
 
   app.get("/api/telegram/avatar/:userId", async (req, res) => {
+    if (!bot) return res.sendStatus(404);
     const userId = Number(req.params.userId);
-    if (!Number.isFinite(userId) || userId < 10000) return res.sendStatus(404);
-
-    const requestedVersion = typeof req.query.v === 'string' ? req.query.v : '';
-    const cachedBin = telegramAvatarBinaryCache.get(userId);
-    if (cachedBin && Date.now() - cachedBin.ts < TELEGRAM_AVATAR_BINARY_TTL) {
-      if (cachedBin.notFound) return res.sendStatus(404);
-      if (cachedBin.body && (!requestedVersion || !cachedBin.version || cachedBin.version === requestedVersion)) {
-        res.setHeader('Cache-Control', requestedVersion ? 'public, max-age=86400, immutable' : 'public, max-age=60');
-        res.setHeader('Content-Type', cachedBin.contentType || 'image/jpeg');
-        return res.send(cachedBin.body);
-      }
-    }
+    if (!Number.isFinite(userId)) return res.sendStatus(400);
 
     try {
-      const resolved = await resolveTelegramPhotoFile(userId);
-      if (resolved?.fileId && bot) {
-        const latestVersion = resolved.version;
-        if (requestedVersion && requestedVersion !== latestVersion) {
-          res.setHeader('Cache-Control', 'no-store');
-          return res.redirect(302, `/api/telegram/avatar/${userId}?v=${encodeURIComponent(latestVersion)}`);
-        }
+      const photos = await bot.getUserProfilePhotos(userId, { limit: 1 });
+      const sizes = photos?.photos?.[0];
+      const largest = sizes?.[sizes.length - 1];
+      if (!largest?.file_id) return res.sendStatus(404);
 
-        const fileUrl = await bot.getFileLink(resolved.fileId);
-        const upstream = await fetch(fileUrl);
-        if (upstream.ok) {
-          const contentType = upstream.headers.get('content-type') || 'image/jpeg';
-          const body = Buffer.from(await upstream.arrayBuffer());
-          telegramAvatarBinaryCache.set(userId, { body, contentType, version: latestVersion, ts: Date.now() });
-          res.setHeader('Cache-Control', requestedVersion ? 'public, max-age=86400, immutable' : 'public, max-age=60');
-          res.setHeader('Content-Type', contentType);
-          return res.send(body);
-        }
+      const latestVersion = String(largest.file_unique_id || largest.file_id);
+      const requestedVersion = typeof req.query.v === 'string' ? req.query.v : '';
+      if (requestedVersion && requestedVersion !== latestVersion) {
+        res.setHeader('Cache-Control', 'no-store');
+        return res.redirect(302, `/api/telegram/avatar/${userId}?v=${encodeURIComponent(latestVersion)}`);
       }
 
-      // Fallback: if stored user has a direct Telegram photo URL (e.g. from WebApp initData)
-      const stored = getUser(userId);
-      const directUrl = stored?.photoUrl && stored.photoUrl.startsWith('https://') ? stored.photoUrl : undefined;
-      if (directUrl) {
-        const upstream = await fetch(directUrl);
-        if (upstream.ok) {
-          const contentType = upstream.headers.get('content-type') || 'image/jpeg';
-          const body = Buffer.from(await upstream.arrayBuffer());
-          telegramAvatarBinaryCache.set(userId, { body, contentType, version: 'direct', ts: Date.now() });
-          res.setHeader('Cache-Control', 'public, max-age=300');
-          res.setHeader('Content-Type', contentType);
-          return res.send(body);
-        }
-      }
+      const fileUrl = await bot.getFileLink(largest.file_id);
+      const upstream = await fetch(fileUrl);
+      if (!upstream.ok) return res.sendStatus(404);
 
-      telegramAvatarBinaryCache.set(userId, { notFound: true, ts: Date.now() });
-      res.sendStatus(404);
+      // Versioned URLs are immutable, so a changed Telegram photo gets a new
+      // URL instead of being hidden behind the browser's old image cache.
+      res.setHeader('Cache-Control', requestedVersion ? 'public, max-age=86400, immutable' : 'public, max-age=60');
+      res.setHeader('Content-Type', upstream.headers.get('content-type') || 'image/jpeg');
+      const body = Buffer.from(await upstream.arrayBuffer());
+      res.send(body);
     } catch (e: any) {
       const msg = String(e?.message || e || '');
       if (!msg.includes('user not found') && !msg.includes('chat not found') && e?.response?.statusCode !== 400) {
@@ -481,17 +425,10 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
       // Restore memory from Supabase if needed
       await syncUserFromSupabase(tgUser.id);
 
-      const clientPhotoUrl = typeof req.body?.clientPhotoUrl === 'string' ? req.body.clientPhotoUrl.trim() : undefined;
-      if (!tgUser.photo_url && clientPhotoUrl && clientPhotoUrl.startsWith('https://')) {
-        tgUser = { ...tgUser, photo_url: clientPhotoUrl };
-      }
-
       const resolvedPhotoUrl = await resolveTelegramPhotoUrl(tgUser);
-      const profileForStore = {
-        ...tgUser,
-        photo_url: resolvedPhotoUrl,
-        photoSynced: true,
-      };
+      const profileForStore = resolvedPhotoUrl
+        ? { ...tgUser, photo_url: resolvedPhotoUrl }
+        : tgUser;
       
       const user = upsertUserProfile(profileForStore, startParam);
 
@@ -551,12 +488,17 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
             ? (gift.lottie_url || gift.image_url || item.image_url)
             : (item.image_url || gift?.lottie_url || gift?.image_url);
 
+          const finalPrice = Number(gift?.floor_price_gram != null ? gift.floor_price_gram : (item.floor_price_gram || item.price || 0));
+
           return {
             ...item,
             id: item.id || gift?.id,
             backdrop: finalBackdrop,
             image_url: finalImage,
-            lottie_url: finalImage
+            lottie_url: finalImage,
+            price: finalPrice,
+            floor_price_gram: finalPrice,
+            rarity: gift?.rarity || item.rarity
           };
         }),
         turnover: user.turnover || 0,
@@ -599,25 +541,12 @@ let currentGiftsDb = getGiftsConfig() || [...baseGiftsDb];
     });
   }
 
-  app.get("/api/me", requireAuth, async (req, res) => {
+  app.get("/api/me", requireAuth, (req, res) => {
     const userId = (req as any).userId as number;
-    let user = getUser(userId);
+    const user = getUser(userId);
     if (!user) {
       res.status(404).json({ error: "Пользователь не найден" });
       return;
-    }
-    if (user.id >= 10000) {
-      const freshPhotoUrl = await resolveTelegramPhotoUrl({ id: user.id, photo_url: user.photoUrl });
-      if (freshPhotoUrl !== user.photoUrl) {
-        user = upsertUserProfile({
-          id: user.id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          username: user.username,
-          photoUrl: freshPhotoUrl,
-          photoSynced: true,
-        });
-      }
     }
     res.json({
       user: { id: user.id, firstName: user.firstName, lastName: user.lastName, username: user.username, photoUrl: user.photoUrl },
@@ -888,10 +817,10 @@ app.post("/api/state", requireAuth, (req, res) => {
       return;
     }
     const itemBackdrop = gift ? getNftBackdrop(gift) : undefined;
+    const finalGiftPrice = isGram ? price : Number(gift.floor_price_gram || gift.price || price || 0);
     recordOpen({
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       ts: new Date().toISOString(),
-      userId: user.id,
       firstName: user.firstName || "Игрок",
       gift: isGram ? undefined : {
         id: gift.id,
@@ -900,10 +829,12 @@ app.post("/api/state", requireAuth, (req, res) => {
         pattern: gift.pattern,
         lottieUrl: gift.lottieUrl,
         slug: gift.slug,
-        price: gift.price,
+        price: finalGiftPrice,
+        floor_price_gram: finalGiftPrice,
+        rarity: gift.rarity,
         backdrop: itemBackdrop
       },
-      price,
+      price: finalGiftPrice,
       isGram: !!isGram,
       multiplier: multiplier || undefined,
       photoUrl: user.photoUrl,
@@ -932,13 +863,19 @@ app.post("/api/state", requireAuth, (req, res) => {
           ? (gift.lottie_url || gift.image_url || open.gift.image_url)
           : (open.gift.image_url || gift?.lottie_url || gift?.image_url);
 
+        const finalPrice = open.isGram ? open.price : Number(gift?.floor_price_gram || gift?.price || open.gift.floor_price_gram || open.gift.price || open.price || 0);
+
         return {
           ...open,
+          price: finalPrice,
           gift: {
             ...open.gift,
             id: open.gift.id || gift?.id,
             backdrop: finalBackdrop,
-            image_url: finalImageUrl
+            image_url: finalImageUrl,
+            rarity: gift?.rarity || open.gift?.rarity,
+            floor_price_gram: finalPrice,
+            price: finalPrice
           }
         };
       }
@@ -997,7 +934,7 @@ app.post("/api/state", requireAuth, (req, res) => {
         id: h.id,
         totalPool: h.totalPool,
         participantsCount: h.participantsCount,
-        winner: h.winner ? { id: h.winner.id, userId: h.winner.userId, username: h.winner.username, firstName: h.winner.firstName, avatar: h.winner.avatar, photoUrl: h.winner.photoUrl || h.winner.avatar } : null,
+        winner: h.winner ? { id: h.winner.id, userId: h.winner.userId, username: h.winner.username, firstName: h.winner.firstName, avatar: h.winner.avatar } : null,
         completedAt: h.completedAt,
         status: h.status,
       })),
@@ -1805,6 +1742,8 @@ app.get("/api/admin/gifts", (req, res) => {
   app.use('/api', (req, res) => {
     res.status(404).json({ error: 'API route not found' });
   });
+
+  app.use(express.static(path.join(process.cwd(), "public")));
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {

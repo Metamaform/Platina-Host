@@ -1,24 +1,67 @@
 import { useTranslation } from '../lib/i18n';
 import React, { useState, useEffect } from 'react';
-import { Trophy, Clock, Users, Sparkles, HelpCircle } from 'lucide-react';
+import { Clock, Users, HelpCircle } from 'lucide-react';
+import { AnimatedTrophy } from './AnimatedTrophy';
 import { PremiumImage } from './PremiumNftImage';
-import { UserAvatar } from './UserAvatar';
 import { GramIcon } from './GramIcon';
 import { LiquidDialog } from './ui/LiquidDialog';
 
-export function Leaderboard({ user: authUser }: { user?: any } = {}) {
+interface LeaderboardProps {
+  currentUser?: any;
+}
+
+export function Leaderboard({ currentUser: currentUserProp }: LeaderboardProps = {}) {
   const { t } = useTranslation();
-  const resolveEntryPhoto = (entry?: any) => {
-    if (!entry) return undefined;
-    if (authUser?.id != null && entry.id != null && Number(entry.id) === Number(authUser.id)) {
-      return authUser.photoUrl || entry.photoUrl;
-    }
-    return entry.photoUrl;
-  };
   const [data, setData] = useState<{ top: any[]; currentUser: any } | null>(null);
   const [config, setConfig] = useState<any>(null);
   const [timeLeft, setTimeLeft] = useState('');
   const [showRules, setShowRules] = useState(false);
+
+  const getPlayerAvatarUrl = (
+    player: { id?: number | string; username?: string; firstName?: string; photoUrl?: string } | null | undefined
+  ): string => {
+    if (!player) return '';
+
+    // 1. Is it the current user? Prioritize real live profile / telegram photo
+    const isMe =
+      (currentUserProp?.id != null && player.id != null && String(currentUserProp.id) === String(player.id)) ||
+      (player.id === 1337 && currentUserProp != null);
+
+    const tgPhoto = (typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.initDataUnsafe?.user?.photo_url) || null;
+    if (isMe && (currentUserProp?.photoUrl || tgPhoto)) {
+      return currentUserProp?.photoUrl || tgPhoto!;
+    }
+
+    // 2. Direct photoUrl if present
+    if (player.photoUrl && typeof player.photoUrl === 'string' && player.photoUrl.trim() !== '') {
+      return player.photoUrl;
+    }
+
+    // 3. Known leader top players
+    const key = `${player.id || ''} ${player.username || ''} ${player.firstName || ''}`.toLowerCase();
+    if (key.includes('metamaform')) {
+      return 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80';
+    }
+    if (key.includes('bigchif') || key.includes('goychick') || key.includes('chif')) {
+      return 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80';
+    }
+    if (key.includes('artem')) {
+      return 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80';
+    }
+    if (key.includes('elena')) {
+      return 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80';
+    }
+    if (key.includes('dmitry')) {
+      return 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80';
+    }
+    if (key.includes('sofi')) {
+      return 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80';
+    }
+
+    // 4. Stable deterministic avatar for any other player
+    const seed = encodeURIComponent(player.username || player.firstName || String(player.id || 'player'));
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
+  };
 
   useEffect(() => {
     const token = sessionStorage.getItem('pg_session_token');
@@ -75,9 +118,9 @@ export function Leaderboard({ user: authUser }: { user?: any } = {}) {
   };
 
   const getRowStyle = (rank: number) => {
-    if (rank === 1) return 'bg-gradient-to-r from-amber-500/[0.16] via-amber-500/[0.06] to-transparent border-amber-400/40 shadow-[0_0_20px_rgba(251,191,36,0.15)]';
-    if (rank === 2) return 'bg-gradient-to-r from-slate-300/[0.14] via-slate-300/[0.05] to-transparent border-slate-300/40 shadow-[0_0_16px_rgba(203,213,225,0.12)]';
-    if (rank === 3) return 'bg-gradient-to-r from-orange-500/[0.14] via-orange-500/[0.05] to-transparent border-orange-500/40 shadow-[0_0_16px_rgba(234,88,12,0.12)]';
+    if (rank === 1) return 'bg-gradient-to-r from-amber-500/[0.14] via-amber-500/[0.05] to-transparent border-amber-400/30 shadow-[0_0_15px_rgba(251,191,36,0.10)]';
+    if (rank === 2) return 'bg-gradient-to-r from-slate-300/[0.10] via-slate-300/[0.03] to-transparent border-slate-300/30';
+    if (rank === 3) return 'bg-gradient-to-r from-orange-500/[0.10] via-orange-500/[0.03] to-transparent border-orange-500/30';
     return 'bg-white/[0.04] border-white/[0.08] hover:bg-white/[0.07]';
   };
 
@@ -107,8 +150,14 @@ export function Leaderboard({ user: authUser }: { user?: any } = {}) {
 
   if (!data || !config) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="w-8 h-8 border-3 border-emerald-400 border-t-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
+      <div className="flex flex-col px-1 pb-28 relative space-y-4 pt-2">
+        <div className="premium-card rounded-[24px] p-6 h-64 skeleton" />
+        <div className="premium-card rounded-[24px] p-4 space-y-3">
+          <div className="h-10 rounded-xl skeleton w-full" />
+          <div className="h-14 rounded-2xl skeleton w-full" />
+          <div className="h-14 rounded-2xl skeleton w-full" />
+          <div className="h-14 rounded-2xl skeleton w-full" />
+        </div>
       </div>
     );
   }
@@ -121,86 +170,78 @@ export function Leaderboard({ user: authUser }: { user?: any } = {}) {
 
   return (
     <div className="flex flex-col px-1 pb-28 relative space-y-4">
-      {/* ------------------------------------------------------------- */}
-      {/* ГЛАВНОЕ ОКНО «ТОП ДНЯ» В СТИЛЕ ОКНА ВЫИГРЫША ICE ARENA        */}
-      {/* ------------------------------------------------------------- */}
-      <div className="group relative overflow-hidden rounded-[28px] border border-emerald-400/50 bg-gradient-to-b from-emerald-500/[0.18] via-[#0c1813]/90 to-[#0e1117]/95 p-5 text-center shadow-[0_0_50px_rgba(16,185,129,0.25),inset_0_1px_0_rgba(255,255,255,0.15)]">
-        {/* Верхнее изумрудное амбиентное свечение (как в окне победы Ice Arena) */}
+      {/* Верхний заголовок экрана в фирменном стиле */}
+      <div className="flex items-center justify-between px-1 pt-1">
+        <div className="flex items-center gap-2.5">
+          <AnimatedTrophy className="w-12 h-12" />
+          <h2 className="font-display text-2xl font-semibold text-white">{t('leaderboard_title')}</h2>
+        </div>
+        <button
+          onClick={() => setShowRules(true)}
+          className="flex items-center justify-center w-9 h-9 rounded-full bg-white/[0.08] border border-white/[0.10] text-white/80 transition-transform cursor-pointer hover:bg-white/[0.15]"
+          title={t('how_to_participate')}
+          aria-label={t('how_to_participate')}
+        >
+          <HelpCircle className="w-5 h-5 text-brand" />
+        </button>
+      </div>
+
+      {/* Информационный турнирный блок со счетчиком и колоннами лидеров */}
+      <div className="group relative overflow-hidden bg-white/[0.06] backdrop-blur-2xl border border-white/[0.10] rounded-[28px] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_18px_45px_-16px_rgba(0,0,0,0.85)] flex flex-col gap-4">
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute -top-12 left-1/2 -translate-x-1/2 w-64 h-28 rounded-full bg-emerald-400/30 blur-3xl"
-        />
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.12)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+          className="pointer-events-none absolute inset-0 rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0.01)_40%,transparent_62%)]"
         />
 
-        {/* Чип «ТОП ДНЯ» */}
-        <div className="relative z-10 flex items-center justify-center gap-1.5 mb-2">
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-400/15 border border-emerald-400/40 text-[10px] font-black tracking-widest uppercase text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-            <Sparkles className="w-3 h-3 text-amber-300" />
-            {t('top_day')}
-          </span>
-        </div>
-
-        {/* Заголовок */}
-        <h2 className="relative z-10 font-display text-[24px] sm:text-[26px] font-black tracking-tight text-white leading-tight">
-          {t('leaderboard_title')}
-        </h2>
-        <p className="relative z-10 text-white/60 text-[12px] sm:text-[13px] max-w-[300px] mx-auto mt-1 leading-snug">
-          {t('top_day_desc')}
-        </p>
-
-        {/* Сводные бейджи: таймер + призовые места + правила */}
-        <div className="relative z-10 flex items-center justify-center gap-2 mt-3.5 flex-wrap">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.08] border border-white/[0.12] backdrop-blur-md shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <Clock className="w-3.5 h-3.5 text-emerald-300" />
-            <span className="text-[11px] font-extrabold text-white tabular-nums">{timeLeft || '...'}</span>
-          </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.08] border border-white/[0.12] backdrop-blur-md shadow-sm">
-            <Users className="w-3.5 h-3.5 text-white/70" />
-            <span className="text-[11px] font-bold text-white/90">{config.places} {t('places')}</span>
-          </div>
-          <button
-            onClick={() => setShowRules(true)}
-            aria-label="Правила"
-            className="flex items-center justify-center w-8 h-8 rounded-full bg-white/[0.08] border border-white/[0.12] text-white/80 active:scale-95 transition-transform cursor-pointer hover:bg-white/[0.15]"
-          >
-            <HelpCircle className="w-4 h-4 text-emerald-300" />
-          </button>
-        </div>
-
-        {/* ----------------------------------------------------------- */}
-        {/* ПОДИУМ ЛИДЕРОВ ДНЯ: #2 Серебро, #1 Золото (центр), #3 Бронза */}
-        {/* ----------------------------------------------------------- */}
-        {champion && (
-          <div className="relative z-10 mt-5 pt-4 border-t border-white/[0.10]">
-            <div className="text-[10px] font-black text-amber-300 uppercase tracking-widest flex items-center justify-center gap-1 mb-3">
-              <Trophy className="w-3.5 h-3.5 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
-              {t('champion_label')}
+        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">{t('ends_in')}</span>
             </div>
+            <div className="text-2xl font-display font-extrabold text-white tabular-nums tracking-tight">
+              {timeLeft || '...'}
+            </div>
+            <p className="text-white/60 text-xs mt-1 leading-snug">
+              {t('top_players')}
+            </p>
+          </div>
 
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.08] border border-white/[0.12] backdrop-blur-md">
+              <Users className="w-4 h-4 text-white/70" />
+              <span className="text-xs font-bold text-white/90">{config.places} {t('places')}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Колонны пьедестала лидеров с призами (1, 2, 3 места) */}
+        {champion && (
+          <div className="relative z-10 mt-2 pt-4 border-t border-white/[0.08]">
             <div className="grid grid-cols-3 gap-2 items-end max-w-sm mx-auto">
-              {/* #2 Серебряный призёр */}
+              {/* #2 Колонна 2-го места */}
               {runnerUp ? (
-                <div className="flex flex-col items-center p-2 rounded-[20px] bg-slate-400/[0.08] border border-slate-300/30">
-                  <span className="text-[14px] leading-none mb-1">🥈</span>
-                  <UserAvatar
-                    src={resolveEntryPhoto(runnerUp)}
-                    alt={runnerUp.firstName || runnerUp.username || ''}
-                    className="w-12 h-12 ring-2 ring-slate-300 shadow-[0_0_12px_rgba(203,213,225,0.4)]"
-                  />
+                <div className="flex flex-col items-center p-2.5 rounded-2xl bg-white/[0.03]">
+                  <div className="relative w-12 h-12 rounded-full overflow-hidden bg-black/40 shadow-sm">
+                    <img
+                      src={getPlayerAvatarUrl(runnerUp)}
+                      alt={runnerUp.firstName || runnerUp.username || '2'}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(runnerUp.username || runnerUp.firstName || '2')}`;
+                      }}
+                    />
+                  </div>
                   <span className="text-[11px] font-bold text-white/90 truncate max-w-[80px] mt-1.5">
                     {maskName(runnerUp.firstName || runnerUp.username)}
                   </span>
-                  <div className="flex items-center gap-1 text-[11px] font-black text-slate-200 mt-0.5">
+                  <div className="flex items-center gap-1 text-[11px] font-black text-white/90 mt-0.5">
                     {formatTurnover(runnerUp.turnover)}
                     <GramIcon className="w-3 h-3 text-brand" />
                   </div>
                   {getPrizeUrl(2) && (
-                    <div className="mt-1.5 p-1 rounded-xl bg-black/30 border border-white/10" title={getPrizeName(2)}>
-                      <PremiumImage src={getPrizeUrl(2)} alt="Prize" className="w-7 h-7 object-contain drop-shadow" />
+                    <div className="mt-1 flex items-center justify-center" title={getPrizeName(2)}>
+                      <PremiumImage src={getPrizeUrl(2)} alt="Prize" className="w-9 h-9 object-contain" />
                     </div>
                   )}
                 </div>
@@ -208,50 +249,55 @@ export function Leaderboard({ user: authUser }: { user?: any } = {}) {
                 <div />
               )}
 
-              {/* #1 ЧЕМПИОН ДНЯ (Золотой кубок, увеличенный масштаб) */}
-              <div className="flex flex-col items-center p-3 rounded-[22px] bg-gradient-to-b from-amber-500/[0.22] via-emerald-500/[0.10] to-black/40 border border-amber-400/50 shadow-[0_0_25px_rgba(251,191,36,0.3)] -translate-y-1">
-                <span className="text-[20px] leading-none mb-1 animate-bounce">👑</span>
-                <UserAvatar
-                  src={resolveEntryPhoto(champion)}
-                  alt={champion.firstName || champion.username || ''}
-                  className="w-16 h-16 ring-4 ring-amber-400 shadow-[0_0_24px_rgba(251,191,36,0.7)]"
-                />
-                <span className="text-[13px] font-black text-white truncate max-w-[95px] mt-1.5">
+              {/* #1 Колонна чемпиона 1-го места */}
+              <div className="flex flex-col items-center p-3 rounded-2xl bg-white/[0.04] -translate-y-1">
+                <div className="relative w-15 h-15 rounded-full overflow-hidden bg-black/50 shadow-md">
+                  <img
+                    src={getPlayerAvatarUrl(champion)}
+                    alt={champion.firstName || champion.username || '1'}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(champion.username || champion.firstName || '1')}`;
+                    }}
+                  />
+                </div>
+                <span className="text-xs font-black text-white truncate max-w-[90px] mt-1.5">
                   {maskName(champion.firstName || champion.username)}
                 </span>
-                <div className="flex items-center gap-1 text-[13px] font-black text-amber-300 mt-0.5 drop-shadow">
+                <div className="flex items-center gap-1 text-xs font-black text-white mt-0.5">
                   {formatTurnover(champion.turnover)}
-                  <GramIcon className="w-3.5 h-3.5 text-brand drop-shadow-[0_0_8px_rgba(0,152,234,0.7)]" />
+                  <GramIcon className="w-3.5 h-3.5 text-brand" />
                 </div>
                 {getPrizeUrl(1) && (
-                  <div className="mt-1.5 p-1 rounded-xl bg-black/40 border border-amber-400/40 shadow-[0_0_10px_rgba(251,191,36,0.3)] flex flex-col items-center" title={getPrizeName(1)}>
-                    <PremiumImage src={getPrizeUrl(1)} alt="Prize" className="w-9 h-9 object-contain drop-shadow-md" />
-                    <span className="text-[8px] font-black uppercase text-amber-300 mt-0.5 tracking-wider">
-                      {t('guaranteed_prize')}
-                    </span>
+                  <div className="mt-1 flex items-center justify-center" title={getPrizeName(1)}>
+                    <PremiumImage src={getPrizeUrl(1)} alt="Prize" className="w-11 h-11 object-contain" />
                   </div>
                 )}
               </div>
 
-              {/* #3 Бронзовый призёр */}
+              {/* #3 Колонна 3-го места */}
               {thirdPlace ? (
-                <div className="flex flex-col items-center p-2 rounded-[20px] bg-amber-600/[0.08] border border-amber-600/30">
-                  <span className="text-[14px] leading-none mb-1">🥉</span>
-                  <UserAvatar
-                    src={resolveEntryPhoto(thirdPlace)}
-                    alt={thirdPlace.firstName || thirdPlace.username || ''}
-                    className="w-12 h-12 ring-2 ring-amber-600 shadow-[0_0_12px_rgba(217,119,6,0.4)]"
-                  />
+                <div className="flex flex-col items-center p-2.5 rounded-2xl bg-white/[0.03]">
+                  <div className="relative w-12 h-12 rounded-full overflow-hidden bg-black/40 shadow-sm">
+                    <img
+                      src={getPlayerAvatarUrl(thirdPlace)}
+                      alt={thirdPlace.firstName || thirdPlace.username || '3'}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(thirdPlace.username || thirdPlace.firstName || '3')}`;
+                      }}
+                    />
+                  </div>
                   <span className="text-[11px] font-bold text-white/90 truncate max-w-[80px] mt-1.5">
                     {maskName(thirdPlace.firstName || thirdPlace.username)}
                   </span>
-                  <div className="flex items-center gap-1 text-[11px] font-black text-amber-400 mt-0.5">
+                  <div className="flex items-center gap-1 text-[11px] font-black text-white/90 mt-0.5">
                     {formatTurnover(thirdPlace.turnover)}
                     <GramIcon className="w-3 h-3 text-brand" />
                   </div>
                   {getPrizeUrl(3) && (
-                    <div className="mt-1.5 p-1 rounded-xl bg-black/30 border border-white/10" title={getPrizeName(3)}>
-                      <PremiumImage src={getPrizeUrl(3)} alt="Prize" className="w-7 h-7 object-contain drop-shadow" />
+                    <div className="mt-1 flex items-center justify-center" title={getPrizeName(3)}>
+                      <PremiumImage src={getPrizeUrl(3)} alt="Prize" className="w-9 h-9 object-contain" />
                     </div>
                   )}
                 </div>
@@ -263,9 +309,7 @@ export function Leaderboard({ user: authUser }: { user?: any } = {}) {
         )}
       </div>
 
-      {/* ------------------------------------------------------------- */}
-      {/* ТАБЛИЦА ВСЕХ ИГРОКОВ (Жидкое стекло с аккуратными рядами)     */}
-      {/* ------------------------------------------------------------- */}
+      {/* Таблица игроков с колонкой призов */}
       <div className="group relative overflow-hidden bg-white/[0.06] backdrop-blur-2xl border border-white/[0.10] rounded-[28px] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_18px_45px_-16px_rgba(0,0,0,0.85)] flex flex-col gap-2">
         <span
           aria-hidden="true"
@@ -275,9 +319,12 @@ export function Leaderboard({ user: authUser }: { user?: any } = {}) {
         {/* Заголовки колонок */}
         <div className="relative z-10 flex items-center gap-3 px-3 py-1.5 bg-white/[0.04] border border-white/[0.06] rounded-[16px] text-[10px] font-bold text-white/50 uppercase tracking-wider">
           <div className="w-[34px] shrink-0 text-center">#</div>
-          <div className="flex-1 min-w-0">{t('user')}</div>
+          <div className="flex-1 min-w-0 flex items-center gap-3">
+            <div className="w-[38px] shrink-0" aria-hidden="true" />
+            <span>{t('user')}</span>
+          </div>
           <div className="w-12 shrink-0 text-center">{t('prize')}</div>
-          <div className="shrink-0 text-right min-w-[64px]">{t('turnover_col')}</div>
+          <div className="w-[92px] shrink-0 text-right pr-2">{t('turnover_col')}</div>
         </div>
 
         {top.length === 0 ? (
@@ -300,11 +347,16 @@ export function Leaderboard({ user: authUser }: { user?: any } = {}) {
                 </div>
 
                 {/* Аватар */}
-                <UserAvatar
-                  src={resolveEntryPhoto(user)}
-                  alt={user.firstName || user.username || ''}
-                  className="w-[38px] h-[38px] shrink-0 border border-white/[0.12] shadow-sm"
-                />
+                <div className="w-[38px] h-[38px] shrink-0 rounded-full overflow-hidden bg-white/[0.08] border border-white/[0.12] shadow-sm">
+                  <img
+                    src={getPlayerAvatarUrl(user)}
+                    alt={user.firstName || user.username || ''}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.username || user.firstName || String(user.id))}`;
+                    }}
+                  />
+                </div>
 
                 {/* Имя */}
                 <div className="flex-1 min-w-0">
@@ -312,29 +364,24 @@ export function Leaderboard({ user: authUser }: { user?: any } = {}) {
                     {maskName(user.firstName || user.username)}
                   </span>
                   {user.rank <= 3 && (
-                    <span className="text-[10px] font-semibold text-emerald-300/80">
+                    <span className="text-[10px] font-semibold text-brand/90">
                       {user.rank === 1 ? '🥇 Топ 1' : user.rank === 2 ? '🥈 Топ 2' : '🥉 Топ 3'}
                     </span>
                   )}
                 </div>
 
-                {/* Приз */}
-                {prizeUrl ? (
-                  <div className="flex flex-col items-center justify-center shrink-0 w-12" title={prizeName}>
-                    <PremiumImage src={prizeUrl} alt="Prize" className="w-9 h-9 object-contain drop-shadow-md" />
-                    <span className="text-[8px] text-amber-300 font-bold uppercase mt-0.5">
-                      {t('prize')}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="w-12 shrink-0" />
-                )}
+                {/* Приз (Колонка с призом - фиксированная ширина w-12) */}
+                <div className="w-12 shrink-0 flex items-center justify-center text-center" title={prizeName}>
+                  {prizeUrl ? (
+                    <PremiumImage src={prizeUrl} alt="Prize" className="w-8 h-8 object-contain drop-shadow-md" />
+                  ) : null}
+                </div>
 
-                {/* Оборот */}
-                <div className="text-right shrink-0">
-                  <div className="px-2.5 py-1 rounded-full bg-white/[0.06] border border-white/[0.08] flex items-center justify-center gap-1 min-w-[64px]">
-                    <span className="font-bold text-white text-[13px] block tabular-nums">{formatTurnover(user.turnover)}</span>
-                    <GramIcon className="w-3.5 h-3.5 text-brand" />
+                {/* Оборот (Фиксированная ширина w-[92px] без усечения точками) */}
+                <div className="w-[92px] shrink-0 flex items-center justify-end">
+                  <div className="px-2.5 py-1 rounded-full bg-white/[0.06] border border-white/[0.08] flex items-center justify-center gap-1">
+                    <span className="font-bold text-white text-[12px] block tabular-nums whitespace-nowrap">{formatTurnover(user.turnover)}</span>
+                    <GramIcon className="w-3.5 h-3.5 text-brand shrink-0" />
                   </div>
                 </div>
               </div>
@@ -343,33 +390,31 @@ export function Leaderboard({ user: authUser }: { user?: any } = {}) {
         )}
       </div>
 
-      {/* ------------------------------------------------------------- */}
-      {/* ФИКСИРОВАННАЯ СТРОКА ТЕКУЩЕГО ИГРОКА (В СТИЛЕ ICE ARENA)       */}
-      {/* ------------------------------------------------------------- */}
+      {/* Фиксированная строка текущего игрока в фирменном стиле */}
       {currentUser && (
         <div className="fixed bottom-[95px] left-0 right-0 px-4 z-40 pointer-events-none">
           <div className="max-w-sm mx-auto pointer-events-auto">
-            <div className="group relative overflow-hidden bg-gradient-to-r from-[#0d2217]/95 via-[#13161c]/95 to-[#0d2217]/95 backdrop-blur-2xl border border-emerald-400/50 rounded-full px-3.5 py-2 flex items-center gap-3 shadow-[0_0_35px_rgba(16,185,129,0.35),inset_0_1px_0_rgba(255,255,255,0.18)]">
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 rounded-full bg-[linear-gradient(180deg,rgba(255,255,255,0.12)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
-              />
-
+            <div className="group relative overflow-hidden bg-[#18181b]/95 backdrop-blur-2xl border border-brand/35 rounded-full px-3.5 py-2 flex items-center gap-3 shadow-[0_4px_25px_rgba(0,152,234,0.25),inset_0_1px_0_rgba(255,255,255,0.15)]">
               {/* Место */}
               <div className={`relative z-10 w-[32px] h-[32px] shrink-0 rounded-full flex items-center justify-center font-bold text-xs ${getRankBadge(currentUser.rank)}`}>
                 {currentUser.rank > 999 ? '999+' : currentUser.rank}
               </div>
 
               {/* Аватар */}
-              <UserAvatar
-                src={resolveEntryPhoto(currentUser)}
-                alt={currentUser.firstName || currentUser.username || ''}
-                className="relative z-10 w-[34px] h-[34px] shrink-0 border border-white/[0.12] shadow-sm"
-              />
+              <div className="relative z-10 w-[34px] h-[34px] shrink-0 rounded-full overflow-hidden bg-white/[0.08] border border-white/[0.12] shadow-sm">
+                <img
+                  src={getPlayerAvatarUrl(currentUser)}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(currentUser.username || currentUser.firstName || 'me')}`;
+                  }}
+                />
+              </div>
 
               {/* Бейдж YOU */}
               <div className="relative z-10 flex-1 min-w-0 flex items-center">
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/25 border border-emerald-400/50 text-emerald-300 text-[11px] font-black tracking-wide shadow-sm">
+                <span className="px-2.5 py-0.5 rounded-full bg-brand/20 border border-brand/40 text-brand text-[11px] font-bold tracking-wide">
                   {t('you')}
                 </span>
               </div>
@@ -380,9 +425,8 @@ export function Leaderboard({ user: authUser }: { user?: any } = {}) {
                 const prizeName = getPrizeName(currentUser.rank);
                 if (prizeUrl) {
                   return (
-                    <div className="relative z-10 flex flex-col items-center justify-center shrink-0 w-10" title={prizeName}>
-                      <PremiumImage src={prizeUrl} alt="Prize" className="w-7 h-7 object-contain drop-shadow" />
-                      <span className="text-[8px] text-amber-300 font-bold uppercase">{t('prize')}</span>
+                    <div className="relative z-10 flex items-center justify-center shrink-0 w-10" title={prizeName}>
+                      <PremiumImage src={prizeUrl} alt="Prize" className="w-8 h-8 object-contain drop-shadow" />
                     </div>
                   );
                 }
@@ -390,10 +434,10 @@ export function Leaderboard({ user: authUser }: { user?: any } = {}) {
               })()}
 
               {/* Оборот */}
-              <div className="relative z-10 text-right shrink-0">
-                <div className="px-2.5 py-1 rounded-full bg-white/[0.08] border border-white/[0.12] flex items-center justify-center gap-1 min-w-[60px]">
-                  <span className="font-bold text-white text-[12px] block tabular-nums">{formatTurnover(currentUser.turnover)}</span>
-                  <GramIcon className="w-3 h-3 text-brand" />
+              <div className="relative z-10 text-right shrink-0 flex items-center justify-end">
+                <div className="px-2.5 py-1 rounded-full bg-white/[0.08] border border-white/[0.12] flex items-center justify-center gap-1">
+                  <span className="font-bold text-white text-[12px] block tabular-nums whitespace-nowrap">{formatTurnover(currentUser.turnover)}</span>
+                  <GramIcon className="w-3 h-3 text-brand shrink-0" />
                 </div>
               </div>
             </div>
@@ -406,12 +450,12 @@ export function Leaderboard({ user: authUser }: { user?: any } = {}) {
         <LiquidDialog
           title={t('how_to_participate')}
           subtitle={t('tournament_rules')}
-          icon={<Trophy className="w-4 h-4 text-emerald-400" />}
+          icon={<AnimatedTrophy className="w-[30px] h-[30px]" />}
           onClose={() => setShowRules(false)}
           actionLabel={t('got_it')}
         >
           <div className="space-y-2.5 pb-1">
-            <p className="text-center text-white/90 text-[13px] rounded-2xl p-3.5 bg-emerald-500/[0.08] border border-emerald-400/30">
+            <p className="text-center text-white/90 text-[13px] rounded-2xl p-3.5 bg-brand/[0.08] border border-brand/30">
               {t('play_modes')} <GramIcon className="w-3.5 h-3.5 mx-1 inline-block text-brand" /> <b>GRAM</b>.
             </p>
             <div className="rounded-2xl p-3.5 bg-white/[0.04] border border-white/[0.08]">

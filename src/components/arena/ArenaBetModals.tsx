@@ -6,10 +6,11 @@
 */
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { motion } from 'motion/react';
 import { X, AlertTriangle } from 'lucide-react';
 import { GramIcon } from '../GramIcon';
 import { NftSelectorGrid } from '../NftSelectorGrid';
-import { LiquidSegment } from '../ui/LiquidSegment';
+import { haptics } from '../../lib/haptics';
 
 interface BetModalProps {
   onClose: () => void;
@@ -109,83 +110,104 @@ export const BetModal: React.FC<BetModalProps> = ({
   return (
     <div className="fixed inset-0 z-[120] flex items-end justify-center" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="group relative w-full max-w-md bg-[#16171b]/95 backdrop-blur-2xl rounded-t-[32px] p-5 pb-8 flex flex-col shadow-2xl border-t border-white/[0.12] overflow-hidden max-h-[88vh] overflow-y-auto custom-scrollbar">
+      <div className="group relative w-full max-w-md bg-[#16171b]/98 backdrop-blur-2xl rounded-t-[24px] px-4 pt-3 pb-5 flex flex-col shadow-2xl border-t border-white/[0.12] overflow-hidden max-h-[88vh] overflow-y-auto custom-scrollbar">
         {/* верхний блик жидкого стекла */}
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-t-[32px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+          className="pointer-events-none absolute inset-0 rounded-t-[24px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
         />
 
-        <div className="relative z-10 flex items-center justify-between mb-4">
-          <div className="w-8" />
-          <h2 className="text-[17px] font-display font-bold text-white text-center">
-            {t('arena_make_bet')}
+        <div className="relative z-10 flex items-center justify-between mb-2.5">
+          <div className="w-7" />
+          <h2 className="text-[15px] font-display font-bold text-white text-center">
+            {t('arena_make_bet') || 'Сделать ставку'}
           </h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white cursor-pointer"
+            className="w-7 h-7 rounded-full bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center text-white/70 hover:text-white cursor-pointer transition-colors"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        <div className="relative z-10 mb-4 w-full flex rounded-2xl bg-white/[0.04] p-1 border border-white/[0.06]">
+        <div className="relative z-10 mb-2.5 w-full flex rounded-xl bg-white/[0.04] p-0.5 border border-white/[0.06]">
           <button
             type="button"
-            onClick={() => setMode('nft')}
-            className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
-              mode === 'nft'
-                ? 'bg-white text-black shadow-sm'
-                : 'text-white/60 hover:text-white'
-            }`}
+            onClick={() => {
+              setMode('nft');
+              haptics.selection();
+            }}
+            className="relative flex-1 py-1 text-center text-xs font-bold rounded-lg transition-colors cursor-pointer z-10"
           >
-            {t('gifts')}
+            {mode === 'nft' && (
+              <motion.div
+                layoutId="arena-bet-modal-mode-pill"
+                className="absolute inset-0 bg-white rounded-lg shadow-sm -z-10"
+                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+              />
+            )}
+            <span className={mode === 'nft' ? 'text-black font-bold' : 'text-white/60 hover:text-white font-bold'}>
+              {t('gifts')}
+            </span>
           </button>
           <button
             type="button"
-            onClick={() => setMode('gram')}
-            className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
-              mode === 'gram'
-                ? 'bg-white text-black shadow-sm'
-                : 'text-white/60 hover:text-white'
-            }`}
+            onClick={() => {
+              setMode('gram');
+              haptics.selection();
+            }}
+            className="relative flex-1 py-1 text-center text-xs font-bold rounded-lg transition-colors cursor-pointer z-10"
           >
-            GRAM
+            {mode === 'gram' && (
+              <motion.div
+                layoutId="arena-bet-modal-mode-pill"
+                className="absolute inset-0 bg-white rounded-lg shadow-sm -z-10"
+                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+              />
+            )}
+            <span className={mode === 'gram' ? 'text-black font-bold' : 'text-white/60 hover:text-white font-bold'}>
+              GRAM
+            </span>
           </button>
         </div>
 
-        {/* Тело: GRAM-ввод или выбор NFT */}
-        <div className="relative z-10 bg-white/[0.04] border border-white/[0.08] rounded-[24px] p-5 mb-4 flex flex-col items-center justify-center min-h-[120px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+        {/* Тело: Компактный GRAM-ввод или выбор NFT */}
+        <div className="relative z-10 bg-white/[0.03] border border-white/[0.06] rounded-[18px] p-3 mb-2.5 flex flex-col items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
           {mode === 'gram' ? (
             <>
-              <div className="absolute top-3.5 left-4 flex items-center gap-1.5 text-white/50 text-[12px] font-medium">
-                <span>{t('balance')}:</span>
-                <span className="text-white font-bold">{balance.toFixed(2)}</span>
-                <GramIcon className="w-3.5 h-3.5 text-brand" />
+              <div className="w-full flex items-center justify-between px-1 mb-1.5">
+                <div className="flex items-center gap-1.5 text-white/50 text-[11px] font-medium">
+                  <span>{t('balance')}:</span>
+                  <span className="text-white font-bold">{balance.toFixed(2)}</span>
+                  <GramIcon className="w-3 h-3 text-brand" />
+                </div>
               </div>
-              <div className="relative w-full text-center flex items-center justify-center mb-4 mt-2">
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={betInput}
-                  onChange={handleBetChange}
-                  className="bg-transparent text-center text-4xl font-display font-bold text-white outline-none w-full max-w-[200px]"
-                  placeholder={minBet.toFixed(2)}
-                />
+              <div className="relative w-full flex items-center justify-center mb-2">
+                <div className="px-3.5 py-1 rounded-xl bg-white/[0.04] border border-white/[0.10] focus-within:border-[#0098ea] transition-all flex items-center justify-center gap-1.5 shadow-inner">
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={betInput}
+                    onChange={handleBetChange}
+                    className="bg-transparent text-center text-xl font-display font-bold text-white outline-none w-24"
+                    placeholder={minBet.toFixed(2)}
+                  />
+                  <GramIcon className="w-3.5 h-3.5 text-brand shrink-0" />
+                </div>
               </div>
-              <div className="flex gap-1.5">
+              <div className="flex gap-1.5 flex-wrap justify-center">
                 {[1, 5, 25, 50].map((amt) => (
                   <button
                     key={amt}
                     onClick={() => setBetAdd(amt)}
-                    className="px-3 py-1.5 rounded-full lg-glass text-white text-[12px] font-bold active:scale-95 transition-all cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-white text-[11px] font-bold transition-all cursor-pointer"
                   >
                     +{amt}
                   </button>
                 ))}
                 <button
                   onClick={setBetMax}
-                  className="px-3 py-1.5 rounded-full bg-gradient-to-r from-[#0098ea] to-[#00b4d8] hover:brightness-110 border border-cyan-300/40 text-white text-[12px] font-bold active:scale-95 transition-all cursor-pointer shadow-[0_0_12px_rgba(0,152,234,0.45),inset_0_1px_0_rgba(255,255,255,0.3)]"
+                  className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-[#0098ea] to-[#00b4d8] hover:brightness-110 border border-cyan-300/40 text-white text-[11px] font-bold transition-all cursor-pointer shadow-[0_0_8px_rgba(0,152,234,0.35)]"
                 >
                   MAX
                 </button>
@@ -198,7 +220,7 @@ export const BetModal: React.FC<BetModalProps> = ({
                 selectedIds={selectedNft ? [selectedNft.uniqueId || selectedNft.id] : []}
                 onSelect={(item) => setSelectedNft(item)}
                 maxBetGram={maxBet}
-                maxContainerHeight="max-h-[300px]"
+                maxContainerHeight="max-h-[250px]"
                 emptyText={t('arena_inventory_empty')}
               />
               {selectedNft && (
@@ -211,7 +233,7 @@ export const BetModal: React.FC<BetModalProps> = ({
         </div>
 
         {shownError && (
-          <div className="relative z-10 flex items-center gap-2 rounded-[16px] border border-red-500/40 bg-red-500/[0.08] px-3.5 py-2.5 mb-3">
+          <div className="relative z-10 flex items-center gap-2 rounded-[14px] border border-red-500/40 bg-red-500/[0.08] px-3 py-2 mb-2.5">
             <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
             <span className="text-[12px] font-semibold text-red-400">{shownError}</span>
           </div>
@@ -220,7 +242,7 @@ export const BetModal: React.FC<BetModalProps> = ({
         <button
           onClick={() => canConfirm && onConfirm(mode === 'gram' ? betGram : 0, mode === 'nft' ? selectedNft : null)}
           disabled={!canConfirm}
-          className="relative z-10 w-full font-display font-bold text-[16px] py-4 rounded-full active:scale-[0.98] transition-all shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          className="relative z-10 w-full font-display font-bold text-[15px] py-3 rounded-xl transition-all shadow-[0_4px_18px_rgba(0,152,234,0.45),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
         >
           {submitting ? t('arena_sending') : t('arena_confirm')}
         </button>

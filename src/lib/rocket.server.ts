@@ -98,14 +98,6 @@ export function getRocketState(userId?: number) {
     currentMultiplier = currentRound.crashMultiplier;
   }
 
-  const syncBetAvatar = (b: RocketBet): RocketBet => {
-    const u = b.userId > 0 ? getUser(b.userId) : null;
-    return {
-      ...b,
-      photoUrl: u?.photoUrl || b.photoUrl,
-    };
-  };
-
   return {
     roundId: currentRound.id,
     state: currentRound.state,
@@ -116,8 +108,8 @@ export function getRocketState(userId?: number) {
     crashMultiplier: currentRound.state === 'crashed' ? currentRound.crashMultiplier : undefined,
     remainingWaitingMs: Math.max(0, currentRound.launchTime - now),
     serverTime: now,
-    bets: currentRound.bets.map(syncBetAvatar), // ONLY real people
-    queuedBets: currentRound.queuedBets.map(syncBetAvatar),
+    bets: currentRound.bets, // ONLY real people
+    queuedBets: currentRound.queuedBets,
     history: currentRound.history
   };
 }
@@ -272,7 +264,6 @@ export function cashoutRocketBet(userId: number) {
   recordOpen({
     id: `rocket-${Date.now()}-${userId}`,
     ts: new Date().toISOString(),
-    userId,
     firstName: user.firstName || 'Player',
     price: winAmount,
     isGram: !wonGift,

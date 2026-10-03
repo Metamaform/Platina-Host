@@ -1,17 +1,17 @@
 import { useTranslation } from '../lib/i18n';
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { incrementStat, recordGameProgress } from '../lib/stats';
-import { ArrowLeft, Zap, Trophy, Bomb, X, TrendingUp, Shuffle, Trash2 } from 'lucide-react';
+import { ArrowLeft, Zap, Trophy, Bomb, X, TrendingUp, Shuffle, Trash2, History } from 'lucide-react';
 import { GramIcon } from './GramIcon';
 import { PremiumImage } from './PremiumNftImage';
-import { UserAvatar } from './UserAvatar';
 import { CleanModelLottie } from './ModelCleaningAnimation';
 import { BombNft } from './NftBomb';
 import { getNftBackdrop } from '../lib/nftUtils';
 import { NftSelectorGrid } from './NftSelectorGrid';
 import { RangeControl } from './ui/RangeControl';
 import { LiquidSegment } from './ui/LiquidSegment';
+import { BetHistoryModal, BetHistoryRecord } from './BetHistoryModal';
 
 function getMultiplier(mines: number, opened: number): number {
   if (opened === 0) return 1;
@@ -53,7 +53,6 @@ export function Mines({
   onTurnover, 
   onWin, 
   giftsDb,
-  user,
   onNavigate
 }: { 
   onBack: () => void,
@@ -64,7 +63,6 @@ export function Mines({
   onTurnover: (amt: number) => void,
   onWin: (amt: number, mode: 'gram' | 'nft', item?: any, mult?: number) => void,
   giftsDb: any[],
-  user?: any,
   onNavigate?: (target: string) => void
 }) {
   const { t } = useTranslation();
@@ -143,6 +141,56 @@ export function Mines({
   
     const initialSession = useMemo(() => getInitialMinesSession(), []);
   
+  const [showBetHistory, setShowBetHistory] = useState<boolean>(false);
+  const userHistoryKey = 'mines_user_history_me';
+  const [userGames, setUserGames] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem(userHistoryKey);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [
+      { id: 'm_1', roundId: '49120', timestamp: Date.now() - 1000 * 60 * 8, betAmount: 10, mode: 'gram', multiplier: 2.14, winAmount: 21.4, isWon: true, minesCount: 3, safeOpened: 4 },
+      { id: 'm_2', roundId: '49118', timestamp: Date.now() - 1000 * 60 * 25, betAmount: 5, mode: 'gram', multiplier: 0, winAmount: 0, isWon: false, minesCount: 5, safeOpened: 2 },
+      { id: 'm_3', roundId: '49115', timestamp: Date.now() - 1000 * 60 * 50, betAmount: 15, mode: 'gram', multiplier: 3.52, winAmount: 52.8, isWon: true, minesCount: 3, safeOpened: 6 },
+    ];
+  });
+
+  const recordMinesGame = useCallback((gameItem: any) => {
+    setUserGames(prev => {
+      const next = [gameItem, ...prev].slice(0, 20);
+      try {
+        localStorage.setItem(userHistoryKey, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }, [userHistoryKey]);
+
+  const userMinesBetHistory: BetHistoryRecord[] = useMemo(() => {
+    return userGames.map((g, idx) => {
+      const isWon = g.isWon;
+      const profit = isWon ? Math.max(0, g.winAmount - g.betAmount) : g.betAmount;
+      return {
+        id: g.id || `${840000 + (idx * 13 + 7) % 65000}`,
+        roundId: g.roundId || `${841000 + (idx * 19 + 3) % 65000}`,
+        timestamp: g.timestamp,
+        betAmount: g.betAmount,
+        mode: g.mode,
+        gift: g.gift,
+        multiplier: g.multiplier,
+        winAmount: g.winAmount,
+        isWon,
+        payoutGram: g.mode === 'gram' ? g.winAmount : (g.remainder || 0),
+        payoutItem: g.gift?.name || (g.mode === 'nft' ? 'NFT' : '-'),
+        cashoutType: isWon ? `Открыто: ${g.safeOpened ?? 1} (Мин: ${g.minesCount ?? 3})` : `Поражение (Мин: ${g.minesCount ?? 3})`,
+        cashoutMult: g.multiplier,
+        acceptedAt: g.multiplier,
+        crashMult: g.multiplier,
+        balanceBefore: balance + (isWon ? -profit : g.betAmount),
+        balanceAfter: balance
+      };
+    });
+  }, [userGames, balance]);
+
   const [minesCount, setMinesCount] = useState<number>(initialSession?.minesCount || 1);
   const [gameState, setGameState] = useState<'idle' | 'playing'>(initialSession?.gameState || 'idle');
   const [activeBetValue, setActiveBetValue] = useState<number>(initialSession?.activeBetValue || 0);
@@ -312,12 +360,38 @@ export function Mines({
       setShowResult({ type: 'win', item: uniqueItem, amount: remainder > 0 ? remainder : undefined });
       incrementStat('stat_mines_wins');
       recordGameProgress('mines', activeBetValue, finalMult, 1);
+      recordMinesGame({
+        id: `m_${Date.now()}`,
+        roundId: `${Math.floor(Date.now() / 1000)}`,
+        timestamp: Date.now(),
+        betAmount: activeBetValue,
+        mode,
+        gift: uniqueItem,
+        multiplier: finalMult,
+        winAmount,
+        remainder: remainder > 0 ? remainder : 0,
+        isWon: true,
+        minesCount,
+        safeOpened
+      });
     } else {
       setBalance(b => b + winAmount);
       onWin(winAmount, 'gram', undefined, finalMult);
       setShowResult({ type: 'win', amount: winAmount });
       incrementStat('stat_mines_wins');
       recordGameProgress('mines', activeBetValue, finalMult, 1);
+      recordMinesGame({
+        id: `m_${Date.now()}`,
+        roundId: `${Math.floor(Date.now() / 1000)}`,
+        timestamp: Date.now(),
+        betAmount: activeBetValue,
+        mode,
+        multiplier: finalMult,
+        winAmount,
+        isWon: true,
+        minesCount,
+        safeOpened
+      });
     }
     
     setGameState('idle');
@@ -336,6 +410,20 @@ export function Mines({
       currentBetNftRef.current = null;
       setSelectedNft(null);
       localStorage.removeItem('mines_selectedNftModel');
+
+      recordMinesGame({
+        id: `m_${Date.now()}`,
+        roundId: `${Math.floor(Date.now() / 1000)}`,
+        timestamp: Date.now(),
+        betAmount: activeBetValue,
+        mode,
+        gift: lostNft,
+        multiplier: 0,
+        winAmount: 0,
+        isWon: false,
+        minesCount,
+        safeOpened
+      });
     } else {
       const newOpened = safeOpened + 1;
       let currentMult = getMultiplier(minesCount, newOpened);
@@ -401,13 +489,20 @@ export function Mines({
     <div className="h-full w-full flex flex-col bg-canvas text-white relative">
       <button 
         onClick={onBack}
-        className="absolute top-4 left-4 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer z-20"
+        className="absolute top-4 left-4 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all cursor-pointer z-20"
       >
         <ArrowLeft className="w-4 h-4 text-white" />
       </button>
       <div className="absolute top-0 left-0 right-0 h-[72px] flex items-center justify-center pointer-events-none z-10">
         <h1 className="font-display text-lg font-bold text-white drop-shadow-md">{t('mines_title')}</h1>
       </div>
+      <button 
+        onClick={() => setShowBetHistory(true)}
+        className="absolute top-4 right-4 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all cursor-pointer z-20"
+        title="История ставок (Provably Fair)"
+      >
+        <History className="w-4 h-4 text-white" />
+      </button>
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col pt-[72px]">
         <div className="px-4 py-6 flex flex-col items-center">
@@ -425,7 +520,7 @@ export function Mines({
                       ? cell.isMine 
                         ? 'bg-danger/20 border-2 border-danger shadow-[0_0_15px_rgba(239,68,68,0.3)]' 
                         : 'bg-brand/10 border border-brand/50 shadow-[0_0_15px_rgba(255,184,0,0.1)]'
-                      : 'lg-glass active:scale-95 transition-all'
+                      : 'lg-glass transition-all'
                     }
                   `}
                 >
@@ -511,7 +606,7 @@ export function Mines({
           {gameState === 'idle' ? (
             <button
               onClick={() => setShowBetModal(true)}
-              className="w-full relative overflow-hidden group rounded-full font-display font-bold text-[17px] tracking-wide active:scale-[0.98] transition-all py-4 shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white cursor-pointer"
+              className="w-full relative overflow-hidden group rounded-2xl font-display font-bold text-[17px] tracking-wide transition-transform py-4 primary-button text-white cursor-pointer shadow-lg"
             >
               <span className="relative z-10 drop-shadow-sm">{t('mines_make_bet') || t('make_bet_btn')}</span>
             </button>
@@ -519,10 +614,10 @@ export function Mines({
             <button
               onClick={() => handleCashout()}
               disabled={safeOpened === 0}
-              className={`w-full relative overflow-hidden group rounded-full font-display font-bold text-[17px] tracking-wide active:scale-[0.98] transition-all py-4 cursor-pointer
+              className={`w-full relative overflow-hidden group rounded-2xl font-display font-bold text-[17px] tracking-wide transition-transform py-4 cursor-pointer
                 ${safeOpened > 0 
-                  ? 'bg-gradient-to-r from-[#10b981] via-[#059669] to-[#10b981] text-white shadow-[0_4px_24px_rgba(16,185,129,0.55),inset_0_1px_0_rgba(255,255,255,0.4)] hover:brightness-110' 
-                  : 'lg-glass text-white/30 cursor-not-allowed'}
+                  ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500 text-white shadow-[0_4px_24px_rgba(16,185,129,0.55),inset_0_1px_0_rgba(255,255,255,0.4)] hover:brightness-110' 
+                  : 'bg-white/[0.08] text-white/30 cursor-not-allowed'}
               `}
             >
               <span className="relative z-10 drop-shadow-sm">
@@ -557,15 +652,7 @@ export function Mines({
                   className="flex items-center justify-between bg-white/[0.05] backdrop-blur-xl rounded-[22px] p-3 border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
                 >
                   <div className="flex items-center gap-3">
-                    <UserAvatar
-                      src={
-                        (open.userId != null && user?.id != null && Number(open.userId) === Number(user.id))
-                          ? (user.photoUrl || open.photoUrl)
-                          : open.photoUrl
-                      }
-                      alt={open.firstName}
-                      className="w-10 h-10 shrink-0 border border-white/10"
-                    />
+                    <img src={open.photoUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${open.firstName || undefined}`} alt="" className="w-10 h-10 rounded-full bg-white/5 shrink-0 object-cover" />
                     <div className="flex flex-col">
                       <span className="text-white font-medium text-[15px] truncate max-w-[100px]">{open.firstName}</span>
                       <div className="flex items-center gap-1.5 opacity-60">
@@ -621,81 +708,98 @@ export function Mines({
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="group fixed bottom-0 left-0 right-0 z-[110] bg-[#16171b]/95 backdrop-blur-2xl rounded-t-[32px] p-5 pb-8 flex flex-col shadow-2xl border-t border-white/[0.12] max-w-md mx-auto overflow-hidden"
+              className="group fixed bottom-0 left-0 right-0 z-[110] bg-[#16171b]/98 backdrop-blur-2xl rounded-t-[24px] px-4 pt-3 pb-5 flex flex-col shadow-2xl border-t border-white/[0.12] max-w-md mx-auto overflow-hidden"
             >
               {/* верхний блик жидкого стекла */}
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 rounded-t-[32px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+                className="pointer-events-none absolute inset-0 rounded-t-[24px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
               />
 
-              <div className="relative z-10 flex items-center justify-between mb-4">
-                <div className="w-8" />
-                <h2 className="text-[17px] font-display font-bold text-white text-center">{t('make_bet_title')}</h2>
+              <div className="relative z-10 flex items-center justify-between mb-2.5">
+                <div className="w-7" />
+                <h2 className="text-[15px] font-display font-bold text-white text-center">
+                  {t('make_bet_title') || 'Сделать ставку'}
+                </h2>
                 <button 
                   onClick={() => setShowBetModal(false)}
-                  className="w-8 h-8 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white cursor-pointer"
+                  className="w-7 h-7 rounded-full bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center text-white/70 hover:text-white cursor-pointer transition-colors"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              <div className="relative z-10 mb-4 w-full flex rounded-2xl bg-white/[0.04] p-1 border border-white/[0.06]">
+              <div className="relative z-10 mb-2.5 w-full flex rounded-xl bg-white/[0.04] p-0.5 border border-white/[0.06]">
                 <button
                   type="button"
                   onClick={() => setMode('nft')}
-                  className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                    mode === 'nft'
-                      ? 'bg-white text-black shadow-sm'
-                      : 'text-white/60 hover:text-white'
-                  }`}
+                  className="relative flex-1 py-1 text-center text-xs font-bold rounded-lg transition-colors cursor-pointer z-10"
                 >
-                  {t('gifts')}
+                  {mode === 'nft' && (
+                    <motion.div
+                      layoutId="mines-bet-mode-pill"
+                      className="absolute inset-0 bg-white rounded-lg shadow-sm -z-10"
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                    />
+                  )}
+                  <span className={mode === 'nft' ? 'text-black font-bold' : 'text-white/60 hover:text-white font-bold'}>
+                    {t('gifts')}
+                  </span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setMode('gram')}
-                  className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                    mode === 'gram'
-                      ? 'bg-white text-black shadow-sm'
-                      : 'text-white/60 hover:text-white'
-                  }`}
+                  className="relative flex-1 py-1 text-center text-xs font-bold rounded-lg transition-colors cursor-pointer z-10"
                 >
-                  GRAM
+                  {mode === 'gram' && (
+                    <motion.div
+                      layoutId="mines-bet-mode-pill"
+                      className="absolute inset-0 bg-white rounded-lg shadow-sm -z-10"
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                    />
+                  )}
+                  <span className={mode === 'gram' ? 'text-black font-bold' : 'text-white/60 hover:text-white font-bold'}>
+                    GRAM
+                  </span>
                 </button>
               </div>
 
-              <div className="relative z-10 bg-white/[0.04] border border-white/[0.08] rounded-[24px] p-5 mb-4 flex flex-col items-center justify-center min-h-[120px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+              <div className="relative z-10 bg-white/[0.03] border border-white/[0.06] rounded-[18px] p-3 mb-2.5 flex flex-col items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                 {mode === 'gram' ? (
                   <>
-                    <div className="absolute top-3.5 left-4 flex items-center gap-1.5 text-white/50 text-[12px] font-medium">
-                      <span>{t('balance')}:</span>
-                      <span className="text-white font-bold">{balance.toFixed(2)}</span>
-                      <GramIcon className="w-3.5 h-3.5 text-brand" />
+                    <div className="w-full flex items-center justify-between px-1 mb-1.5">
+                      <div className="flex items-center gap-1.5 text-white/50 text-[11px] font-medium">
+                        <span>{t('balance')}:</span>
+                        <span className="text-white font-bold">{balance.toFixed(2)}</span>
+                        <GramIcon className="w-3 h-3 text-brand" />
+                      </div>
                     </div>
-                    <div className="relative w-full text-center flex items-center justify-center mb-4 mt-2">
-                      <input 
-                        type="text" 
-                        inputMode="decimal"
-                        value={betInput}
-                        onChange={handleBetChange}
-                        className="bg-transparent text-center text-4xl font-display font-bold text-white outline-none w-full max-w-[200px]"
-                        placeholder="0.1"
-                      />
+                    <div className="relative w-full flex items-center justify-center mb-2">
+                      <div className="px-3.5 py-1 rounded-xl bg-white/[0.04] border border-white/[0.10] focus-within:border-[#0098ea] transition-all flex items-center justify-center gap-1.5 shadow-inner">
+                        <input 
+                          type="text" 
+                          inputMode="decimal"
+                          value={betInput}
+                          onChange={handleBetChange}
+                          className="bg-transparent text-center text-xl font-display font-bold text-white outline-none w-24"
+                          placeholder="0.1"
+                        />
+                        <GramIcon className="w-3.5 h-3.5 text-brand shrink-0" />
+                      </div>
                     </div>
-                    <div className="flex gap-1.5">
+                    <div className="flex gap-1.5 flex-wrap justify-center">
                       {[1, 5, 25, 50].map(amt => (
                         <button 
                           key={amt}
                           onClick={() => setBetAdd(amt)}
-                          className="px-3 py-1.5 rounded-full lg-glass text-white text-[12px] font-bold active:scale-95 transition-all cursor-pointer"
+                          className="px-2.5 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-white text-[11px] font-bold transition-all cursor-pointer"
                         >
                           +{amt}
                         </button>
                       ))}
                       <button 
                         onClick={setBetMax}
-                        className="px-3 py-1.5 rounded-full bg-gradient-to-r from-[#0098ea] to-[#00b4d8] hover:brightness-110 border border-cyan-300/40 text-white text-[12px] font-bold active:scale-95 transition-all cursor-pointer shadow-[0_0_12px_rgba(0,152,234,0.45),inset_0_1px_0_rgba(255,255,255,0.3)]"
+                        className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-[#0098ea] to-[#00b4d8] hover:brightness-110 border border-cyan-300/40 text-white text-[11px] font-bold transition-all cursor-pointer shadow-[0_0_8px_rgba(0,152,234,0.35)]"
                       >
                         MAX
                       </button>
@@ -708,21 +812,22 @@ export function Mines({
                       selectedIds={selectedNft ? [selectedNft.uniqueId || selectedNft.id] : []}
                       onSelect={(item) => setSelectedNft(item)}
                       maxBetGram={2500}
-                      maxContainerHeight="max-h-[280px]"
+                      maxContainerHeight="max-h-[250px]"
                       emptyText={t('inventory_empty_upgrade')}
                     />
                   </div>
                 )}
               </div>
 
-              <div className="relative z-10 bg-white/[0.04] border border-white/[0.08] rounded-[24px] p-5 mb-5 flex flex-col gap-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+              <div className="relative z-10 bg-white/[0.03] border border-white/[0.06] rounded-[18px] p-3 mb-2.5 flex flex-col gap-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col">
-                    <span className="text-white font-bold text-[15px]">{t('choose_mines')}</span>
-                    <span className="text-white/40 text-[12px]">{t('more_mines')}</span>
+                    <span className="text-white font-bold text-[14px]">{t('choose_mines')}</span>
+                    <span className="text-white/40 text-[11px]">{t('more_mines')}</span>
                   </div>
-                  <div className="text-white font-display font-bold text-sm px-3.5 py-1.5 rounded-full lg-glass">
-                    {minesCount}
+                  <div className="text-white font-display font-bold text-xs px-2.5 py-1 rounded-full bg-white/[0.06] border border-white/10 flex items-center gap-1.5">
+                    <Bomb className="w-3 h-3 text-red-400" />
+                    <span>{minesCount}</span>
                   </div>
                 </div>
                 
@@ -741,7 +846,7 @@ export function Mines({
                   (mode === 'gram' && (betGram < 0.1 || betGram > balance || betGram > MAX_BET_GRAM)) ||
                   (mode === 'nft' && (!selectedNft || Number(selectedNft.floor_price_gram || selectedNft.price || 0) > 2500))
                 }
-                className="relative z-10 w-full font-display font-bold text-[16px] py-4 rounded-full active:scale-[0.98] transition-all shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="relative z-10 w-full font-display font-bold text-[15px] py-3 rounded-xl transition-all shadow-[0_4px_18px_rgba(0,152,234,0.45),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 <span className="relative z-10 drop-shadow-sm">{t('mines_start')}</span>
               </button>
@@ -764,7 +869,7 @@ export function Mines({
             >
               <div className="w-full flex justify-center pt-1 relative">
                 <div className="flex flex-col items-center">
-                  <span className="text-[11px] font-bold text-[#3b82f6] uppercase tracking-widest">Random</span>
+                  <span className="text-[11px] font-bold text-[#c7c7cc] uppercase tracking-widest">Random</span>
                   <span className="text-[8px] text-white/20 font-bold tracking-widest uppercase mt-0.5">Platina Gift</span>
                 </div>
                 <button onClick={resetGame} className="absolute top-0 right-1 p-1 text-white/40 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
@@ -794,7 +899,7 @@ export function Mines({
                 {!showResult.item ? (
                   <button 
                     onClick={resetGame}
-                    className="w-full py-3.5 rounded-[16px] text-[14px] font-bold flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] text-white hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] cursor-pointer"
+                    className="w-full py-3.5 rounded-[16px] text-[14px] font-bold flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] text-white hover:brightness-110 transition-all shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] cursor-pointer"
                   >
                     {t('continue')}
                   </button>
@@ -803,21 +908,21 @@ export function Mines({
                     <div className="flex gap-1.5 w-full">
                       <button 
                         onClick={() => { resetGame(); if(onNavigate) onNavigate('upgrade'); }}
-                        className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#22c55e] text-white hover:bg-[#16a34a] shadow-[0_2px_10px_rgba(34,197,94,0.35)] active:scale-95 transition-all cursor-pointer"
+                        className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#22c55e] text-white hover:bg-[#16a34a] shadow-[0_2px_10px_rgba(34,197,94,0.35)] transition-all cursor-pointer"
                       >
                         <TrendingUp className="w-3.5 h-3.5 shrink-0" />
                         <span className="truncate">{t('upgrade')}</span>
                       </button>
                       <button 
                         onClick={() => { resetGame(); if(onNavigate) onNavigate('craft'); }}
-                        className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#dc2626] text-white hover:bg-[#b91c1c] shadow-[0_2px_10px_rgba(220,38,38,0.35)] active:scale-95 transition-all cursor-pointer"
+                        className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#dc2626] text-white hover:bg-[#b91c1c] shadow-[0_2px_10px_rgba(220,38,38,0.35)] transition-all cursor-pointer"
                       >
                         <Shuffle className="w-3.5 h-3.5 shrink-0" />
                         <span className="truncate">{t('craft')}</span>
                       </button>
                       <button 
                         onClick={() => { resetGame(); if(onNavigate) onNavigate('mines'); }}
-                        className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#a855f7] text-white hover:bg-[#9333ea] shadow-[0_2px_10px_rgba(168,85,247,0.35)] active:scale-95 transition-all cursor-pointer"
+                        className="flex-1 py-2.5 rounded-[12px] text-[11px] font-bold flex items-center justify-center gap-1 bg-[#a855f7] text-white hover:bg-[#9333ea] shadow-[0_2px_10px_rgba(168,85,247,0.35)] transition-all cursor-pointer"
                       >
                         <Bomb className="w-3.5 h-3.5 shrink-0" />
                         <span className="truncate">{t('mines_title')}</span>
@@ -825,7 +930,7 @@ export function Mines({
                     </div>
                     <button 
                       onClick={() => { resetGame(); if(onNavigate) onNavigate('inventory'); }}
-                      className="w-full py-3 rounded-[12px] text-[12px] font-bold flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#0098ea] to-[#00b4d8] text-white hover:brightness-110 shadow-[0_4px_16px_rgba(0,152,234,0.4)] active:scale-[0.98] transition-all cursor-pointer"
+                      className="w-full py-3 rounded-[12px] text-[12px] font-bold flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#0098ea] to-[#00b4d8] text-white hover:brightness-110 shadow-[0_4px_16px_rgba(0,152,234,0.4)] transition-all cursor-pointer"
                     >
                       {t('my_inventory')}
                     </button>
@@ -840,7 +945,7 @@ export function Mines({
                         });
                         resetGame();
                       }}
-                      className="w-full py-3 flex items-center justify-center gap-1.5 rounded-[12px] text-[12px] font-bold lg-glass text-white active:scale-[0.98] transition-all cursor-pointer"
+                      className="w-full py-3 flex items-center justify-center gap-1.5 rounded-[12px] text-[12px] font-bold lg-glass text-white transition-all cursor-pointer"
                     >
                       {t('sell')} {Number(showResult.item?.price || 0).toFixed(2)} <GramIcon className="w-4 h-4 opacity-80" />
                     </button>
@@ -851,6 +956,13 @@ export function Mines({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Bet History Modal with Provably Fair */}
+      <BetHistoryModal
+        isOpen={showBetHistory}
+        onClose={() => setShowBetHistory(false)}
+        history={userMinesBetHistory}
+      />
     </div>
   );
 }

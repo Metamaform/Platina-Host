@@ -298,7 +298,7 @@ export function WelcomeScreen({ onComplete, token }: WelcomeScreenProps) {
           <button
             onClick={handleNext}
             disabled={status === 'loading'}
-            className="w-full bg-white text-black font-bold text-[17px] py-[18px] rounded-[16px] shadow-lg hover:bg-white/90 active:scale-[0.98] transition-all flex items-center justify-center"
+            className="w-full bg-white text-black font-bold text-[17px] py-[18px] rounded-[16px] shadow-lg hover:bg-white/90 transition-all flex items-center justify-center"
           >
             {status === 'loading' ? (
               <span className="flex items-center gap-2">

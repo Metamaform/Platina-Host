@@ -254,7 +254,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
               fetch('/api/admin/reset-welcome', { method: 'POST', headers: { 'Authorization': `Bearer ${sessionStorage.getItem('pg_session_token')}` } })
                 .then(() => window.location.reload());
             }}
-            className="flex-1 py-2 text-sm font-bold rounded-xl transition-colors bg-white/10 hover:bg-white/20 text-white shadow-sm active:scale-95"
+            className="flex-1 py-2 text-sm font-bold rounded-xl transition-colors bg-white/10 hover:bg-white/20 text-white shadow-sm "
           >
             Сбросить онбординг
           </button>
@@ -262,7 +262,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
           <button 
             onClick={handleManualSyncPrices}
             disabled={isSyncingPrices}
-            className="flex-1 py-2 text-sm font-bold rounded-xl transition-colors bg-brand text-white shadow-sm active:scale-95 flex items-center justify-center gap-1.5 disabled:opacity-50"
+            className="flex-1 py-2 text-sm font-bold rounded-xl transition-colors bg-brand text-white shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50"
             title="Автоматическое обновление раз в 3 часа. Нажмите для принудительного обновления прямо сейчас."
           >
             <RefreshCw size={14} className={isSyncingPrices ? 'animate-spin' : ''} />
@@ -346,13 +346,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
             </div>
             <div className="flex gap-2">
-              <button onClick={handleReset} className="p-2.5 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500/20 active:scale-95 transition-all" title="Сбросить к заводским настройкам">
+              <button onClick={handleReset} className="p-2.5 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500/20 transition-all" title="Сбросить к заводским настройкам">
                 <RotateCcw size={20} />
               </button>
-              <button onClick={openAdd} className="p-2.5 bg-brand/20 text-brand rounded-xl hover:bg-brand/30 active:scale-95 transition-all" title="Добавить NFT">
+              <button onClick={openAdd} className="p-2.5 bg-brand/20 text-brand rounded-xl hover:bg-brand/30 transition-all" title="Добавить NFT">
                 <Plus size={20} />
               </button>
-              <button onClick={() => { setIsQuickAdding(true); setVariantCollection('berrybox'); }} className="p-2.5 bg-green-500/20 text-green-400 rounded-xl hover:bg-green-500/30 active:scale-95 transition-all" title="Быстрое добавление из вариаций">
+              <button onClick={() => { setIsQuickAdding(true); setVariantCollection('berrybox'); }} className="p-2.5 bg-green-500/20 text-green-400 rounded-xl hover:bg-green-500/30 transition-all" title="Быстрое добавление из вариаций">
                 <Wand2 size={20} />
               </button>
             </div>
@@ -443,10 +443,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
                </div>
 
                <div className="flex gap-3 mt-2">
-                 <button onClick={handleSave} className={`flex-1 font-bold py-3 rounded-xl flex justify-center items-center gap-2 transition-colors active:scale-95 shadow-lg ${nftSaved ? 'bg-green-500 hover:bg-green-600 shadow-green-500/20 text-white' : 'bg-brand hover:bg-brand text-white shadow-brand/20'}`}>
+                 <button onClick={handleSave} className={`flex-1 font-bold py-3 rounded-xl flex justify-center items-center gap-2 transition-colors shadow-lg ${nftSaved ? 'bg-green-500 hover:bg-green-600 shadow-green-500/20 text-white' : 'bg-brand hover:bg-brand text-white shadow-brand/20'}`}>
                    {nftSaved ? <Check size={18}/> : <Save size={18}/>} {nftSaved ? 'Сохранено!' : 'Сохранить'}
                  </button>
-                 <button onClick={() => { setEditingId(null); setIsAdding(false); }} className="flex-1 bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl flex justify-center items-center gap-2 transition-colors active:scale-95">
+                 <button onClick={() => { setEditingId(null); setIsAdding(false); }} className="flex-1 bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl flex justify-center items-center gap-2 transition-colors ">
                    <X size={18}/> {isAdding ? 'Отмена' : 'Закрыть'}
                  </button>
                </div>
@@ -482,10 +482,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
                     </div>
                   </div>
                   <div className="flex gap-2 shrink-0 pr-1">
-                    <button onClick={() => openEdit(gift)} className="p-2.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-xl transition-colors active:scale-95">
+                    <button onClick={() => openEdit(gift)} className="p-2.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-xl transition-colors ">
                       <Edit2 size={18}/>
                     </button>
-                    <button onClick={() => handleDelete(gift.id)} className="p-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-colors active:scale-95">
+                    <button onClick={() => handleDelete(gift.id)} className="p-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-colors ">
                       <Trash2 size={18}/>
                     </button>
                   </div>
@@ -595,7 +595,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
 
             <button 
               onClick={() => setIsQuickAdding(false)}
-              className="w-full py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl mt-2 transition-colors active:scale-95"
+              className="w-full py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl mt-2 transition-colors "
             >
               Отмена
             </button>
@@ -664,7 +664,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
 
             <button 
               onClick={() => setIsSelectingModelForCase(false)}
-              className="w-full py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl mt-2 transition-colors active:scale-95"
+              className="w-full py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl mt-2 transition-colors "
             >
               Отмена
             </button>
@@ -762,7 +762,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
 
             <button 
               onClick={() => setIsSelectingModel(false)}
-              className="w-full py-3 bg-brand hover:bg-brand text-white font-bold rounded-xl mt-2 transition-colors active:scale-95 shadow-lg shadow-brand/20 flex items-center justify-center gap-2"
+              className="w-full py-3 bg-brand hover:bg-brand text-white font-bold rounded-xl mt-2 transition-colors shadow-lg shadow-brand/20 flex items-center justify-center gap-2"
             >
               <Check size={18} /> Применить и закрыть
             </button>
@@ -852,7 +852,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
         <div className="flex gap-2">
           <input type="number" className="flex-1 bg-black/40 border border-white/10 rounded-lg p-2 text-white" placeholder="Цена (Grams)" value={newCase.price} onChange={e => setNewCase({...newCase, price: Number(e.target.value)})} />
           <input className="flex-1 bg-black/40 border border-white/10 rounded-lg p-2 text-white" placeholder="URL изображения" value={newCase.image} onChange={e => setNewCase({...newCase, image: e.target.value})} />
-          <button onClick={() => { setIsSelectingModelForCase(true); setVariantCollection('berrybox'); }} className="px-3 bg-brand/20 text-brand rounded-lg hover:bg-brand/30 active:scale-95 transition-all" title="Выбрать 3D-модель для кейса">
+          <button onClick={() => { setIsSelectingModelForCase(true); setVariantCollection('berrybox'); }} className="px-3 bg-brand/20 text-brand rounded-lg hover:bg-brand/30 transition-all" title="Выбрать 3D-модель для кейса">
             <Wand2 size={18}/>
           </button>
           <label className="cursor-pointer bg-white/10 px-3 flex items-center justify-center rounded-lg hover:bg-white/20 text-sm font-semibold whitespace-nowrap">
@@ -1260,7 +1260,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
 
                <button 
                  onClick={saveSystemConfig}
-                 className={`w-full mt-4 py-4 rounded-xl font-bold hover:brightness-110 active:scale-[0.98] transition-all shadow-lg ${systemSaved ? 'bg-green-500 text-white shadow-green-500/20' : 'bg-brand text-white shadow-brand/20'}`}
+                 className={`w-full mt-4 py-4 rounded-xl font-bold hover:brightness-110 transition-all shadow-lg ${systemSaved ? 'bg-green-500 text-white shadow-green-500/20' : 'bg-brand text-white shadow-brand/20'}`}
                >
                  {systemSaved ? 'Сохранено!' : 'Сохранить системные настройки'}
                </button>
@@ -1323,7 +1323,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
                              a1.click();
                              document.body.removeChild(a1);
                           }}
-                          className="px-2 py-2 bg-brand/10 text-brand text-xs font-bold rounded-xl hover:bg-brand/20 active:scale-95 transition-all text-center"
+                          className="px-2 py-2 bg-brand/10 text-brand text-xs font-bold rounded-xl hover:bg-brand/20 transition-all text-center"
                         >
                           .lottie
                         </button>
@@ -1337,7 +1337,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
                              a1.click();
                              document.body.removeChild(a1);
                           }}
-                          className="px-2 py-2 bg-blue-500/10 text-blue-400 text-xs font-bold rounded-xl hover:bg-blue-500/20 active:scale-95 transition-all text-center"
+                          className="px-2 py-2 bg-blue-500/10 text-blue-400 text-xs font-bold rounded-xl hover:bg-blue-500/20 transition-all text-center"
                         >
                           .tgs
                         </button>
@@ -1351,7 +1351,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
                              a1.click();
                              document.body.removeChild(a1);
                           }}
-                          className="px-2 py-2 bg-green-500/10 text-green-400 text-xs font-bold rounded-xl hover:bg-green-500/20 active:scale-95 transition-all text-center"
+                          className="px-2 py-2 bg-green-500/10 text-green-400 text-xs font-bold rounded-xl hover:bg-green-500/20 transition-all text-center"
                         >
                           .webp
                         </button>
@@ -1385,25 +1385,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
               <div className="flex flex-wrap gap-2 mt-2">
                 <button 
                   onClick={() => setLbConfig({...lbConfig, endTime: new Date(Date.now() + 60 * 60 * 1000).toISOString()})}
-                  className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-xs font-bold hover:bg-brand hover:text-black transition-colors active:scale-95"
+                  className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-xs font-bold hover:bg-brand hover:text-black transition-colors "
                 >
                   Завершить через 1 час
                 </button>
                 <button 
                   onClick={() => setLbConfig({...lbConfig, endTime: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString()})} 
-                  className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-xs font-bold hover:bg-brand hover:text-black transition-colors active:scale-95"
+                  className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-xs font-bold hover:bg-brand hover:text-black transition-colors "
                 >
                   Через 6 часов
                 </button>
                 <button 
                   onClick={() => setLbConfig({...lbConfig, endTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()})} 
-                  className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-xs font-bold hover:bg-brand hover:text-black transition-colors active:scale-95"
+                  className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-xs font-bold hover:bg-brand hover:text-black transition-colors "
                 >
                   Через 1 день
                 </button>
                 <button 
                   onClick={() => setLbConfig({...lbConfig, endTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()})} 
-                  className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-xs font-bold hover:bg-brand hover:text-black transition-colors active:scale-95"
+                  className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-xs font-bold hover:bg-brand hover:text-black transition-colors "
                 >
                   Через 7 дней
                 </button>
@@ -1485,7 +1485,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ giftsDb, setGiftsDb }) =
                   setTimeout(() => setLbSaved(false), 2000);
                 });
               }}
-              className={`mt-2 text-white font-bold py-3 rounded-xl flex justify-center items-center gap-2 transition-colors active:scale-95 shadow-lg ${lbSaved ? 'bg-green-500 hover:bg-green-600 shadow-green-500/20' : 'bg-brand hover:bg-brand shadow-brand/20'}`}
+              className={`mt-2 text-white font-bold py-3 rounded-xl flex justify-center items-center gap-2 transition-colors shadow-lg ${lbSaved ? 'bg-green-500 hover:bg-green-600 shadow-green-500/20' : 'bg-brand hover:bg-brand shadow-brand/20'}`}
             >
               <Save size={18}/> {lbSaved ? 'Сохранено!' : 'Сохранить настройки'}
             </button>

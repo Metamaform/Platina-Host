@@ -40,7 +40,7 @@ export function AssetStep({ assets, selectedAsset, selectedNetwork, onSelectAsse
                 key={asset.symbol}
                 type="button"
                 onClick={() => onSelectAsset(asset.symbol)}
-                className={`relative p-3.5 rounded-2xl border text-left transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1683FF] cursor-pointer ${
+                className={`relative p-3.5 rounded-2xl border text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1683FF] cursor-pointer ${
                   active ? 'lg-glass text-white' : 'bg-white/[0.03] border-white/10 text-white/70 hover:bg-white/[0.05] hover:border-white/15'
                 }`}
               >
@@ -69,7 +69,7 @@ export function AssetStep({ assets, selectedAsset, selectedNetwork, onSelectAsse
                   key={net.id}
                   type="button"
                   onClick={() => onSelectNetwork(net.id)}
-                  className={`p-3.5 rounded-2xl border flex items-center justify-between text-left transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1683FF] cursor-pointer ${
+                  className={`p-3.5 rounded-2xl border flex items-center justify-between text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1683FF] cursor-pointer ${
                     active ? 'lg-glass text-white' : 'bg-white/[0.03] border-white/10 text-white/70 hover:bg-white/[0.05]'
                   }`}
                 >

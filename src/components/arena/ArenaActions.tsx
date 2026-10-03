@@ -42,9 +42,9 @@ export const ArenaActions: React.FC<ArenaActionsProps> = React.memo(({
     return (
       <button
         onClick={onBet}
-        className="w-full relative overflow-hidden group rounded-full font-display font-bold text-[17px] tracking-wide active:scale-[0.98] transition-all py-4 shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white cursor-pointer select-none"
+        className="w-full relative overflow-hidden group rounded-2xl font-display font-bold text-[16px] tracking-wide transition-transform py-3.5 primary-button text-white cursor-pointer select-none shadow-lg"
       >
-        {t('arena_make_bet')}
+        {t('arena_make_bet') || 'Сделать ставку'}
       </button>
     );
   }

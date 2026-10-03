@@ -169,43 +169,8 @@ export async function syncUserFromSupabase(id: number): Promise<void> {
   }
 }
 
-const hasTelegramBotToken = Boolean((process.env.TELEGRAM_BOT_TOKEN || '').trim());
-
-export function sanitizeStoredAvatarUrl(url?: string | null): string | undefined {
-  if (!url || typeof url !== 'string') return undefined;
-  const trimmed = url.trim();
-  if (!trimmed) return undefined;
-  const lower = trimmed.toLowerCase();
-  if (
-    lower.includes('dicebear.com') ||
-    lower.includes('unsplash.com') ||
-    lower.includes('ui-avatars.com') ||
-    lower.includes('pravatar.cc') ||
-    lower.includes('robohash.org')
-  ) {
-    return undefined;
-  }
-  return trimmed;
-}
-
-export function resolveStoredUserPhotoUrl(u?: StoredUser | null): string | undefined {
-  if (!u) return undefined;
-  const clean = sanitizeStoredAvatarUrl(u.photoUrl);
-  if (clean) return clean;
-  if (hasTelegramBotToken && Number.isFinite(u.id) && u.id >= 10000) {
-    return `/api/telegram/avatar/${u.id}`;
-  }
-  return undefined;
-}
-
 export function getUser(id: number): StoredUser | null {
-  const u = users()[String(id)] || null;
-  if (!u) return null;
-  const resolvedPhoto = resolveStoredUserPhotoUrl(u);
-  if (resolvedPhoto !== u.photoUrl) {
-    return { ...u, photoUrl: resolvedPhoto };
-  }
-  return u;
+  return users()[String(id)] || null;
 }
 
 /** Разбирает реферальный start_param: «ref_<id>» (канон) и «r_<id>» (легаси). */
@@ -220,45 +185,33 @@ export function parseReferralStartParam(startParam?: string | null): number | un
 export function upsertUserProfile(profile: {
   id: number;
   referredBy?: number;
-  first_name?: string;
-  firstName?: string;
+  first_name: string;
   last_name?: string;
-  lastName?: string;
   username?: string;
   photo_url?: string;
-  photoUrl?: string;
-  photoSynced?: boolean;
 }, startParam?: string | null): StoredUser {
   const all = users();
   const key = String(profile.id);
   const existing = all[key];
   const now = new Date().toISOString();
 
-  const resolvedFirstName = profile.first_name ?? profile.firstName ?? existing?.firstName ?? 'Player';
-  const resolvedLastName = profile.last_name ?? profile.lastName ?? existing?.lastName;
-  const resolvedUsername = profile.username ?? existing?.username;
-  const incomingPhoto = sanitizeStoredAvatarUrl(profile.photo_url ?? profile.photoUrl);
-  const resolvedPhotoUrl = profile.photoSynced
-    ? incomingPhoto
-    : (incomingPhoto || sanitizeStoredAvatarUrl(existing?.photoUrl));
-
   const user: StoredUser = existing
     ? {
         ...existing,
-        firstName: resolvedFirstName,
-        lastName: resolvedLastName,
-        username: resolvedUsername,
-        photoUrl: resolvedPhotoUrl,
+        firstName: profile.first_name,
+        lastName: profile.last_name,
+        username: profile.username,
+        photoUrl: profile.photo_url || existing.photoUrl,
         needsReload: false,
         updatedAt: now,
       }
     : {
         id: profile.id,
         referredBy: profile.referredBy ?? parseReferralStartParam(startParam),
-        firstName: resolvedFirstName,
-        lastName: resolvedLastName,
-        username: resolvedUsername,
-        photoUrl: resolvedPhotoUrl,
+        firstName: profile.first_name,
+        lastName: profile.last_name,
+        username: profile.username,
+        photoUrl: profile.photo_url,
         balance: STARTING_BALANCE,
         inventory: [],
         turnover: 0,
@@ -357,7 +310,6 @@ export function saveUserState(id: number, balance: number, inventory: any[], tur
 export interface OpenEvent {
   id: string;
   ts: string;
-  userId?: number;
   firstName: string;
   gift?: { id?: string; name: string; image_url?: string; slug?: string; price?: number; backdrop?: string; pattern?: string; lottieUrl?: string };
   price: number;
@@ -391,19 +343,13 @@ export function recordOpen(event: OpenEvent) {
     return;
   }
 
-  const sanitizedEvent: OpenEvent = {
-    ...event,
-    photoUrl: sanitizeStoredAvatarUrl(event.photoUrl),
-  };
-
-  list.unshift(sanitizedEvent);
+  list.unshift(event);
   if (list.length > MAX_OPENS) list.length = MAX_OPENS;
   writeJson(OPENS_FILE, list);
 }
 
 export function getRecentOpens(limit = 20): OpenEvent[] {
   const list = opens();
-  const allUsers = users();
   const seen = new Set<string>();
   const unique: OpenEvent[] = [];
 
@@ -413,18 +359,7 @@ export function getRecentOpens(limit = 20): OpenEvent[] {
     const key = `${item.firstName}_${giftName}_${Number(item.price || 0).toFixed(2)}_${timeKey}`;
     if (!seen.has(key)) {
       seen.add(key);
-      let resolvedPhoto = sanitizeStoredAvatarUrl(item.photoUrl);
-      const inferredUserId = item.userId ?? (() => {
-        const m = /^(?:rocket|arena)-\d+-(\d+)$/.exec(item.id || '');
-        return m ? Number(m[1]) : undefined;
-      })();
-      if (inferredUserId && allUsers[String(inferredUserId)]) {
-        resolvedPhoto = resolveStoredUserPhotoUrl(allUsers[String(inferredUserId)]) || resolvedPhoto;
-      }
-      unique.push({
-        ...item,
-        photoUrl: resolvedPhoto,
-      });
+      unique.push(item);
     }
   }
 
@@ -621,13 +556,27 @@ export function getLeaderboardData(currentUserId: number, limit: number = 100) {
   const sorted = allUsers
     .filter(u => getUserTurnover(u) > 0)
     .sort((a, b) => getUserTurnover(b) - getUserTurnover(a));
+
+  const resolvePersonalAvatar = (u: StoredUser): string => {
+    if (u.photoUrl && typeof u.photoUrl === 'string' && u.photoUrl.trim() !== '') {
+      return u.photoUrl;
+    }
+    const key = `${u.id || ''} ${u.username || ''} ${u.firstName || ''}`.toLowerCase();
+    if (key.includes('metamaform')) {
+      return 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80';
+    }
+    if (key.includes('bigchif') || key.includes('goychick') || key.includes('chif')) {
+      return 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80';
+    }
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(u.username || u.firstName || String(u.id))}`;
+  };
     
   const top = sorted.slice(0, limit).map((u, i) => ({
     rank: i + 1,
     id: u.id,
     firstName: u.firstName,
     username: u.username,
-    photoUrl: resolveStoredUserPhotoUrl(u),
+    photoUrl: resolvePersonalAvatar(u),
     turnover: getUserTurnover(u)
   }));
   
@@ -637,7 +586,7 @@ export function getLeaderboardData(currentUserId: number, limit: number = 100) {
     id: sorted[currentUserIndex].id,
     firstName: sorted[currentUserIndex].firstName,
     username: sorted[currentUserIndex].username,
-    photoUrl: resolveStoredUserPhotoUrl(sorted[currentUserIndex]),
+    photoUrl: resolvePersonalAvatar(sorted[currentUserIndex]),
     turnover: getUserTurnover(sorted[currentUserIndex])
   } : null;
   
@@ -656,7 +605,7 @@ export function getReferrals(userId: number) {
         firstName: user.firstName,
         lastName: user.lastName,
         username: user.username,
-        photoUrl: resolveStoredUserPhotoUrl(user),
+        photoUrl: user.photoUrl,
         topupSum,
         createdAt: user.createdAt
       });

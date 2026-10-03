@@ -101,7 +101,7 @@ export function AmountStep({
               <button
                 type="button"
                 onClick={handleMax}
-                className="px-3 py-1.5 rounded-full bg-[#1683FF] hover:bg-[#1683FF]/90 text-white text-[12px] font-bold transition-colors active:scale-95 cursor-pointer"
+                className="px-3 py-1.5 rounded-full bg-[#1683FF] hover:bg-[#1683FF]/90 text-white text-[12px] font-bold transition-colors cursor-pointer"
               >
                 {t('max_short')}
               </button>
@@ -143,7 +143,7 @@ export function AmountStep({
           type="button"
           onClick={onRequestQuote}
           disabled={!amountAtomic || amountAtomic === '0' || !!amountValidation && !amountValidation.valid || quoteLoading}
-          className="mt-4 w-full py-3 rounded-2xl lg-glass disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-[14px] transition-all active:scale-[0.98] cursor-pointer"
+          className="mt-4 w-full py-3 rounded-2xl lg-glass disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-[14px] transition-all cursor-pointer"
         >
           {quoteLoading ? t('quote_loading') : quote ? t('quote_refresh') : t('quote_calculate')}
         </button>

@@ -206,7 +206,7 @@ export function PremiumCardCarousel({ balance = 0, username, onHint }: PremiumCa
               onClick={handleShare}
               disabled={sharing}
               aria-label={t('share')}
-              className="shrink-0 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/80 hover:text-white transition-all active:scale-95 disabled:opacity-60 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1683FF]"
+              className="shrink-0 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/80 hover:text-white transition-all disabled:opacity-60 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1683FF]"
             >
               {sharing ? (
                 <Loader2 className="w-[18px] h-[18px] animate-spin" />

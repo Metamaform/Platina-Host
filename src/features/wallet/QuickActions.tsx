@@ -37,29 +37,19 @@ export function QuickActions({ onDeposit, onWithdraw }: QuickActionsProps) {
           type="button"
           onClick={onClick}
           aria-label={caption ? `${label}. ${caption}` : label}
-          className="group relative overflow-hidden min-h-[88px] rounded-[24px] px-3 py-4 flex flex-col items-center justify-center gap-2.5
-            lg-glass
-            transition-all duration-200
-            active:scale-[0.98]
-            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1683FF] cursor-pointer"
+          className="group relative overflow-hidden min-h-[88px] rounded-[22px] px-3 py-4 flex flex-col items-center justify-center gap-2.5
+            premium-card
+            transition-transform duration-150
+            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6366f1] cursor-pointer"
         >
-          {/* верхнее бликовое свечение — эффект жидкого стекла */}
+          {/* маленькая иконка в чипе */}
           <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 rounded-[24px] bg-[linear-gradient(180deg,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
-          />
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.10] blur-2xl opacity-70 transition-opacity duration-300 group-hover:opacity-100"
-          />
-          {/* маленькая иконка в стеклянном чипе */}
-          <span
-            className={`relative flex h-9 w-9 items-center justify-center rounded-full lg-glass ${iconTint} transition-transform duration-150 group-active:scale-95`}
+            className={`relative flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.08] border border-white/[0.10] ${iconTint} transition-transform duration-150 shadow-sm`}
           >
             <Icon className="h-4 w-4" strokeWidth={2.5} aria-hidden="true" />
           </span>
           <span className="relative flex flex-col items-center gap-1">
-            <span className="text-[15px] font-semibold tracking-tight text-white leading-none whitespace-nowrap">
+            <span className="text-[14px] font-bold tracking-tight text-white leading-none whitespace-nowrap">
               {label}
             </span>
             {caption && (

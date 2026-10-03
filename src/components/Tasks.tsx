@@ -168,20 +168,25 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
         </div>
       </div>
 
-      <div className="mb-4 w-full flex rounded-2xl bg-white/[0.04] p-1 border border-white/[0.06]">
+      <div className="mb-4 w-full flex rounded-2xl bg-white/[0.04] p-1 border border-white/[0.06] relative">
         <button
           type="button"
           onClick={() => {
             setActiveTab('daily');
             try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch { /* optional */ }
           }}
-          className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
-            activeTab === 'daily'
-              ? 'bg-white text-black shadow-sm'
-              : 'text-white/60 hover:text-white'
-          }`}
+          className="relative flex-1 py-2 text-center text-xs font-bold rounded-xl transition-colors cursor-pointer z-10"
         >
-          {t('daily')}
+          {activeTab === 'daily' && (
+            <motion.div
+              layoutId="tasks-active-tab-pill"
+              className="absolute inset-0 bg-white rounded-xl shadow-sm -z-10"
+              transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+            />
+          )}
+          <span className={activeTab === 'daily' ? 'text-black' : 'text-white/60 hover:text-white'}>
+            {t('daily')}
+          </span>
         </button>
         <button
           type="button"
@@ -189,19 +194,26 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
             setActiveTab('all');
             try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch { /* optional */ }
           }}
-          className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
-            activeTab === 'all'
-              ? 'bg-white text-black shadow-sm'
-              : 'text-white/60 hover:text-white'
-          }`}
+          className="relative flex-1 py-2 text-center text-xs font-bold rounded-xl transition-colors cursor-pointer z-10"
         >
-          {t('main_tasks')}
+          {activeTab === 'all' && (
+            <motion.div
+              layoutId="tasks-active-tab-pill"
+              className="absolute inset-0 bg-white rounded-xl shadow-sm -z-10"
+              transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+            />
+          )}
+          <span className={activeTab === 'all' ? 'text-black' : 'text-white/60 hover:text-white'}>
+            {t('main_tasks')}
+          </span>
         </button>
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center py-12">
-          <Loader2 className="w-7 h-7 animate-spin text-brand" />
+        <div className="space-y-2.5">
+          <div className="premium-card rounded-[22px] p-4 h-20 skeleton w-full" />
+          <div className="premium-card rounded-[22px] p-4 h-20 skeleton w-full" />
+          <div className="premium-card rounded-[22px] p-4 h-20 skeleton w-full" />
         </div>
       ) : error ? (
         <div className="text-center py-10 text-rose-400 text-xs font-semibold">
@@ -210,7 +222,7 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
       ) : (
         <div className="space-y-2.5">
           {filteredTasks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 bg-white/[0.04] border border-white/[0.08] rounded-[24px]">
+            <div className="flex flex-col items-center justify-center py-12 premium-card rounded-[24px]">
               <Calendar className="w-10 h-10 text-white/20 mb-2" />
               <p className="text-xs text-white/50 font-medium text-center">{t('no_tasks')}</p>
             </div>
@@ -218,16 +230,16 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
             filteredTasks.map(task => (
               <div 
                 key={task.id}
-                className={`group relative overflow-hidden bg-white/[0.06] backdrop-blur-xl border border-white/[0.10] hover:border-white/[0.18] rounded-[24px] p-3.5 flex items-center gap-3.5 cursor-pointer active:scale-[0.98] transition-all duration-150 select-none shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_25px_-10px_rgba(0,0,0,0.6)] ${
-                  task.completed ? 'opacity-65 pointer-events-none' : ''
+                className={`premium-card rounded-[22px] p-3.5 flex items-center gap-3.5 cursor-pointer transition-transform select-none ${
+                  task.completed ? 'opacity-60 pointer-events-none' : ''
                 }`}
                 onClick={() => handleComplete(task)}
               >
-                <div className="w-11 h-11 rounded-full lg-glass flex items-center justify-center shrink-0 overflow-hidden">
+                <div className="w-11 h-11 rounded-2xl bg-white/[0.08] border border-white/[0.10] flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
                   {task.icon === 'telegram' ? (
-                    <img src="/telegram.png" className="w-7 h-7 object-contain" alt="Telegram" />
+                    <img src="/telegram.png" className="w-6 h-6 object-contain" alt="Telegram" />
                   ) : (
-                    <Gift className={`w-5 h-5 ${task.completed ? 'text-emerald-400' : 'text-amber-400'}`} />
+                    <Gift className={`w-5 h-5 ${task.completed ? 'text-emerald-400' : 'text-indigo-400'}`} />
                   )}
                 </div>
                 
@@ -237,8 +249,8 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
                     {task.description}
                   </p>
                   <div className="flex items-center gap-2 mt-2">
-                    <div className="flex items-center gap-1 bg-amber-400/15 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-amber-400 border border-amber-400/30 shadow-[0_0_8px_rgba(251,191,36,0.2)]">
-                      +{task.reward} <GramIcon className="w-3 h-3 text-amber-400" />
+                    <div className="flex items-center gap-1 bg-indigo-500/15 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-indigo-300 border border-indigo-500/30 shadow-sm">
+                      +{task.reward} <GramIcon className="w-3 h-3 text-indigo-300" />
                     </div>
                   </div>
                 </div>
@@ -247,7 +259,7 @@ export function Tasks({ onBalanceUpdate }: { onBalanceUpdate: (balance: number) 
                   {task.completed ? (
                     <CheckCircle2 className="w-5 h-5 text-emerald-400 drop-shadow-md" />
                   ) : (
-                    <div className="w-7 h-7 rounded-full lg-glass flex items-center justify-center text-white/50 group-hover:text-white">
+                    <div className="w-7 h-7 rounded-full bg-white/[0.08] flex items-center justify-center text-white/50 group-hover:text-white">
                       <ChevronRight className="w-4 h-4" />
                     </div>
                   )}

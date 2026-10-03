@@ -17,7 +17,7 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import type express from 'express';
-import { getUser, saveUserState, recordOpen, sanitizeStoredAvatarUrl } from './store.server.ts';
+import { getUser, saveUserState, recordOpen } from './store.server.ts';
 import {
   ArenaParticipant,
   ArenaRoundState,
@@ -81,14 +81,14 @@ function generateSeedHistory(): ArenaHistoryEntry[] {
   const baseId = 449084;
   const now = Date.now();
   const sampleUsers = [
-    { name: 'ton_whale', first: 'Alexander' },
-    { name: 'crypto_fox', first: 'Dmitry' },
-    { name: 'ice_queen', first: 'Elena' },
-    { name: 'lucky_strike', first: 'Artem' },
-    { name: 'platina_king', first: 'Maxim' },
-    { name: 'nordic_bear', first: 'Sergey' },
-    { name: 'ton_master', first: 'Nikita' },
-    { name: 'polar_star', first: 'Alina' },
+    { name: 'ton_whale', first: 'Alexander', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alexander' },
+    { name: 'crypto_fox', first: 'Dmitry', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Dmitry' },
+    { name: 'ice_queen', first: 'Elena', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Elena' },
+    { name: 'lucky_strike', first: 'Artem', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Artem' },
+    { name: 'platina_king', first: 'Maxim', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maxim' },
+    { name: 'nordic_bear', first: 'Sergey', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sergey' },
+    { name: 'ton_master', first: 'Nikita', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Nikita' },
+    { name: 'polar_star', first: 'Alina', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alina' },
   ];
 
   const poolPresets = [
@@ -121,6 +121,7 @@ function generateSeedHistory(): ArenaHistoryEntry[] {
         userId: -(1000 + idx + i * 10),
         username: u.name,
         firstName: u.first,
+        avatar: u.avatar,
         betAmount: b,
         contribution: b,
         percentage: pct,
@@ -147,6 +148,7 @@ function generateSeedHistory(): ArenaHistoryEntry[] {
         userId: winner.userId,
         username: winner.username,
         firstName: winner.firstName,
+        avatar: winner.avatar,
         contribution: winner.contribution,
         percentage: winner.percentage,
       },
@@ -446,32 +448,20 @@ function completeRound(round: ArenaRound) {
     recordOpen({
       id: `arena-${round.id}-${participant.userId}`,
       ts: new Date().toISOString(),
-      userId: participant.userId,
       firstName: participant.firstName || participant.username || 'Player',
       price: round.totalPool,
       isGram: true,
       gift: undefined,
       multiplier: undefined,
-      photoUrl: participant.photoUrl || participant.avatar,
+      photoUrl: participant.avatar || participant.photoUrl,
     });
   }
 
   pushHistory(snapshotHistory(round));
 }
 
-function syncParticipantAvatar<T extends { userId?: number; avatar?: string; photoUrl?: string }>(p: T): T {
-  const realUser = p.userId && p.userId > 0 ? getUser(p.userId) : null;
-  const resolved = realUser?.photoUrl || sanitizeStoredAvatarUrl(p.photoUrl || p.avatar);
-  return {
-    ...p,
-    avatar: resolved,
-    photoUrl: resolved,
-  };
-}
-
 function snapshotHistory(round: ArenaRound): ArenaHistoryEntry {
-  const syncedParticipants = round.participants.map(syncParticipantAvatar);
-  const winner = syncedParticipants.find((p) => p.id === round.winnerId);
+  const winner = round.participants.find((p) => p.id === round.winnerId);
   return {
     id: round.id,
     mode: round.mode,
@@ -480,7 +470,7 @@ function snapshotHistory(round: ArenaRound): ArenaHistoryEntry {
     completedAt: round.completedAt || Date.now(),
     totalPool: round.totalPool,
     winAmount: round.winAmount || 0,
-    participantsCount: syncedParticipants.length,
+    participantsCount: round.participants.length,
     winner: winner
       ? {
           id: winner.id,
@@ -493,7 +483,7 @@ function snapshotHistory(round: ArenaRound): ArenaHistoryEntry {
           percentage: winner.percentage,
         }
       : undefined,
-    participants: syncedParticipants,
+    participants: round.participants,
     serverSeedHash: round.serverSeedHash,
     serverSeed: round.seedRevealed ? round.serverSeed : undefined,
     roll: round.roll,
@@ -593,7 +583,7 @@ function publicState(round: ArenaRound): ArenaRoundState {
     endsAt: round.endsAt,
     completedAt: round.completedAt,
     totalPool: round.totalPool,
-    participants: round.participants.map(syncParticipantAvatar),
+    participants: round.participants,
     maxPlayers: round.maxPlayers,
     minBet: round.minBet,
     maxBet: round.maxBet,
@@ -613,11 +603,7 @@ export function getArenaState(): ArenaRoundState {
 }
 
 export function getArenaHistory(limit = 30): ArenaHistoryEntry[] {
-  return history().slice(0, Math.min(limit, HISTORY_CAP)).map((entry) => ({
-    ...entry,
-    winner: entry.winner ? syncParticipantAvatar(entry.winner) : undefined,
-    participants: entry.participants ? entry.participants.map(syncParticipantAvatar) : [],
-  }));
+  return history().slice(0, Math.min(limit, HISTORY_CAP));
 }
 
 export function getArenaRoundEntry(id: number): ArenaHistoryEntry | null {

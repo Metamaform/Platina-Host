@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PremiumImage } from './PremiumNftImage';
 import { GramIcon } from './GramIcon';
-import { getNftBackdrop } from '../lib/nftUtils';
+import { getNftBackdrop, getRarityConfig } from '../lib/nftUtils';
 
 interface RealDrop {
   id: string;
   ts: string;
   firstName: string;
-  gift?: { id?: string; name: string; image_url?: string; slug?: string; isGram?: boolean; backdrop?: string; rarity?: string };
+  gift?: { id?: string; name: string; image_url?: string; slug?: string; isGram?: boolean; backdrop?: string; rarity?: string; floor_price_gram?: number; price?: number };
   price: number;
   isGram?: boolean;
   photoUrl?: string;
@@ -103,6 +103,16 @@ export const LiveFeed: React.FC = () => {
             const backdrop = getNftBackdrop(drop.gift);
             const isOnyx = backdrop === 'Onyx Black';
             const isBlack = backdrop === 'Black';
+            const giftPrice = Number(drop.gift?.floor_price_gram || drop.gift?.price || (drop.isGram ? drop.price : 0));
+            const rarityConfig = getRarityConfig(
+              drop.gift
+                ? {
+                    ...drop.gift,
+                    price: giftPrice > 0 ? giftPrice : drop.price,
+                    floor_price_gram: giftPrice > 0 ? giftPrice : drop.price
+                  }
+                : { price: drop.price, isGram: drop.isGram }
+            );
 
             return (
               <motion.div
@@ -111,12 +121,14 @@ export const LiveFeed: React.FC = () => {
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.4, type: 'spring', bounce: 0.4 }}
-                className={`w-12 h-12 rounded-xl overflow-hidden shrink-0 border shadow-lg flex items-center justify-center relative ${
+                className={`w-12 h-12 rounded-2xl overflow-hidden shrink-0 border shadow-md flex items-center justify-center relative ${
                   isBlack
-                    ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/10'
+                    ? 'bg-[radial-gradient(circle_at_top,#27272a_0%,#121214_100%)] border-zinc-700/60'
                     : isOnyx
-                      ? 'bg-[radial-gradient(circle,#35393a_0%,#282b2c_100%)] border-white/10'
-                      : 'bg-gradient-to-tr from-white/5 to-white/10 border-white/5'
+                      ? 'bg-[radial-gradient(circle_at_top,#3f3f46_0%,#18181b_100%)] border-amber-500/30'
+                      : rarityConfig
+                        ? rarityConfig.liveFeedBg
+                        : 'bg-white/[0.06] border-white/[0.08] backdrop-blur-md'
                 }`}
                 title={`${drop.firstName} — ${drop.isGram ? (drop.price || 0) + ' GRAM' : drop.gift?.name}`}
               >

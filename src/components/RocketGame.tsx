@@ -4,7 +4,6 @@ import { ArrowLeft, Rocket, X, Flame, ShieldCheck, History, Users, Settings } fr
 import { useTranslation } from '../lib/i18n';
 import { GramIcon } from './GramIcon';
 import { PremiumImage } from './PremiumNftImage';
-import { UserAvatar } from './UserAvatar';
 import { CleanModelLottie } from './ModelCleaningAnimation';
 import { BoomIcon } from './ExplosionIcon';
 import { multAtTime, RocketBet, ServerRocketState, buildRocketLadder, getRocketReachedGiftFromLadder } from '../lib/rocketShared';
@@ -697,7 +696,7 @@ export const RocketGame: React.FC<NewGameProps> = ({
       <button
         id="rocket-back-button"
         onClick={onBack}
-        className="absolute top-4 left-4 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer z-20"
+        className="absolute top-4 left-4 w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all cursor-pointer z-20"
         title={t('back')}
       >
         <ArrowLeft className="w-4 h-4 text-white" />
@@ -716,7 +715,7 @@ export const RocketGame: React.FC<NewGameProps> = ({
         </div>
         <button
           onClick={() => setShowBetHistory(true)}
-          className="w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer"
+          className="w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/90 hover:text-white transition-all cursor-pointer"
           title={t('bet_history_title')}
         >
           <History className="w-4 h-4 text-white" />
@@ -950,10 +949,10 @@ export const RocketGame: React.FC<NewGameProps> = ({
                         staticMode={true}
                       />
                       {(isOnyx || isBlack) && (
-                        <span className={`text-[10px] font-black uppercase tracking-widest mt-1 px-2.5 py-0.5 rounded-full ${
+                        <span className={`text-[10px] font-bold uppercase tracking-widest mt-1 px-2.5 py-0.5 rounded-full text-[#c7c7cc] ${
                           isOnyx 
-                            ? 'text-zinc-200 bg-[#35393a]/90' 
-                            : 'text-zinc-300 bg-black/90'
+                            ? 'bg-[#35393a]/90 border border-white/20' 
+                            : 'bg-black/90 border border-white/15'
                         }`}>
                           {isOnyx ? 'Onyx Black' : 'Black'}
                         </span>
@@ -978,7 +977,7 @@ export const RocketGame: React.FC<NewGameProps> = ({
               id="rocket-cashout-button"
               onClick={handleCashout}
               disabled={isCashingOut}
-              className="w-full relative overflow-hidden group rounded-full font-display font-bold text-[17px] tracking-wide active:scale-[0.98] transition-all py-4 shadow-[0_4px_24px_rgba(16,185,129,0.6),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#10b981] via-[#059669] to-[#10b981] hover:brightness-110 text-white disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 select-none"
+              className="w-full relative overflow-hidden group rounded-2xl font-display font-bold text-[17px] tracking-wide transition-transform py-4 shadow-[0_4px_24px_rgba(16,185,129,0.6),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#10b981] via-[#059669] to-[#10b981] hover:brightness-110 text-white disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 select-none"
             >
               {isCashingOut ? (
                 <span>{t('withdrawing')}</span>
@@ -1014,7 +1013,7 @@ export const RocketGame: React.FC<NewGameProps> = ({
               id="rocket-make-bet-button"
               onClick={() => setShowBetModal(true)}
               disabled={isSubmittingBet || !!userBetInQueue}
-              className="w-full relative overflow-hidden group rounded-full font-display font-bold text-[17px] tracking-wide active:scale-[0.98] transition-all py-4 shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white disabled:opacity-40 cursor-pointer"
+              className="w-full relative overflow-hidden group rounded-2xl font-display font-bold text-[17px] tracking-wide transition-transform py-4 primary-button text-white disabled:opacity-40 cursor-pointer shadow-lg"
             >
               {userBetInQueue
                 ? t('rocket_next_round_accepted')
@@ -1089,10 +1088,10 @@ export const RocketGame: React.FC<NewGameProps> = ({
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <UserAvatar
-                          src={isMyBet ? (user?.photoUrl || open.photoUrl) : open.photoUrl}
-                          alt={open.firstName}
-                          className="w-10 h-10 shrink-0 border border-white/10"
+                        <img
+                          src={open.photoUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${open.firstName || undefined}`}
+                          alt=""
+                          className="w-10 h-10 rounded-full bg-white/5 shrink-0 object-cover border border-white/10"
                         />
                         <div className="flex flex-col min-w-0">
                           <div className="flex items-center gap-1.5">
@@ -1227,109 +1226,124 @@ export const RocketGame: React.FC<NewGameProps> = ({
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="group fixed bottom-0 left-0 right-0 z-[110] bg-[#16171b]/95 backdrop-blur-2xl rounded-t-[32px] p-5 pb-8 flex flex-col shadow-2xl border-t border-white/[0.12] max-w-md mx-auto overflow-hidden"
+              className="group fixed bottom-0 left-0 right-0 z-[110] bg-[#16171b]/98 backdrop-blur-2xl rounded-t-[24px] px-4 pt-3 pb-5 flex flex-col shadow-2xl border-t border-white/[0.12] max-w-md mx-auto overflow-hidden"
             >
               {/* верхний блик жидкого стекла */}
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 rounded-t-[32px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
+                className="pointer-events-none absolute inset-0 rounded-t-[24px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
               />
 
-              <div className="relative z-10 flex items-center justify-between mb-4">
-                <div className="w-8" />
-                <h2 className="text-[17px] font-display font-bold text-white text-center">
+              <div className="relative z-10 flex items-center justify-between mb-2.5">
+                <div className="w-7" />
+                <h2 className="text-[15px] font-display font-bold text-white text-center">
                   {currentGameState === 'flying' ? t('rocket_bet_next_round') : (t('make_bet_title') || t('rocket_place_bet'))}
                 </h2>
-                <button
+                <button 
                   onClick={() => setShowBetModal(false)}
-                  className="w-8 h-8 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white cursor-pointer"
+                  className="w-7 h-7 rounded-full bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center text-white/70 hover:text-white cursor-pointer transition-colors"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              <div className="relative z-10 mb-4 w-full flex rounded-2xl bg-white/[0.04] p-1 border border-white/[0.06]">
+              <div className="relative z-10 mb-2.5 w-full flex rounded-xl bg-white/[0.04] p-0.5 border border-white/[0.06]">
                 <button
                   type="button"
                   onClick={() => setMode('nft')}
-                  className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                    mode === 'nft'
-                      ? 'bg-white text-black shadow-sm'
-                      : 'text-white/60 hover:text-white'
-                  }`}
+                  className="relative flex-1 py-1 text-center text-xs font-bold rounded-lg transition-colors cursor-pointer z-10"
                 >
-                  {t('gifts')}
+                  {mode === 'nft' && (
+                    <motion.div
+                      layoutId="rocket-bet-mode-pill"
+                      className="absolute inset-0 bg-white rounded-lg shadow-sm -z-10"
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                    />
+                  )}
+                  <span className={mode === 'nft' ? 'text-black font-bold' : 'text-white/60 hover:text-white font-bold'}>
+                    {t('gifts')}
+                  </span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setMode('gram')}
-                  className={`flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                    mode === 'gram'
-                      ? 'bg-white text-black shadow-sm'
-                      : 'text-white/60 hover:text-white'
-                  }`}
+                  className="relative flex-1 py-1 text-center text-xs font-bold rounded-lg transition-colors cursor-pointer z-10"
                 >
-                  GRAM
+                  {mode === 'gram' && (
+                    <motion.div
+                      layoutId="rocket-bet-mode-pill"
+                      className="absolute inset-0 bg-white rounded-lg shadow-sm -z-10"
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                    />
+                  )}
+                  <span className={mode === 'gram' ? 'text-black font-bold' : 'text-white/60 hover:text-white font-bold'}>
+                    GRAM
+                  </span>
                 </button>
               </div>
 
-              {/* Mode Body: GRAM or NFT Picker in Liquid Glass */}
-              <div className="relative z-10 bg-white/[0.04] border border-white/[0.08] rounded-[24px] p-5 mb-5 flex flex-col items-center justify-center min-h-[120px] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+              {/* Mode Body: Compact GRAM or NFT Picker */}
+              <div className="relative z-10 bg-white/[0.03] border border-white/[0.06] rounded-[18px] p-3 mb-2.5 flex flex-col items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                 {mode === 'gram' ? (
                   <>
-                    <div className="absolute top-3.5 left-4 flex items-center gap-1.5 text-white/50 text-[12px] font-medium">
-                      <span>{t('balance')}:</span>
-                      <span className="text-white font-bold">{balance.toFixed(2)}</span>
-                      <GramIcon className="w-3.5 h-3.5 text-brand" />
+                    <div className="w-full flex items-center justify-between px-1 mb-1.5">
+                      <div className="flex items-center gap-1.5 text-white/50 text-[11px] font-medium">
+                        <span>{t('balance')}:</span>
+                        <span className="text-white font-bold">{balance.toFixed(2)}</span>
+                        <GramIcon className="w-3 h-3 text-brand" />
+                      </div>
                     </div>
-                    <div className="relative w-full text-center flex items-center justify-center mb-4 mt-2">
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        value={betInput}
-                        onChange={handleBetChange}
-                        className="bg-transparent text-center text-4xl font-display font-bold text-white outline-none w-full max-w-[200px]"
-                        placeholder="0.1"
-                      />
+                    <div className="relative w-full text-center flex items-center justify-center mb-2">
+                      <div className="px-3.5 py-1 rounded-xl bg-white/[0.04] border border-white/[0.10] focus-within:border-[#0098ea] transition-all flex items-center justify-center gap-1.5 shadow-inner">
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={betInput}
+                          onChange={handleBetChange}
+                          className="bg-transparent text-center text-xl font-display font-bold text-white outline-none w-24"
+                          placeholder="0.1"
+                        />
+                        <GramIcon className="w-3.5 h-3.5 text-brand shrink-0" />
+                      </div>
                     </div>
-                    <div className="flex gap-1.5">
+                    <div className="flex gap-1.5 flex-wrap justify-center">
                       {[1, 5, 25, 50].map(amt => (
                         <button
                           key={amt}
                           onClick={() => setBetAdd(amt)}
-                          className="px-3 py-1.5 rounded-full lg-glass text-white text-[12px] font-bold active:scale-95 transition-all cursor-pointer"
+                          className="px-2.5 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-white text-[11px] font-bold transition-all cursor-pointer"
                         >
                           +{amt}
                         </button>
                       ))}
                       <button
                         onClick={setBetMax}
-                        className="px-3 py-1.5 rounded-full bg-gradient-to-r from-[#0098ea] to-[#00b4d8] hover:brightness-110 border border-cyan-300/40 text-white text-[12px] font-bold active:scale-95 transition-all cursor-pointer shadow-[0_0_12px_rgba(0,152,234,0.45),inset_0_1px_0_rgba(255,255,255,0.3)]"
+                        className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-[#0098ea] to-[#00b4d8] hover:brightness-110 border border-cyan-300/40 text-white text-[11px] font-bold transition-all cursor-pointer shadow-[0_0_8px_rgba(0,152,234,0.35)]"
                       >
                         MAX
                       </button>
                     </div>
 
-                    {/* Auto-Cashout Settings */}
-                    <div className="flex items-center gap-3 w-full mt-4 bg-white/[0.04] border border-white/[0.08] rounded-[18px] p-2.5">
+                    {/* Auto-Cashout Settings (compact) */}
+                    <div className="flex items-center gap-2.5 w-full mt-2 bg-white/[0.03] border border-white/[0.06] rounded-[12px] py-1.5 px-2.5">
                       <div 
                         className="flex items-center gap-2 cursor-pointer select-none"
                         onClick={() => setAutoCashoutEnabled(!autoCashoutEnabled)}
                       >
-                        <div className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-300 ease-in-out flex items-center ${autoCashoutEnabled ? 'bg-brand' : 'bg-white/20'}`}>
-                          <div className={`w-4 h-4 bg-black/80 rounded-full transition-transform duration-300 ease-out shadow-sm ${autoCashoutEnabled ? 'translate-x-4' : 'translate-x-0'}`} />
+                        <div className={`w-7 h-4 rounded-full p-0.5 transition-colors duration-300 ease-in-out flex items-center ${autoCashoutEnabled ? 'bg-brand' : 'bg-white/20'}`}>
+                          <div className={`w-3 h-3 bg-black/80 rounded-full transition-transform duration-300 ease-out shadow-sm ${autoCashoutEnabled ? 'translate-x-3' : 'translate-x-0'}`} />
                         </div>
-                        <span className="text-white/80 text-[12px] font-bold">{t('rocket_auto_withdraw')}</span>
+                        <span className="text-white/80 text-[11px] font-bold">{t('rocket_auto_withdraw')}</span>
                       </div>
                       <div className={`flex-1 flex items-center justify-end transition-opacity ${autoCashoutEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
-                        <span className="text-white/40 text-[11px] font-medium mr-2">x</span>
-                        <div className="lg-glass rounded-full px-2.5 py-1 flex items-center">
+                        <span className="text-white/40 text-[11px] font-medium mr-1.5">x</span>
+                        <div className="bg-white/[0.06] border border-white/10 rounded-lg px-2 py-0.5 flex items-center">
                           <input 
                             type="text" 
                             inputMode="decimal"
                             value={autoCashoutInput}
                             onChange={(e) => setAutoCashoutInput(e.target.value.replace(/,/g, '.'))}
-                            className="bg-transparent text-right text-[13px] font-bold text-white outline-none w-12"
+                            className="bg-transparent text-right text-[11px] font-bold text-white outline-none w-10"
                             placeholder="2.00"
                           />
                         </div>
@@ -1343,7 +1357,7 @@ export const RocketGame: React.FC<NewGameProps> = ({
                       selectedIds={selectedNft ? [selectedNft.uniqueId || selectedNft.id] : []}
                       onSelect={(item) => setSelectedNft(item)}
                       maxBetGram={2500}
-                      maxContainerHeight="max-h-[300px]"
+                      maxContainerHeight="max-h-[250px]"
                       emptyText={t('inventory_empty')}
                     />
                   </div>
@@ -1359,7 +1373,7 @@ export const RocketGame: React.FC<NewGameProps> = ({
                   (mode === 'gram' && (betGram < 0.1 || betGram > balance || betGram > MAX_BET_GRAM)) ||
                   (mode === 'nft' && (!selectedNft || Number(selectedNft.floor_price_gram || selectedNft.price || 0) > 2500))
                 }
-                className="w-full font-display font-bold text-[16px] py-4 rounded-full active:scale-[0.98] transition-all shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full font-display font-bold text-[15px] py-3 rounded-xl transition-all shadow-[0_4px_18px_rgba(0,152,234,0.45),inset_0_1px_0_rgba(255,255,255,0.4)] bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] hover:brightness-110 text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isSubmittingBet ? 'Placing...' : t('rocket_place_bet')}
               </button>
@@ -1400,7 +1414,7 @@ export const RocketGame: React.FC<NewGameProps> = ({
                 <button 
                   type="button"
                   onClick={() => setWonResult(null)} 
-                  className="w-8 h-8 rounded-full lg-glass active:scale-90 flex items-center justify-center text-white/60 hover:text-white transition-all cursor-pointer z-30"
+                  className="w-8 h-8 rounded-full lg-glass flex items-center justify-center text-white/60 hover:text-white transition-all cursor-pointer z-30"
                   title={t('close')}
                 >
                   <X className="w-4 h-4" />
@@ -1428,10 +1442,10 @@ export const RocketGame: React.FC<NewGameProps> = ({
                       return (
                         <>
                           {(isOnyx || isBlack) && (
-                            <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full mb-1 ${
+                            <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full mb-1 text-[#c7c7cc] ${
                               isOnyx 
-                                ? 'text-zinc-200 bg-[#35393a]/90' 
-                                : 'text-zinc-300 bg-black/90'
+                                ? 'bg-[#35393a]/90 border border-white/20' 
+                                : 'bg-black/90 border border-white/15'
                             }`}>
                               {isOnyx ? 'Onyx Black' : 'Black'}
                             </span>
@@ -1477,7 +1491,7 @@ export const RocketGame: React.FC<NewGameProps> = ({
                 <button 
                   type="button"
                   onClick={() => setWonResult(null)}
-                  className="w-full py-3.5 rounded-[16px] text-[14px] font-bold flex items-center justify-center bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] text-white hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)]"
+                  className="w-full py-3.5 rounded-[16px] text-[14px] font-bold flex items-center justify-center bg-gradient-to-r from-[#0098ea] via-[#00a8ff] to-[#00b4d8] text-white hover:brightness-110 transition-all cursor-pointer shadow-[0_4px_22px_rgba(0,152,234,0.5),inset_0_1px_0_rgba(255,255,255,0.4)]"
                 >
                   {t('great')}
                 </button>

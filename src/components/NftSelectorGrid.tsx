@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Check } from 'lucide-react';
 import { PremiumImage } from './PremiumNftImage';
 import { GramIcon } from './GramIcon';
 import { cleanNftName, getNftBackdrop } from '../lib/nftUtils';
@@ -129,24 +129,31 @@ export function NftSelectorGrid({
                   type="button"
                   disabled={disabled || exceedsMaxBet}
                   onClick={() => onSelect(item)}
-                  className={`relative overflow-hidden w-full aspect-[3/4] rounded-[16px] border flex flex-col items-center p-2 transition-all cursor-pointer select-none ${
+                  className={`relative overflow-hidden w-full aspect-[3/4] rounded-[16px] border flex flex-col items-center p-2 transition-all duration-150 cursor-pointer select-none ${
+                    isBlack 
+                      ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)]' 
+                      : isOnyx 
+                        ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)]' 
+                        : 'bg-[#181a20]'
+                  } ${
                     isSelected 
-                      ? 'border-brand bg-[#fbc740]/10 scale-95 shadow-[0_4px_15px_rgba(251,199,64,0.15)]' 
-                      : isBlack 
-                        ? 'bg-[radial-gradient(circle,#353637_0%,#000000_100%)] border-white/10 hover:border-white/20' 
-                        : isOnyx 
-                          ? 'bg-[radial-gradient(circle,#4c5153_0%,#393d3f_100%)] border-white/10 hover:border-white/20' 
-                          : 'border-white/5 bg-[#181a20] hover:bg-[#1f2129]'
+                      ? 'border-[#0098ea] shadow-[0_2px_10px_rgba(0,152,234,0.18)]' 
+                      : 'border-white/5 hover:border-white/15 hover:bg-[#1f2129]'
                   } ${exceedsMaxBet ? 'opacity-40 cursor-not-allowed grayscale' : ''}`}
                 >
+                  {/* Minimalist corner checkmark */}
+                  {isSelected && (
+                    <div className="absolute top-1.5 right-1.5 z-30 w-4 h-4 rounded-full bg-[#0098ea] text-white flex items-center justify-center shadow-sm">
+                      <Check className="w-2.5 h-2.5 stroke-[2.5]" />
+                    </div>
+                  )}
+
                   {(isOnyx || isBlack) && (
-                    <span className={`absolute top-1.5 left-0 right-0 z-20 text-[9px] font-bold uppercase tracking-widest text-center ${
-                      isOnyx ? 'text-zinc-300' : 'text-zinc-400'
-                    }`}>
+                    <span className="absolute top-1.5 left-0 right-0 z-20 text-[9px] font-bold uppercase tracking-widest text-center text-[#c7c7cc]">
                       {isOnyx ? 'Onyx Black' : 'Black'}
                     </span>
                   )}
-                  <div className="flex-1 w-full flex items-center justify-center min-h-0 mb-1">
+                  <div className="flex-1 w-full flex items-center justify-center min-h-0 mb-1 relative z-20">
                     <PremiumImage 
                       staticMode 
                       src={item.image_url} 

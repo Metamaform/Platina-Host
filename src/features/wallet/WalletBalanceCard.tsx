@@ -97,7 +97,7 @@ export function WalletBalanceCard({ amount, loading }: WalletBalanceCardProps) {
           aria-label={hidden ? t('show_balance') : t('hide_balance')}
           aria-pressed={hidden}
           onClick={() => setHidden((v) => !v)}
-          className="absolute right-4 top-4 w-11 h-11 rounded-full bg-black/15 backdrop-blur-md border border-white/15 flex items-center justify-center text-white/80 hover:text-white hover:bg-black/25 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 cursor-pointer"
+          className="absolute right-4 top-4 w-11 h-11 rounded-full bg-black/15 backdrop-blur-md border border-white/15 flex items-center justify-center text-white/80 hover:text-white hover:bg-black/25 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 cursor-pointer"
           style={{ minWidth: 44, minHeight: 44 }}
         >
           {hidden ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}

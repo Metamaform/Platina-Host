@@ -99,7 +99,7 @@ export function LiquidSegment<T extends string>({
             onPointerEnter={(event) => {
               if (dragSelect && dragging.current && event.buttons === 1) select(opt.value);
             }}
-            className={`relative z-10 flex-1 min-w-0 outline-none cursor-pointer active:scale-[0.97] transition-transform duration-100 disabled:cursor-not-allowed disabled:opacity-45 ${
+            className={`relative z-10 flex-1 min-w-0 outline-none cursor-pointer transition-transform duration-100 disabled:cursor-not-allowed disabled:opacity-45 ${
               variant === 'nav' ? 'py-2 px-0.5' : 'py-2 px-1.5'
             }`}
           >

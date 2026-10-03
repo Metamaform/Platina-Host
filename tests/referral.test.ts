@@ -1,7 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseReferralStartParam, sanitizeStoredAvatarUrl } from '../src/lib/store.server.ts';
-import { sanitizeAvatarUrl } from '../src/components/UserAvatar.tsx';
+import { parseReferralStartParam } from '../src/lib/store.server.ts';
 
 // Реферальные ссылки: https://t.me/<bot>?startapp=ref_<userId>
 // Легаси-ссылки использовали префикс r_ — он тоже должен атрибутироваться.
@@ -27,17 +26,3 @@ test('rejects junk start params', () => {
   assert.equal(parseReferralStartParam('ref_12extra'), undefined);
   assert.equal(parseReferralStartParam('reffer_12'), undefined);
 });
-
-test('keeps Telegram profile avatar URLs and strips individual generated/stock URLs', () => {
-  assert.equal(sanitizeAvatarUrl('/api/telegram/avatar/5698050836?v=abc'), '/api/telegram/avatar/5698050836?v=abc');
-  assert.equal(sanitizeAvatarUrl('https://t.me/i/userpic/320/user.jpg'), 'https://t.me/i/userpic/320/user.jpg');
-  assert.equal(sanitizeAvatarUrl('https://api.dicebear.com/7.x/avataaars/svg?seed=Alex'), undefined);
-  assert.equal(sanitizeAvatarUrl('https://images.unsplash.com/photo-1535713875002-d1d0cf377fde'), undefined);
-  assert.equal(sanitizeAvatarUrl(''), undefined);
-  assert.equal(sanitizeAvatarUrl(null), undefined);
-
-  assert.equal(sanitizeStoredAvatarUrl('/api/telegram/avatar/5698050836?v=abc'), '/api/telegram/avatar/5698050836?v=abc');
-  assert.equal(sanitizeStoredAvatarUrl('https://api.dicebear.com/7.x/avataaars/svg?seed=Alex'), undefined);
-  assert.equal(sanitizeStoredAvatarUrl('https://images.unsplash.com/photo-1535713875002-d1d0cf377fde'), undefined);
-});
-

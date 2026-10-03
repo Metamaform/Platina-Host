@@ -64,7 +64,7 @@ export function RecipientStep({ networkId, destination, onChange, error }: Recip
             <button
               type="button"
               onClick={handlePaste}
-              className="px-2.5 rounded-xl lg-glass text-white/80 hover:text-white text-[12px] font-semibold flex items-center gap-1 transition-colors active:scale-95 cursor-pointer"
+              className="px-2.5 rounded-xl lg-glass text-white/80 hover:text-white text-[12px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
               aria-label={t('paste')}
             >
               <ClipboardPaste className="w-4 h-4" />

@@ -7,23 +7,22 @@
 
 import React from 'react';
 import { PremiumImage } from '../PremiumNftImage';
-import { UserAvatar } from '../UserAvatar';
 import type { ArenaParticipant, ArenaStatus } from '../../lib/arenaShared';
 import { cleanNftName, getNftBackdrop } from '../../lib/nftUtils';
 
 // ---------------------------------------------------------------------------
-// Аватар игрока — синхронизация с профилем Telegram,
-// либо стандартная серая заглушка с силуэтом человека.
+// Аватар игрока — один в один как в Crash: фото или dicebear-аватар,
+// нейтральный фон и тонкая светлая рамка (без цветных градиентов).
 // ---------------------------------------------------------------------------
 
 export const PlayerAvatar: React.FC<{ participant: ArenaParticipant; className?: string; style?: React.CSSProperties }> = ({ participant, className = 'w-10 h-10', style }) => {
   const name = participant.username || participant.firstName || 'Player';
   return (
-    <UserAvatar
-      src={participant.photoUrl || participant.avatar}
-      alt={name}
+    <img
+      src={participant.photoUrl || participant.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participant.firstName || name}`}
+      alt=""
       style={style}
-      className={`${className} shrink-0 border border-white/10`}
+      className={`${className} rounded-full bg-white/5 shrink-0 object-cover border border-white/10`}
     />
   );
 };

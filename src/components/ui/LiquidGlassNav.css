@@ -9,7 +9,7 @@
   вкладок задаётся из компонента (items.length → --lg-count).
 */
 .lg-nav {
-  /* Геометрия */
+  /* Геометрия: оригинальная капсульная форма (stadium shape) */
   --lg-height: 72px;
   --lg-radius: 36px;
   --lg-gap: 3px;
@@ -19,23 +19,20 @@
   --lg-ease: cubic-bezier(.2, .8, .2, 1);
   --lg-pill-radius: calc((var(--lg-height) - (var(--lg-side-padding) * 2)) / 2);
 
-  /* Палитра — стекло + брендовый синий */
-  --lg-text: rgba(255, 255, 255, .62);
-  --lg-active: #0098ea;
-  /* Полупрозрачная «подложка» стекла: контент под меню остаётся
-     различимым и размывается backdrop-фильтром ниже. */
-  --lg-glass: rgba(23, 26, 31, .42);
-  --lg-hairline: rgba(255, 255, 255, .16);
-  --lg-pill: linear-gradient(145deg, rgba(255, 255, 255, .18), rgba(255, 255, 255, .05) 55%, rgba(255, 255, 255, .10));
+  /* Палитра — глубокое тёмное стекло + текущие акцентные цвета и градиенты */
+  --lg-text: #a1a1aa;
+  --lg-active: #ffffff;
+  --lg-glass: rgba(18, 18, 20, .85);
+  --lg-hairline: rgba(255, 255, 255, .08);
+  --lg-pill: linear-gradient(135deg, rgba(99, 102, 241, .26), rgba(59, 130, 246, .18) 50%, rgba(139, 92, 246, .24));
+  --lg-pill-border: rgba(255, 255, 255, .20);
 
-  /* Позиционируется относительно ближайшего позиционированного родителя —
-     в приложении это нижняя полоса экранного фрейма (max-w-md),
-     поэтому меню всегда остаётся внутри «телефона» и над safe-area. */
   position: absolute;
   left: 50%;
-  bottom: max(12px, env(safe-area-inset-bottom));
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   z-index: 1000;
-  width: min(560px, calc(100% - 24px));
+  width: calc(100% - 24px);
+  max-width: 420px;
   transform: translateX(-50%);
   pointer-events: auto;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
@@ -51,17 +48,12 @@
   padding: var(--lg-side-padding);
   border: 1px solid var(--lg-hairline);
   border-radius: var(--lg-radius);
-  /* Стеклянный блик сверху на полупрозрачной основе —
-     остальное «делает» backdrop-filter. */
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, .09) 0%, rgba(255, 255, 255, .02) 40%, rgba(255, 255, 255, 0) 62%),
+    linear-gradient(180deg, rgba(255, 255, 255, .08) 0%, rgba(255, 255, 255, .01) 40%, rgba(255, 255, 255, 0) 62%),
     var(--lg-glass);
-  /* Блюр всего, что под меню. Работает и на тач-устройствах. */
-  backdrop-filter: blur(28px) saturate(170%);
-  -webkit-backdrop-filter: blur(28px) saturate(170%);
-  box-shadow:
-    0 8px 28px -12px rgba(0, 0, 0, .55),
-    inset 0 1px 0 rgba(255, 255, 255, .10);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .4);
   isolation: isolate;
 }
 
@@ -73,18 +65,18 @@
 
 .lg-nav__active {
   position: absolute;
-  z-index: -1;
+  z-index: 0;
   top: var(--lg-side-padding);
   bottom: var(--lg-side-padding);
   left: var(--lg-side-padding);
   width: calc((100% - (var(--lg-side-padding) * 2) - (var(--lg-gap) * (var(--lg-count) - 1))) / var(--lg-count));
-  border: 1px solid rgba(255, 255, 255, .22);
+  border: 1px solid var(--lg-pill-border);
   border-radius: var(--lg-pill-radius);
   background: var(--lg-pill);
-  box-shadow: inset 0 1px 2px rgba(255, 255, 255, .28), inset 0 -2px 5px rgba(255, 255, 255, .05), 0 4px 10px -5px rgba(0, 0, 0, .5);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, .28), inset 0 -2px 5px rgba(255, 255, 255, .05), 0 4px 15px -4px rgba(99, 102, 241, .35);
   will-change: transform;
   transform: translate3d(calc((100% + var(--lg-gap)) * var(--lg-index)), 0, 0);
-  transition: transform 240ms var(--lg-ease);
+  transition: transform 260ms var(--lg-ease);
   pointer-events: none;
 }
 
@@ -106,11 +98,20 @@
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  transition: color 180ms ease, transform 120ms ease;
+  transition: color 200ms ease, opacity 150ms ease;
 }
-.lg-nav__item:active { transform: scale(.94); }
-.lg-nav__item.is-active { color: var(--lg-active); }
-.lg-nav__item.is-active .lg-nav__icon { filter: drop-shadow(0 0 6px rgba(0, 152, 234, .45)); }
+
+.lg-nav__item.is-active {
+  color: var(--lg-active);
+}
+
+.lg-nav__item.is-active .lg-nav__icon {
+  filter: drop-shadow(0 0 10px rgba(99, 102, 241, .6));
+}
+
+.lg-nav__item:active {
+  opacity: 0.8;
+}
 
 .lg-nav__icon { width: 25px; height: 25px; display: grid; place-items: center; flex: 0 0 auto; }
 .lg-nav__icon svg { width: 100%; height: 100%; display: block; }
@@ -134,7 +135,7 @@
 }
 
 @media (max-width: 390px) {
-  .lg-nav { --lg-height: 66px; --lg-gap: 2px; --lg-side-padding: 6px; width: calc(100% - 16px); }
+  .lg-nav { --lg-height: 68px; --lg-gap: 2px; --lg-side-padding: 6px; width: calc(100% - 16px); }
   .lg-nav__label { font-size: 10px; }
   .lg-nav__icon { width: 23px; height: 23px; }
 }

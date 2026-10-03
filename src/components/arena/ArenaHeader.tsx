@@ -21,7 +21,7 @@ export const ArenaHeader: React.FC<ArenaHeaderProps> = React.memo(({ onBack, bal
       <button
         onClick={onBack}
         aria-label="Назад"
-        className="w-9 h-9 shrink-0 rounded-full lg-glass flex items-center justify-center text-white/90 active:scale-95 transition-transform cursor-pointer"
+        className="w-9 h-9 shrink-0 rounded-full lg-glass flex items-center justify-center text-white/90 transition-transform cursor-pointer"
       >
         <ArrowLeft className="w-4 h-4 text-white" />
       </button>
@@ -43,7 +43,7 @@ export const ArenaHeader: React.FC<ArenaHeaderProps> = React.memo(({ onBack, bal
         <button
           onClick={onOpenHistory}
           aria-label="История игр"
-          className="w-9 h-9 rounded-full lg-glass flex items-center justify-center active:scale-95 transition-transform cursor-pointer"
+          className="w-9 h-9 rounded-full lg-glass flex items-center justify-center transition-transform cursor-pointer"
         >
           <History className="w-4 h-4 text-white" />
         </button>
