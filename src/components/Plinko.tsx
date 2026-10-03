@@ -7,6 +7,7 @@ import { NftSelectorGrid } from './NftSelectorGrid';
 import { cleanNftName } from '../lib/nftUtils';
 import { preparePlinkoRewards, selectPlinkoReward, rewardIdentity } from '../lib/plinkoRewards';
 import { PremiumImage } from './PremiumNftImage';
+import { UserAvatar, sanitizeAvatarUrl } from './UserAvatar';
 import { BetHistoryModal, BetHistoryRecord } from './BetHistoryModal';
 import { GameRoundInfoModal } from './GameRoundInfoModal';
 import { LiquidSegment } from './ui/LiquidSegment';
@@ -394,11 +395,13 @@ export const Plinko: React.FC<PlinkoProps> = ({
   const avatarImgRef = useRef<HTMLImageElement | null>(null);
   useEffect(() => {
     avatarImgRef.current = null;
-    if (!user?.photoUrl) return;
+    const cleanUrl = sanitizeAvatarUrl(user?.photoUrl);
+    if (!cleanUrl) return;
     const img = new Image();
     img.onload = () => { avatarImgRef.current = img; };
-    img.src = user.photoUrl;
-    return () => { img.onload = null; avatarImgRef.current = null; };
+    img.onerror = () => { avatarImgRef.current = null; };
+    img.src = cleanUrl;
+    return () => { img.onload = null; img.onerror = null; avatarImgRef.current = null; };
   }, [user?.photoUrl]);
 
   // Shared/global drop history (live drops feed, max 20)
@@ -1000,31 +1003,32 @@ export const Plinko: React.FC<PlinkoProps> = ({
             BALL_RADIUS * 2
           );
         } else {
-          const grad = ctx.createLinearGradient(
-            -BALL_RADIUS,
-            -BALL_RADIUS,
-            BALL_RADIUS,
-            BALL_RADIUS
-          );
-          grad.addColorStop(0, '#f59e0b');
-          grad.addColorStop(1, '#d97706');
-          ctx.fillStyle = grad;
-          ctx.fill();
+          // Standard gray background + gray person silhouette placeholder
+          ctx.fillStyle = '#1f2026';
+          ctx.fillRect(-BALL_RADIUS, -BALL_RADIUS, BALL_RADIUS * 2, BALL_RADIUS * 2);
 
-          ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 9px system-ui, -apple-system, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          const initial = userRef.current?.firstName?.charAt(0) || 'U';
-          ctx.fillText(initial, 0, 0);
+          ctx.strokeStyle = '#9aa0a8';
+          ctx.lineWidth = Math.max(1.2, BALL_RADIUS * 0.16);
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+
+          // Head circle
+          ctx.beginPath();
+          ctx.arc(0, -BALL_RADIUS * 0.2, BALL_RADIUS * 0.24, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Shoulders arc
+          ctx.beginPath();
+          ctx.arc(0, BALL_RADIUS * 0.62, BALL_RADIUS * 0.44, Math.PI * 1.15, Math.PI * 1.85);
+          ctx.stroke();
         }
         ctx.restore();
 
-        // Golden ring border
+        // Ring border
         ctx.beginPath();
         ctx.arc(ball.x, ball.y, BALL_RADIUS, 0, Math.PI * 2);
-        ctx.strokeStyle = '#f59e0b';
-        ctx.lineWidth = 1.8;
+        ctx.strokeStyle = avatarImg && avatarImg.complete && avatarImg.naturalWidth > 0 ? '#f59e0b' : 'rgba(255,255,255,0.22)';
+        ctx.lineWidth = 1.6;
         ctx.stroke();
 
         // When drop finishes: clear active ball and defer state updates outside RAF
@@ -1426,13 +1430,15 @@ export const Plinko: React.FC<PlinkoProps> = ({
                       className="h-16 w-full flex items-center justify-between rounded-[22px] px-3.5 bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] hover:border-white/[0.14] transition-all cursor-pointer select-none active:scale-[0.99] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-full bg-white/5 shrink-0 object-cover border border-white/10 flex items-center justify-center overflow-hidden font-bold text-white/80">
-                          {item.photoUrl ? (
-                            <img src={item.photoUrl} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            item.firstName.charAt(0)
-                          )}
-                        </div>
+                        <UserAvatar
+                          src={
+                            (item.userId != null && user?.id != null && Number(item.userId) === Number(user.id))
+                              ? (user.photoUrl || item.photoUrl)
+                              : item.photoUrl
+                          }
+                          alt={item.firstName}
+                          className="w-9 h-9 shrink-0 border border-white/10"
+                        />
 
                         <div className="flex flex-col min-w-0">
                           <span className="text-white font-medium text-[13px] truncate max-w-[120px]">

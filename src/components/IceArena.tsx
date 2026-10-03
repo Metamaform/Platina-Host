@@ -9,6 +9,7 @@ import { cleanNftName, getNftBackdrop } from '../lib/nftUtils';
 import { NftSelectorGrid } from './NftSelectorGrid';
 import { LiquidSegment } from './ui/LiquidSegment';
 import { PremiumImage } from './PremiumNftImage';
+import { UserAvatar, sanitizeAvatarUrl } from './UserAvatar';
 import { useTranslation } from '../lib/i18n';
 import {
   computeIceArenaTerritories,
@@ -82,7 +83,6 @@ const DEFAULT_HISTORY: CompletedRoundRecord[] = [
       userId: 101,
       firstName: 'Артем',
       username: 'artem_ton',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
       betAmount: 75.00,
       contribution: 75.00,
       percentage: 40.7,
@@ -92,10 +92,10 @@ const DEFAULT_HISTORY: CompletedRoundRecord[] = [
     giftsCount: 2,
     completedAt: Date.now() - 1000 * 60 * 12,
     participants: [
-      { id: 'h_1', userId: 101, firstName: 'Артем', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80', betAmount: 75, contribution: 75, percentage: 40.7, color: '#10b981' },
-      { id: 'h_2', userId: 102, firstName: 'Elena', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80', betAmount: 45, contribution: 45, percentage: 24.4, color: '#06b6d4' },
-      { id: 'h_3', userId: 103, firstName: 'Dmitry', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', betAmount: 38, contribution: 38, percentage: 20.6, color: '#f59e0b' },
-      { id: 'h_4', userId: 104, firstName: 'Sofi', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80', betAmount: 26.5, contribution: 26.5, percentage: 14.3, color: '#ec4899' },
+      { id: 'h_1', userId: 101, firstName: 'Артем', betAmount: 75, contribution: 75, percentage: 40.7, color: '#10b981' },
+      { id: 'h_2', userId: 102, firstName: 'Elena', betAmount: 45, contribution: 45, percentage: 24.4, color: '#06b6d4' },
+      { id: 'h_3', userId: 103, firstName: 'Dmitry', betAmount: 38, contribution: 38, percentage: 20.6, color: '#f59e0b' },
+      { id: 'h_4', userId: 104, firstName: 'Sofi', betAmount: 26.5, contribution: 26.5, percentage: 14.3, color: '#ec4899' },
     ],
     gifts: [
       {
@@ -124,7 +124,6 @@ const DEFAULT_HISTORY: CompletedRoundRecord[] = [
       userId: 105,
       firstName: 'Max',
       username: 'max_crypto',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
       betAmount: 28.00,
       contribution: 28.00,
       percentage: 44.9,
@@ -134,9 +133,9 @@ const DEFAULT_HISTORY: CompletedRoundRecord[] = [
     giftsCount: 1,
     completedAt: Date.now() - 1000 * 60 * 35,
     participants: [
-      { id: 'h_5', userId: 105, firstName: 'Max', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', betAmount: 28, contribution: 28, percentage: 44.9, color: '#3b82f6' },
-      { id: 'h_6', userId: 106, firstName: 'kesha', avatar: 'https://images.unsplash.com/photo-1544499980-2680ced6993a?w=150&auto=format&fit=crop&q=80', betAmount: 18.4, contribution: 18.4, percentage: 29.5, color: '#10b981' },
-      { id: 'h_7', userId: 107, firstName: 'AV', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', betAmount: 16, contribution: 16, percentage: 25.6, color: '#06b6d4' },
+      { id: 'h_5', userId: 105, firstName: 'Max', betAmount: 28, contribution: 28, percentage: 44.9, color: '#3b82f6' },
+      { id: 'h_6', userId: 106, firstName: 'kesha', betAmount: 18.4, contribution: 18.4, percentage: 29.5, color: '#10b981' },
+      { id: 'h_7', userId: 107, firstName: 'AV', betAmount: 16, contribution: 16, percentage: 25.6, color: '#06b6d4' },
     ],
   },
   {
@@ -147,7 +146,6 @@ const DEFAULT_HISTORY: CompletedRoundRecord[] = [
       userId: 108,
       firstName: 'Polaris',
       username: 'polaris_star',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
       betAmount: 52.00,
       contribution: 52.00,
       percentage: 55.3,
@@ -157,10 +155,10 @@ const DEFAULT_HISTORY: CompletedRoundRecord[] = [
     giftsCount: 3,
     completedAt: Date.now() - 1000 * 60 * 65,
     participants: [
-      { id: 'h_8', userId: 108, firstName: 'Polaris', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', betAmount: 52, contribution: 52, percentage: 55.3, color: '#ec4899' },
-      { id: 'h_9', userId: 109, firstName: 'Давид', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', betAmount: 22, contribution: 22, percentage: 23.4, color: '#f59e0b' },
-      { id: 'h_10', userId: 110, firstName: 'Ivan', avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80', betAmount: 12.1, contribution: 12.1, percentage: 12.8, color: '#8b5cf6' },
-      { id: 'h_11', userId: 111, firstName: 'Anna', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80', betAmount: 8, contribution: 8, percentage: 8.5, color: '#06b6d4' },
+      { id: 'h_8', userId: 108, firstName: 'Polaris', betAmount: 52, contribution: 52, percentage: 55.3, color: '#ec4899' },
+      { id: 'h_9', userId: 109, firstName: 'Давид', betAmount: 22, contribution: 22, percentage: 23.4, color: '#f59e0b' },
+      { id: 'h_10', userId: 110, firstName: 'Ivan', betAmount: 12.1, contribution: 12.1, percentage: 12.8, color: '#8b5cf6' },
+      { id: 'h_11', userId: 111, firstName: 'Anna', betAmount: 8, contribution: 8, percentage: 8.5, color: '#06b6d4' },
     ],
   },
 ];
@@ -177,28 +175,24 @@ const PLAYER_COLORS = [
 ];
 
 // Presets from the video demo
-const SAMPLE_PLAYERS = [
+const SAMPLE_PLAYERS: { name: string; avatar?: string; bet: number; color: string }[] = [
   { 
     name: 'kesha', 
-    avatar: 'https://images.unsplash.com/photo-1544499980-2680ced6993a?w=150&auto=format&fit=crop&q=80', 
     bet: 4.26, 
     color: '#10b981' 
   },
   { 
     name: 'AV', 
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', 
     bet: 4.78, 
     color: '#06b6d4' 
   },
   { 
     name: 'Polaris', 
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', 
     bet: 4.22, 
     color: '#ec4899' 
   },
   { 
     name: 'Давид', 
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', 
     bet: 3.85, 
     color: '#f59e0b' 
   },
@@ -275,7 +269,7 @@ interface IceArenaCelebrationModalProps {
   isTopGame?: boolean;
   roundId: number;
   winner: ArenaParticipant;
-  avatarUrl: string;
+  avatarUrl?: string;
   totalPool: number;
   gifts?: any[];
   onContinue?: () => void;
@@ -360,10 +354,10 @@ const IceArenaCelebrationModal: React.FC<IceArenaCelebrationModalProps> = ({
             style={{ backgroundColor: winner.color || (isTopGame ? '#f59e0b' : '#10b981') }} 
             className="absolute inset-0 rounded-full blur-xl opacity-60 animate-pulse" 
           />
-          <img
+          <UserAvatar
             src={avatarUrl}
             alt={winner.firstName || 'Победитель'}
-            className="relative z-10 w-20 h-20 rounded-full object-cover border-4 border-white/20 shadow-2xl"
+            className="relative z-10 w-20 h-20 border-4 border-white/20 shadow-2xl"
           />
         </div>
 
@@ -448,12 +442,15 @@ export const IceArena: React.FC<IceArenaProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const syncedAvatarFor = useCallback((player?: Partial<ArenaParticipant> | null, fallbackSeed = 'User') => {
-    const isCurrentUser = user?.id != null
-      && player?.userId != null
-      && Number(player.userId) === Number(user.id);
-    if (isCurrentUser && user?.photoUrl) return user.photoUrl;
-    return player?.photoUrl || player?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(player?.firstName || fallbackSeed)}`;
+  const syncedAvatarFor = useCallback((player?: Partial<ArenaParticipant> | null, _fallbackSeed = 'User') => {
+    const isCurrentUser = Boolean(
+      player?.isUser ||
+      (user?.id != null && player?.userId != null && Number(player.userId) === Number(user.id))
+    );
+    if (isCurrentUser) {
+      return sanitizeAvatarUrl(user?.photoUrl || player?.photoUrl || player?.avatar);
+    }
+    return sanitizeAvatarUrl(player?.photoUrl || player?.avatar);
   }, [user?.id, user?.photoUrl]);
 
   // Tabs: 'game' (Текущая игра) | 'history' (История)
@@ -1041,13 +1038,14 @@ export const IceArena: React.FC<IceArenaProps> = ({
         setInventory(inventory.filter(i => !chosenIds.has(i.uniqueId || i.id)));
       }
 
+      const userPhoto = sanitizeAvatarUrl(user?.photoUrl);
       const newParticipant: ArenaParticipant = {
         id: `user_${user?.id || 9999}`,
         userId: user?.id || 9999,
         firstName: user?.firstName || 'Вы',
         username: user?.username || 'you',
-        avatar: user?.photoUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=YouHero',
-        photoUrl: user?.photoUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=YouHero',
+        avatar: userPhoto,
+        photoUrl: userPhoto,
         betAmount: betValue,
         gift: betGifts[0] || null,
         gifts: betGifts,
@@ -1067,8 +1065,8 @@ export const IceArena: React.FC<IceArenaProps> = ({
           const combinedGifts = [...(cur.gifts || (cur.gift ? [cur.gift] : [])), ...betGifts];
           updated[existingIdx] = {
             ...cur,
-            avatar: user?.photoUrl || cur.avatar,
-            photoUrl: user?.photoUrl || cur.photoUrl,
+            avatar: userPhoto || sanitizeAvatarUrl(cur.avatar),
+            photoUrl: userPhoto || sanitizeAvatarUrl(cur.photoUrl),
             firstName: user?.firstName || cur.firstName,
             username: user?.username || cur.username,
             contribution: Number((cur.contribution + betValue).toFixed(2)),
@@ -1188,10 +1186,10 @@ export const IceArena: React.FC<IceArenaProps> = ({
                     className="w-full text-left flex items-center justify-between rounded-[20px] p-3.5 bg-white/[0.05] border border-white/[0.08] hover:border-white/[0.18] backdrop-blur-md transition-all active:scale-[0.99] cursor-pointer"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <img
+                      <UserAvatar
                         src={syncedAvatarFor(h.winner as any, 'Winner')}
                         alt=""
-                        className="w-10 h-10 rounded-full object-cover border border-emerald-400/70 shrink-0"
+                        className="w-10 h-10 border border-emerald-400/70 shrink-0"
                       />
                       <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-1.5">
@@ -1406,7 +1404,7 @@ export const IceArena: React.FC<IceArenaProps> = ({
                                 }}
                                 className="pointer-events-none z-20 flex aspect-square shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-black/60 shadow-[0_3px_12px_rgba(0,0,0,0.48)] ring-1 ring-black/20 transition-all duration-300"
                               >
-                                <img src={syncedAvatarFor(p, name)} alt={name} className="h-full w-full rounded-full object-cover" />
+                                <UserAvatar src={syncedAvatarFor(p, name)} alt={name} className="h-full w-full" />
                               </div>
                             </React.Fragment>
                           );
@@ -1509,10 +1507,10 @@ export const IceArena: React.FC<IceArenaProps> = ({
                           <span className="text-white/40 text-xs font-bold w-4 text-center">
                             {idx + 1}
                           </span>
-                          <img
+                          <UserAvatar
                             src={syncedAvatarFor(p, p.firstName || 'User')}
                             alt=""
-                            className="w-10 h-10 rounded-full object-cover border border-white/15 bg-white/5"
+                            className="w-10 h-10 border border-white/15 shrink-0"
                           />
                           <div className="flex flex-col min-w-0">
                             <div className="flex items-center gap-1.5">
@@ -1895,10 +1893,10 @@ export const IceArena: React.FC<IceArenaProps> = ({
                 {/* Winner Card */}
                 <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-3.5 flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
-                    <img
+                    <UserAvatar
                       src={syncedAvatarFor(selectedHistoryRound.winner, 'Winner')}
                       alt=""
-                      className="w-11 h-11 rounded-full object-cover border-2 border-emerald-400 shrink-0"
+                      className="w-11 h-11 border-2 border-emerald-400 shrink-0"
                     />
                     <div className="flex flex-col min-w-0">
                       <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-300 uppercase tracking-wider">
@@ -1950,10 +1948,10 @@ export const IceArena: React.FC<IceArenaProps> = ({
                           className="flex items-center justify-between rounded-xl bg-white/[0.03] border border-white/[0.06] p-2.5"
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <img
+                            <UserAvatar
                               src={syncedAvatarFor(p, 'User')}
                               alt=""
-                              className="w-8 h-8 rounded-full object-cover border border-white/10 shrink-0"
+                              className="w-8 h-8 border border-white/10 shrink-0"
                             />
                             <span className="text-white text-xs font-bold truncate">
                               {p.firstName || p.username}
