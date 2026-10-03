@@ -1117,36 +1117,104 @@ function Profile({  user, inventory, setInventory, balance, setBalance, turnover
         </LiquidDialog>
       )}
 
-      {showSettings && (
-        <LiquidDialog
-          title={t('settings')}
-          subtitle={t('settings_desc')}
-          icon={<Settings className="w-4 h-4" />}
-          onClose={() => setShowSettings(false)}
-          actionLabel={t('got_it')}
-        >
-          <div className="space-y-4 pb-1">
-            <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-white/50 mb-2">
-                {t('language')}
-              </div>
-              <LiquidSegment<'ru' | 'en' | 'zh'>
-                ariaLabel={t('language')}
-                value={lang === 'en' || lang === 'zh' ? lang : 'ru'}
-                onChange={(code) => {
-                  handleSetLang(code);
-                  try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch { /* optional */ }
-                }}
-                options={[
-                  { value: 'ru', label: 'Русский', icon: <span className="text-[14px] leading-none">🇷🇺</span> },
-                  { value: 'en', label: 'English', icon: <span className="text-[14px] leading-none">🇬🇧</span> },
-                  { value: 'zh', label: '中文', icon: <span className="text-[14px] leading-none">🇨🇳</span> },
-                ]}
+      {/* Settings / Language Modal (Liquid Glass Bottom Sheet style, unified with Profile modals) */}
+      <AnimatePresence>
+        {showSettings && (
+          <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSettings(false)}
+              className="fixed inset-0 bg-black/80 backdrop-blur-md cursor-pointer"
+            />
+            <motion.div
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+              className="group relative z-10 w-full max-w-sm bg-[#16171b]/95 backdrop-blur-2xl border border-white/[0.12] rounded-t-[32px] sm:rounded-[28px] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_25px_50px_-12px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[80vh] text-white"
+            >
+              {/* верхнее бликовое свечение жидкого стекла */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-t-[32px] sm:rounded-[28px] bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.02)_40%,transparent_62%)]"
               />
-            </div>
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 w-4/5 h-16 rounded-full bg-white/[0.08] blur-2xl opacity-70"
+              />
+
+              {/* Grab Handle */}
+              <div className="relative z-10 w-12 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-1 sm:hidden" />
+
+              <div className="relative z-10 p-5 pb-3 border-b border-white/[0.08] flex items-center justify-between shrink-0">
+                <div>
+                  <h3 className="font-display text-lg font-bold tracking-tight text-white">{t('settings')}</h3>
+                  <p className="text-white/40 text-xs mt-0.5">{t('settings_desc')}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowSettings(false)}
+                  className="w-9 h-9 rounded-full lg-glass flex items-center justify-center text-white/70 hover:text-white active:scale-95 transition-all cursor-pointer"
+                >
+                  <X className="w-4 h-4" strokeWidth={2.5} />
+                </button>
+              </div>
+
+              <div className="relative z-10 overflow-y-auto custom-scrollbar p-5 pt-4 space-y-3">
+                <span className="block text-[11px] font-bold text-white/40 uppercase tracking-wider">
+                  {t('language')}
+                </span>
+
+                <div className="flex flex-col gap-2">
+                  {([
+                    { code: 'ru' as const, label: 'Русский', sub: 'RU' },
+                    { code: 'en' as const, label: 'English', sub: 'EN' },
+                    { code: 'zh' as const, label: '中文', sub: 'ZH' },
+                  ]).map((item) => {
+                    const currentLang = lang === 'en' || lang === 'zh' ? lang : 'ru';
+                    const isActive = currentLang === item.code;
+                    return (
+                      <button
+                        key={item.code}
+                        type="button"
+                        onClick={() => {
+                          handleSetLang(item.code);
+                          try { (window as any).Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch { /* optional */ }
+                        }}
+                        className={`w-full rounded-2xl p-3.5 flex items-center justify-between border transition-all active:scale-[0.99] cursor-pointer ${
+                          isActive
+                            ? 'bg-white/[0.09] border-white/[0.18] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+                            : 'bg-white/[0.04] border-white/[0.08] hover:bg-white/[0.06] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full lg-glass text-[11px] font-bold text-white/80 tracking-wider">
+                            {item.sub}
+                          </span>
+                          <span className={`text-[14px] leading-tight ${isActive ? 'font-bold text-white' : 'font-medium text-white/75'}`}>
+                            {item.label}
+                          </span>
+                        </div>
+                        <span
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-all ${
+                            isActive
+                              ? 'bg-white/[0.14] border-white/[0.28] text-white'
+                              : 'bg-white/[0.03] border-white/[0.10] text-transparent'
+                          }`}
+                        >
+                          <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
           </div>
-        </LiquidDialog>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 }
